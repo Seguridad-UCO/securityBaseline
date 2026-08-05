@@ -15,8 +15,8 @@ Mensajes textuales en cada controller son inconsistentes y frágiles para client
 ## Ubicación verificable
 
 - [`ApiResponse.java`](../../src/main/java/co/edu/uco/seguridad/shared/web/ApiResponse.java)
-- [`ApiErrorHandler.java`](../../src/main/java/co/edu/uco/seguridad/applications/infrastructure/web/ApiErrorHandler.java)
-- Prueba: [`ProtectedApplicationHttpTests.java`](../../src/test/java/co/edu/uco/seguridad/applications/infrastructure/web/ProtectedApplicationHttpTests.java).
+- [`ApiErrorHandler.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
+- Prueba: [`ProtectedApplicationHttpTests.java`](../../src/test/java/co/edu/uco/seguridad/pdp).
 
 ## Evidencia y límite
 

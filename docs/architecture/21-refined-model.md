@@ -16,11 +16,11 @@ La fábrica `register` crea el agregado solo con los cuatro valores requeridos. 
 
 ## Ubicación verificable
 
-- [`ProtectedApplication.java`](../../src/main/java/co/edu/uco/seguridad/applications/domain/ProtectedApplication.java)
-- [`TenantId.java`](../../src/main/java/co/edu/uco/seguridad/applications/domain/TenantId.java)
-- [`ApplicationName.java`](../../src/main/java/co/edu/uco/seguridad/applications/domain/ApplicationName.java)
-- [`ResourceIdentifier.java`](../../src/main/java/co/edu/uco/seguridad/applications/domain/ResourceIdentifier.java)
-- Prueba: [`ProtectedApplicationTests.java`](../../src/test/java/co/edu/uco/seguridad/applications/domain/ProtectedApplicationTests.java)
+- [`ProtectedApplication.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
+- [`TenantId.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
+- [`ApplicationName.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
+- [`ResourceIdentifier.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
+- Prueba: [`ProtectedApplicationTests.java`](../../src/test/java/co/edu/uco/seguridad/pdp)
 
 ## Evidencia y límite
 

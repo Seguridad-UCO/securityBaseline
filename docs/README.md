@@ -5,6 +5,7 @@ Esta documentación sustenta la HU E-1 / UC-02: registrar una aplicación proteg
 ## Navegación por tema
 
 - [Enfoque general de los 23 criterios](baseline-criteria-overview.md): índice para sustentación con enlace directo a cada evidencia.
+- [Alineación PDP / Spring Modulith](architecture/pdp-modulith-alignment.md): estructura y dependencias ejecutables frente a la arquitectura de referencia.
 - [Arquitectura](architecture/README.md): 1, 2, 11, 12, 20, 21 y 22.
 - [Dominio y datos](domain-and-data/README.md): 3, 10 y 15 a 19.
 - [Interfaces](interfaces/README.md): 5, 6, 13 y 14.

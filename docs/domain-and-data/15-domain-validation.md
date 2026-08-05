@@ -14,9 +14,9 @@ Los constructores de VOs y agregado validan creación. `ProtectedApplicationCrit
 
 ## Ubicación verificable
 
-- [`ProtectedApplicationCriteria.java`](../../src/main/java/co/edu/uco/seguridad/applications/domain/ProtectedApplicationCriteria.java)
-- [`ProtectedApplication.java`](../../src/main/java/co/edu/uco/seguridad/applications/domain/ProtectedApplication.java)
-- [`ProtectedApplicationTests.java`](../../src/test/java/co/edu/uco/seguridad/applications/domain/ProtectedApplicationTests.java)
+- [`ProtectedApplicationCriteria.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
+- [`ProtectedApplication.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
+- [`ProtectedApplicationTests.java`](../../src/test/java/co/edu/uco/seguridad/pdp)
 
 ## Evidencia y límite
 

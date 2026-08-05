@@ -22,10 +22,10 @@ WebFlux → port/in → service → port/out → dummy
 
 ## Ubicación verificable
 
-- Agregado: [`ProtectedApplication.java`](../../src/main/java/co/edu/uco/seguridad/applications/domain/ProtectedApplication.java).
-- Casos de uso: [`application/port/in`](../../src/main/java/co/edu/uco/seguridad/applications/application/port/in).
-- Puertos de salida: [`application/port/out`](../../src/main/java/co/edu/uco/seguridad/applications/application/port/out).
-- Adaptadores: [`applications/infrastructure`](../../src/main/java/co/edu/uco/seguridad/applications/infrastructure).
+- Agregado: [`ProtectedApplication.java`](../../src/main/java/co/edu/uco/seguridad/pdp).
+- Casos de uso: [`application/port/in`](../../src/main/java/co/edu/uco/seguridad/pdp).
+- Puertos de salida: [`application/port/out`](../../src/main/java/co/edu/uco/seguridad/pdp).
+- Adaptadores: [`applications/infrastructure`](../../src/main/java/co/edu/uco/seguridad/pdp).
 - Prueba de estructura: [`ModulithStructureTests.java`](../../src/test/java/co/edu/uco/seguridad/ModulithStructureTests.java).
 
 ## Evidencia y límite

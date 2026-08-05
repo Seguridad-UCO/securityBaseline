@@ -16,10 +16,10 @@ En un `POST`, el controller valida forma, mapea el DTO a comando y llama al puer
 
 ## Ubicación verificable
 
-- Entrada: [`ProtectedApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/applications/infrastructure/web/ProtectedApplicationController.java).
-- Orquestación: [`ProtectedApplicationService.java`](../../src/main/java/co/edu/uco/seguridad/applications/application/service/ProtectedApplicationService.java).
-- Salidas: [`ProtectedApplicationRepository.java`](../../src/main/java/co/edu/uco/seguridad/applications/application/port/out/ProtectedApplicationRepository.java) y [`AuditPort.java`](../../src/main/java/co/edu/uco/seguridad/applications/application/port/out/AuditPort.java).
-- Verificación: [`ProtectedApplicationHttpTests.java`](../../src/test/java/co/edu/uco/seguridad/applications/infrastructure/web/ProtectedApplicationHttpTests.java).
+- Entrada: [`ProtectedApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/pdp).
+- Orquestación: [`ProtectedApplicationService.java`](../../src/main/java/co/edu/uco/seguridad/pdp).
+- Salidas: [`ProtectedApplicationRepository.java`](../../src/main/java/co/edu/uco/seguridad/pdp) y [`AuditPort.java`](../../src/main/java/co/edu/uco/seguridad/pdp).
+- Verificación: [`ProtectedApplicationHttpTests.java`](../../src/test/java/co/edu/uco/seguridad/pdp).
 
 ## Evidencia y límite
 

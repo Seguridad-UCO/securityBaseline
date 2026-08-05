@@ -14,9 +14,9 @@ Guardar la aplicación y fallar al generar evidencia deja un estado no auditable
 
 ## Ubicación verificable
 
-- Puerto: [`ReactiveTransactionPort.java`](../../src/main/java/co/edu/uco/seguridad/applications/application/port/out/ReactiveTransactionPort.java).
-- Dummy: [`SnapshotReactiveTransactionAdapter.java`](../../src/main/java/co/edu/uco/seguridad/applications/infrastructure/persistence/dummy/SnapshotReactiveTransactionAdapter.java).
-- Evidencia: prueba `rolls_back_save_when_audit_fails` en [`ProtectedApplicationServiceTests.java`](../../src/test/java/co/edu/uco/seguridad/applications/application/service/ProtectedApplicationServiceTests.java).
+- Puerto: [`ReactiveTransactionPort.java`](../../src/main/java/co/edu/uco/seguridad/pdp).
+- Dummy: [`SnapshotReactiveTransactionAdapter.java`](../../src/main/java/co/edu/uco/seguridad/pdp).
+- Evidencia: prueba `rolls_back_save_when_audit_fails` en [`ProtectedApplicationServiceTests.java`](../../src/test/java/co/edu/uco/seguridad/pdp).
 
 ## Evidencia y límite
 

@@ -14,9 +14,9 @@ El catálogo crecerá en atributos y combinaciones. Multiplicar métodos convier
 
 ## Ubicación verificable
 
-- [`ProtectedApplicationRepository.java`](../../src/main/java/co/edu/uco/seguridad/applications/application/port/out/ProtectedApplicationRepository.java)
-- [`InMemoryProtectedApplicationRepository.java`](../../src/main/java/co/edu/uco/seguridad/applications/infrastructure/persistence/dummy/InMemoryProtectedApplicationRepository.java)
-- HTTP de consumo: [`ProtectedApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/applications/infrastructure/web/ProtectedApplicationController.java).
+- [`ProtectedApplicationRepository.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
+- [`InMemoryProtectedApplicationRepository.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
+- HTTP de consumo: [`ProtectedApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/pdp).
 
 ## Evidencia y límite
 

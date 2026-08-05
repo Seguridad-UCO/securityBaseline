@@ -14,8 +14,8 @@ El request es `record`, usa `@NotBlank`, `@Size` y `@Pattern`; sus campos no tie
 
 ## Ubicación verificable
 
-- [`RegisterProtectedApplicationRequest.java`](../../src/main/java/co/edu/uco/seguridad/applications/infrastructure/web/RegisterProtectedApplicationRequest.java)
-- [`ProtectedApplicationCriteria.java`](../../src/main/java/co/edu/uco/seguridad/applications/domain/ProtectedApplicationCriteria.java)
+- [`RegisterProtectedApplicationRequest.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
+- [`ProtectedApplicationCriteria.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
 - [Reglas de dominio](../domain-and-data/03-business-rules-data-integrity.md).
 
 ## Evidencia y límite

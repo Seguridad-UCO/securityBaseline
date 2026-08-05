@@ -14,9 +14,9 @@ Un `NOT NULL` no valida formato, cardinalidad ni unicidad funcional por tenant. 
 
 ## Ubicación verificable
 
-- [`domain`](../../src/main/java/co/edu/uco/seguridad/applications/domain)
-- [`ProtectedApplicationService.java`](../../src/main/java/co/edu/uco/seguridad/applications/application/service/ProtectedApplicationService.java)
-- Pruebas: [`ProtectedApplicationTests.java`](../../src/test/java/co/edu/uco/seguridad/applications/domain/ProtectedApplicationTests.java) y [`ProtectedApplicationServiceTests.java`](../../src/test/java/co/edu/uco/seguridad/applications/application/service/ProtectedApplicationServiceTests.java).
+- [`domain`](../../src/main/java/co/edu/uco/seguridad/pdp)
+- [`ProtectedApplicationService.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
+- Pruebas: [`ProtectedApplicationTests.java`](../../src/test/java/co/edu/uco/seguridad/pdp) y [`ProtectedApplicationServiceTests.java`](../../src/test/java/co/edu/uco/seguridad/pdp).
 
 ## Evidencia y límite
 

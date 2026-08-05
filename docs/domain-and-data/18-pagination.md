@@ -14,8 +14,8 @@ Un catálogo sin límite puede consumir memoria y degradar una API de seguridad.
 
 ## Ubicación verificable
 
-- [`PageWindow.java`](../../src/main/java/co/edu/uco/seguridad/applications/application/port/out/PageWindow.java)
-- [`ApplicationPage.java`](../../src/main/java/co/edu/uco/seguridad/applications/application/port/out/ApplicationPage.java)
+- [`PageWindow.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
+- [`ApplicationPage.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
 - [Contrato de consulta](../interfaces/06-parameter-handling.md).
 
 ## Evidencia y límite

@@ -14,8 +14,8 @@ Parámetros sin normalizar generan validaciones repetidas e interpretaciones dis
 
 ## Ubicación verificable
 
-- [`RegisterProtectedApplicationRequest.java`](../../src/main/java/co/edu/uco/seguridad/applications/infrastructure/web/RegisterProtectedApplicationRequest.java)
-- [`ProtectedApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/applications/infrastructure/web/ProtectedApplicationController.java)
+- [`RegisterProtectedApplicationRequest.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
+- [`ProtectedApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
 - [`CorrelationWebFilter.java`](../../src/main/java/co/edu/uco/seguridad/shared/web/CorrelationWebFilter.java).
 
 ## Evidencia y límite

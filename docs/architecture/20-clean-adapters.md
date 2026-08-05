@@ -16,9 +16,9 @@ El adapter web aplica Bean Validation de forma y usa `ProtectedApplicationMapper
 
 ## Ubicación verificable
 
-- Web: [`infrastructure/web`](../../src/main/java/co/edu/uco/seguridad/applications/infrastructure/web).
-- Persistencia dummy: [`InMemoryProtectedApplicationRepository.java`](../../src/main/java/co/edu/uco/seguridad/applications/infrastructure/persistence/dummy/InMemoryProtectedApplicationRepository.java).
-- Regla: [`ProtectedApplication.java`](../../src/main/java/co/edu/uco/seguridad/applications/domain/ProtectedApplication.java).
+- Web: [`infrastructure/web`](../../src/main/java/co/edu/uco/seguridad/pdp).
+- Persistencia dummy: [`InMemoryProtectedApplicationRepository.java`](../../src/main/java/co/edu/uco/seguridad/pdp).
+- Regla: [`ProtectedApplication.java`](../../src/main/java/co/edu/uco/seguridad/pdp).
 
 ## Evidencia y límite
 

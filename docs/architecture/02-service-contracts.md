@@ -16,10 +16,10 @@ El consumidor de negocio debe conocer operación, entrada y salida, pero no HTTP
 
 ## Ubicación verificable
 
-- [`RegisterProtectedApplicationUseCase.java`](../../src/main/java/co/edu/uco/seguridad/applications/application/port/in/RegisterProtectedApplicationUseCase.java)
-- [`SearchProtectedApplicationsUseCase.java`](../../src/main/java/co/edu/uco/seguridad/applications/application/port/in/SearchProtectedApplicationsUseCase.java)
-- [`ProtectedApplicationService.java`](../../src/main/java/co/edu/uco/seguridad/applications/application/service/ProtectedApplicationService.java)
-- Contrato HTTP traducido, no sustituido: [`ProtectedApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/applications/infrastructure/web/ProtectedApplicationController.java)
+- [`RegisterProtectedApplicationUseCase.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
+- [`SearchProtectedApplicationsUseCase.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
+- [`ProtectedApplicationService.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
+- Contrato HTTP traducido, no sustituido: [`ProtectedApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
 
 ## Evidencia y límite
 

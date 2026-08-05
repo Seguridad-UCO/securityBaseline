@@ -14,9 +14,9 @@ Las excepciones de dominio se expresan en el núcleo y se traducen una única ve
 
 ## Ubicación verificable
 
-- [`DomainException.java`](../../src/main/java/co/edu/uco/seguridad/applications/domain/DomainException.java)
-- [`DuplicateProtectedApplicationException.java`](../../src/main/java/co/edu/uco/seguridad/applications/domain/DuplicateProtectedApplicationException.java)
-- [`ApiErrorHandler.java`](../../src/main/java/co/edu/uco/seguridad/applications/infrastructure/web/ApiErrorHandler.java)
+- [`DomainException.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
+- [`DuplicateProtectedApplicationException.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
+- [`ApiErrorHandler.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
 
 ## Evidencia y límite
 

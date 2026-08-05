@@ -15,7 +15,7 @@ Duplicarlos por historia hace que cada módulo responda y registre distinto. Se 
 ## Ubicación verificable
 
 - [`shared`](../../src/main/java/co/edu/uco/seguridad/shared)
-- [`AuditPort.java`](../../src/main/java/co/edu/uco/seguridad/applications/application/port/out/AuditPort.java)
+- [`AuditPort.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
 - [`application.properties`](../../src/main/resources/application.properties)
 
 ## Evidencia y límite

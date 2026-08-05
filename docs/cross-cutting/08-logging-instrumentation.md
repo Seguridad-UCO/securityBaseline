@@ -16,7 +16,7 @@ Una plataforma de seguridad debe reconstruir el recorrido de una petición. Se d
 
 - [`CorrelationWebFilter.java`](../../src/main/java/co/edu/uco/seguridad/shared/web/CorrelationWebFilter.java)
 - [`ReactiveLogContext.java`](../../src/main/java/co/edu/uco/seguridad/shared/observability/ReactiveLogContext.java)
-- [`ProtectedApplicationService.java`](../../src/main/java/co/edu/uco/seguridad/applications/application/service/ProtectedApplicationService.java)
+- [`ProtectedApplicationService.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
 - [`pom.xml`](../../pom.xml) y [`application.properties`](../../src/main/resources/application.properties).
 
 ## Evidencia y límite

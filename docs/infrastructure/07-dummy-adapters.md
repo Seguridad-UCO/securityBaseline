@@ -14,10 +14,10 @@ Esperar infraestructura real bloquearía la validación de arquitectura. Simular
 
 ## Ubicación verificable
 
-- [`persistence/dummy`](../../src/main/java/co/edu/uco/seguridad/applications/infrastructure/persistence/dummy)
-- [`audit/dummy`](../../src/main/java/co/edu/uco/seguridad/applications/infrastructure/audit/dummy)
-- [`ApplicationConfiguration.java`](../../src/main/java/co/edu/uco/seguridad/applications/infrastructure/ApplicationConfiguration.java)
-- Prueba de rollback: [`ProtectedApplicationServiceTests.java`](../../src/test/java/co/edu/uco/seguridad/applications/application/service/ProtectedApplicationServiceTests.java).
+- [`persistence/dummy`](../../src/main/java/co/edu/uco/seguridad/pdp)
+- [`audit/dummy`](../../src/main/java/co/edu/uco/seguridad/pdp)
+- [`ApplicationConfiguration.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
+- Prueba de rollback: [`ProtectedApplicationServiceTests.java`](../../src/test/java/co/edu/uco/seguridad/pdp).
 
 ## Evidencia y límite
 

@@ -14,9 +14,9 @@ El DTO evita que la forma pública sea el modelo del dominio y permite versionar
 
 ## Ubicación verificable
 
-- [`RegisterProtectedApplicationRequest.java`](../../src/main/java/co/edu/uco/seguridad/applications/infrastructure/web/RegisterProtectedApplicationRequest.java)
-- [`ProtectedApplicationMapper.java`](../../src/main/java/co/edu/uco/seguridad/applications/infrastructure/web/ProtectedApplicationMapper.java)
-- [`RegisterProtectedApplicationCommand.java`](../../src/main/java/co/edu/uco/seguridad/applications/application/port/in/RegisterProtectedApplicationCommand.java).
+- [`RegisterProtectedApplicationRequest.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
+- [`ProtectedApplicationMapper.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
+- [`RegisterProtectedApplicationCommand.java`](../../src/main/java/co/edu/uco/seguridad/pdp).
 
 ## Evidencia y límite
 

@@ -14,9 +14,9 @@ El controller exige ambos parámetros juntos y los transforma a `PageWindow`. No
 
 ## Ubicación verificable
 
-- [`ProtectedApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/applications/infrastructure/web/ProtectedApplicationController.java)
-- [`PageWindow.java`](../../src/main/java/co/edu/uco/seguridad/applications/application/port/out/PageWindow.java)
-- Prueba HTTP: [`ProtectedApplicationHttpTests.java`](../../src/test/java/co/edu/uco/seguridad/applications/infrastructure/web/ProtectedApplicationHttpTests.java).
+- [`ProtectedApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
+- [`PageWindow.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
+- Prueba HTTP: [`ProtectedApplicationHttpTests.java`](../../src/test/java/co/edu/uco/seguridad/pdp).
 
 ## Evidencia y límite
 

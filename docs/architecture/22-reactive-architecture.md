@@ -17,9 +17,9 @@ Los casos de uso devuelven `Mono`; repositorio, auditoría y transacción tambi�
 ## Ubicación verificable
 
 - Dependencias: [`pom.xml`](../../pom.xml).
-- Controlador: [`ProtectedApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/applications/infrastructure/web/ProtectedApplicationController.java).
-- Flujo: [`ProtectedApplicationService.java`](../../src/main/java/co/edu/uco/seguridad/applications/application/service/ProtectedApplicationService.java).
-- Prueba real Netty: [`ProtectedApplicationHttpTests.java`](../../src/test/java/co/edu/uco/seguridad/applications/infrastructure/web/ProtectedApplicationHttpTests.java).
+- Controlador: [`ProtectedApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/pdp).
+- Flujo: [`ProtectedApplicationService.java`](../../src/main/java/co/edu/uco/seguridad/pdp).
+- Prueba real Netty: [`ProtectedApplicationHttpTests.java`](../../src/test/java/co/edu/uco/seguridad/pdp).
 
 ## Evidencia y límite
 

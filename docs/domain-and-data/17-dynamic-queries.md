@@ -14,8 +14,8 @@ Un endpoint por combinación de filtros no escala y rompe el contrato. La constr
 
 ## Ubicación verificable
 
-- [`ProtectedApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/applications/infrastructure/web/ProtectedApplicationController.java)
-- [`ProtectedApplicationCriteria.java`](../../src/main/java/co/edu/uco/seguridad/applications/domain/ProtectedApplicationCriteria.java)
+- [`ProtectedApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
+- [`ProtectedApplicationCriteria.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
 
 ## Evidencia y límite
 

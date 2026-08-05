@@ -11,3 +11,5 @@
 | 20 | [Adaptadores limpios](20-clean-adapters.md) |
 | 21 | [Modelo refinado](21-refined-model.md) |
 | 22 | [Decisión reactiva](22-reactive-architecture.md) |
+
+La estructura aplicable del PDP se detalla en [Alineación PDP / Spring Modulith](pdp-modulith-alignment.md).
