@@ -1,20 +1,55 @@
 trigger:
 - main
 
-pool:
-  vmImage: ubuntu-latest
+stages:
+- stage: Build
+  displayName: 'Compilación'
+  jobs:
+  - job: CompileApplication
+    displayName: 'Compilar'
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - task: JavaToolInstaller@0
+      displayName: 'Configurar Java'
+      inputs:
+        versionSpec: '25'
+        jdkArchitectureOption: 'x64'
+        jdkSourceOption: 'PreInstalled'
 
-steps:
-- task: JavaToolInstaller@0
-  displayName: 'Seleccionar Temurin JDK 25'
-  inputs:
-    versionSpec: '25'
-    jdkArchitectureOption: 'x64'
-    jdkSourceOption: 'PreInstalled'
+    - bash: |
+        set -euo pipefail
+        java -version
+        ./mvnw --version
+        ./mvnw --batch-mode -DskipTests package
+      displayName: 'Compilar el proyecto'
 
-- bash: |
-    set -euo pipefail
-    java -version
-    ./mvnw --version
-    ./mvnw --batch-mode verify
-  displayName: 'Compilar y verificar con Java 25'
+- stage: UnitTests
+  displayName: 'Pruebas unitarias'
+  dependsOn: Build
+  jobs:
+  - job: RunUnitTests
+    displayName: 'Pruebas unitarias'
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - task: JavaToolInstaller@0
+      displayName: 'Configurar Java'
+      inputs:
+        versionSpec: '25'
+        jdkArchitectureOption: 'x64'
+        jdkSourceOption: 'PreInstalled'
+
+    - bash: |
+        set -euo pipefail
+        java -version
+        ./mvnw --batch-mode test
+      displayName: 'Ejecutar pruebas unitarias'
+
+    - task: PublishTestResults@2
+      displayName: 'Publicar resultados JUnit'
+      condition: succeededOrFailed()
+      inputs:
+        testResultsFormat: 'JUnit'
+        testResultsFiles: '**/surefire-reports/TEST-*.xml'
+        failTaskOnFailedTests: true
