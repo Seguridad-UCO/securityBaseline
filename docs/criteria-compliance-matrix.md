@@ -61,8 +61,27 @@ Estado final: los 23 cumplen, con la evidencia enlazada desde cada página y ver
 
 ## Lo que sigue sin estar hecho, y se dice aquí
 
-- Los adaptadores siguen siendo dummies: SurrealDB, Keycloak y OPA son el siguiente incremento.
-- El Quality Gate no se ha ejecutado todavía contra un servidor SonarQube real; requiere la service
-  connection y la extensión instaladas en la organización.
-- Las ramas `develop` y `qa` no existen aún en el remoto; los comandos están en
-  [estrategia de ramas](delivery/branching-strategy.md).
+- Los adaptadores siguen siendo dummies: SurrealDB y seguridad JWT son el siguiente incremento —
+  [ADR-0004](governance/adr/adr-0004-real-persistence-surrealdb.md) y
+  [ADR-0003](governance/adr/adr-0003-real-security-reactive-jwt.md), con plan en
+  [arquitectura y hoja de ruta](plans/2026-08-07-architecture-and-roadmap.md).
+- La auditoría por eventos ([ADR-0002](governance/adr/adr-0002-domain-events-modulith-registry.md))
+  usa entrega síncrona (`ApplicationEventPublisher`); el Event Publication Registry de Modulith
+  requiere almacén persistente (se reconsidera con ADR-0004).
+- El Quality Gate contra SonarQube real requiere la service connection y la extensión en la
+  organización.
+
+## Evolución posterior
+
+Decisiones y etapas: [gobierno](governance/README.md) y
+[hoja de ruta](plans/2026-08-07-architecture-and-roadmap.md).
+
+| Etapa | Cambio | Criterios tocados |
+|---|---|---|
+| 0 | ADRs, C4, convención de idioma | 23 |
+| 1 | DTO de registro único; puerto `SnapshotCapable` | 1, 11, 13, 20 |
+| 2 | Eventos de dominio; auditoría por listener | 1, 4, 7, 10 |
+| — | Interactores por operación; mapeo en interactor; `TenantStatusMustBeActiveRule` | 11, 12, 20 |
+
+Etapas 3 y 4 (seguridad real, persistencia real) están aceptadas y pendientes de implementación.
+La verificación del proyecto es `./mvnw verify` (Java 25 según el POM).

@@ -1,38 +1,37 @@
 package co.edu.uco.seguridad.pdp.tenants.application.rule.impl;
 
 import co.edu.uco.seguridad.pdp.commons.TenantId;
-import co.edu.uco.seguridad.pdp.tenants.application.rule.TenantMustBeActiveRule;
-import co.edu.uco.seguridad.pdp.tenants.application.exception.TenantNotActiveException;
 import co.edu.uco.seguridad.pdp.tenants.application.exception.TenantNotFoundException;
 import co.edu.uco.seguridad.pdp.tenants.application.port.primary.dto.response.TenantResponse;
 import co.edu.uco.seguridad.pdp.tenants.application.port.secondary.repository.TenantRepository;
-import co.edu.uco.seguridad.pdp.tenants.domain.Tenant;
+import co.edu.uco.seguridad.pdp.tenants.application.rule.TenantMustBeActiveRule;
+import co.edu.uco.seguridad.pdp.tenants.application.rule.TenantStatusMustBeActiveRule;
 import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 
 /**
- * Regla respaldada por repositorio. Separa las dos formas en que la verificación puede fallar para que los
- * llamadores y clientes obtengan una causa, no solo un rechazo.
+ * Regla compuesta respaldada por repositorio: carga el inquilino y delega el chequeo de estado
+ * a {@link TenantStatusMustBeActiveRule}.
  */
 public final class TenantMustBeActiveRuleImpl implements TenantMustBeActiveRule {
 
     private final TenantRepository repository;
+    private final TenantStatusMustBeActiveRule statusMustBeActive;
 
-    public TenantMustBeActiveRuleImpl(TenantRepository repository) {
+    public TenantMustBeActiveRuleImpl(TenantRepository repository,
+                                      TenantStatusMustBeActiveRule statusMustBeActive) {
         this.repository = Objects.requireNonNull(repository, "se requiere repositorio de inquilino");
+        this.statusMustBeActive = Objects.requireNonNull(statusMustBeActive, "se requiere regla de estado activo");
     }
 
     @Override
     public Mono<TenantResponse> execute(TenantId tenantId) {
         return repository.findById(tenantId)
                 .switchIfEmpty(Mono.error(() -> new TenantNotFoundException(tenantId)))
-                .flatMap(this::requireActive);
-    }
-
-    private Mono<TenantResponse> requireActive(Tenant tenant) {
-        return tenant.isActive()
-                ? Mono.just(new TenantResponse(tenant.id(), tenant.status()))
-                : Mono.error(new TenantNotActiveException(tenant.id(), tenant.status()));
+                .map(tenant -> {
+                    statusMustBeActive.execute(tenant);
+                    return new TenantResponse(tenant.id(), tenant.status());
+                });
     }
 }

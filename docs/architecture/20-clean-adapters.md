@@ -32,7 +32,7 @@ Las decisiones que podrían haberse filtrado al adaptador y no lo hicieron:
 
 ## Ubicación verificable
 
-- Web: [`recursos/infrastructure/web`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/web)
+- Web: [`recursos/infrastructure/adapter/primary/web`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web)
 - Persistencia dummy: [`InMemoryProtectedResourceRepository.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/secondary/persistence/repository/InMemoryProtectedResourceRepository.java)
 - Auditoría dummy: [`InMemoryAuditAdapter.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/secondary/audit/InMemoryAuditAdapter.java)
 
@@ -41,3 +41,8 @@ Las decisiones que podrían haberse filtrado al adaptador y no lo hicieron:
 La prueba HTTP crea una aplicación sin conocer el dummy, y las pruebas de dominio rechazan un código
 inválido sin WebFlux. El mapper traduce formatos, pero nunca toma decisiones de negocio: cuando una
 traducción necesite un `if` sobre significado, ese `if` pertenece a una regla.
+
+Cuando la auditoría dummy se sustituya por un listener de eventos de dominio
+([ADR-0002](../governance/adr/adr-0002-domain-events-modulith-registry.md)), esta tabla gana una fila:
+"a quién le importa que algo se registró" tampoco es una decisión del adaptador web ni del caso de
+uso — la decide quien escucha el evento.

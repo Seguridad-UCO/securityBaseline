@@ -6,6 +6,7 @@ import co.edu.uco.seguridad.pdp.tenants.application.exception.TenantNotActiveExc
 import co.edu.uco.seguridad.pdp.tenants.application.exception.TenantNotFoundException;
 import co.edu.uco.seguridad.pdp.tenants.application.port.secondary.repository.TenantRepository;
 import co.edu.uco.seguridad.pdp.tenants.application.rule.impl.TenantMustBeActiveRuleImpl;
+import co.edu.uco.seguridad.pdp.tenants.application.rule.impl.TenantStatusMustBeActiveRuleImpl;
 import co.edu.uco.seguridad.pdp.tenants.domain.Tenant;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
@@ -36,7 +37,8 @@ class TenantMustBeActiveRuleImplTests {
 
     @Test
     void reports_an_unknown_tenant_as_not_found() {
-        TenantMustBeActiveRuleImpl rule = new TenantMustBeActiveRuleImpl(id -> Mono.empty());
+        TenantMustBeActiveRuleImpl rule = new TenantMustBeActiveRuleImpl(
+                id -> Mono.empty(), new TenantStatusMustBeActiveRuleImpl());
 
         StepVerifier.create(rule.execute(TENANT))
                 .expectError(TenantNotFoundException.class)
@@ -54,6 +56,6 @@ class TenantMustBeActiveRuleImplTests {
 
     private static TenantMustBeActiveRuleImpl ruleFor(Tenant tenant) {
         TenantRepository repository = id -> id.equals(tenant.id()) ? Mono.just(tenant) : Mono.empty();
-        return new TenantMustBeActiveRuleImpl(repository);
+        return new TenantMustBeActiveRuleImpl(repository, new TenantStatusMustBeActiveRuleImpl());
     }
 }

@@ -1,0 +1,170 @@
+# Arquitectura objetivo y hoja de ruta
+
+[← Planes](.) · [Gobierno (ADR)](../governance/README.md) · [Diagramas C4](../architecture/c4/README.md)
+
+## Contexto
+
+Hoja de ruta de evolución de `securityBaseline`: Clean Architecture + hexagonal por módulo sobre
+Spring Modulith, stack reactivo (WebFlux). Las decisiones grandes están en
+[gobierno](../governance/README.md) (ADR-0001 a ADR-0004).
+
+Regla invariante: `domain/` y `application/` no cambian cuando entran seguridad o persistencia
+reales — solo se añaden o sustituyen adaptadores en `infrastructure/`.
+
+## Arquitectura por módulo
+
+```mermaid
+flowchart TB
+    subgraph EXT["Actores / sistemas externos"]
+      CLIENT["Cliente HTTP"]
+      DB[("Base de datos")]
+      IDP["Proveedor de identidad / auditoría"]
+    end
+
+    subgraph MOD["Módulo Modulith"]
+      direction TB
+      subgraph INFRA["infrastructure"]
+        PADAPT["Adaptador primario\n(Controller + DTOs web)"]
+        SADAPT["Adaptadores secundarios"]
+        CFG["@Configuration"]
+      end
+      subgraph APP["application"]
+        PPORT["Interactor (puerto primario)"]
+        UC["Caso de uso"]
+        RV["Rules validator + reglas"]
+        SPORT["Puertos secundarios"]
+      end
+      subgraph DOM["domain"]
+        AGG["AggregateRoot + entidades"]
+        VO["Value objects"]
+        SPEC["Specification"]
+        EVT["Domain events"]
+      end
+    end
+
+    CLIENT -->|request| PADAPT
+    PADAPT --> PPORT --> UC
+    UC --> RV --> AGG
+    UC --> SPORT
+    SPORT -.implementado por.-> SADAPT
+    SADAPT --> DB
+    SADAPT --> IDP
+    AGG -->|registra| EVT
+    CFG -. cablea .-> PPORT & UC & SPORT & SADAPT
+```
+
+**Dependencias:** `infrastructure → application → domain`. Los puertos secundarios se declaran en
+`application` y se implementan en `infrastructure`. El dominio no importa Spring ni Reactor.
+
+### Plantilla de carpetas por módulo
+
+```text
+<módulo>/
+├── domain/                            entidades, AggregateRoot, VOs, specifications, eventos
+├── application/
+│   ├── model/                         contextos de aplicación (p. ej. hechos compuestos para reglas)
+│   ├── usecase/ (+ impl)              orquestación (Reactor); devuelve dominio cuando aplica
+│   ├── port/
+│   │   ├── primary/
+│   │   │   ├── dto/{request,response}
+│   │   │   ├── mapper/                proyección dominio → DTO de salida
+│   │   │   └── interactor/ (+ impl)   un contrato por operación; mapea y ejecuta el caso de uso
+│   │   └── secondary/                 Repository · EventPublisher · TransactionPort
+│   ├── rule/ + rulesvalidator/
+│   └── exception/
+└── infrastructure/
+    ├── config/                        @Configuration (DI manual)
+    └── adapter/
+        ├── primary/web/               controller + dto/request/raw + mapper
+        └── secondary/                 persistence · audit · transaction
+```
+
+## Estructura del contenedor PDP
+
+```mermaid
+flowchart TB
+    CLIENT["Cliente HTTP"]
+
+    subgraph SHARED["shared + crosscutting"]
+      SEC["security/ (previsto)\nJWT reactivo"]
+      CORR["CorrelationWebFilter"]
+      ERRH["ApiErrorHandler"]
+      EVTP["DomainEventPublisher"]
+      PORTS["TimeProvider · IdentifierGenerator · ReactiveTransactionPort"]
+    end
+
+    subgraph PDP["pdp/"]
+      COMMONS["commons\nVOs + AggregateRoot"]
+      TEN["tenants\nFindTenantInteractor · TenantMustBeActiveRule"]
+      APLI["aplicaciones\nRegister/RemoveApplicationInteractor"]
+      REC["recursos\nregistro/consulta · saga E-1"]
+    end
+
+    subgraph ADAPT["Adaptadores secundarios"]
+      SURDB[("SurrealDB (previsto)")]
+      AUDIT["Auditoría por eventos"]
+    end
+
+    CLIENT --> CORR --> REC
+    REC --> APLI --> TEN
+    APLI --> COMMONS
+    REC --> COMMONS
+    TEN --> COMMONS
+    REC -->|publica eventos| EVTP --> AUDIT
+    REC -.puertos.-> SURDB
+    ERRH -.traduce.-> CLIENT
+```
+
+Invariante Modulith (`ModulithStructureTests`):
+`aplicaciones → commons, tenants` y `recursos → commons, tenants, aplicaciones`.
+
+## Flujo de una operación HTTP
+
+```text
+Controller  →  Interactor.execute(raw)
+                 ├─ mapea raw → DTO tipado
+                 ├─ UseCase.execute(dto)
+                 │    ├─ RulesValidator → Rules
+                 │    └─ orquestación / puertos secundarios → dominio
+                 └─ proyecta dominio → respuesta HTTP
+Controller  →  ApiResponse
+```
+
+Cada interactor y cada caso de uso extiende una forma genérica
+(`ReactiveOperation` / `ReactiveOperationWithoutResult`) y declara un solo método `execute`.
+
+## Qué se mantiene / incorpora / retira
+
+| Acción | Elemento |
+|---|---|
+| Mantener | Clean+Hexagonal por módulo Modulith; DI manual en `@Configuration` |
+| Mantener | VOs auto-validados; Specification; motor de reglas |
+| Mantener | Entrada String→VO sin `starter-validation`; `ApiErrorHandler` RFC7807 |
+| Mantener | Capa interactor ([ADR-0001](../governance/adr/adr-0001-keep-interactor-layer.md)) |
+| Incorporar | `AggregateRoot` + eventos ([ADR-0002](../governance/adr/adr-0002-domain-events-modulith-registry.md)) — hecho |
+| Incorporar | Spring Security reactivo + JWT ([ADR-0003](../governance/adr/adr-0003-real-security-reactive-jwt.md)) |
+| Incorporar | Persistencia SurrealDB ([ADR-0004](../governance/adr/adr-0004-real-persistence-surrealdb.md)) |
+| Retirado | Fachadas multi-método (`*ModuleApi` / `*Service`); DTO de registro duplicado |
+
+## Etapas
+
+Cada etapa deja `./mvnw verify` en verde (compilación, fronteras Modulith, tests, cobertura).
+
+| Etapa | Contenido | Estado |
+|---|---|---|
+| 0 | ADRs, C4, convención de idioma | Completada |
+| 1 | Colapso DTO duplicado; puerto `SnapshotCapable` | Completada |
+| 2 | Eventos de dominio + auditoría por listener | Completada |
+| — | Interactores por operación; mapeo en interactor; reglas de tenant separadas | Completada |
+| 3 | Seguridad real (PEP JWT) | Pendiente (ADR-0003) |
+| 4 | Persistencia SurrealDB | Pendiente (ADR-0004) |
+| 5 | Sincronización final de documentación y evidencia | En curso |
+
+## Verificación
+
+- `./mvnw verify` — el POM y el pipeline usan Java 25.
+- `ApplicationModules.of(PdpApplication.class).verify()` — fronteras Modulith.
+- Tests de `domain/` y `application/` sin levantar Spring.
+- Eventos: `ProtectedResourceAuditListenerTests`.
+- Etapa 3: `WebTestClient` para 401/403 y tenant desde el principal.
+- Etapa 4: Testcontainers con SurrealDB.

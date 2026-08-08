@@ -4,6 +4,7 @@ import co.edu.uco.seguridad.crosscutting.messages.WebContractMessages;
 import co.edu.uco.seguridad.pdp.commons.PageWindow;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
 import co.edu.uco.seguridad.pdp.commons.exception.InvalidValueException;
+import co.edu.uco.seguridad.shared.web.RequestFieldParser;
 import co.edu.uco.seguridad.shared.web.exception.ConflictingRequestParametersException;
 import co.edu.uco.seguridad.shared.web.exception.MalformedRequestFieldException;
 

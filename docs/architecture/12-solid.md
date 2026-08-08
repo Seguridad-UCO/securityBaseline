@@ -22,7 +22,7 @@ infraestructura.
 - **LSP:** `SnapshotReactiveTransactionAdapter` e `InMemoryProtectedResourceRepository` sustituyen a
   sus puertos; SurrealDB podrá hacerlo sin tocar el caso de uso.
 - **ISP:** los contratos son mínimos y separados — `BusinessRule` (sin I/O), `ReactiveBusinessRule`
-  (sin retorno), `ReactiveBusinessRuleWithResult` (con retorno), `AuditPort`, `TimeProvider`,
+  (sin retorno), `ReactiveBusinessRuleWithResult` (con retorno), `DomainEventPublisher`, `TimeProvider`,
   `IdentifierGenerator`, `ReactiveTransactionPort`. Ningún implementador recibe métodos que no usa.
 - **DIP:** los servicios reciben interfaces por constructor; `ConcurrentHashMap` y las clases de
   Spring solo aparecen en `infrastructure`.

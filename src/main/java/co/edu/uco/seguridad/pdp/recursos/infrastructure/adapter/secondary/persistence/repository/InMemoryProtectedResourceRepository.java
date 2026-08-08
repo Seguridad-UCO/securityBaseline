@@ -11,6 +11,7 @@ import co.edu.uco.seguridad.pdp.recursos.domain.ProtectedResource;
 import co.edu.uco.seguridad.pdp.recursos.domain.ResourceCode;
 import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.secondary.persistence.entity.ProtectedResourceEntity;
 import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.secondary.persistence.mapper.ProtectedResourcePersistenceMapper;
+import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.secondary.persistence.transaction.SnapshotCapable;
 import reactor.core.publisher.Mono;
 
 import java.util.Comparator;
@@ -27,7 +28,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * una cláusula {@code WHERE} en una base de datos real. El orden se fija por el instante de registro y luego
  * por id, para que la paginación sea estable en lugar de depender del orden del hash.</p>
  */
-public final class InMemoryProtectedResourceRepository implements ProtectedResourceRepository {
+public final class InMemoryProtectedResourceRepository
+        implements ProtectedResourceRepository, SnapshotCapable<Map<String, ProtectedResourceEntity>> {
 
     private static final Comparator<ProtectedResource> STABLE_ORDER =
             Comparator.comparing(ProtectedResource::registeredAt)
@@ -74,13 +76,15 @@ public final class InMemoryProtectedResourceRepository implements ProtectedResou
     }
 
     /**
-     * Visible solo para {@link co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.secondary.persistence.transaction.SnapshotReactiveTransactionAdapter};
-     * el puerto nunca expone esto.
+     * Implementa {@link SnapshotCapable}, no {@link ProtectedResourceRepository}: el puerto de
+     * aplicación nunca expone esto, solo el adaptador de transacción la usa.
      */
+    @Override
     public Map<String, ProtectedResourceEntity> snapshot() {
         return new LinkedHashMap<>(rows);
     }
 
+    @Override
     public void restore(Map<String, ProtectedResourceEntity> snapshot) {
         rows.clear();
         rows.putAll(snapshot);

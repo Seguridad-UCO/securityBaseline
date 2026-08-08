@@ -17,33 +17,29 @@ infraestructura y ocultan las inconsistencias.
 ## Implementación
 
 ```text
-HTTP → RawRequest DTO → mapper → DTO validado → Controller
-                                                    ↓
-                                               Interactor
-                                                    ↓
-                                                Use Case
-                                                    ↓
-                                            Rules Validator
-                                                    ↓
-                                    Rules sin repo · Rules con repo
-                                                    ↓
-                                         Domain · port/out → adapters
-                                                    ↓
-                                     Interactor → Response mapper
-                                                    ↓
-                                              HTTP Response
+HTTP → Controller (arma RawRequest)
+            ↓
+       Interactor.execute(raw)
+            ├─ mapper → DTO tipado
+            ├─ Use Case
+            │     ├─ Rules Validator → Rules
+            │     └─ Domain · port/secondary → adapters
+            └─ proyección → respuesta HTTP
+            ↓
+       Controller → ApiResponse
 ```
 
-El interactor adapta y mapea; el caso de uso orquesta; el rules validator compone reglas; cada regla
-decide una cosa. Ninguna de esas capas repite el trabajo de otra.
+El controlador solo recibe, ejecuta el interactor y envuelve. El interactor mapea; el caso de uso
+orquesta; el rules validator compone reglas; cada regla decide una cosa. Ver
+[ADR-0001](../governance/adr/adr-0001-keep-interactor-layer.md).
 
 ## Ubicación verificable
 
 - Entrada: [`ProtectedApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/controller/ProtectedApplicationController.java)
-- Interactores: [`web/interactor`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/web/interactor)
+- Interactores: [`application/port/primary/interactor`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/port/primary/interactor)
 - Orquestación: [`RegisterProtectedApplicationUseCaseImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/usecase/impl/RegisterProtectedApplicationUseCaseImpl.java)
 - Reglas: [`recursos/application/rule`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/rule)
-- Salidas: [`recursos/application/port/out`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/port/out)
+- Salidas: [`recursos/application/port/secondary`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/port/secondary)
 
 ## Evidencia y límite
 

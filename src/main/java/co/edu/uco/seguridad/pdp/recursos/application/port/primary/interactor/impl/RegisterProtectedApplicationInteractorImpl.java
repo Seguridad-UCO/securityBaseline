@@ -1,15 +1,18 @@
 package co.edu.uco.seguridad.pdp.recursos.application.port.primary.interactor.impl;
 
-import co.edu.uco.seguridad.pdp.recursos.application.usecase.RegisterProtectedApplicationUseCase;
-import co.edu.uco.seguridad.pdp.recursos.application.port.primary.dto.response.ProtectedApplicationResponse;
-import co.edu.uco.seguridad.pdp.recursos.application.port.primary.dto.request.RegisterProtectedApplicationRequest;
 import co.edu.uco.seguridad.pdp.recursos.application.port.primary.interactor.RegisterProtectedApplicationInteractor;
+import co.edu.uco.seguridad.pdp.recursos.application.port.primary.mapper.ProtectedResourceCatalogMapper;
+import co.edu.uco.seguridad.pdp.recursos.application.usecase.RegisterProtectedApplicationUseCase;
+import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.dto.request.raw.RegisterProtectedApplicationRawRequest;
+import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.dto.response.ProtectedApplicationResponse;
+import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.mapper.ProtectedApplicationResponseMapper;
+import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.mapper.RegisterProtectedApplicationRequestMapper;
 import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 
 /**
- * Delega en el caso de uso. Mantiene el controlador delgado y el caso de uso enfocado en orquestación.
+ * Mapea el payload HTTP → DTO tipado, ejecuta el caso de uso y proyecta dominio → respuesta HTTP.
  */
 public final class RegisterProtectedApplicationInteractorImpl implements RegisterProtectedApplicationInteractor {
 
@@ -20,7 +23,10 @@ public final class RegisterProtectedApplicationInteractorImpl implements Registe
     }
 
     @Override
-    public Mono<ProtectedApplicationResponse> execute(RegisterProtectedApplicationRequest dto) {
-        return useCase.execute(dto);
+    public Mono<ProtectedApplicationResponse> execute(RegisterProtectedApplicationRawRequest raw) {
+        return Mono.fromSupplier(() -> RegisterProtectedApplicationRequestMapper.toRequest(raw))
+                .flatMap(useCase::execute)
+                .map(ProtectedResourceCatalogMapper::toResponse)
+                .map(ProtectedApplicationResponseMapper::toResponse);
     }
 }

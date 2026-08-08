@@ -5,7 +5,6 @@ import co.edu.uco.seguridad.pdp.commons.ApplicationName;
 import co.edu.uco.seguridad.pdp.commons.PageWindow;
 import co.edu.uco.seguridad.pdp.commons.ResourceId;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
-import co.edu.uco.seguridad.pdp.recursos.application.port.primary.dto.response.ProtectedApplicationResponse;
 import co.edu.uco.seguridad.pdp.recursos.application.port.primary.dto.request.SearchProtectedApplicationsRequest;
 import co.edu.uco.seguridad.pdp.recursos.application.rulesvalidator.impl.SearchProtectedApplicationsRulesValidatorImpl;
 import co.edu.uco.seguridad.pdp.recursos.domain.ActionCode;
@@ -70,7 +69,7 @@ class SearchProtectedApplicationsUseCaseImplTests {
 
         StepVerifier.create(service.execute(dto(byName, PageWindow.defaultWindow())))
                 .assertNext(page -> assertThat(page.content())
-                        .extracting(ProtectedApplicationResponse::resourceCode)
+                        .extracting(ProtectedResource::code)
                         .containsExactly(new ResourceCode("estudiantes"), new ResourceCode("docentes")))
                 .verifyComplete();
     }

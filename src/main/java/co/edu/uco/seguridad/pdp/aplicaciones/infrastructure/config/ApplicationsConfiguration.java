@@ -1,9 +1,9 @@
 package co.edu.uco.seguridad.pdp.aplicaciones.infrastructure.config;
 
-import co.edu.uco.seguridad.pdp.aplicaciones.ApplicationsModuleApi;
-import co.edu.uco.seguridad.pdp.aplicaciones.application.ApplicationsService;
-import co.edu.uco.seguridad.pdp.aplicaciones.application.usecase.RegisterApplicationUseCase;
-import co.edu.uco.seguridad.pdp.aplicaciones.application.usecase.RemoveApplicationUseCase;
+import co.edu.uco.seguridad.pdp.aplicaciones.application.port.primary.interactor.RegisterApplicationInteractor;
+import co.edu.uco.seguridad.pdp.aplicaciones.application.port.primary.interactor.RemoveApplicationInteractor;
+import co.edu.uco.seguridad.pdp.aplicaciones.application.port.primary.interactor.impl.RegisterApplicationInteractorImpl;
+import co.edu.uco.seguridad.pdp.aplicaciones.application.port.primary.interactor.impl.RemoveApplicationInteractorImpl;
 import co.edu.uco.seguridad.pdp.aplicaciones.application.port.secondary.repository.ApplicationRepository;
 import co.edu.uco.seguridad.pdp.aplicaciones.application.rule.ApplicationNameMustBeUniqueForTenantRule;
 import co.edu.uco.seguridad.pdp.aplicaciones.application.rule.ApplicationNameMustNotBeReservedRule;
@@ -11,11 +11,14 @@ import co.edu.uco.seguridad.pdp.aplicaciones.application.rule.impl.ApplicationNa
 import co.edu.uco.seguridad.pdp.aplicaciones.application.rule.impl.ApplicationNameMustNotBeReservedRuleImpl;
 import co.edu.uco.seguridad.pdp.aplicaciones.application.rulesvalidator.RegisterApplicationRulesValidator;
 import co.edu.uco.seguridad.pdp.aplicaciones.application.rulesvalidator.impl.RegisterApplicationRulesValidatorImpl;
+import co.edu.uco.seguridad.pdp.aplicaciones.application.usecase.RegisterApplicationUseCase;
+import co.edu.uco.seguridad.pdp.aplicaciones.application.usecase.RemoveApplicationUseCase;
 import co.edu.uco.seguridad.pdp.aplicaciones.application.usecase.impl.RegisterApplicationUseCaseImpl;
 import co.edu.uco.seguridad.pdp.aplicaciones.application.usecase.impl.RemoveApplicationUseCaseImpl;
 import co.edu.uco.seguridad.pdp.aplicaciones.infrastructure.adapter.secondary.persistence.repository.InMemoryApplicationRepository;
 import co.edu.uco.seguridad.pdp.aplicaciones.infrastructure.properties.ApplicationCatalogProperties;
 import co.edu.uco.seguridad.pdp.tenants.application.rule.TenantMustBeActiveRule;
+import co.edu.uco.seguridad.shared.event.DomainEventPublisher;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -56,9 +59,10 @@ public class ApplicationsConfiguration {
     @Bean
     RegisterApplicationUseCase registerApplicationUseCase(RegisterApplicationRulesValidator rules,
                                                           ApplicationRepository repository,
+                                                          DomainEventPublisher events,
                                                           IdentifierGenerator identifiers,
                                                           TimeProvider time) {
-        return new RegisterApplicationUseCaseImpl(rules, repository, identifiers, time);
+        return new RegisterApplicationUseCaseImpl(rules, repository, events, identifiers, time);
     }
 
     @Bean
@@ -67,8 +71,12 @@ public class ApplicationsConfiguration {
     }
 
     @Bean
-    ApplicationsModuleApi applicationsModuleApi(RegisterApplicationUseCase registerUseCase,
-                                                RemoveApplicationUseCase removeUseCase) {
-        return new ApplicationsService(registerUseCase, removeUseCase);
+    RegisterApplicationInteractor registerApplicationInteractor(RegisterApplicationUseCase useCase) {
+        return new RegisterApplicationInteractorImpl(useCase);
+    }
+
+    @Bean
+    RemoveApplicationInteractor removeApplicationInteractor(RemoveApplicationUseCase useCase) {
+        return new RemoveApplicationInteractorImpl(useCase);
     }
 }

@@ -1,4 +1,4 @@
-package co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.dto.request;
+package co.edu.uco.seguridad.shared.web;
 
 import co.edu.uco.seguridad.crosscutting.messages.WebContractMessages;
 import co.edu.uco.seguridad.pdp.commons.exception.InvalidValueException;
@@ -9,25 +9,22 @@ import java.util.Optional;
 import java.util.function.Function;
 
 /**
- * El vocabulario que los DTOs validados usan dentro de sus setters.
- *
- * <p>{@link #parse} es el importante: delega la decisión de formato al objeto de valor
- * y solo agrega qué campo llevaba el valor incorrecto. Repetir una expresión regular aquí le daría
- * al límite una segunda definición divergente de lo que es un código válido.</p>
+ * Utilidad compartida del adaptador web: convierte campos String del transporte en tipos tipados,
+ * nombrando el campo cuando el value object o el parseo fallan.
  */
-final class RequestFieldParser {
+public final class RequestFieldParser {
 
     private RequestFieldParser() {
     }
 
-    static String requirePresent(String field, String value) {
+    public static String requirePresent(String field, String value) {
         if (value == null || value.isBlank()) {
             throw new MissingRequestFieldException(field);
         }
         return value.trim();
     }
 
-    static <T> T parse(String field, String value, Function<String, T> factory) {
+    public static <T> T parse(String field, String value, Function<String, T> factory) {
         try {
             return factory.apply(requirePresent(field, value));
         } catch (InvalidValueException cause) {
@@ -35,11 +32,11 @@ final class RequestFieldParser {
         }
     }
 
-    static <T> Optional<T> parseOptional(String field, String value, Function<String, T> factory) {
+    public static <T> Optional<T> parseOptional(String field, String value, Function<String, T> factory) {
         return optional(value).map(present -> parse(field, present, factory));
     }
 
-    static int parseInt(String field, String value) {
+    public static int parseInt(String field, String value) {
         try {
             return Integer.parseInt(requirePresent(field, value));
         } catch (NumberFormatException cause) {
@@ -47,7 +44,7 @@ final class RequestFieldParser {
         }
     }
 
-    static Optional<String> optional(String value) {
+    public static Optional<String> optional(String value) {
         return Optional.ofNullable(value).map(String::trim).filter(present -> !present.isEmpty());
     }
 }

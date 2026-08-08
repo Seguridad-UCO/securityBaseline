@@ -11,8 +11,12 @@ verifica.
   el estado real de cada criterio.
 - [Matriz de cumplimiento](criteria-compliance-matrix.md): estado inicial, problema encontrado,
   cambio realizado y estado final, criterio por criterio.
-- [Alineación PDP / Spring Modulith](architecture/pdp-modulith-alignment.md): estructura y
-  dependencias ejecutables frente a la arquitectura de referencia.
+- [Estructura PDP / Spring Modulith](architecture/pdp-modulith-alignment.md): módulos, contratos
+  publicados y flujo E-1.
+- [Arquitectura y hoja de ruta](plans/2026-08-07-architecture-and-roadmap.md): objetivo y etapas.
+- [Gobierno arquitectónico](governance/README.md): registro de decisiones (ADR) — interactor, eventos
+  de dominio, seguridad real y persistencia real.
+- [Diagramas C4](architecture/c4/README.md): contexto y contenedor, estado actual y evolución prevista.
 - [Arquitectura](architecture/README.md): 1, 2, 11, 12, 20, 21 y 22.
 - [Dominio y datos](domain-and-data/README.md): 3, 10 y 15 a 19.
 - [Interfaces](interfaces/README.md): 5, 6, 13 y 14.

@@ -20,30 +20,40 @@ fuente de verdad productiva.
 | `InMemoryTenantRepository` | `TenantRepository` | Sirve el catálogo de tenants desde configuración |
 | `InMemoryApplicationRepository` | `ApplicationRepository` | Unicidad por tenant sin distinguir mayúsculas |
 | `InMemoryProtectedResourceRepository` | `ProtectedResourceRepository` | Ejecuta la specification, ordena y pagina |
-| `InMemoryAuditAdapter` | `AuditPort` | Registra identificadores y momento, nunca el payload |
 | `SnapshotReactiveTransactionAdapter` | `ReactiveTransactionPort` | Copia y restaura ante error |
 
-Los dummies almacenan **entidades de persistencia**, no objetos de dominio. Eso no es ceremonia: es
-lo que obliga a que el mapper exista y se ejerza desde el primer día, de modo que sustituir el
-almacén no descubra después que el modelo estaba acoplado a la fila.
+`InMemoryAuditAdapter` ya no está en esta tabla porque no implementa ningún puerto: desde el Stage 2
+escucha `ProtectedResourceRegistered` con `@EventListener` en vez de que el caso de uso la invoque
+por un puerto de auditoría (ver [ADR-0002](../governance/adr/adr-0002-domain-events-modulith-registry.md)).
+Sigue siendo un dummy — solo identificadores, nunca el payload — pero ya no es un "adaptador detrás de
+un puerto" en el mismo sentido que los demás; es un consumidor de eventos.
 
-El adaptador de auditoría guarda solo identificadores. Una auditoría que copiara el payload se
-convertiría en una segunda copia de los datos que la plataforma debe proteger.
+Los dummies restantes almacenan **entidades de persistencia**, no objetos de dominio. Eso no es
+ceremonia: es lo que obliga a que el mapper exista y se ejerza desde el primer día, de modo que
+sustituir el almacén no descubra después que el modelo estaba acoplado a la fila.
 
-Un solo detalle de acoplamiento, y está confinado: la configuración expone el repositorio de
-recursos por su tipo concreto, porque el adaptador de transacción necesita la capacidad de snapshot
-que el puerto deliberadamente no declara. Desaparece con el dummy.
+El acoplamiento entre la configuración y el tipo concreto del dummy —que existía porque el adaptador
+de transacción necesitaba la capacidad de snapshot que el puerto de repositorio deliberadamente no
+declara— se resolvió en el Stage 1 con un puerto dedicado,
+[`SnapshotCapable`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/secondary/persistence/transaction/SnapshotCapable.java):
+`InMemoryProtectedResourceRepository` lo implementa junto con `ProtectedResourceRepository`, y
+`ResourcesConfiguration` cablea cada punto de inyección por el contrato que le corresponde, nunca por
+el tipo concreto. `SnapshotCapable` desaparece junto con el dummy cuando la persistencia real
+implemente `ReactiveTransactionPort` con la transacción propia del motor
+([ADR-0004](../governance/adr/adr-0004-real-persistence-surrealdb.md)).
 
 ## Ubicación verificable
 
-- [`recursos/infrastructure/persistence`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/persistence)
-- [`recursos/infrastructure/audit`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/audit)
-- [`aplicaciones/infrastructure/persistence`](../../src/main/java/co/edu/uco/seguridad/pdp/aplicaciones/infrastructure/persistence)
-- [`tenants/infrastructure/persistence`](../../src/main/java/co/edu/uco/seguridad/pdp/tenants/infrastructure/persistence)
+- [`recursos/infrastructure/adapter/secondary/persistence`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/secondary/persistence)
+- [`recursos/infrastructure/adapter/secondary/audit`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/secondary/audit)
+- [`aplicaciones/infrastructure/adapter/secondary/persistence`](../../src/main/java/co/edu/uco/seguridad/pdp/aplicaciones/infrastructure/adapter/secondary/persistence)
+- [`tenants/infrastructure/adapter/secondary/persistence`](../../src/main/java/co/edu/uco/seguridad/pdp/tenants/infrastructure/adapter/secondary/persistence)
 - Configuración: [`ResourcesConfiguration.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/config/ResourcesConfiguration.java)
 
 ## Evidencia y límite
 
 La prueba de rollback usa el adaptador de transacción y el repositorio reales del dummy, no un mock:
 verifica el comportamiento, no la interacción. Los dummies se reemplazan por adaptadores SurrealDB y
-de auditoría reales sin cambiar dominio, casos de uso, reglas ni controlador.
+de auditoría reales sin cambiar dominio, casos de uso, reglas ni controlador — ver
+[ADR-0004](../governance/adr/adr-0004-real-persistence-surrealdb.md) y
+[ADR-0002](../governance/adr/adr-0002-domain-events-modulith-registry.md) (auditoría por eventos).

@@ -79,7 +79,17 @@
 			<groupId>org.springframework.modulith</groupId>
 			<artifactId>spring-modulith-starter-core</artifactId>
 		</dependency>
-
+		<!--
+			spring-modulith-events-api/-core NOT added on purpose (ADR-0002, revisado durante la
+			implementación de la etapa 2). @ApplicationModuleListener requiere que
+			spring-modulith-events-core autoconfigure un EventPublicationRegistry, y ningún
+			backend de ese registro (JDBC/JPA/MongoDB/Neo4j) encaja con "todavía no hay base de
+			datos real": añadir uno solo para el registro de eventos sería una base de datos
+			desechable disfrazada de infraestructura de eventos. La publicación de eventos de
+			dominio usa el ApplicationEventPublisher de Spring puro (ver shared/event); se revisita
+			cuando la persistencia real (ADR-0004) aporte un almacén que el registro de Modulith
+			pueda usar de verdad.
+		-->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>

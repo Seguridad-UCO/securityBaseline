@@ -12,4 +12,6 @@
 | 21 | [Modelo refinado](21-refined-model.md) |
 | 22 | [Decisión reactiva](22-reactive-architecture.md) |
 
-La estructura aplicable del PDP se detalla en [Alineación PDP / Spring Modulith](pdp-modulith-alignment.md).
+La estructura del PDP se detalla en [Estructura PDP / Spring Modulith](pdp-modulith-alignment.md).
+Las decisiones detrás de esta estructura están registradas en [Gobierno arquitectónico](../governance/README.md)
+(ADR). El panorama visual (contexto y contenedor) está en [Diagramas C4](c4/README.md).

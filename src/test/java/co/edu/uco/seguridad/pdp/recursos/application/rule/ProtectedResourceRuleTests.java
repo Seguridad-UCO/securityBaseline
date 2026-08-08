@@ -9,6 +9,7 @@ import co.edu.uco.seguridad.pdp.commons.ResultPage;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
 import co.edu.uco.seguridad.pdp.recursos.application.exception.DuplicateProtectedResourceException;
 import co.edu.uco.seguridad.pdp.recursos.application.exception.ResourceTenantMismatchException;
+import co.edu.uco.seguridad.pdp.recursos.application.model.ProtectedResourceRegistration;
 import co.edu.uco.seguridad.pdp.recursos.application.port.primary.dto.request.RegisterProtectedApplicationRequest;
 import co.edu.uco.seguridad.pdp.recursos.application.port.secondary.repository.ProtectedResourceRepository;
 import co.edu.uco.seguridad.pdp.recursos.application.rule.impl.ProtectedResourceMustBeUniqueRuleImpl;

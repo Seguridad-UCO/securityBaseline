@@ -1,7 +1,6 @@
 package co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.secondary.persistence.transaction;
 
 import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.secondary.persistence.entity.ProtectedResourceEntity;
-import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.secondary.persistence.repository.InMemoryProtectedResourceRepository;
 import co.edu.uco.seguridad.shared.port.ReactiveTransactionPort;
 import reactor.core.publisher.Mono;
 
@@ -20,9 +19,9 @@ import java.util.function.Supplier;
  */
 public final class SnapshotReactiveTransactionAdapter implements ReactiveTransactionPort {
 
-    private final InMemoryProtectedResourceRepository repository;
+    private final SnapshotCapable<Map<String, ProtectedResourceEntity>> repository;
 
-    public SnapshotReactiveTransactionAdapter(InMemoryProtectedResourceRepository repository) {
+    public SnapshotReactiveTransactionAdapter(SnapshotCapable<Map<String, ProtectedResourceEntity>> repository) {
         this.repository = Objects.requireNonNull(repository, "se requiere repositorio de recurso protegido");
     }
 

@@ -1,13 +1,11 @@
-package co.edu.uco.seguridad.pdp.recursos.application.usecase.mapper;
+package co.edu.uco.seguridad.pdp.recursos.application.port.primary.mapper;
 
 import co.edu.uco.seguridad.pdp.recursos.application.port.primary.dto.response.ProtectedApplicationResponse;
 import co.edu.uco.seguridad.pdp.recursos.domain.ProtectedResource;
 
 /**
- * Mapper Entity → DTO del caso de uso: proyecta el agregado de dominio al DTO del puerto primario.
- *
- * <p>Campo por campo y libre de decisiones — si necesitara un {@code if} de negocio, esa lógica
- * pertenecería a una regla.</p>
+ * Proyección dominio → DTO de salida del puerto primario.
+ * La usa el interactor tras ejecutar el caso de uso.
  */
 public final class ProtectedResourceCatalogMapper {
 

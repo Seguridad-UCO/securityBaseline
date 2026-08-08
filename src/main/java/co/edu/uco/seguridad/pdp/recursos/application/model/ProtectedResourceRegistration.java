@@ -1,4 +1,4 @@
-package co.edu.uco.seguridad.pdp.recursos.application.rule;
+package co.edu.uco.seguridad.pdp.recursos.application.model;
 
 import co.edu.uco.seguridad.pdp.aplicaciones.application.port.primary.dto.response.RegisteredApplicationResponse;
 import co.edu.uco.seguridad.pdp.recursos.application.port.primary.dto.request.RegisterProtectedApplicationRequest;
@@ -6,11 +6,11 @@ import co.edu.uco.seguridad.pdp.recursos.application.port.primary.dto.request.Re
 import java.util.Objects;
 
 /**
- * El hecho que inspeccionan las reglas de recurso: lo que se pidió, más la aplicación que realmente
- * se registró.
+ * Contexto de aplicación que inspeccionan las reglas de registro de recurso: lo pedido más la
+ * aplicación que realmente quedó registrada en el módulo {@code aplicaciones}.
  *
- * <p>Existe porque estas reglas comparan ambos — una regla que solo viera el DTO no podría
- * detectar una aplicación perteneciente a otro inquilino.</p>
+ * <p>No es una regla: es el hecho compuesto que el caso de uso arma después de registrar la
+ * aplicación y pasa al {@code RulesValidator}.</p>
  */
 public record ProtectedResourceRegistration(RegisterProtectedApplicationRequest dto,
                                             RegisteredApplicationResponse application) {

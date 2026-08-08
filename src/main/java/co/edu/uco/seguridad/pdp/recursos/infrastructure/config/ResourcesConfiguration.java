@@ -1,13 +1,11 @@
 package co.edu.uco.seguridad.pdp.recursos.infrastructure.config;
 
-import co.edu.uco.seguridad.pdp.aplicaciones.ApplicationsModuleApi;
-import co.edu.uco.seguridad.pdp.recursos.application.usecase.RegisterProtectedApplicationUseCase;
-import co.edu.uco.seguridad.pdp.recursos.application.usecase.SearchProtectedApplicationsUseCase;
+import co.edu.uco.seguridad.pdp.aplicaciones.application.port.primary.interactor.RegisterApplicationInteractor;
+import co.edu.uco.seguridad.pdp.aplicaciones.application.port.primary.interactor.RemoveApplicationInteractor;
 import co.edu.uco.seguridad.pdp.recursos.application.port.primary.interactor.RegisterProtectedApplicationInteractor;
 import co.edu.uco.seguridad.pdp.recursos.application.port.primary.interactor.SearchProtectedApplicationsInteractor;
 import co.edu.uco.seguridad.pdp.recursos.application.port.primary.interactor.impl.RegisterProtectedApplicationInteractorImpl;
 import co.edu.uco.seguridad.pdp.recursos.application.port.primary.interactor.impl.SearchProtectedApplicationsInteractorImpl;
-import co.edu.uco.seguridad.pdp.recursos.application.port.secondary.AuditPort;
 import co.edu.uco.seguridad.pdp.recursos.application.port.secondary.repository.ProtectedResourceRepository;
 import co.edu.uco.seguridad.pdp.recursos.application.rule.ProtectedResourceMustBeUniqueRule;
 import co.edu.uco.seguridad.pdp.recursos.application.rule.ProtectedResourceMustBelongToApplicationTenantRule;
@@ -17,46 +15,45 @@ import co.edu.uco.seguridad.pdp.recursos.application.rulesvalidator.RegisterProt
 import co.edu.uco.seguridad.pdp.recursos.application.rulesvalidator.SearchProtectedApplicationsRulesValidator;
 import co.edu.uco.seguridad.pdp.recursos.application.rulesvalidator.impl.RegisterProtectedApplicationRulesValidatorImpl;
 import co.edu.uco.seguridad.pdp.recursos.application.rulesvalidator.impl.SearchProtectedApplicationsRulesValidatorImpl;
+import co.edu.uco.seguridad.pdp.recursos.application.usecase.RegisterProtectedApplicationUseCase;
+import co.edu.uco.seguridad.pdp.recursos.application.usecase.SearchProtectedApplicationsUseCase;
 import co.edu.uco.seguridad.pdp.recursos.application.usecase.impl.RegisterProtectedApplicationUseCaseImpl;
 import co.edu.uco.seguridad.pdp.recursos.application.usecase.impl.SearchProtectedApplicationsUseCaseImpl;
 import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.secondary.audit.InMemoryAuditAdapter;
+import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.secondary.persistence.entity.ProtectedResourceEntity;
 import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.secondary.persistence.repository.InMemoryProtectedResourceRepository;
+import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.secondary.persistence.transaction.SnapshotCapable;
 import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.secondary.persistence.transaction.SnapshotReactiveTransactionAdapter;
 import co.edu.uco.seguridad.pdp.tenants.application.rule.TenantMustBeActiveRule;
+import co.edu.uco.seguridad.shared.event.DomainEventPublisher;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
 import co.edu.uco.seguridad.shared.port.ReactiveTransactionPort;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.Map;
+
 /**
  * La única clase consciente de Spring en el módulo. Cablea los puertos secundarios a sus adaptadores
  * y ensambla casos de uso e interactores.
- *
- * <p>El repositorio dummy se expone tanto como el puerto como su tipo concreto: el adaptador de transacción
- * necesita la capacidad de instantánea que el puerto deliberadamente no declara. Ese acoplamiento
- * está confinado a este archivo y desaparece con el dummy.</p>
  */
 @Configuration
 public class ResourcesConfiguration {
 
-    /**
-     * Declarado por su tipo concreto porque el adaptador de transacción necesita la capacidad de instantánea
-     * que el puerto deliberadamente no expone. Los puntos de inyección que piden el puerto resuelven a este
-     * mismo bean, por lo que sigue existiendo exactamente un almacén.
-     */
     @Bean
     InMemoryProtectedResourceRepository protectedResourceRepository() {
         return new InMemoryProtectedResourceRepository();
     }
 
     @Bean
-    ReactiveTransactionPort reactiveTransactionPort(InMemoryProtectedResourceRepository repository) {
-        return new SnapshotReactiveTransactionAdapter(repository);
+    ReactiveTransactionPort reactiveTransactionPort(
+            SnapshotCapable<Map<String, ProtectedResourceEntity>> snapshotCapable) {
+        return new SnapshotReactiveTransactionAdapter(snapshotCapable);
     }
 
     @Bean
-    AuditPort auditPort() {
+    InMemoryAuditAdapter protectedResourceAuditListener() {
         return new InMemoryAuditAdapter();
     }
 
@@ -86,15 +83,23 @@ public class ResourcesConfiguration {
 
     @Bean
     RegisterProtectedApplicationUseCase registerProtectedApplicationUseCase(
-            ApplicationsModuleApi applications,
+            RegisterApplicationInteractor registerApplicationInteractor,
+            RemoveApplicationInteractor removeApplicationInteractor,
             RegisterProtectedApplicationRulesValidator rules,
             ProtectedResourceRepository resources,
-            AuditPort audit,
+            DomainEventPublisher events,
             ReactiveTransactionPort transaction,
             IdentifierGenerator identifiers,
             TimeProvider time) {
         return new RegisterProtectedApplicationUseCaseImpl(
-                applications, rules, resources, audit, transaction, identifiers, time);
+                registerApplicationInteractor,
+                removeApplicationInteractor,
+                rules,
+                resources,
+                events,
+                transaction,
+                identifiers,
+                time);
     }
 
     @Bean

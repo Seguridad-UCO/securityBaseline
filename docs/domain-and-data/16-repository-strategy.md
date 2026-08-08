@@ -19,7 +19,9 @@ Mono<ResultPage<ProtectedResource>> findBy(ProtectedApplicationCriteria criteria
 ```
 
 Un único método de lectura. La semántica del criterio la resuelve el dominio; el adaptador elige
-cómo ejecutarla: hoy un recorrido en memoria, mañana un índice o SurrealQL.
+cómo ejecutarla: hoy un recorrido en memoria, mañana un índice o SurrealQL — ver
+[ADR-0004](../governance/adr/adr-0004-real-persistence-surrealdb.md), que fija SurrealDB como motor y
+exige que este puerto no cambie de forma al sustituir el adaptador.
 
 `existsGrant` es la excepción deliberada: la unicidad es una pregunta de sí o no, y responderla con
 un índice es más barato que cargar la fila para descartarla.
@@ -32,8 +34,12 @@ estable, dos páginas consecutivas podrían repetir u omitir filas según el ord
 
 ## Ubicación verificable
 
-- [`ProtectedResourceRepository.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/port/out/ProtectedResourceRepository.java)
+- [`ProtectedResourceRepository.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/port/secondary/repository/ProtectedResourceRepository.java)
 - [`InMemoryProtectedResourceRepository.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/secondary/persistence/repository/InMemoryProtectedResourceRepository.java)
+  — desde el Stage 1 también implementa
+  [`SnapshotCapable`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/secondary/persistence/transaction/SnapshotCapable.java),
+  no el puerto de repositorio: la capacidad de instantánea es exclusiva del adaptador de transacción
+  dummy y desaparecerá con él (ADR-0004).
 - Mapper: [`ProtectedResourcePersistenceMapper.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/secondary/persistence/mapper/ProtectedResourcePersistenceMapper.java)
 
 ## Evidencia y límite

@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.pdp.recursos.application.rule;
 
+import co.edu.uco.seguridad.pdp.recursos.application.model.ProtectedResourceRegistration;
 import co.edu.uco.seguridad.shared.contract.ReactiveOperationWithoutResult;
 
 /**

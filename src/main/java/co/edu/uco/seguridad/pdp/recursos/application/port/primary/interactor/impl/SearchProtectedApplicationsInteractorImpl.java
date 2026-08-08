@@ -1,16 +1,19 @@
 package co.edu.uco.seguridad.pdp.recursos.application.port.primary.interactor.impl;
 
-import co.edu.uco.seguridad.pdp.commons.ResultPage;
-import co.edu.uco.seguridad.pdp.recursos.application.usecase.SearchProtectedApplicationsUseCase;
-import co.edu.uco.seguridad.pdp.recursos.application.port.primary.dto.response.ProtectedApplicationResponse;
-import co.edu.uco.seguridad.pdp.recursos.application.port.primary.dto.request.SearchProtectedApplicationsRequest;
 import co.edu.uco.seguridad.pdp.recursos.application.port.primary.interactor.SearchProtectedApplicationsInteractor;
+import co.edu.uco.seguridad.pdp.recursos.application.port.primary.mapper.ProtectedResourceCatalogMapper;
+import co.edu.uco.seguridad.pdp.recursos.application.usecase.SearchProtectedApplicationsUseCase;
+import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.dto.request.raw.SearchProtectedApplicationsRawRequest;
+import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.dto.response.ProtectedApplicationResponse;
+import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.mapper.ProtectedApplicationResponseMapper;
+import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.mapper.SearchProtectedApplicationsRequestMapper;
+import co.edu.uco.seguridad.shared.web.PageResponse;
 import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 
 /**
- * Delega en el caso de uso. Mantiene el controlador delgado y el caso de uso enfocado en orquestación.
+ * Mapea la consulta HTTP → DTO tipado, ejecuta el caso de uso y proyecta dominio → página HTTP.
  */
 public final class SearchProtectedApplicationsInteractorImpl implements SearchProtectedApplicationsInteractor {
 
@@ -21,7 +24,11 @@ public final class SearchProtectedApplicationsInteractorImpl implements SearchPr
     }
 
     @Override
-    public Mono<ResultPage<ProtectedApplicationResponse>> execute(SearchProtectedApplicationsRequest dto) {
-        return useCase.execute(dto);
+    public Mono<PageResponse<ProtectedApplicationResponse>> execute(SearchProtectedApplicationsRawRequest raw) {
+        return Mono.fromSupplier(() -> SearchProtectedApplicationsRequestMapper.toRequest(
+                        SearchProtectedApplicationsRequestMapper.toValidatedRequest(raw)))
+                .flatMap(useCase::execute)
+                .map(page -> page.map(ProtectedResourceCatalogMapper::toResponse))
+                .map(ProtectedApplicationResponseMapper::toPageResponse);
     }
 }

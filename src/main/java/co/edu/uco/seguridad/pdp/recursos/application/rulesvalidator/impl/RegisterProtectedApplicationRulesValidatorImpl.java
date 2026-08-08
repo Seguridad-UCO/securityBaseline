@@ -1,8 +1,8 @@
 package co.edu.uco.seguridad.pdp.recursos.application.rulesvalidator.impl;
 
+import co.edu.uco.seguridad.pdp.recursos.application.model.ProtectedResourceRegistration;
 import co.edu.uco.seguridad.pdp.recursos.application.rule.ProtectedResourceMustBeUniqueRule;
 import co.edu.uco.seguridad.pdp.recursos.application.rule.ProtectedResourceMustBelongToApplicationTenantRule;
-import co.edu.uco.seguridad.pdp.recursos.application.rule.ProtectedResourceRegistration;
 import co.edu.uco.seguridad.pdp.recursos.application.rulesvalidator.RegisterProtectedApplicationRulesValidator;
 import reactor.core.publisher.Mono;
 

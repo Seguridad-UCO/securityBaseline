@@ -3,7 +3,7 @@ package co.edu.uco.seguridad.pdp.recursos.application.rule.impl;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
 import co.edu.uco.seguridad.pdp.recursos.application.exception.ResourceTenantMismatchException;
 import co.edu.uco.seguridad.pdp.recursos.application.rule.ProtectedResourceMustBelongToApplicationTenantRule;
-import co.edu.uco.seguridad.pdp.recursos.application.rule.ProtectedResourceRegistration;
+import co.edu.uco.seguridad.pdp.recursos.application.model.ProtectedResourceRegistration;
 
 public final class ProtectedResourceMustBelongToApplicationTenantRuleImpl
         implements ProtectedResourceMustBelongToApplicationTenantRule {

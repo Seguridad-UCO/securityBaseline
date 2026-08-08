@@ -1,54 +1,60 @@
-# Alineación ejecutable con el PDP de referencia
+# Estructura ejecutable del PDP (Spring Modulith)
 
 [← Arquitectura](README.md)
 
 ## Estructura implementada
 
-La línea base representa el **contenedor PDP**, no un módulo genérico de aplicaciones:
+La línea base representa el **contenedor PDP**:
 
 ```text
 co.edu.uco.seguridad
-├── shared/            capacidades transversales, fuera del análisis de módulos
-│   ├── rule/          BusinessRule · ReactiveBusinessRule · ReactiveBusinessRuleWithResult
+├── shared/            capacidades transversales (módulo OPEN)
+│   ├── contract/      ReactiveOperation · OperationWithoutResult · …
 │   ├── port/          TimeProvider · IdentifierGenerator · ReactiveTransactionPort
-│   ├── web/           ApiResponse · PageResponse · correlación · excepciones de contrato
+│   ├── event/         DomainEvent · DomainEventPublisher
+│   ├── web/           ApiResponse · PageResponse · RequestFieldParser · correlación
 │   ├── observability/ ReactiveLogContext
-│   └── config/        implementaciones por defecto de los puertos transversales
+│   └── config/        puertos transversales + EventPublisherConfiguration
 └── pdp/
     ├── commons/       shared kernel: TenantId, ApplicationId, ResourceId, ApplicationName,
-    │                  PageWindow, ResultPage y las excepciones base del dominio
-    ├── tenants/       API TenantModuleApi + regla publicada TenantMustBeActiveRule
-    ├── aplicaciones/  API ApplicationsModuleApi; registro, unicidad y nombres reservados
-    └── recursos/      APIs de registro y consulta del catálogo; orquesta E-1
+    │                  PageWindow, ResultPage, AggregateRoot y excepciones base
+    ├── tenants/       FindTenantInteractor · TenantMustBeActiveRule · TenantStatusMustBeActiveRule
+    ├── aplicaciones/  RegisterApplicationInteractor · RemoveApplicationInteractor
+    └── recursos/      Register/SearchProtectedApplication(s)Interactor; orquesta E-1
 ```
 
-Esto implementa el fragmento aplicable del dependency map de referencia:
-`aplicaciones → commons, tenants` y `recursos → commons, tenants, aplicaciones`. Las APIs públicas
-viven en la raíz de cada módulo; `domain`, `application` e `infrastructure` son internos y Modulith
-lo verifica.
+Dependencias Modulith: `aplicaciones → commons, tenants` y
+`recursos → commons, tenants, aplicaciones`. Los interactors y DTOs se publican como Named Interfaces;
+`domain`, `application` e `infrastructure` internos quedan verificados por Modulith.
 
-`shared` está fuera del paquete base del análisis (`co.edu.uco.seguridad.pdp`) a propósito: son
-capacidades técnicas disponibles para cualquier adaptador, no vocabulario del PDP. El vocabulario
-del negocio vive en `pdp/commons`, que sí es un módulo y sí es Java puro sin Reactor.
+`shared` está fuera de `pdp` a propósito: capacidades técnicas, no vocabulario del PDP. El
+vocabulario de negocio vive en `pdp/commons` (Java puro, sin Reactor).
+
+Eventos de dominio ([ADR-0002](../governance/adr/adr-0002-domain-events-modulith-registry.md)):
+`Application` / `ProtectedResource` registran hechos vía `registerWithEvent`;
+`DomainEventPublisher` usa `ApplicationEventPublisher` (sin Event Publication Registry hasta tener
+almacén real). Seguridad reactiva ([ADR-0003](../governance/adr/adr-0003-real-security-reactive-jwt.md))
+sigue pendiente.
 
 ## Contratos publicados por módulo
 
 | Módulo | Publica | No publica |
 |---|---|---|
-| `tenants` | `TenantModuleApi`, `TenantMustBeActiveRule`, `TenantSnapshot`, `TenantStatus`, sus dos excepciones | `Tenant`, `TenantRepository`, adaptadores |
-| `aplicaciones` | `ApplicationsModuleApi`, comando, resultado, sus dos excepciones | `Application`, `ApplicationRepository`, reglas, adaptadores |
-| `recursos` | casos de uso, comando, query, entrada de catálogo, sus dos excepciones | dominio, reglas, puertos, adaptadores |
+| `tenants` | `FindTenantInteractor`, `TenantMustBeActiveRule`, DTOs, excepciones | `Tenant`, repositorio, adaptadores |
+| `aplicaciones` | `RegisterApplicationInteractor`, `RemoveApplicationInteractor`, DTOs, excepciones | `Application`, repositorio, reglas internas |
+| `recursos` | Interactores HTTP, DTOs de catálogo | dominio, reglas, puertos secundarios, adaptadores |
 
-La separación entre `TenantModuleApi` y `TenantMustBeActiveRule` es intencional: la API responde
-*qué* es un tenant y la regla decide *si* puede operar. Un único método que hiciera ambas cosas
-obligaría a cada consumidor a interpretar un `Mono` vacío como una decisión de negocio.
+`FindTenantInteractor` responde *qué* es un tenant; `TenantMustBeActiveRule` decide *si* puede
+operar (carga + `TenantStatusMustBeActiveRule`). No se mezclan consulta y decisión en un solo método.
 
 ## Flujo E-1
 
-El adaptador HTTP de `recursos` mapea el JSON crudo a un DTO validado y llama al interactor. El caso
-de uso registra la aplicación con `ApplicationsModuleApi` —que aplica sus propias reglas, incluida
-la del tenant— y luego valida y persiste el recurso con su código y acción explícitos. Los
-identificadores `estudiantes` y `consultar` sustituyen a la ruta HTTP como fuente de verdad.
+El controlador HTTP entrega el JSON crudo al interactor. El interactor mapea a DTO tipado, ejecuta
+el caso de uso y proyecta la respuesta HTTP. El caso de uso registra la aplicación con
+`RegisterApplicationInteractor` (que aplica sus reglas, incluida la del tenant, y publica
+`ApplicationRegistered`) y luego valida y persiste el recurso, publicando
+`ProtectedResourceRegistered`. `InMemoryAuditAdapter` escucha ese evento. Si el recurso falla, se
+compensa con `RemoveApplicationInteractor`.
 
 ## Evidencia
 
@@ -56,5 +62,4 @@ identificadores `estudiantes` y `consultar` sustituyen a la ruta HTTP como fuent
 - Gate: [`ModulithStructureTests.java`](../../src/test/java/co/edu/uco/seguridad/ModulithStructureTests.java)
 - Flujo HTTP: [`ProtectedApplicationHttpTests.java`](../../src/test/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/ProtectedApplicationHttpTests.java)
 
-`./mvnw verify` comprueba compilación, contexto Spring, dependencias Modulith, 109 pruebas y
-cobertura.
+`./mvnw verify` comprueba compilación, contexto Spring, dependencias Modulith, tests y cobertura.

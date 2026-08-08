@@ -453,7 +453,7 @@ Comando de verificación (el POM y CI usan Java 25):
 
 - La única advertencia recurrente del build es la auto-adjunción del agente de Mockito, propia del
   starter de pruebas y ajena a este cambio.
-- El POM exige Java 25 y ningún equipo local lo tiene; la validación con JDK 25 la hará el pipeline.
+- El POM y el pipeline exigen Java 25 (`./mvnw verify`).
 
 ### Lo que no se pudo verificar aquí, y se dice claramente
 

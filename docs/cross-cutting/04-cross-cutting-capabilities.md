@@ -20,6 +20,7 @@ infraestructura transversal en el dominio o en el controlador.
 | `shared/observability` | puente Reactor Context → MDC | Aplica a cualquier flujo reactivo |
 | `shared/rule` | los tres contratos de regla | Vocabulario común de reglas, Java puro |
 | `shared/port` | `TimeProvider`, `IdentifierGenerator`, `ReactiveTransactionPort` | Capacidades que todo caso de uso puede necesitar |
+| `shared/event` | `DomainEvent`, `DomainEventPublisher` (+ `SpringDomainEventPublisher`) | Publicar un hecho de negocio sin que quien lo produce conozca a quien escucha (ADR-0002) |
 | `shared/config` | implementaciones por defecto de esos puertos | Único lugar donde se decide el reloj real |
 | `pdp/commons` | value objects y excepciones base del PDP | Lenguaje del dominio compartido entre módulos |
 

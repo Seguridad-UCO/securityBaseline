@@ -3,8 +3,8 @@ package co.edu.uco.seguridad.pdp.recursos.application.rule.impl;
 import co.edu.uco.seguridad.pdp.recursos.application.exception.DuplicateProtectedResourceException;
 import co.edu.uco.seguridad.pdp.recursos.application.port.primary.dto.request.RegisterProtectedApplicationRequest;
 import co.edu.uco.seguridad.pdp.recursos.application.port.secondary.repository.ProtectedResourceRepository;
+import co.edu.uco.seguridad.pdp.recursos.application.model.ProtectedResourceRegistration;
 import co.edu.uco.seguridad.pdp.recursos.application.rule.ProtectedResourceMustBeUniqueRule;
-import co.edu.uco.seguridad.pdp.recursos.application.rule.ProtectedResourceRegistration;
 import reactor.core.publisher.Mono;
 
 import java.util.Objects;

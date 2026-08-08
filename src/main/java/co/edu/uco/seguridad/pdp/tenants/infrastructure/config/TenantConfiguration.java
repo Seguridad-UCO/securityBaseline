@@ -1,10 +1,12 @@
 package co.edu.uco.seguridad.pdp.tenants.infrastructure.config;
 
-import co.edu.uco.seguridad.pdp.tenants.TenantModuleApi;
-import co.edu.uco.seguridad.pdp.tenants.application.TenantLookupService;
+import co.edu.uco.seguridad.pdp.tenants.application.port.primary.interactor.FindTenantInteractor;
+import co.edu.uco.seguridad.pdp.tenants.application.port.primary.interactor.impl.FindTenantInteractorImpl;
 import co.edu.uco.seguridad.pdp.tenants.application.port.secondary.repository.TenantRepository;
 import co.edu.uco.seguridad.pdp.tenants.application.rule.TenantMustBeActiveRule;
+import co.edu.uco.seguridad.pdp.tenants.application.rule.TenantStatusMustBeActiveRule;
 import co.edu.uco.seguridad.pdp.tenants.application.rule.impl.TenantMustBeActiveRuleImpl;
+import co.edu.uco.seguridad.pdp.tenants.application.rule.impl.TenantStatusMustBeActiveRuleImpl;
 import co.edu.uco.seguridad.pdp.tenants.application.usecase.FindTenantUseCase;
 import co.edu.uco.seguridad.pdp.tenants.application.usecase.impl.FindTenantUseCaseImpl;
 import co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.secondary.persistence.entity.TenantEntity;
@@ -35,12 +37,18 @@ public class TenantConfiguration {
     }
 
     @Bean
-    TenantModuleApi tenantModuleApi(FindTenantUseCase findTenantUseCase) {
-        return new TenantLookupService(findTenantUseCase);
+    FindTenantInteractor findTenantInteractor(FindTenantUseCase findTenantUseCase) {
+        return new FindTenantInteractorImpl(findTenantUseCase);
     }
 
     @Bean
-    TenantMustBeActiveRule tenantMustBeActiveRule(TenantRepository repository) {
-        return new TenantMustBeActiveRuleImpl(repository);
+    TenantStatusMustBeActiveRule tenantStatusMustBeActiveRule() {
+        return new TenantStatusMustBeActiveRuleImpl();
+    }
+
+    @Bean
+    TenantMustBeActiveRule tenantMustBeActiveRule(TenantRepository repository,
+                                                  TenantStatusMustBeActiveRule statusMustBeActive) {
+        return new TenantMustBeActiveRuleImpl(repository, statusMustBeActive);
     }
 }

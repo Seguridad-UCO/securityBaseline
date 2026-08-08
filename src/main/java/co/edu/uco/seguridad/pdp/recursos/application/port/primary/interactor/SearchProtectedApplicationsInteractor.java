@@ -1,16 +1,13 @@
 package co.edu.uco.seguridad.pdp.recursos.application.port.primary.interactor;
 
-import co.edu.uco.seguridad.pdp.commons.ResultPage;
-import co.edu.uco.seguridad.pdp.recursos.application.port.primary.dto.response.ProtectedApplicationResponse;
-import co.edu.uco.seguridad.pdp.recursos.application.port.primary.dto.request.SearchProtectedApplicationsRequest;
+import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.dto.request.raw.SearchProtectedApplicationsRawRequest;
+import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.dto.response.ProtectedApplicationResponse;
 import co.edu.uco.seguridad.shared.contract.ReactiveOperation;
+import co.edu.uco.seguridad.shared.web.PageResponse;
 
 /**
- * Interactor del puerto primario: punto de entrada de aplicación para consultar el catálogo.
- *
- * <p>Recibe y devuelve DTOs de aplicación (no DTOs web). El adaptador primario mapea la entrada/salida
- * de transporte; este contrato permanece independiente del canal.</p>
+ * Puerto primario HTTP: recibe la consulta cruda, mapea, ejecuta el caso de uso y proyecta la página HTTP.
  */
 public interface SearchProtectedApplicationsInteractor
-        extends ReactiveOperation<SearchProtectedApplicationsRequest, ResultPage<ProtectedApplicationResponse>> {
+        extends ReactiveOperation<SearchProtectedApplicationsRawRequest, PageResponse<ProtectedApplicationResponse>> {
 }

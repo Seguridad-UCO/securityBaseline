@@ -8,16 +8,16 @@ import co.edu.uco.seguridad.pdp.commons.ResultPage;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
 import co.edu.uco.seguridad.pdp.recursos.application.port.primary.dto.request.RegisterProtectedApplicationRequest;
 import co.edu.uco.seguridad.pdp.recursos.application.port.primary.dto.request.SearchProtectedApplicationsRequest;
-import co.edu.uco.seguridad.pdp.recursos.application.port.primary.interactor.RegisterProtectedApplicationInteractor;
-import co.edu.uco.seguridad.pdp.recursos.application.port.primary.interactor.SearchProtectedApplicationsInteractor;
+import co.edu.uco.seguridad.pdp.recursos.application.port.primary.interactor.impl.RegisterProtectedApplicationInteractorImpl;
+import co.edu.uco.seguridad.pdp.recursos.application.port.primary.interactor.impl.SearchProtectedApplicationsInteractorImpl;
+import co.edu.uco.seguridad.pdp.recursos.application.usecase.RegisterProtectedApplicationUseCase;
+import co.edu.uco.seguridad.pdp.recursos.application.usecase.SearchProtectedApplicationsUseCase;
 import co.edu.uco.seguridad.pdp.recursos.domain.ActionCode;
+import co.edu.uco.seguridad.pdp.recursos.domain.ProtectedResource;
 import co.edu.uco.seguridad.pdp.recursos.domain.ResourceCode;
 import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.dto.request.raw.RegisterProtectedApplicationRawRequest;
 import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.dto.request.raw.SearchProtectedApplicationsRawRequest;
 import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.dto.response.ProtectedApplicationResponse;
-import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.mapper.ProtectedApplicationResponseMapper;
-import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.mapper.RegisterProtectedApplicationRequestMapper;
-import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.mapper.SearchProtectedApplicationsRequestMapper;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -30,8 +30,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Verifica que el adaptador primario web traduce correctamente en ambas direcciones:
- * solicitud HTTP cruda → DTO tipado de aplicación (vía mapper + interactor), y resultado → DTO HTTP.
+ * Verifica que el interactor traduce correctamente: raw → tipado → dominio → respuesta HTTP.
  */
 class ProtectedApplicationControllerMappingTests {
 
@@ -42,20 +41,14 @@ class ProtectedApplicationControllerMappingTests {
     @Test
     void register_maps_raw_request_to_typed_dto_and_entry_to_flat_response() {
         AtomicReference<RegisterProtectedApplicationRequest> received = new AtomicReference<>();
-        RegisterProtectedApplicationInteractor interactor = dto -> {
+        RegisterProtectedApplicationUseCase useCase = dto -> {
             received.set(dto);
-            return Mono.just(entry());
+            return Mono.just(resource());
         };
 
-        Mono<ProtectedApplicationResponse> result = Mono.fromSupplier(() ->
-                        RegisterProtectedApplicationRequestMapper.toRequest(
-                                RegisterProtectedApplicationRequestMapper.toValidatedRequest(
-                                        new RegisterProtectedApplicationRawRequest(
-                                                "universidad-uco", "gestion-academica", "estudiantes", "consultar"))))
-                .flatMap(interactor::execute)
-                .map(ProtectedApplicationResponseMapper::toResponse);
-
-        StepVerifier.create(result)
+        StepVerifier.create(new RegisterProtectedApplicationInteractorImpl(useCase)
+                        .execute(new RegisterProtectedApplicationRawRequest(
+                                "universidad-uco", "gestion-academica", "estudiantes", "consultar")))
                 .assertNext(response -> {
                     assertThat(response.applicationId()).isEqualTo(APPLICATION_ID.value().toString());
                     assertThat(response.resourceId()).isEqualTo(RESOURCE_ID.value().toString());
@@ -71,16 +64,12 @@ class ProtectedApplicationControllerMappingTests {
 
     @Test
     void search_maps_raw_request_and_carries_window_metadata_into_the_response() {
-        SearchProtectedApplicationsInteractor interactor = dto ->
-                Mono.just(ResultPage.of(List.of(entry()), 12, dto.window()));
+        SearchProtectedApplicationsUseCase useCase = dto ->
+                Mono.just(ResultPage.of(List.of(resource()), 12, dto.window()));
 
-        StepVerifier.create(Mono.fromSupplier(() ->
-                                SearchProtectedApplicationsRequestMapper.toRequest(
-                                        SearchProtectedApplicationsRequestMapper.toValidatedRequest(
-                                                new SearchProtectedApplicationsRawRequest(
-                                                        null, null, null, "1", "5", null, null))))
-                        .flatMap(interactor::execute)
-                        .map(ProtectedApplicationResponseMapper::toPageResponse))
+        StepVerifier.create(new SearchProtectedApplicationsInteractorImpl(useCase)
+                        .execute(new SearchProtectedApplicationsRawRequest(
+                                null, null, null, "1", "5", null, null)))
                 .assertNext(page -> {
                     assertThat(page.content()).hasSize(1);
                     assertThat(page.total()).isEqualTo(12);
@@ -93,19 +82,16 @@ class ProtectedApplicationControllerMappingTests {
     }
 
     @Test
-    void search_passes_criteria_to_interactor_untouched() {
+    void search_passes_criteria_to_use_case_untouched() {
         AtomicReference<SearchProtectedApplicationsRequest> received = new AtomicReference<>();
-        SearchProtectedApplicationsInteractor interactor = dto -> {
+        SearchProtectedApplicationsUseCase useCase = dto -> {
             received.set(dto);
             return Mono.just(ResultPage.of(List.of(), 0, dto.window()));
         };
 
-        Mono.fromSupplier(() ->
-                        SearchProtectedApplicationsRequestMapper.toRequest(
-                                SearchProtectedApplicationsRequestMapper.toValidatedRequest(
-                                        new SearchProtectedApplicationsRawRequest(
-                                                "universidad-uco", "academica", "estud", null, null, null, null))))
-                .flatMap(interactor::execute)
+        new SearchProtectedApplicationsInteractorImpl(useCase)
+                .execute(new SearchProtectedApplicationsRawRequest(
+                        "universidad-uco", "academica", "estud", null, null, null, null))
                 .block();
 
         assertThat(received.get().criteria().tenantId()).contains(new TenantId("universidad-uco"));
@@ -114,10 +100,10 @@ class ProtectedApplicationControllerMappingTests {
         assertThat(received.get().window()).isEqualTo(PageWindow.defaultWindow());
     }
 
-    private static co.edu.uco.seguridad.pdp.recursos.application.port.primary.dto.response.ProtectedApplicationResponse entry() {
-        return new co.edu.uco.seguridad.pdp.recursos.application.port.primary.dto.response.ProtectedApplicationResponse(
-                APPLICATION_ID,
+    private static ProtectedResource resource() {
+        return ProtectedResource.register(
                 RESOURCE_ID,
+                APPLICATION_ID,
                 new TenantId("universidad-uco"),
                 new ApplicationName("gestion-academica"),
                 new ResourceCode("estudiantes"),
