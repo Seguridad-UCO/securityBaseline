@@ -6,3 +6,5 @@ variables:
   keyVaultName: 'kv-pdp-prod'
   webAppName: 'app-pdp-prod'
   resourceGroupName: 'rg-pdp-prod'
+  datasourceUrl: 'http://surrealdb-prod.example.com:8000'
+  datasourceUsername: 'root'

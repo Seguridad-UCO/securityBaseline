@@ -43,7 +43,7 @@ stages:
                   inputs:
                     azureSubscription: $(azureServiceConnection)
                     KeyVaultName: $(keyVaultName)
-                    SecretsFilter: 'pdp-datasource-password,pdp-oidc-client-secret,pdp-otlp-token'
+                    SecretsFilter: 'pdp-jwt-signing-key,pdp-datasource-password,pdp-oidc-client-secret,pdp-otlp-token'
                     RunAsPreJob: true
 
                 # The secret values are passed as app settings, so the running application reads
@@ -59,6 +59,9 @@ stages:
                     runtimeStack: 'JAVA|25-java25'
                     appSettings: >-
                       -SPRING_PROFILES_ACTIVE $(springProfile)
+                      -PDP_JWT_SIGNING_KEY "$(pdp-jwt-signing-key)"
+                      -PDP_DATASOURCE_URL "$(datasourceUrl)"
+                      -PDP_DATASOURCE_USERNAME "$(datasourceUsername)"
                       -PDP_DATASOURCE_PASSWORD "$(pdp-datasource-password)"
                       -PDP_OIDC_CLIENT_SECRET "$(pdp-oidc-client-secret)"
                       -PDP_OTLP_TOKEN "$(pdp-otlp-token)"

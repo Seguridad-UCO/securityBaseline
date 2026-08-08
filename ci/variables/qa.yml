@@ -6,3 +6,5 @@ variables:
   keyVaultName: 'kv-pdp-qa'
   webAppName: 'app-pdp-qa'
   resourceGroupName: 'rg-pdp-qa'
+  datasourceUrl: 'http://surrealdb-qa.example.com:8000'
+  datasourceUsername: 'root'
