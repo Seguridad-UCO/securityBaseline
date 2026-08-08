@@ -8,9 +8,9 @@ import reactor.core.publisher.Mono;
 import java.util.Objects;
 
 /**
- * Aplica la regla de inquilino solo cuando la consulta está acotada a un inquilino, así un inquilino desconocido
- * se reporta como tal en lugar de devolver silenciosamente una página vacía — una página vacía permitiría a un
- * llamador sondear qué identificadores de inquilino existen.
+ * El tenant de la consulta viene del token autenticado (ADR-0003), nunca de un parámetro que el
+ * llamador pueda omitir, así que la regla de inquilino activo se aplica siempre — ya no hay una
+ * consulta "sin tenant" que la deje sin ejercer.
  */
 public final class SearchProtectedApplicationsRulesValidatorImpl
         implements SearchProtectedApplicationsRulesValidator {
@@ -23,8 +23,6 @@ public final class SearchProtectedApplicationsRulesValidatorImpl
 
     @Override
     public Mono<Void> execute(SearchProtectedApplicationsRequest dto) {
-        return Mono.justOrEmpty(dto.criteria().tenantId())
-                .flatMap(tenantMustBeActive::execute)
-                .then();
+        return tenantMustBeActive.execute(dto.criteria().tenantId()).then();
     }
 }

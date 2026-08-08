@@ -16,10 +16,11 @@ catálogo.
 ## Implementación
 
 ```text
-?tenantId=&nameContains=&resourceContains=
+Authorization: Bearer <jwt>          →  interactor: SecurityContext.currentPrincipal() → tenant
+?nameContains=&resourceContains=
         ↓  controller: los recibe como String, sin interpretarlos
-        ↓  mapper: normaliza a Optional y construye los value objects
-ProtectedApplicationCriteria
+        ↓  mapper: normaliza a Optional, construye los value objects y añade el tenant del principal
+ProtectedApplicationCriteria(tenantId obligatorio, nameContains, resourceContains)
         ↓  use case: la entrega sin inspeccionarla
 repositorio: decide cómo ejecutarla
 ```
@@ -27,7 +28,10 @@ repositorio: decide cómo ejecutarla
 El controlador **no** construye la consulta: solo entrega parámetros. El caso de uso tampoco la
 inspecciona — si lo hiciera, estaría duplicando la lógica de filtrado que ya vive en el criterio.
 
-Cada filtro ausente equivale a “no restringir”. Un fragmento en blanco cuenta como ausente.
+`tenantId` no es un parámetro de la query desde ADR-0003: es obligatorio, pero sale del token, no de
+algo que el llamador pueda omitir o cambiar. `nameContains`/`resourceContains` siguen siendo
+opcionales; cada uno ausente equivale a "no restringir" dentro del tenant. Un fragmento en blanco
+cuenta como ausente.
 
 ## Ubicación verificable
 

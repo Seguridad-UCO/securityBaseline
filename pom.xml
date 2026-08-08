@@ -71,6 +71,20 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
+		<!--
+			Frontera PEP reactiva (ADR-0003). oauth2-resource-server, no una librería JWT suelta:
+			trae NimbusReactiveJwtDecoder ya integrado con SecurityWebFilterChain, y el día que
+			Keycloak reemplace el emisor propio (ver ADR-0003), el cambio es
+			withSecretKey(...) → withJwkSetUri(...) sin tocar el resto de la cadena.
+		-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>io.micrometer</groupId>
 			<artifactId>micrometer-tracing-bridge-otel</artifactId>
@@ -103,6 +117,22 @@
 		<dependency>
 			<groupId>io.projectreactor</groupId>
 			<artifactId>reactor-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!--
+			SurrealDB no tiene módulo oficial de Testcontainers (ADR-0004): se levanta con
+			GenericContainer sobre la imagen surrealdb/surrealdb, verificada manualmente antes de
+			escribir el adaptador. spring-boot-testcontainers gestiona la versión vía el BOM del
+			padre; junit-jupiter añade el ciclo de vida @Testcontainers/@Container.
+		-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-testcontainers</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers-junit-jupiter</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

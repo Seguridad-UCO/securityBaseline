@@ -16,7 +16,6 @@ import co.edu.uco.seguridad.pdp.recursos.domain.event.ProtectedResourceRegistere
 import co.edu.uco.seguridad.shared.event.DomainEventPublisher;
 import co.edu.uco.seguridad.shared.observability.ReactiveLogContext;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
-import co.edu.uco.seguridad.shared.port.ReactiveTransactionPort;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +27,16 @@ import java.util.Objects;
 
 /**
  * Orquesta E-1: registrar la aplicación a través de Aplicaciones, luego su primer recurso aquí,
- * como una unidad de trabajo. Devuelve el agregado; el interactor proyecta al DTO.
+ * como una saga con dos pasos y una compensación explícita por paso — no una transacción distribuida.
+ *
+ * <p>Ninguna transacción real puede envolver los dos pasos: viven detrás de puertos de módulos
+ * distintos, y aunque hoy ambos hablan con la misma instancia de SurrealDB, el diseño no debe
+ * asumirlo (ADR-0004). Si el registro del recurso falla <b>después</b> de guardarlo pero antes de
+ * terminar (p. ej. al publicar su evento), {@link #compensateResource} lo borra; si cualquier parte
+ * de {@link #registerResource} falla, {@link #compensateApplication} deshace el registro de la
+ * aplicación en el otro módulo. Nombrar ambas compensaciones en vez de ocultarlas detrás de un
+ * {@code ReactiveTransactionPort} genérico es lo que hace visible, para quien lea este archivo, que
+ * la consistencia aquí es eventual y compensada, no atómica.</p>
  */
 public final class RegisterProtectedApplicationUseCaseImpl implements RegisterProtectedApplicationUseCase {
 
@@ -39,7 +47,6 @@ public final class RegisterProtectedApplicationUseCaseImpl implements RegisterPr
     private final RegisterProtectedApplicationRulesValidator rules;
     private final ProtectedResourceRepository resources;
     private final DomainEventPublisher events;
-    private final ReactiveTransactionPort transaction;
     private final IdentifierGenerator identifiers;
     private final TimeProvider time;
 
@@ -48,7 +55,6 @@ public final class RegisterProtectedApplicationUseCaseImpl implements RegisterPr
                                                     RegisterProtectedApplicationRulesValidator rules,
                                                     ProtectedResourceRepository resources,
                                                     DomainEventPublisher events,
-                                                    ReactiveTransactionPort transaction,
                                                     IdentifierGenerator identifiers,
                                                     TimeProvider time) {
         this.registerApplicationInteractor = Objects.requireNonNull(
@@ -58,16 +64,15 @@ public final class RegisterProtectedApplicationUseCaseImpl implements RegisterPr
         this.rules = Objects.requireNonNull(rules, "se requiere validador de reglas");
         this.resources = Objects.requireNonNull(resources, "se requiere repositorio de recurso protegido");
         this.events = Objects.requireNonNull(events, "se requiere publicador de eventos de dominio");
-        this.transaction = Objects.requireNonNull(transaction, "se requiere puerto de transacción");
         this.identifiers = Objects.requireNonNull(identifiers, "se requiere generador de identificadores");
         this.time = Objects.requireNonNull(time, "se requiere proveedor de tiempo");
     }
 
     @Override
     public Mono<ProtectedResource> execute(RegisterProtectedApplicationRequest dto) {
-        return transaction.execute(() -> registerApplication(dto)
-                        .flatMap(application -> registerResource(dto, application)
-                                .onErrorResume(error -> compensateApplication(application).then(Mono.error(error)))))
+        return registerApplication(dto)
+                .flatMap(application -> registerResource(dto, application)
+                        .onErrorResume(error -> compensateApplication(application).then(Mono.error(error))))
                 .transform(ReactiveLogContext.withContext(LOG, "protected_application.register"));
     }
 
@@ -82,7 +87,9 @@ public final class RegisterProtectedApplicationUseCaseImpl implements RegisterPr
         return rules.execute(registration)
                 .then(Mono.fromSupplier(() -> buildResource(dto, application)))
                 .flatMap(outcome -> resources.save(outcome.entity())
-                        .flatMap(saved -> publish(outcome.domainEvents()).thenReturn(saved)));
+                        .flatMap(saved -> publish(outcome.domainEvents())
+                                .thenReturn(saved)
+                                .onErrorResume(error -> compensateResource(saved).then(Mono.error(error)))));
     }
 
     private AggregateRoot<ProtectedResource, ProtectedResourceRegistered> buildResource(
@@ -99,6 +106,10 @@ public final class RegisterProtectedApplicationUseCaseImpl implements RegisterPr
 
     private Mono<Void> publish(List<ProtectedResourceRegistered> domainEvents) {
         return Flux.fromIterable(domainEvents).concatMap(events::publish).then();
+    }
+
+    private Mono<Void> compensateResource(ProtectedResource saved) {
+        return resources.deleteById(saved.id());
     }
 
     private Mono<Void> compensateApplication(RegisteredApplicationResponse application) {

@@ -2,7 +2,6 @@ package co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.dto
 
 import co.edu.uco.seguridad.crosscutting.messages.WebContractMessages;
 import co.edu.uco.seguridad.pdp.commons.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.TenantId;
 import co.edu.uco.seguridad.pdp.commons.exception.InvalidValueException;
 import co.edu.uco.seguridad.shared.web.RequestFieldParser;
 import co.edu.uco.seguridad.shared.web.exception.ConflictingRequestParametersException;
@@ -15,19 +14,18 @@ import java.util.function.Supplier;
  * Nivel dos para la consulta de catálogo: filtros que se sabe que son analizables y una ventana que se
  * sabe que está acotada.
  *
+ * <p>No incluye tenant: desde ADR-0003 el tenant de la consulta es el del token autenticado, así que
+ * el mapper lo añade directamente al construir el {@code ProtectedApplicationCriteria}, sin pasar
+ * por esta clase.</p>
+ *
  * <p>La ventana tiene un solo setter para los cuatro parámetros porque paginación e intervalos son dos formas
  * de decir lo mismo, y su validez es una propiedad de la combinación, no de ningún valor individual.</p>
  */
 public final class SearchProtectedApplicationsRequest {
 
-    private Optional<TenantId> tenantId = Optional.empty();
     private Optional<String> nameContains = Optional.empty();
     private Optional<String> resourceContains = Optional.empty();
     private PageWindow window = PageWindow.defaultWindow();
-
-    public void setTenantId(String value) {
-        this.tenantId = RequestFieldParser.parseOptional("tenantId", value, TenantId::new);
-    }
 
     public void setNameContains(String value) {
         this.nameContains = RequestFieldParser.optional(value);
@@ -54,10 +52,6 @@ public final class SearchProtectedApplicationsRequest {
         } else if (pagingRequested) {
             this.window = pageWindow(page, size);
         }
-    }
-
-    public Optional<TenantId> tenantId() {
-        return tenantId;
     }
 
     public Optional<String> nameContains() {

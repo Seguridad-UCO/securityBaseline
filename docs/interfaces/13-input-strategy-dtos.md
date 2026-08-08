@@ -10,16 +10,19 @@ validación) y termina como un **App Request** tipado
 dos puntos depende de si hace falta **ensamblar** algo a partir de los campos sueltos:
 
 ```text
-JSON
- ↓
-Raw Request DTO      record, todos los campos String, sin anotaciones de validación
- ↓
- ├─ Registro: el mapper convierte cada campo directo a su value object — nada que ensamblar
- │   ↓
+Authorization: Bearer <jwt>  →  SecurityContext.currentPrincipal()  →  TenantId
+                                                                            │
+JSON / query string                                                       │
+ ↓                                                                        │
+Raw Request DTO      record, todos los campos String, sin anotaciones     │
+ ↓                    de validación, y sin tenantId (ADR-0003)            │
+ ├─ Registro: el mapper convierte cada campo directo a su value object ◄──┤
+ │   ↓                                                                    │
  │  App Request       tipado, inmutable (application.port.primary.dto.request)
- │
- └─ Búsqueda: el mapper pasa por un Web Request mutable, porque construir el criterio de
-     búsqueda a partir de campos sueltos SÍ es una transformación real
+ │                                                                        │
+ └─ Búsqueda: el mapper pasa por un Web Request mutable, porque          │
+     construir el criterio de búsqueda a partir de campos sueltos SÍ ◄────┘
+     es una transformación real
      ↓
     Web Request DTO   mutable, campos tipados como value objects (infraestructura)
      ↓
@@ -27,6 +30,11 @@ Raw Request DTO      record, todos los campos String, sin anotaciones de validac
  ↓
 Use Case → Domain
 ```
+
+El tenant no es un campo del payload: desde ADR-0003 es el interactor quien lo lee del principal
+autenticado (`SecurityContext.currentPrincipal()`) y se lo entrega al mapper como parámetro aparte,
+para el registro y para la búsqueda por igual. Un `Raw Request` con `tenantId` habría dejado a un
+cliente pedir operar sobre un tenant que no es el suyo con solo cambiar un campo del cuerpo.
 
 ## Justificación
 
@@ -43,33 +51,46 @@ Se descartó recibir entidades del dominio directamente desde JSON: la forma pú
 al modelo interno y no habría manera de versionar la API.
 
 **El registro y la búsqueda dejaron de compartir la misma cantidad de pasos** (hasta el Stage 1 de la
-evolución de arquitectura ambos tenían un Web Request intermedio). El registro tiene cuatro campos que
-se convierten uno a uno en su value object — `tenantId`, `applicationName`, `resourceCode`, `action` —
-y el App Request los recibe con el mismo nombre y tipo. Un Web Request ahí solo repetía esos cuatro
+evolución de arquitectura ambos tenían un Web Request intermedio). El registro tiene tres campos que
+se convierten uno a uno en su value object — `applicationName`, `resourceCode`, `action` — más el
+tenant, que entra por su cuenta desde el principal autenticado. Un Web Request ahí solo repetía esos
 campos con el mismo tipo, para que un mapper después los volviera a copiar sin transformar nada. Se
 eliminó: el mapper de registro ahora construye el App Request directamente, campo por campo, y
-conserva la misma precisión de error por campo porque sigue usando `RequestFieldParser.parse` para cada
-uno. La búsqueda sí necesita el paso intermedio, porque `tenantId`/`nameContains`/`resourceContains` y
-la ventana de paginación se **consolidan** en un objeto `ProtectedApplicationCriteria` (una
-Specification) — eso es una transformación real, no una copia.
+conserva la misma precisión de error por campo porque sigue usando `RequestFieldParser.parse` para
+cada uno. La búsqueda sí necesita el paso intermedio, porque `nameContains`/`resourceContains` y la
+ventana de paginación se **consolidan**, junto con el tenant del principal, en un objeto
+`ProtectedApplicationCriteria` (una Specification) — eso es una transformación real, no una copia.
 
 ## Implementación
 
-### Registro — un solo mapper, sin DTO intermedio
+### Registro — un solo mapper, sin DTO intermedio; el tenant llega aparte
 
 ```java
-public static RegisterProtectedApplicationRequest toRequest(RegisterProtectedApplicationRawRequest raw) {
+public static RegisterProtectedApplicationRequest toRequest(
+        RegisterProtectedApplicationRawRequest raw, TenantId tenantId) {
     return new RegisterProtectedApplicationRequest(
-            RequestFieldParser.parse("tenantId", raw.tenantId(), TenantId::new),
+            tenantId,
             RequestFieldParser.parse("applicationName", raw.applicationName(), ApplicationName::new),
             RequestFieldParser.parse("resourceCode", raw.resourceCode(), ResourceCode::new),
             RequestFieldParser.parse("action", raw.action(), ActionCode::new));
 }
 ```
 
+El interactor es quien llama a este mapper, y es quien resuelve `tenantId` antes de llamarlo:
+
+```java
+SecurityContext.currentPrincipal()
+        .map(principal -> RegisterProtectedApplicationRequestMapper.toRequest(raw, principal.tenantId()))
+        .flatMap(useCase::execute)
+        // ...
+```
+
 `RequestFieldParser.parse` delega el formato al value object y solo añade **qué campo** lo traía —
 exactamente la misma garantía que daban los setters del Web Request que se eliminó, pero sin una clase
-mutable que solo iba a vivir para volver a copiarse en un record.
+mutable que solo iba a vivir para volver a copiarse en un record. `tenantId` no pasa por
+`RequestFieldParser` porque no es texto sin analizar: para cuando el interactor lo lee, el
+`ReactiveJwtDecoder` ya verificó la firma del token y `PdpPrincipal.from` ya construyó el
+`TenantId` a partir del claim (ver [ADR-0003](../governance/adr/adr-0003-real-security-reactive-jwt.md)).
 
 ### Búsqueda — el Web Request sigue siendo mutable a propósito
 
@@ -82,7 +103,8 @@ public void setResourceCode(String value) {
 No es un `record` a propósito. El constructor canónico de un record validaría todo de una vez, solo
 podría reportar el primer problema y no dejaría un lugar con nombre donde colgar la regla de cada
 campo — y aquí, a diferencia del registro, después hay una transformación (armar el criterio) que
-necesita los cuatro valores ya construidos antes de decidir cómo combinarlos.
+necesita los valores ya construidos (los filtros opcionales y la ventana) antes de decidir cómo
+combinarlos con el tenant que trae el interactor.
 
 Pasado el mapper de búsqueda, el adaptador proyecta al **App Request** ensamblando
 `ProtectedApplicationCriteria` a partir de los campos ya tipados. El App Request y el Web Request
@@ -96,9 +118,13 @@ cualificados cuando hace falta.
 - Web Request (solo búsqueda): [`SearchProtectedApplicationsRequest.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/dto/request/SearchProtectedApplicationsRequest.java)
 - [`RequestFieldParser.java`](../../src/main/java/co/edu/uco/seguridad/shared/web/RequestFieldParser.java)
   — utilidad compartida del adaptador web; el interactor invoca los mappers que la usan
+- Tenant: [`PdpPrincipal.java`](../../src/main/java/co/edu/uco/seguridad/shared/security/PdpPrincipal.java),
+  [`SecurityContext.java`](../../src/main/java/co/edu/uco/seguridad/shared/security/SecurityContext.java)
 - App Request: [`application/port/primary/dto/request`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/port/primary/dto/request)
 - Mappers: [`RegisterProtectedApplicationRequestMapper.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/mapper/RegisterProtectedApplicationRequestMapper.java),
   [`SearchProtectedApplicationsRequestMapper.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/mapper/SearchProtectedApplicationsRequestMapper.java)
+- Interactores: [`RegisterProtectedApplicationInteractorImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/port/primary/interactor/impl/RegisterProtectedApplicationInteractorImpl.java),
+  [`SearchProtectedApplicationsInteractorImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/port/primary/interactor/impl/SearchProtectedApplicationsInteractorImpl.java)
 - Pruebas: [`RegisterProtectedApplicationRequestMapperTests`](../../src/test/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/mapper/RegisterProtectedApplicationRequestMapperTests.java),
   [`SearchProtectedApplicationsRequestMapperTests`](../../src/test/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/mapper/SearchProtectedApplicationsRequestMapperTests.java)
 

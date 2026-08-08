@@ -10,11 +10,12 @@ La línea base representa el **contenedor PDP**:
 co.edu.uco.seguridad
 ├── shared/            capacidades transversales (módulo OPEN)
 │   ├── contract/      ReactiveOperation · OperationWithoutResult · …
-│   ├── port/          TimeProvider · IdentifierGenerator · ReactiveTransactionPort
+│   ├── port/          TimeProvider · IdentifierGenerator
 │   ├── event/         DomainEvent · DomainEventPublisher
+│   ├── security/      PdpPrincipal · SecurityContext · handlers 401/403 (ADR-0003)
 │   ├── web/           ApiResponse · PageResponse · RequestFieldParser · correlación
 │   ├── observability/ ReactiveLogContext
-│   └── config/        puertos transversales + EventPublisherConfiguration
+│   └── config/        puertos transversales + EventPublisherConfiguration + SecurityConfiguration
 └── pdp/
     ├── commons/       shared kernel: TenantId, ApplicationId, ResourceId, ApplicationName,
     │                  PageWindow, ResultPage, AggregateRoot y excepciones base
@@ -32,9 +33,14 @@ vocabulario de negocio vive en `pdp/commons` (Java puro, sin Reactor).
 
 Eventos de dominio ([ADR-0002](../governance/adr/adr-0002-domain-events-modulith-registry.md)):
 `Application` / `ProtectedResource` registran hechos vía `registerWithEvent`;
-`DomainEventPublisher` usa `ApplicationEventPublisher` (sin Event Publication Registry hasta tener
-almacén real). Seguridad reactiva ([ADR-0003](../governance/adr/adr-0003-real-security-reactive-jwt.md))
-sigue pendiente.
+`DomainEventPublisher` usa `ApplicationEventPublisher` (sin Event Publication Registry: aunque ya hay
+persistencia real desde el Stage 4, Modulith no trae un backend de registry para SurrealDB — ver la
+actualización en la nota de implementación de ADR-0002). Seguridad reactiva
+([ADR-0003](../governance/adr/adr-0003-real-security-reactive-jwt.md)) y persistencia real
+([ADR-0004](../governance/adr/adr-0004-real-persistence-surrealdb.md)) ya están implementadas:
+`SecurityWebFilterChain` exige JWT en toda ruta salvo `/actuator/health,info`, los interactores de
+`recursos` leen el tenant del principal autenticado en vez de aceptarlo en el cuerpo o la query, y
+los tres repositorios secundarios hablan con SurrealDB por HTTP en vez de guardar en memoria.
 
 ## Contratos publicados por módulo
 
@@ -49,12 +55,13 @@ operar (carga + `TenantStatusMustBeActiveRule`). No se mezclan consulta y decisi
 
 ## Flujo E-1
 
-El controlador HTTP entrega el JSON crudo al interactor. El interactor mapea a DTO tipado, ejecuta
-el caso de uso y proyecta la respuesta HTTP. El caso de uso registra la aplicación con
-`RegisterApplicationInteractor` (que aplica sus reglas, incluida la del tenant, y publica
-`ApplicationRegistered`) y luego valida y persiste el recurso, publicando
-`ProtectedResourceRegistered`. `InMemoryAuditAdapter` escucha ese evento. Si el recurso falla, se
-compensa con `RemoveApplicationInteractor`.
+`SecurityWebFilterChain` valida el JWT antes de que la petición llegue al controlador. El
+controlador HTTP entrega el JSON crudo al interactor. El interactor lee el tenant del principal
+autenticado (`SecurityContext.currentPrincipal()`), mapea a DTO tipado, ejecuta el caso de uso y
+proyecta la respuesta HTTP. El caso de uso registra la aplicación con `RegisterApplicationInteractor`
+(que aplica sus reglas, incluida la del tenant, y publica `ApplicationRegistered`) y luego valida y
+persiste el recurso, publicando `ProtectedResourceRegistered`. `InMemoryAuditAdapter` escucha ese
+evento. Si el recurso falla, se compensa con `RemoveApplicationInteractor`.
 
 ## Evidencia
 

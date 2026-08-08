@@ -86,11 +86,11 @@ flowchart TB
     CLIENT["Cliente HTTP"]
 
     subgraph SHARED["shared + crosscutting"]
-      SEC["security/ (previsto)\nJWT reactivo"]
+      SEC["security/\nJWT reactivo (PEP)"]
       CORR["CorrelationWebFilter"]
       ERRH["ApiErrorHandler"]
       EVTP["DomainEventPublisher"]
-      PORTS["TimeProvider · IdentifierGenerator · ReactiveTransactionPort"]
+      PORTS["TimeProvider · IdentifierGenerator"]
     end
 
     subgraph PDP["pdp/"]
@@ -101,11 +101,11 @@ flowchart TB
     end
 
     subgraph ADAPT["Adaptadores secundarios"]
-      SURDB[("SurrealDB (previsto)")]
+      SURDB[("SurrealDB (real, por HTTP)")]
       AUDIT["Auditoría por eventos"]
     end
 
-    CLIENT --> CORR --> REC
+    CLIENT --> CORR --> SEC --> REC
     REC --> APLI --> TEN
     APLI --> COMMONS
     REC --> COMMONS
@@ -121,17 +121,21 @@ Invariante Modulith (`ModulithStructureTests`):
 ## Flujo de una operación HTTP
 
 ```text
-Controller  →  Interactor.execute(raw)
-                 ├─ mapea raw → DTO tipado
-                 ├─ UseCase.execute(dto)
-                 │    ├─ RulesValidator → Rules
-                 │    └─ orquestación / puertos secundarios → dominio
-                 └─ proyecta dominio → respuesta HTTP
+SecurityWebFilterChain (JWT) → Controller → Interactor.execute(raw)
+                                               ├─ SecurityContext.currentPrincipal() → tenant
+                                               ├─ mapea raw + tenant → DTO tipado
+                                               ├─ UseCase.execute(dto)
+                                               │    ├─ RulesValidator → Rules
+                                               │    └─ orquestación / puertos secundarios → dominio
+                                               └─ proyecta dominio → respuesta HTTP
 Controller  →  ApiResponse
 ```
 
 Cada interactor y cada caso de uso extiende una forma genérica
-(`ReactiveOperation` / `ReactiveOperationWithoutResult`) y declara un solo método `execute`.
+(`ReactiveOperation` / `ReactiveOperationWithoutResult`) y declara un solo método `execute`. El
+tenant nunca es un parámetro de esa forma genérica: el interactor lo lee del principal autenticado
+(ADR-0003) antes de construir el DTO, así que ni el contrato del puerto ni el caso de uso saben que
+existe un JWT.
 
 ## Qué se mantiene / incorpora / retira
 
@@ -142,9 +146,9 @@ Cada interactor y cada caso de uso extiende una forma genérica
 | Mantener | Entrada String→VO sin `starter-validation`; `ApiErrorHandler` RFC7807 |
 | Mantener | Capa interactor ([ADR-0001](../governance/adr/adr-0001-keep-interactor-layer.md)) |
 | Incorporar | `AggregateRoot` + eventos ([ADR-0002](../governance/adr/adr-0002-domain-events-modulith-registry.md)) — hecho |
-| Incorporar | Spring Security reactivo + JWT ([ADR-0003](../governance/adr/adr-0003-real-security-reactive-jwt.md)) |
-| Incorporar | Persistencia SurrealDB ([ADR-0004](../governance/adr/adr-0004-real-persistence-surrealdb.md)) |
-| Retirado | Fachadas multi-método (`*ModuleApi` / `*Service`); DTO de registro duplicado |
+| Incorporar | Spring Security reactivo + JWT ([ADR-0003](../governance/adr/adr-0003-real-security-reactive-jwt.md)) — hecho |
+| Incorporar | Persistencia SurrealDB ([ADR-0004](../governance/adr/adr-0004-real-persistence-surrealdb.md)) — hecho |
+| Retirado | Fachadas multi-método (`*ModuleApi` / `*Service`); DTO de registro duplicado; `tenantId` en el cuerpo/query (ahora viene del token); `ReactiveTransactionPort`/`SnapshotCapable` (ahora saga con compensación explícita, ADR-0004) |
 
 ## Etapas
 
@@ -156,9 +160,9 @@ Cada etapa deja `./mvnw verify` en verde (compilación, fronteras Modulith, test
 | 1 | Colapso DTO duplicado; puerto `SnapshotCapable` | Completada |
 | 2 | Eventos de dominio + auditoría por listener | Completada |
 | — | Interactores por operación; mapeo en interactor; reglas de tenant separadas | Completada |
-| 3 | Seguridad real (PEP JWT) | Pendiente (ADR-0003) |
-| 4 | Persistencia SurrealDB | Pendiente (ADR-0004) |
-| 5 | Sincronización final de documentación y evidencia | En curso |
+| 3 | Seguridad real (PEP JWT); tenant retirado del cuerpo/query | Completada |
+| 4 | Persistencia SurrealDB (HTTP + WebClient, sin driver Java); saga con compensación explícita; Testcontainers | Completada |
+| 5 | Sincronización final de documentación y evidencia | Completada |
 
 ## Verificación
 
@@ -166,5 +170,9 @@ Cada etapa deja `./mvnw verify` en verde (compilación, fronteras Modulith, test
 - `ApplicationModules.of(PdpApplication.class).verify()` — fronteras Modulith.
 - Tests de `domain/` y `application/` sin levantar Spring.
 - Eventos: `ProtectedResourceAuditListenerTests`.
-- Etapa 3: `WebTestClient` para 401/403 y tenant desde el principal.
-- Etapa 4: Testcontainers con SurrealDB.
+- Seguridad: `SecurityWebFilterChainTests` (401/403, rutas públicas) y `ProtectedApplicationHttpTests`
+  (flujo autenticado, aislamiento entre tenants).
+- Etapa 4: Testcontainers con SurrealDB — `AbstractSurrealDbIntegrationTest` (contenedor único
+  compartido por la JVM de prueba) y `SurrealRepositoryIntegrationTests` (los tres repositorios
+  reales, sin contexto de Spring). `./mvnw verify` es autocontenido: no requiere `docker compose up`
+  manual, solo Docker corriendo.

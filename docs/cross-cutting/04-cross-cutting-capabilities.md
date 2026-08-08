@@ -19,9 +19,10 @@ infraestructura transversal en el dominio o en el controlador.
 | `shared/web` | envelope, paginación HTTP, correlación, excepciones de contrato | Frontera HTTP, común a todo adaptador web |
 | `shared/observability` | puente Reactor Context → MDC | Aplica a cualquier flujo reactivo |
 | `shared/rule` | los tres contratos de regla | Vocabulario común de reglas, Java puro |
-| `shared/port` | `TimeProvider`, `IdentifierGenerator`, `ReactiveTransactionPort` | Capacidades que todo caso de uso puede necesitar |
+| `shared/port` | `TimeProvider`, `IdentifierGenerator` | Capacidades que todo caso de uso puede necesitar |
 | `shared/event` | `DomainEvent`, `DomainEventPublisher` (+ `SpringDomainEventPublisher`) | Publicar un hecho de negocio sin que quien lo produce conozca a quien escucha (ADR-0002) |
-| `shared/config` | implementaciones por defecto de esos puertos | Único lugar donde se decide el reloj real |
+| `shared/security` | `PdpPrincipal`, `SecurityContext`, handlers 401/403 | Frontera PEP: quién hace la petición, sin que el dominio conozca JWT (ADR-0003) |
+| `shared/config` | implementaciones por defecto de esos puertos + `SecurityConfiguration` | Único lugar donde se decide el reloj real y la cadena de seguridad |
 | `pdp/commons` | value objects y excepciones base del PDP | Lenguaje del dominio compartido entre módulos |
 
 La separación entre `shared` y `pdp/commons` no es cosmética: `pdp/commons` es vocabulario del
@@ -32,7 +33,8 @@ de Reactor es lo que permite afirmar que el dominio es Java puro.
 de un caso de uso lo vuelven imposible de probar de forma determinista. Con los puertos, la prueba
 fija el instante y el identificador.
 
-La auditoría es un puerto para que la aplicación pueda solicitarla sin saber dónde se almacena.
+La auditoría escucha eventos de dominio en vez de ser invocada por un puerto que el caso de uso pida
+explícitamente (ADR-0002): quién audita qué es una decisión de infraestructura, no del caso de uso.
 
 ## Ubicación verificable
 

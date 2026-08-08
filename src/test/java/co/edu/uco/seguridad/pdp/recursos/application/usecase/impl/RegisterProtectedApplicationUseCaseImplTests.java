@@ -18,8 +18,6 @@ import co.edu.uco.seguridad.pdp.recursos.domain.ActionCode;
 import co.edu.uco.seguridad.pdp.recursos.domain.ProtectedApplicationCriteria;
 import co.edu.uco.seguridad.pdp.recursos.domain.ResourceCode;
 import co.edu.uco.seguridad.pdp.recursos.domain.event.ProtectedResourceRegistered;
-import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.secondary.persistence.repository.InMemoryProtectedResourceRepository;
-import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.secondary.persistence.transaction.SnapshotReactiveTransactionAdapter;
 import co.edu.uco.seguridad.shared.event.DomainEvent;
 import co.edu.uco.seguridad.shared.event.DomainEventPublisher;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
@@ -44,14 +42,14 @@ class RegisterProtectedApplicationUseCaseImplTests {
     private static final TenantId TENANT = new TenantId("universidad-uco");
     private static final Instant NOW = Instant.parse("2026-08-07T12:00:00Z");
 
-    private InMemoryProtectedResourceRepository resources;
+    private FakeProtectedResourceRepository resources;
     private RecordingRegisterApplicationInteractor registerApplication;
     private RecordingRemoveApplicationInteractor removeApplication;
     private RecordingEventPublisher events;
 
     @BeforeEach
     void setUp() {
-        resources = new InMemoryProtectedResourceRepository();
+        resources = new FakeProtectedResourceRepository();
         registerApplication = new RecordingRegisterApplicationInteractor();
         removeApplication = new RecordingRemoveApplicationInteractor();
         events = new RecordingEventPublisher();
@@ -88,7 +86,7 @@ class RegisterProtectedApplicationUseCaseImplTests {
                 .verify();
 
         assertThat(storedResources())
-                .as("the transaction port must restore the snapshot taken before the work")
+                .as("a failure after the save must trigger the explicit compensating delete")
                 .isEmpty();
         assertThat(removeApplication.removed)
                 .as("the application lives in another module, so it is undone by explicit compensation")
@@ -131,13 +129,12 @@ class RegisterProtectedApplicationUseCaseImplTests {
                         new ProtectedResourceMustBeUniqueRuleImpl(resources)),
                 resources,
                 eventPublisher,
-                new SnapshotReactiveTransactionAdapter(resources),
                 identifiers,
                 time);
     }
 
     private List<?> storedResources() {
-        return resources.findBy(ProtectedApplicationCriteria.unfiltered(), PageWindow.defaultWindow())
+        return resources.findBy(ProtectedApplicationCriteria.scopedTo(TENANT), PageWindow.defaultWindow())
                 .block()
                 .content();
     }

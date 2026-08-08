@@ -51,7 +51,6 @@ final class ProtectedApplicationController {
 
     @GetMapping
     Mono<ResponseEntity<ApiResponse<PageResponse<ProtectedApplicationResponse>>>> search(
-            @RequestParam(required = false) String tenantId,
             @RequestParam(required = false) String nameContains,
             @RequestParam(required = false) String resourceContains,
             @RequestParam(required = false) String page,
@@ -61,7 +60,7 @@ final class ProtectedApplicationController {
             ServerWebExchange exchange) {
         RequestContext context = CorrelationWebFilter.context(exchange);
         SearchProtectedApplicationsRawRequest raw = new SearchProtectedApplicationsRawRequest(
-                tenantId, nameContains, resourceContains, page, size, offset, limit);
+                nameContains, resourceContains, page, size, offset, limit);
         return searchInteractor.execute(raw)
                 .map(response -> ResponseEntity.ok(ApiResponse.success("CATALOG_QUERIED",
                         WebContractMessages.successCatalogQueried(), response, context)));

@@ -4,44 +4,50 @@
 
 ## Decisión arquitectónica
 
-La frontera transaccional es el puerto `ReactiveTransactionPort`. El registro y su evidencia de
-auditoría ocurren dentro de una sola unidad lógica de trabajo.
+No hay un puerto genérico de transacción. El registro de una aplicación protegida orquesta dos
+módulos (`aplicaciones` y `recursos`) y publica un evento de dominio entre medio; cada paso que puede
+fallar tiene su **compensación explícita** en vez de estar envuelto en una abstracción transaccional
+que prometería una atomicidad que ningún motor involucrado puede dar.
 
 ## Justificación
 
-Guardar el recurso y fallar al generar la evidencia deja un estado no auditable. Anotar el servicio
-con una transacción de framework lo acoplaría a una tecnología que todavía no existe en el proyecto.
+Esto no fue la decisión original: hasta el Stage 3, un puerto `ReactiveTransactionPort` con un
+adaptador de snapshot en memoria envolvía todo el flujo, dando la ilusión de una transacción única.
+Al llegar la persistencia real ([ADR-0004](../governance/adr/adr-0004-real-persistence-surrealdb.md))
+quedó claro que esa ilusión no se sostenía: las transacciones `BEGIN/COMMIT` de SurrealDB solo cubren
+un lote de SurrealQL dentro de **una misma petición HTTP**, y el trabajo real del caso de uso cruza
+módulos Java y publica eventos, no solo ejecuta sentencias. Mantener el puerto habría significado que
+su implementación real no pudiera cumplir el contrato que el nombre prometía. Se prefirió retirarlo y
+nombrar el patrón que ya estaba ahí — una saga — en vez de disfrazarlo de transacción.
 
 ## Implementación
 
-El caso de uso delimita la operación con `transaction.execute(...)`.
+`RegisterProtectedApplicationUseCaseImpl` encadena dos pasos, cada uno con su propia compensación:
 
-Hay **dos mecanismos de recuperación** porque hay dos almacenes, y conviene que eso sea visible en
-vez de estar escondido:
+1. **Registrar la aplicación** (módulo `aplicaciones`, vía `RegisterApplicationInteractor`).
+2. **Registrar el recurso protegido** (módulo `recursos`, guardado + publicación del evento de
+   dominio). Si este paso falla *después* de guardar el recurso, se compensa borrándolo
+   (`resources.deleteById(...)`) antes de propagar el error. Si el paso completo falla después de
+   registrar la aplicación, se compensa eliminándola (`removeApplicationInteractor.execute(...)`),
+   porque vive detrás del límite de otro módulo y no puede unirse a ninguna transacción de este.
 
-1. `SnapshotReactiveTransactionAdapter` copia el almacén de `recursos` antes del trabajo y lo
-   restaura si el `Mono` termina en error.
-2. La eliminación de la aplicación es una **compensación explícita**, porque vive detrás del límite
-   de otro módulo y no puede unirse a esta transacción. Es una saga, y nombrarla como tal evita que
-   alguien suponga una atomicidad que no existe.
-
-Detalle que hace correcto el rollback: el puerto recibe `Supplier<Mono<T>>` y no un `Mono<T>` ya
-ensamblado, y toma la copia dentro de `Mono.defer`. Así el snapshot corresponde al momento de la
-suscripción; con un `Mono` ya armado se restauraría un estado equivocado.
+No hay snapshot ni rollback de framework: cada compensación es una llamada explícita al mismo puerto
+o interactor que hizo el efecto original, encadenada con `onErrorResume`.
 
 ## Ubicación verificable
 
-- Puerto: [`ReactiveTransactionPort.java`](../../src/main/java/co/edu/uco/seguridad/shared/port/ReactiveTransactionPort.java)
-- Adaptador: [`SnapshotReactiveTransactionAdapter.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/secondary/persistence/transaction/SnapshotReactiveTransactionAdapter.java)
-- Uso: [`RegisterProtectedApplicationUseCaseImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/usecase/impl/RegisterProtectedApplicationUseCaseImpl.java)
-- Prueba: `rolls_back_the_saved_resource_and_removes_the_application_when_audit_fails` en
+- Flujo y compensación: [`RegisterProtectedApplicationUseCaseImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/usecase/impl/RegisterProtectedApplicationUseCaseImpl.java)
+- Prueba: `rolls_back_the_saved_resource_and_removes_the_application_when_event_publication_fails` en
   [`RegisterProtectedApplicationUseCaseImplTests`](../../src/test/java/co/edu/uco/seguridad/pdp/recursos/application/usecase/impl/RegisterProtectedApplicationUseCaseImplTests.java)
+- Nota de implementación con el razonamiento completo: [ADR-0004, sección de retiro de `ReactiveTransactionPort`](../governance/adr/adr-0004-real-persistence-surrealdb.md#nota-de-implementación)
 
 ## Evidencia y límite
 
-La prueba fuerza un fallo de auditoría y verifica dos cosas: que el almacén de recursos quedó vacío
-y que se solicitó la eliminación de la aplicación.
+La prueba fuerza un fallo en la publicación del evento y verifica dos cosas: que el recurso guardado
+se borró y que se solicitó la eliminación de la aplicación. Cubre la compensación en Java; no cubre
+un fallo a mitad de una escritura HTTP individual contra SurrealDB (por ejemplo, la conexión
+cayéndose entre el `CREATE` y la respuesta), que queda fuera del alcance de una prueba unitaria y
+sería terreno de una prueba de resiliencia de infraestructura.
 
-El rollback es demostrativo y exclusivo del dummy. La implementación SurrealDB deberá implementar el
-mismo puerto con su transacción real y sus propias pruebas de aislamiento; la compensación entre
-módulos seguirá siendo necesaria mientras cada módulo tenga su propio almacén.
+La compensación entre módulos seguirá siendo necesaria mientras cada módulo tenga su propio límite de
+consistencia — eso no depende de qué motor de persistencia haya detrás.

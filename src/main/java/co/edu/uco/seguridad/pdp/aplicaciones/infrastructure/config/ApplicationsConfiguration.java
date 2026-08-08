@@ -15,12 +15,15 @@ import co.edu.uco.seguridad.pdp.aplicaciones.application.usecase.RegisterApplica
 import co.edu.uco.seguridad.pdp.aplicaciones.application.usecase.RemoveApplicationUseCase;
 import co.edu.uco.seguridad.pdp.aplicaciones.application.usecase.impl.RegisterApplicationUseCaseImpl;
 import co.edu.uco.seguridad.pdp.aplicaciones.application.usecase.impl.RemoveApplicationUseCaseImpl;
-import co.edu.uco.seguridad.pdp.aplicaciones.infrastructure.adapter.secondary.persistence.repository.InMemoryApplicationRepository;
+import co.edu.uco.seguridad.pdp.aplicaciones.infrastructure.adapter.secondary.persistence.repository.SurrealApplicationRepository;
+import co.edu.uco.seguridad.pdp.aplicaciones.infrastructure.adapter.secondary.persistence.schema.SurrealApplicationSchemaInitializer;
 import co.edu.uco.seguridad.pdp.aplicaciones.infrastructure.properties.ApplicationCatalogProperties;
 import co.edu.uco.seguridad.pdp.tenants.application.rule.TenantMustBeActiveRule;
 import co.edu.uco.seguridad.shared.event.DomainEventPublisher;
+import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,8 +37,13 @@ import org.springframework.context.annotation.Configuration;
 public class ApplicationsConfiguration {
 
     @Bean
-    ApplicationRepository applicationRepository() {
-        return new InMemoryApplicationRepository();
+    ApplicationRepository applicationRepository(SurrealDbClient client) {
+        return new SurrealApplicationRepository(client);
+    }
+
+    @Bean
+    ApplicationRunner applicationSchemaInitializer(SurrealDbClient client) {
+        return new SurrealApplicationSchemaInitializer(client);
     }
 
     @Bean

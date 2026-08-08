@@ -1,46 +1,47 @@
-# 07. Adaptadores dummy
+# 07. Adaptadores de persistencia y auditoría
 
 [← Infraestructura](README.md)
 
-## Decisión arquitectónica
+## Estado actual
 
-Mientras SurrealDB y la auditoría real no existan, se usan implementaciones en memoria **detrás de
-puertos**, con comportamiento suficiente para probar registro, búsqueda, auditoría y rollback.
-
-## Justificación
-
-Esperar la infraestructura real bloquearía la validación de la arquitectura. Simularla dentro del
-servicio invalidaría la sustitución que se quiere demostrar. Se descarta presentar el dummy como
-fuente de verdad productiva.
+Desde el Stage 4 ([ADR-0004](../governance/adr/adr-0004-real-persistence-surrealdb.md)) los tres
+repositorios secundarios (`TenantRepository`, `ApplicationRepository`,
+`ProtectedResourceRepository`) tienen implementaciones **reales** sobre SurrealDB. Este archivo
+conserva el nombre `07-dummy-adapters.md` porque otras páginas ya enlazan a él por ruta, pero ya no
+describe dummies para esos tres puertos — ver [Historia](#historia-los-dummies-de-los-stages-0-3)
+más abajo para lo que había antes.
 
 ## Implementación
 
 | Adaptador | Puerto | Qué hace de verdad |
 |---|---|---|
-| `InMemoryTenantRepository` | `TenantRepository` | Sirve el catálogo de tenants desde configuración |
-| `InMemoryApplicationRepository` | `ApplicationRepository` | Unicidad por tenant sin distinguir mayúsculas |
-| `InMemoryProtectedResourceRepository` | `ProtectedResourceRepository` | Ejecuta la specification, ordena y pagina |
-| `SnapshotReactiveTransactionAdapter` | `ReactiveTransactionPort` | Copia y restaura ante error |
+| [`SurrealTenantRepository`](../../src/main/java/co/edu/uco/seguridad/pdp/tenants/infrastructure/adapter/secondary/persistence/repository/SurrealTenantRepository.java) | `TenantRepository` | Busca un tenant por id vía `SELECT` parametrizado contra SurrealDB |
+| [`SurrealApplicationRepository`](../../src/main/java/co/edu/uco/seguridad/pdp/aplicaciones/infrastructure/adapter/secondary/persistence/repository/SurrealApplicationRepository.java) | `ApplicationRepository` | Unicidad por tenant, alta y baja vía `CREATE`/`DELETE` |
+| [`SurrealProtectedResourceRepository`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/secondary/persistence/repository/SurrealProtectedResourceRepository.java) | `ProtectedResourceRepository` | Ejecuta la specification como `WHERE` dinámico, ordena y pagina con `ORDER BY ... LIMIT ... START` |
 
-`InMemoryAuditAdapter` ya no está en esta tabla porque no implementa ningún puerto: desde el Stage 2
-escucha `ProtectedResourceRegistered` con `@EventListener` en vez de que el caso de uso la invoque
-por un puerto de auditoría (ver [ADR-0002](../governance/adr/adr-0002-domain-events-modulith-registry.md)).
-Sigue siendo un dummy — solo identificadores, nunca el payload — pero ya no es un "adaptador detrás de
-un puerto" en el mismo sentido que los demás; es un consumidor de eventos.
+Cada módulo con datos también registra un inicializador de esquema (`ApplicationRunner`) que define
+su tabla e índices de forma idempotente en el arranque:
+[`SurrealTenantSchemaInitializer`](../../src/main/java/co/edu/uco/seguridad/pdp/tenants/infrastructure/adapter/secondary/persistence/schema/SurrealTenantSchemaInitializer.java),
+[`SurrealApplicationSchemaInitializer`](../../src/main/java/co/edu/uco/seguridad/pdp/aplicaciones/infrastructure/adapter/secondary/persistence/schema/SurrealApplicationSchemaInitializer.java),
+[`SurrealProtectedResourceSchemaInitializer`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/secondary/persistence/schema/SurrealProtectedResourceSchemaInitializer.java).
 
-Los dummies restantes almacenan **entidades de persistencia**, no objetos de dominio. Eso no es
-ceremonia: es lo que obliga a que el mapper exista y se ejerza desde el primer día, de modo que
-sustituir el almacén no descubra después que el modelo estaba acoplado a la fila.
+No hay driver Java de SurrealDB en el classpath: los tres adaptadores hablan HTTP crudo a través del
+cliente compartido
+[`SurrealDbClient`](../../src/main/java/co/edu/uco/seguridad/shared/persistence/surrealdb/SurrealDbClient.java)
+(sobre `WebClient`). El porqué de esta decisión —no había un driver Java viable— está documentado en
+la [Nota de implementación de ADR-0004](../governance/adr/adr-0004-real-persistence-surrealdb.md#nota-de-implementación).
 
-El acoplamiento entre la configuración y el tipo concreto del dummy —que existía porque el adaptador
-de transacción necesitaba la capacidad de snapshot que el puerto de repositorio deliberadamente no
-declara— se resolvió en el Stage 1 con un puerto dedicado,
-[`SnapshotCapable`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/secondary/persistence/transaction/SnapshotCapable.java):
-`InMemoryProtectedResourceRepository` lo implementa junto con `ProtectedResourceRepository`, y
-`ResourcesConfiguration` cablea cada punto de inyección por el contrato que le corresponde, nunca por
-el tipo concreto. `SnapshotCapable` desaparece junto con el dummy cuando la persistencia real
-implemente `ReactiveTransactionPort` con la transacción propia del motor
-([ADR-0004](../governance/adr/adr-0004-real-persistence-surrealdb.md)).
+`InMemoryAuditAdapter` sigue existiendo y sigue siendo un dummy — solo identificadores, nunca el
+payload — pero no implementa ningún puerto: desde el Stage 2 escucha `ProtectedResourceRegistered`
+con `@EventListener` en vez de que el caso de uso la invoque por un puerto de auditoría (ver
+[ADR-0002](../governance/adr/adr-0002-domain-events-modulith-registry.md)). Sustituirla por un
+sumidero real (log estructurado, sistema externo) es trabajo futuro fuera del alcance de las cuatro
+etapas actuales.
+
+Los repositorios reales siguen sin devolver **entidades de persistencia** directamente al dominio:
+`SurrealTenantRepository` y `SurrealProtectedResourceRepository` mapean la fila SurrealDB a la
+misma `Entity`+`Mapper` que usaban sus predecesores dummy, así que el mapper existe y se ejerce
+igual que antes — sustituir el almacén no cambió esa disciplina.
 
 ## Ubicación verificable
 
@@ -48,12 +49,37 @@ implemente `ReactiveTransactionPort` con la transacción propia del motor
 - [`recursos/infrastructure/adapter/secondary/audit`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/secondary/audit)
 - [`aplicaciones/infrastructure/adapter/secondary/persistence`](../../src/main/java/co/edu/uco/seguridad/pdp/aplicaciones/infrastructure/adapter/secondary/persistence)
 - [`tenants/infrastructure/adapter/secondary/persistence`](../../src/main/java/co/edu/uco/seguridad/pdp/tenants/infrastructure/adapter/secondary/persistence)
-- Configuración: [`ResourcesConfiguration.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/config/ResourcesConfiguration.java)
+- [`shared/persistence/surrealdb`](../../src/main/java/co/edu/uco/seguridad/shared/persistence/surrealdb) (cliente HTTP compartido)
+- Configuración: [`ResourcesConfiguration.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/config/ResourcesConfiguration.java), [`ApplicationsConfiguration.java`](../../src/main/java/co/edu/uco/seguridad/pdp/aplicaciones/infrastructure/config/ApplicationsConfiguration.java), [`TenantConfiguration.java`](../../src/main/java/co/edu/uco/seguridad/pdp/tenants/infrastructure/config/TenantConfiguration.java)
 
 ## Evidencia y límite
 
-La prueba de rollback usa el adaptador de transacción y el repositorio reales del dummy, no un mock:
-verifica el comportamiento, no la interacción. Los dummies se reemplazan por adaptadores SurrealDB y
-de auditoría reales sin cambiar dominio, casos de uso, reglas ni controlador — ver
-[ADR-0004](../governance/adr/adr-0004-real-persistence-surrealdb.md) y
-[ADR-0002](../governance/adr/adr-0002-domain-events-modulith-registry.md) (auditoría por eventos).
+Las pruebas de integración con contexto de Spring completo (`ProtectedApplicationHttpTests`,
+`SecurityWebFilterChainTests`, `SeguridadApplicationTests`, `ProtectedResourceAuditListenerTests`)
+corren contra una SurrealDB real provista por Testcontainers — ver
+[`AbstractSurrealDbIntegrationTest`](../../src/test/java/co/edu/uco/seguridad/AbstractSurrealDbIntegrationTest.java).
+`SurrealRepositoryIntegrationTests` ejercita los tres repositorios directamente (sin levantar el
+contexto de Spring) contra el mismo contenedor compartido, cubriendo casos que el flujo HTTP no
+ejercita explícitamente: existencia antes/después de guardar, borrado idempotente y paginación.
+
+## Historia: los dummies de los Stages 0-3
+
+Hasta el Stage 4, los tres repositorios eran implementaciones en memoria **detrás de los mismos
+puertos**, con comportamiento suficiente para probar registro, búsqueda y rollback sin bloquear la
+validación de la arquitectura por la ausencia de infraestructura real:
+
+| Adaptador (retirado) | Puerto | Qué hacía |
+|---|---|---|
+| `InMemoryTenantRepository` | `TenantRepository` | Servía el catálogo de tenants desde configuración |
+| `InMemoryApplicationRepository` | `ApplicationRepository` | Unicidad por tenant sin distinguir mayúsculas |
+| `InMemoryProtectedResourceRepository` | `ProtectedResourceRepository` | Ejecutaba la specification, ordenaba y paginaba |
+| `SnapshotReactiveTransactionAdapter` | `ReactiveTransactionPort` | Copiaba y restauraba el mapa en memoria ante error |
+
+El acoplamiento entre la configuración y el tipo concreto del dummy —que existía porque el adaptador
+de transacción necesitaba la capacidad de snapshot que el puerto de repositorio deliberadamente no
+declaraba— se resolvió en el Stage 1 con un puerto dedicado, `SnapshotCapable`. Ambos,
+`SnapshotCapable` y `ReactiveTransactionPort`, se **retiraron por completo** en el Stage 4 en vez de
+implementarse sobre SurrealDB: el modelo de transacción HTTP de SurrealDB no puede envolver trabajo
+que cruza módulos Java, así que `RegisterProtectedApplicationUseCaseImpl` pasó a una saga con
+compensación explícita por paso — ver la
+[Nota de implementación de ADR-0004](../governance/adr/adr-0004-real-persistence-surrealdb.md#nota-de-implementación).

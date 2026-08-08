@@ -61,13 +61,15 @@ Estado final: los 23 cumplen, con la evidencia enlazada desde cada página y ver
 
 ## Lo que sigue sin estar hecho, y se dice aquí
 
-- Los adaptadores siguen siendo dummies: SurrealDB y seguridad JWT son el siguiente incremento —
-  [ADR-0004](governance/adr/adr-0004-real-persistence-surrealdb.md) y
-  [ADR-0003](governance/adr/adr-0003-real-security-reactive-jwt.md), con plan en
-  [arquitectura y hoja de ruta](plans/2026-08-07-architecture-and-roadmap.md).
-- La auditoría por eventos ([ADR-0002](governance/adr/adr-0002-domain-events-modulith-registry.md))
-  usa entrega síncrona (`ApplicationEventPublisher`); el Event Publication Registry de Modulith
-  requiere almacén persistente (se reconsidera con ADR-0004).
+- La auditoría real (fuera de memoria) sigue sin implementarse: `InMemoryAuditAdapter` sigue
+  registrando solo identificadores como listener de `ProtectedResourceRegistered`
+  ([ADR-0002](governance/adr/adr-0002-domain-events-modulith-registry.md)). No estaba en el alcance
+  de las cuatro etapas.
+- La auditoría por eventos usa entrega síncrona (`ApplicationEventPublisher`), no el Event
+  Publication Registry de Modulith: aunque desde el Stage 4 ya hay persistencia real (SurrealDB),
+  Modulith 2.1 no trae un backend de registry para SurrealDB (solo JPA/JDBC/MongoDB/Neo4j) — ver la
+  actualización en la nota de implementación de
+  [ADR-0002](governance/adr/adr-0002-domain-events-modulith-registry.md#nota-de-implementación).
 - El Quality Gate contra SonarQube real requiere la service connection y la extensión en la
   organización.
 
@@ -82,6 +84,12 @@ Decisiones y etapas: [gobierno](governance/README.md) y
 | 1 | DTO de registro único; puerto `SnapshotCapable` | 1, 11, 13, 20 |
 | 2 | Eventos de dominio; auditoría por listener | 1, 4, 7, 10 |
 | — | Interactores por operación; mapeo en interactor; `TenantStatusMustBeActiveRule` | 11, 12, 20 |
+| 3 | Seguridad real (JWT reactivo); `tenantId` retirado del cuerpo/query, `ProtectedApplicationCriteria.tenantId` obligatorio | 4, 6, 9, 13, 14 |
+| 4 | Persistencia real (SurrealDB por HTTP, sin driver Java); retiro de `ReactiveTransactionPort`/`SnapshotCapable` en favor de saga con compensación explícita; Testcontainers | 4, 7, 10, 16 |
 
-Etapas 3 y 4 (seguridad real, persistencia real) están aceptadas y pendientes de implementación.
-La verificación del proyecto es `./mvnw verify` (Java 25 según el POM).
+Las cuatro etapas del plan de arquitectura están implementadas.
+La verificación del proyecto es `./mvnw verify` (Java 25 según el POM; localmente se usa
+`-Dmaven.compiler.release=21` como comprobación de cordura, sin tocar el POM — ver
+[`plans/2026-08-07-architecture-and-roadmap.md`](plans/2026-08-07-architecture-and-roadmap.md)).
+Desde el Stage 4, `verify` también requiere Docker (Testcontainers provisiona SurrealDB
+automáticamente; no hace falta `docker compose up` manual).

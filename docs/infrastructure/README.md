@@ -2,4 +2,4 @@
 
 [← Índice principal](../README.md)
 
-[07 Adaptadores dummy](07-dummy-adapters.md)
+[07 Adaptadores de persistencia y auditoría](07-dummy-adapters.md)

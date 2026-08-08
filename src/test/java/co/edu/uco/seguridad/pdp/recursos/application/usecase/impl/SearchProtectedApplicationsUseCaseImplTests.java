@@ -11,7 +11,6 @@ import co.edu.uco.seguridad.pdp.recursos.domain.ActionCode;
 import co.edu.uco.seguridad.pdp.recursos.domain.ProtectedApplicationCriteria;
 import co.edu.uco.seguridad.pdp.recursos.domain.ProtectedResource;
 import co.edu.uco.seguridad.pdp.recursos.domain.ResourceCode;
-import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.secondary.persistence.repository.InMemoryProtectedResourceRepository;
 import co.edu.uco.seguridad.pdp.tenants.application.rule.TenantMustBeActiveRule;
 import co.edu.uco.seguridad.pdp.tenants.TenantStatus;
 import co.edu.uco.seguridad.pdp.tenants.application.exception.TenantNotFoundException;
@@ -35,12 +34,12 @@ class SearchProtectedApplicationsUseCaseImplTests {
 
     private static final TenantId TENANT = new TenantId("universidad-uco");
 
-    private InMemoryProtectedResourceRepository resources;
+    private FakeProtectedResourceRepository resources;
     private SearchProtectedApplicationsUseCaseImpl service;
 
     @BeforeEach
     void setUp() {
-        resources = new InMemoryProtectedResourceRepository();
+        resources = new FakeProtectedResourceRepository();
         TenantMustBeActiveRule activeTenant = tenantId -> TENANT.equals(tenantId)
                 ? Mono.just(new TenantResponse(tenantId, TenantStatus.ACTIVE))
                 : Mono.error(new TenantNotFoundException(tenantId));
@@ -54,7 +53,7 @@ class SearchProtectedApplicationsUseCaseImplTests {
 
     @Test
     void returns_every_row_when_no_filter_is_supplied() {
-        StepVerifier.create(service.execute(dto(ProtectedApplicationCriteria.unfiltered(), PageWindow.defaultWindow())))
+        StepVerifier.create(service.execute(dto(ProtectedApplicationCriteria.scopedTo(TENANT), PageWindow.defaultWindow())))
                 .assertNext(page -> {
                     assertThat(page.content()).hasSize(3);
                     assertThat(page.total()).isEqualTo(3);
@@ -65,7 +64,7 @@ class SearchProtectedApplicationsUseCaseImplTests {
     @Test
     void applies_only_the_filters_that_are_present() {
         ProtectedApplicationCriteria byName = new ProtectedApplicationCriteria(
-                Optional.of(TENANT), Optional.of("academica"), Optional.empty());
+                TENANT, Optional.of("academica"), Optional.empty());
 
         StepVerifier.create(service.execute(dto(byName, PageWindow.defaultWindow())))
                 .assertNext(page -> assertThat(page.content())
@@ -77,7 +76,7 @@ class SearchProtectedApplicationsUseCaseImplTests {
     @Test
     void reports_the_full_total_even_when_the_window_returns_one_row() {
         StepVerifier.create(service.execute(
-                        dto(ProtectedApplicationCriteria.unfiltered(), PageWindow.ofRange(0, 1))))
+                        dto(ProtectedApplicationCriteria.scopedTo(TENANT), PageWindow.ofRange(0, 1))))
                 .assertNext(page -> {
                     assertThat(page.content()).hasSize(1);
                     assertThat(page.total()).isEqualTo(3);
@@ -87,8 +86,8 @@ class SearchProtectedApplicationsUseCaseImplTests {
 
     @Test
     void pages_are_stable_and_do_not_overlap() {
-        var first = service.execute(dto(ProtectedApplicationCriteria.unfiltered(), PageWindow.ofPage(0, 2))).block();
-        var second = service.execute(dto(ProtectedApplicationCriteria.unfiltered(), PageWindow.ofPage(1, 2))).block();
+        var first = service.execute(dto(ProtectedApplicationCriteria.scopedTo(TENANT), PageWindow.ofPage(0, 2))).block();
+        var second = service.execute(dto(ProtectedApplicationCriteria.scopedTo(TENANT), PageWindow.ofPage(1, 2))).block();
 
         assertThat(first.content()).hasSize(2);
         assertThat(second.content()).hasSize(1);
@@ -97,8 +96,8 @@ class SearchProtectedApplicationsUseCaseImplTests {
 
     @Test
     void rejects_a_search_scoped_to_an_unknown_tenant_instead_of_returning_an_empty_page() {
-        ProtectedApplicationCriteria unknownTenant = new ProtectedApplicationCriteria(
-                Optional.of(new TenantId("inexistente")), Optional.empty(), Optional.empty());
+        ProtectedApplicationCriteria unknownTenant =
+                ProtectedApplicationCriteria.scopedTo(new TenantId("inexistente"));
 
         StepVerifier.create(service.execute(dto(unknownTenant, PageWindow.defaultWindow())))
                 .expectError(TenantNotFoundException.class)

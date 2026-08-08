@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.secondary.audit;
 
+import co.edu.uco.seguridad.AbstractSurrealDbIntegrationTest;
 import co.edu.uco.seguridad.pdp.PdpApplication;
 import co.edu.uco.seguridad.pdp.commons.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.ResourceId;
@@ -25,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Spring, no de una llamada directa (ver ADR-0002). La entrega es síncrona: no hace falta esperar.
  */
 @SpringBootTest(classes = PdpApplication.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
-class ProtectedResourceAuditListenerTests {
+class ProtectedResourceAuditListenerTests extends AbstractSurrealDbIntegrationTest {
 
     @Autowired
     private DomainEventPublisher events;

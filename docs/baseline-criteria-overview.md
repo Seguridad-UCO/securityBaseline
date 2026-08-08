@@ -15,10 +15,10 @@ Para el antes y el después criterio por criterio, ver la
 | 4 | Capacidades transversales | Correlación, auditoría, reloj, identificadores, transacción y errores comunes. | [04](cross-cutting/04-cross-cutting-capabilities.md) |
 | 5 | Manejo de mensajes | Envelope de éxito y ProblemDetail con código estable. | [05](interfaces/05-message-handling.md) |
 | 6 | Manejo de parámetros | Query tipada por mapper y headers de correlación. | [06](interfaces/06-parameter-handling.md) |
-| 7 | Adaptadores dummy | Repositorios, auditoría y transacción en memoria, sustituibles. | [07](infrastructure/07-dummy-adapters.md) |
+| 7 | Adaptadores de persistencia | Repositorios reales sobre SurrealDB (HTTP); auditoría aún en memoria. | [07](infrastructure/07-dummy-adapters.md) |
 | 8 | Logging e instrumentación | MDC desde Reactor Context, Actuator y bridge OTEL. | [08](cross-cutting/08-logging-instrumentation.md) |
 | 9 | Excepciones | Una excepción por condición, traducción HTTP centralizada. | [09](cross-cutting/09-exception-handling.md) |
-| 10 | Transacciones | Puerto reactivo con rollback demostrable y compensación explícita. | [10](domain-and-data/10-transactions.md) |
+| 10 | Transacciones | Saga con compensación explícita por paso, sin puerto de transacción genérico. | [10](domain-and-data/10-transactions.md) |
 | 11 | Interacción entre capas | Controller → interactor → caso de uso → rules → dominio/puertos. | [11](architecture/11-layer-interaction.md) |
 | 12 | SOLID | Contratos pequeños, reglas sustituibles, inversión de dependencias. | [12](architecture/12-solid.md) |
 | 13 | DTOs | Raw DTO en `String` → mapper → DTO validado tipado. | [13](interfaces/13-input-strategy-dtos.md) |

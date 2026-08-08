@@ -2,21 +2,25 @@
 
 ## Estado actual, sin adornos
 
-**Hoy la aplicación no tiene ningún secreto.** No hay base de datos, no hay proveedor de identidad
-y no hay exportador de telemetría remoto: todos los adaptadores son dummies en memoria. La
-auditoría del repositorio lo confirma:
+La aplicación tiene dos secretos reales: la clave HMAC que firma y valida los JWT del emisor propio
+(ADR-0003, `pdp.security.jwt.secret`) y la contraseña de SurrealDB (ADR-0004,
+`pdp.persistence.surrealdb.password`). El exportador de telemetría remoto sigue sin existir — es el
+único de los tres subsistemas con secreto reservado que aún no consume su variable de entorno.
 
 ```bash
 git grep -nIE "(password|secret|api[_-]?key|token|credential)" -- . ':!docs' ':!*.md'
 ```
 
-Las únicas coincidencias son la documentación del propio wrapper de Maven y comentarios que
-explican esta política. No hay `.env`, ni `.pem`, ni `.jks`, ni credenciales en
-`application.properties`.
+Esa búsqueda ahora sí encuentra algo real: `pdp.security.jwt.secret=dev-only-signing-key-...` en
+`application.properties`. No es una fuga — el valor está deliberadamente marcado como
+`dev-only-signing-key-not-for-production-use` y **`application-qa.properties`/`application-prod.properties`
+lo redefinen sin valor de respaldo** (`${PDP_JWT_SIGNING_KEY}`, sin `:default`), así que si la
+variable de entorno faltara en un despliegue real, el arranque falla en vez de operar en silencio
+con la clave de desarrollo. El dev-only value solo protege ejecuciones locales y pruebas.
 
-Esa es la respuesta concreta a la pregunta de Farid: no es que los secretos estén mal guardados,
-es que todavía no existen. Lo que sí existe ahora es el mecanismo para cuando aparezcan, de modo
-que la primera credencial real no tenga que improvisar dónde vivir.
+Lo que sigue sin existir es el exportador de telemetría; su mecanismo de secreto (Key Vault,
+`${PDP_OTLP_TOKEN}`) está preparado desde antes de que el subsistema exista, siguiendo el mismo
+patrón que los secretos de JWT y SurrealDB ya usan en producción.
 
 ## Qué es configuración y qué es secreto
 
@@ -30,6 +34,7 @@ significar algo.
 | `management.endpoints.*` | `application.properties` | Configuración operativa |
 | Nombres de App Service, resource group, Key Vault | `ci/variables/*.yml` | Identificadores de recursos, no credenciales |
 | Contraseña de SurrealDB | **Key Vault** | Da acceso de lectura y escritura a los datos |
+| Clave de firma JWT (emisor propio) | **Key Vault** | Permite falsificar cualquier token |
 | Client secret de Keycloak/OIDC | **Key Vault** | Permite suplantar a la aplicación |
 | Token del colector OTLP | **Key Vault** | Permite inyectar o leer telemetría |
 
@@ -41,9 +46,16 @@ esté activa.
 
 | Secreto | Consumidor previsto | Variable de entorno |
 |---|---|---|
-| `pdp-datasource-password` | Adaptador SurrealDB (E-2) | `PDP_DATASOURCE_PASSWORD` |
-| `pdp-oidc-client-secret` | Integración con el IdP (E-3) | `PDP_OIDC_CLIENT_SECRET` |
+| `pdp-jwt-signing-key` | Emisor/validador JWT propio (ADR-0003) — **en uso** | `PDP_JWT_SIGNING_KEY` |
+| `pdp-datasource-password` | Adaptador SurrealDB (ADR-0004) — **en uso** | `PDP_DATASOURCE_PASSWORD` |
+| `pdp-oidc-client-secret` | Integración con Keycloak, reemplaza el emisor propio (ADR-0003) | `PDP_OIDC_CLIENT_SECRET` |
 | `pdp-otlp-token` | Exportación de trazas | `PDP_OTLP_TOKEN` |
+
+`pdp-jwt-signing-key` y `pdp-datasource-password` son, a la fecha de esta línea, los dos secretos de
+esta lista que un ambiente desplegado necesita para arrancar: `application-qa.properties` y
+`application-prod.properties` los exigen a ambos sin valor de respaldo (junto con
+`PDP_DATASOURCE_URL`/`PDP_DATASOURCE_USERNAME`, que son configuración operativa, no secretos, y
+también sin valor de respaldo).
 
 ## Cómo se consumen
 

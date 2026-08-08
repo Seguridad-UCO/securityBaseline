@@ -67,22 +67,28 @@ class ProtectedResourceDomainTests {
     }
 
     @Test
-    void unfiltered_criteria_match_everything() {
-        assertThat(ProtectedApplicationCriteria.unfiltered()
+    void criteria_scoped_only_to_the_tenant_matches_everything_in_it() {
+        assertThat(ProtectedApplicationCriteria.scopedTo(new TenantId("uco"))
                 .matches(resource("uco", "gestion-academica", "estudiantes", "consultar")))
                 .isTrue();
     }
 
     @Test
-    void each_present_filter_restricts_and_each_absent_one_does_not() {
+    void the_tenant_always_restricts_since_adr_0003_it_is_never_absent() {
         ProtectedResource resource = resource("uco", "gestion-academica", "estudiantes", "consultar");
 
-        assertThat(criteria("uco", null, null).matches(resource)).isTrue();
-        assertThat(criteria("otro", null, null).matches(resource)).isFalse();
-        assertThat(criteria(null, "academica", null).matches(resource)).isTrue();
-        assertThat(criteria(null, "nomina", null).matches(resource)).isFalse();
-        assertThat(criteria(null, null, "estudi").matches(resource)).isTrue();
-        assertThat(criteria(null, null, "docentes").matches(resource)).isFalse();
+        assertThat(ProtectedApplicationCriteria.scopedTo(new TenantId("uco")).matches(resource)).isTrue();
+        assertThat(ProtectedApplicationCriteria.scopedTo(new TenantId("otro")).matches(resource)).isFalse();
+    }
+
+    @Test
+    void each_present_optional_filter_restricts_and_each_absent_one_does_not() {
+        ProtectedResource resource = resource("uco", "gestion-academica", "estudiantes", "consultar");
+
+        assertThat(criteria("uco", "academica", null).matches(resource)).isTrue();
+        assertThat(criteria("uco", "nomina", null).matches(resource)).isFalse();
+        assertThat(criteria("uco", null, "estudi").matches(resource)).isTrue();
+        assertThat(criteria("uco", null, "docentes").matches(resource)).isFalse();
     }
 
     @Test
@@ -96,14 +102,14 @@ class ProtectedResourceDomainTests {
     @Test
     void blank_fragments_are_treated_as_absent_rather_than_as_a_match_on_empty_text() {
         ProtectedApplicationCriteria criteria =
-                new ProtectedApplicationCriteria(Optional.empty(), Optional.of("   "), Optional.empty());
+                new ProtectedApplicationCriteria(new TenantId("uco"), Optional.of("   "), Optional.empty());
 
         assertThat(criteria.nameContains()).isEmpty();
     }
 
     private static ProtectedApplicationCriteria criteria(String tenant, String name, String resource) {
         return new ProtectedApplicationCriteria(
-                Optional.ofNullable(tenant).map(TenantId::new),
+                new TenantId(tenant),
                 Optional.ofNullable(name),
                 Optional.ofNullable(resource));
     }

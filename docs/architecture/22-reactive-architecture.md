@@ -15,24 +15,29 @@ modelos de concurrencia antes de construir el camino crítico.
 
 ## Implementación
 
-Casos de uso, interactores, repositorios, auditoría, transacción y reglas con repositorio devuelven
-`Mono`. Las reglas sin repositorio son síncronas a propósito: envolver en `Mono` una decisión que no
-hace I/O solo añade indirección.
+Casos de uso, interactores, repositorios, auditoría y reglas con repositorio devuelven `Mono`. Las
+reglas sin repositorio son síncronas a propósito: envolver en `Mono` una decisión que no hace I/O
+solo añade indirección. `SurrealDbClient` habla con SurrealDB por HTTP a través del `WebClient`
+reactivo de Spring, así que la cadena entera —desde el controlador hasta la fila— no bloquea un hilo
+en ningún punto (ADR-0004).
 
 No hay `block()` en producción. Sí lo hay en algunas pruebas, donde bloquear es correcto porque el
-hilo de test existe para esperar.
+hilo de test existe para esperar — con una excepción intencional: los inicializadores de esquema
+(`SurrealTenantSchemaInitializer` y análogos) sí bloquean, porque son `ApplicationRunner` que corren
+antes de que Netty acepte tráfico, no dentro de una petición.
 
-Detalle que importa: `SnapshotReactiveTransactionAdapter` recibe un `Supplier<Mono<T>>` y no un
-`Mono<T>` ya construido, y toma la copia dentro de `Mono.defer`. Así el snapshot se toma en el
-momento de la suscripción y no cuando se ensambla la cadena — con un `Mono` ya armado, el rollback
-restauraría un estado equivocado.
+Detalle que importa en la saga de registro
+([`RegisterProtectedApplicationUseCaseImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/usecase/impl/RegisterProtectedApplicationUseCaseImpl.java)):
+cada compensación se encadena con `onErrorResume(error -> compensar().then(Mono.error(error)))`, no
+con un `try/catch` imperativo — la compensación es ella misma un `Mono` reactivo, y solo se suscribe
+si la cadena anterior emitió error, preservando el error original tras compensar.
 
 ## Ubicación verificable
 
 - Dependencias: [`pom.xml`](../../pom.xml)
 - Controlador: [`ProtectedApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/controller/ProtectedApplicationController.java)
 - Flujo: [`RegisterProtectedApplicationUseCaseImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/usecase/impl/RegisterProtectedApplicationUseCaseImpl.java)
-- Transacción: [`SnapshotReactiveTransactionAdapter.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/secondary/persistence/transaction/SnapshotReactiveTransactionAdapter.java)
+- Cliente HTTP reactivo: [`SurrealDbClient.java`](../../src/main/java/co/edu/uco/seguridad/shared/persistence/surrealdb/SurrealDbClient.java)
 - Prueba real sobre Netty: [`ProtectedApplicationHttpTests`](../../src/test/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/ProtectedApplicationHttpTests.java)
 
 ## Evidencia y límite

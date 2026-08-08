@@ -63,3 +63,13 @@ cambiar casos de uso ni eventos de dominio.
 
 Lo que aún no se tiene: entrega asíncrona tras commit, reintento ante caída y rastreo de listeners
 pendientes. Se reconsidera junto con ADR-0004.
+
+**Actualización tras ADR-0004 (persistencia real ya existe):** la condición de "aún no hay base de
+datos real" ya no aplica — SurrealDB está detrás de los tres repositorios desde el Stage 4. Sin
+embargo el Event Publication Registry de Spring Modulith 2.1 solo trae módulos de respaldo para JPA,
+JDBC, MongoDB y Neo4j (`spring-modulith-events-{jpa,jdbc,mongodb,neo4j}`); no existe un módulo de
+respaldo para SurrealDB, y este proyecto no habla SQL/JDBC con SurrealDB (usa su API HTTP vía
+`WebClient`, ver ADR-0004). Construir un `EventPublicationRepository` propio sobre esa misma API HTTP
+es viable pero es trabajo adicional no trivial, y no se ha hecho. La decisión de este ADR
+(`ApplicationEventPublisher` + `@EventListener` síncrono) sigue vigente; el motivo cambió de "no hay
+almacén real" a "el almacén real que hay no tiene un backend de registry soportado de fábrica".

@@ -12,16 +12,19 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Criteria 17 to 19 at the boundary: optional filters, two ways of expressing a window, and no
- * ambiguous combination allowed through.
+ * ambiguous combination allowed through. {@code tenantId} no longer travels through the query
+ * string (ADR-0003): it is supplied here exactly as the interactor would, already read from the
+ * authenticated principal.
  */
 class SearchProtectedApplicationsRequestMapperTests {
 
-    @Test
-    void an_empty_query_string_yields_no_filters_and_the_default_window() {
-        var dto = map(new SearchProtectedApplicationsRawRequest(
-                null, null, null, null, null, null, null));
+    private static final TenantId TENANT = new TenantId("universidad-uco");
 
-        assertThat(dto.criteria().tenantId()).isEmpty();
+    @Test
+    void an_empty_query_string_yields_no_optional_filters_and_the_default_window() {
+        var dto = map(new SearchProtectedApplicationsRawRequest(null, null, null, null, null, null));
+
+        assertThat(dto.criteria().tenantId()).isEqualTo(TENANT);
         assertThat(dto.criteria().nameContains()).isEmpty();
         assertThat(dto.criteria().resourceContains()).isEmpty();
         assertThat(dto.window()).isEqualTo(PageWindow.defaultWindow());
@@ -29,10 +32,9 @@ class SearchProtectedApplicationsRequestMapperTests {
 
     @Test
     void builds_the_criteria_from_whichever_filters_arrived() {
-        var dto = map(new SearchProtectedApplicationsRawRequest(
-                "universidad-uco", "academica", null, null, null, null, null));
+        var dto = map(new SearchProtectedApplicationsRawRequest("academica", null, null, null, null, null));
 
-        assertThat(dto.criteria().tenantId()).contains(new TenantId("universidad-uco"));
+        assertThat(dto.criteria().tenantId()).isEqualTo(TENANT);
         assertThat(dto.criteria().nameContains()).contains("academica");
         assertThat(dto.criteria().resourceContains()).isEmpty();
     }
@@ -95,22 +97,13 @@ class SearchProtectedApplicationsRequestMapperTests {
                 .isInstanceOf(MalformedRequestFieldException.class);
     }
 
-    @Test
-    void reports_a_malformed_tenant_filter_by_name() {
-        assertThatThrownBy(() -> map(new SearchProtectedApplicationsRawRequest(
-                "tenant with spaces", null, null, null, null, null, null)))
-                .isInstanceOf(MalformedRequestFieldException.class)
-                .extracting(error -> ((MalformedRequestFieldException) error).field())
-                .isEqualTo("tenantId");
-    }
-
     private static SearchProtectedApplicationsRawRequest raw(String page, String size, String offset, String limit) {
-        return new SearchProtectedApplicationsRawRequest(null, null, null, page, size, offset, limit);
+        return new SearchProtectedApplicationsRawRequest(null, null, page, size, offset, limit);
     }
 
     private static co.edu.uco.seguridad.pdp.recursos.application.port.primary.dto.request.SearchProtectedApplicationsRequest map(
             SearchProtectedApplicationsRawRequest raw) {
         var request = SearchProtectedApplicationsRequestMapper.toValidatedRequest(raw);
-        return SearchProtectedApplicationsRequestMapper.toRequest(request);
+        return SearchProtectedApplicationsRequestMapper.toRequest(request, TENANT);
     }
 }

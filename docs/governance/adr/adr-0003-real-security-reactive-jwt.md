@@ -4,7 +4,8 @@
 
 ## Estado
 
-Aceptada — pendiente de implementación.
+**Implementada.** Ver [Nota de implementación](#nota-de-implementación) para las decisiones concretas
+que no estaban fijadas cuando se aceptó esta ADR.
 
 ## Contexto
 
@@ -43,8 +44,37 @@ la query— y se propagarán vía `RequestContext`.
 
 ## Consecuencias
 
-- Dependencias: `spring-boot-starter-security` (reactivo) + librería JWT.
-- Paquete `shared/security`: cadena de filtros, auth JWT, handlers 401/403.
-- El interactor (ADR-0001) leerá el `RequestContext` autenticado.
+- Dependencias: `spring-boot-starter-security` + `spring-boot-starter-oauth2-resource-server`
+  (reactivos).
+- Paquete `shared/security`: `SecurityConfiguration` (cadena de filtros + `ReactiveJwtDecoder`),
+  `PdpPrincipal`, `SecurityContext`, `ApiAuthenticationEntryPoint`, `ApiAccessDeniedHandler`.
+- Los interactores de `recursos` (ADR-0001) leen el principal autenticado antes de mapear.
 - Rutas públicas acotadas (`/actuator/health`, `/actuator/info`); el resto exige token válido.
-- Pruebas de integración WebFlux (`WebTestClient`) para 401/403 y propagación de tenant.
+- Pruebas de integración WebFlux (`WebTestClient`): `SecurityWebFilterChainTests` (401/403/rutas
+  públicas) y `ProtectedApplicationHttpTests` (flujo de negocio ya autenticado, incluye aislamiento
+  entre tenants).
+
+## Nota de implementación
+
+Decisiones que no estaban fijadas en el texto original de esta ADR y se tomaron durante la etapa 3:
+
+- **`spring-boot-starter-oauth2-resource-server`, no una librería JWT suelta.** Trae
+  `NimbusReactiveJwtDecoder` ya integrado con `SecurityWebFilterChain`. El emisor propio de hoy usa
+  `NimbusReactiveJwtDecoder.withSecretKey(...)` (HMAC); el día que Keycloak lo reemplace, el cambio
+  es `.withJwkSetUri(...)` sin tocar el resto de la cadena.
+- **`tenantId` se retiró por completo del cuerpo y la query**, no solo se ignora si llega. Un campo
+  presente pero ignorado habría sido código muerto y una fuente de confusión ("¿por qué mando esto
+  si no hace nada?"). Como consecuencia, `ProtectedApplicationCriteria.tenantId` pasó de
+  `Optional<TenantId>` a `TenantId` obligatorio: ya no existe una consulta sin tenant, y
+  `SearchProtectedApplicationsRulesValidatorImpl` aplica `TenantMustBeActiveRule` siempre, no solo
+  cuando el filtro estaba presente.
+- **El secreto de firma vive en `application.properties` como valor de desarrollo**, marcado
+  explícitamente como tal (`dev-only-signing-key-not-for-production-use`), porque el emisor propio
+  necesita alguno para funcionar localmente y en pruebas. `application-qa.properties` y
+  `application-prod.properties` lo redefinen sin valor de respaldo (`${PDP_JWT_SIGNING_KEY}`), así
+  que un despliegue real sin la variable de entorno falla al arrancar en vez de operar en silencio
+  con la clave de desarrollo. Ver [`infra/README.md`](../../infra/README.md).
+- **Jackson 3, no Jackson 2.** Spring Boot 4 / Spring Framework 7 renombraron el paquete base de
+  `com.fasterxml.jackson` a `tools.jackson`. Los handlers 401/403
+  (`ApiAuthenticationEntryPoint`/`ApiAccessDeniedHandler`) serializan `ProblemDetail` con el
+  `ObjectMapper` de Spring, y esto solo compila importando `tools.jackson.databind.ObjectMapper`.

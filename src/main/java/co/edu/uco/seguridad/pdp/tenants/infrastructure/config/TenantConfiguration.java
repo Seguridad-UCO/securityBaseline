@@ -9,9 +9,11 @@ import co.edu.uco.seguridad.pdp.tenants.application.rule.impl.TenantMustBeActive
 import co.edu.uco.seguridad.pdp.tenants.application.rule.impl.TenantStatusMustBeActiveRuleImpl;
 import co.edu.uco.seguridad.pdp.tenants.application.usecase.FindTenantUseCase;
 import co.edu.uco.seguridad.pdp.tenants.application.usecase.impl.FindTenantUseCaseImpl;
-import co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.secondary.persistence.entity.TenantEntity;
-import co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.secondary.persistence.repository.InMemoryTenantRepository;
+import co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.secondary.persistence.repository.SurrealTenantRepository;
+import co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.secondary.persistence.schema.SurrealTenantSchemaInitializer;
 import co.edu.uco.seguridad.pdp.tenants.infrastructure.properties.TenantCatalogProperties;
+import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,10 +27,13 @@ import org.springframework.context.annotation.Configuration;
 public class TenantConfiguration {
 
     @Bean
-    TenantRepository tenantRepository(TenantCatalogProperties properties) {
-        return new InMemoryTenantRepository(properties.seed().entrySet().stream()
-                .map(entry -> new TenantEntity(entry.getKey(), entry.getValue()))
-                .toList());
+    TenantRepository tenantRepository(SurrealDbClient client) {
+        return new SurrealTenantRepository(client);
+    }
+
+    @Bean
+    ApplicationRunner tenantSchemaInitializer(SurrealDbClient client, TenantCatalogProperties properties) {
+        return new SurrealTenantSchemaInitializer(client, properties);
     }
 
     @Bean

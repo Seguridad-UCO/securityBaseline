@@ -19,11 +19,12 @@ infraestructura.
 - **OCP:** `ProtectedApplicationCriteria` admite nuevos filtros sin crear métodos de repositorio por
   atributo. Añadir una regla es añadir una clase y una línea en el validator, no editar el caso de
   uso.
-- **LSP:** `SnapshotReactiveTransactionAdapter` e `InMemoryProtectedResourceRepository` sustituyen a
-  sus puertos; SurrealDB podrá hacerlo sin tocar el caso de uso.
+- **LSP:** `SurrealProtectedResourceRepository`, `SurrealApplicationRepository` y
+  `SurrealTenantRepository` sustituyen a sus dummies en memoria implementando exactamente el mismo
+  puerto (ADR-0004); ningún caso de uso cambió al hacer el reemplazo.
 - **ISP:** los contratos son mínimos y separados — `BusinessRule` (sin I/O), `ReactiveBusinessRule`
   (sin retorno), `ReactiveBusinessRuleWithResult` (con retorno), `DomainEventPublisher`, `TimeProvider`,
-  `IdentifierGenerator`, `ReactiveTransactionPort`. Ningún implementador recibe métodos que no usa.
+  `IdentifierGenerator`. Ningún implementador recibe métodos que no usa.
 - **DIP:** los servicios reciben interfaces por constructor; `ConcurrentHashMap` y las clases de
   Spring solo aparecen en `infrastructure`.
 

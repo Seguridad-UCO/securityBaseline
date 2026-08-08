@@ -27,13 +27,17 @@ verifica.
 
 ## Alcance honesto
 
-La línea base implementa dos operaciones de una historia de esqueleto con adaptadores dummy. No
-declara como realizados PEP, PDP, OPA, Keycloak ni SurrealDB: son evolución prevista detrás de los
-puertos ya definidos.
+La línea base implementa dos operaciones de una historia de esqueleto, con **autenticación real** y
+**persistencia real**: cada petición exige un JWT válido y el tenant se deriva del token, no del
+cuerpo ni de la query (ADR-0003); los tres repositorios secundarios hablan con una SurrealDB real por
+HTTP, sin driver Java (ADR-0004). El PEP sigue siendo propio (emisor JWT simple, HMAC), no
+PDP/OPA/Keycloak todavía — esos siguen siendo evolución prevista detrás de los puertos ya definidos.
+La auditoría también sigue siendo dummy en su contenido: registra identificadores, nunca el payload,
+como listener de eventos de dominio (ADR-0002).
 
-La aplicación **no tiene ningún secreto todavía**, porque no tiene base de datos, proveedor de
-identidad ni exportador remoto de telemetría. El Key Vault y su cableado existen desde ahora para
-que la primera credencial real no tenga que improvisar dónde vivir; ver
-[`infra/README.md`](../infra/README.md).
+La aplicación **tiene dos secretos reales**: la clave que firma y valida sus JWT y la contraseña de
+SurrealDB. No tiene exportador remoto de telemetría todavía. El Key Vault y su cableado, ya en uso
+para esos dos secretos, existen para que el resto de credenciales reales no tengan que improvisar
+dónde vivir; ver [`infra/README.md`](../infra/README.md).
 
 El POM exige Java 25. Ver la [guía de verificación](evidence/verification-guide.md).

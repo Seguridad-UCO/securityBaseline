@@ -20,19 +20,16 @@ import co.edu.uco.seguridad.pdp.recursos.application.usecase.SearchProtectedAppl
 import co.edu.uco.seguridad.pdp.recursos.application.usecase.impl.RegisterProtectedApplicationUseCaseImpl;
 import co.edu.uco.seguridad.pdp.recursos.application.usecase.impl.SearchProtectedApplicationsUseCaseImpl;
 import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.secondary.audit.InMemoryAuditAdapter;
-import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.secondary.persistence.entity.ProtectedResourceEntity;
-import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.secondary.persistence.repository.InMemoryProtectedResourceRepository;
-import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.secondary.persistence.transaction.SnapshotCapable;
-import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.secondary.persistence.transaction.SnapshotReactiveTransactionAdapter;
+import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.secondary.persistence.repository.SurrealProtectedResourceRepository;
+import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.secondary.persistence.schema.SurrealProtectedResourceSchemaInitializer;
 import co.edu.uco.seguridad.pdp.tenants.application.rule.TenantMustBeActiveRule;
 import co.edu.uco.seguridad.shared.event.DomainEventPublisher;
+import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
-import co.edu.uco.seguridad.shared.port.ReactiveTransactionPort;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.Map;
 
 /**
  * La única clase consciente de Spring en el módulo. Cablea los puertos secundarios a sus adaptadores
@@ -42,14 +39,13 @@ import java.util.Map;
 public class ResourcesConfiguration {
 
     @Bean
-    InMemoryProtectedResourceRepository protectedResourceRepository() {
-        return new InMemoryProtectedResourceRepository();
+    ProtectedResourceRepository protectedResourceRepository(SurrealDbClient client) {
+        return new SurrealProtectedResourceRepository(client);
     }
 
     @Bean
-    ReactiveTransactionPort reactiveTransactionPort(
-            SnapshotCapable<Map<String, ProtectedResourceEntity>> snapshotCapable) {
-        return new SnapshotReactiveTransactionAdapter(snapshotCapable);
+    ApplicationRunner protectedResourceSchemaInitializer(SurrealDbClient client) {
+        return new SurrealProtectedResourceSchemaInitializer(client);
     }
 
     @Bean
@@ -88,7 +84,6 @@ public class ResourcesConfiguration {
             RegisterProtectedApplicationRulesValidator rules,
             ProtectedResourceRepository resources,
             DomainEventPublisher events,
-            ReactiveTransactionPort transaction,
             IdentifierGenerator identifiers,
             TimeProvider time) {
         return new RegisterProtectedApplicationUseCaseImpl(
@@ -97,7 +92,6 @@ public class ResourcesConfiguration {
                 rules,
                 resources,
                 events,
-                transaction,
                 identifiers,
                 time);
     }

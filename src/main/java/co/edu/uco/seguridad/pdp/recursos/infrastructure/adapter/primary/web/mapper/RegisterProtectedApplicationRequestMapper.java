@@ -13,18 +13,22 @@ import co.edu.uco.seguridad.shared.web.RequestFieldParser;
  *
  * <p>Cada campo se analiza de forma independiente con {@link RequestFieldParser#parse}, que delega
  * el formato al objeto de valor y nombra el campo si falla. No existe un DTO intermedio mutable:
- * a diferencia de la búsqueda, aquí no hay nada que ensamblar más allá de los cuatro objetos de
- * valor, así que un paso adicional de "validado" solo repetiría los mismos cuatro campos con los
- * mismos tipos.</p>
+ * a diferencia de la búsqueda, aquí no hay nada que ensamblar más allá de los tres objetos de
+ * valor que sí vienen del cuerpo.</p>
+ *
+ * <p>{@code tenantId} llega como parámetro aparte, no de {@code raw}: desde ADR-0003 es el
+ * interactor quien lo lee del token autenticado antes de llamar a este mapper. El cuerpo de la
+ * petición ya no tiene un campo {@code tenantId} que validar.</p>
  */
 public final class RegisterProtectedApplicationRequestMapper {
 
     private RegisterProtectedApplicationRequestMapper() {
     }
 
-    public static RegisterProtectedApplicationRequest toRequest(RegisterProtectedApplicationRawRequest raw) {
+    public static RegisterProtectedApplicationRequest toRequest(
+            RegisterProtectedApplicationRawRequest raw, TenantId tenantId) {
         return new RegisterProtectedApplicationRequest(
-                RequestFieldParser.parse("tenantId", raw.tenantId(), TenantId::new),
+                tenantId,
                 RequestFieldParser.parse("applicationName", raw.applicationName(), ApplicationName::new),
                 RequestFieldParser.parse("resourceCode", raw.resourceCode(), ResourceCode::new),
                 RequestFieldParser.parse("action", raw.action(), ActionCode::new));

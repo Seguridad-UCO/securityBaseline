@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.mapper;
 
+import co.edu.uco.seguridad.pdp.commons.TenantId;
 import co.edu.uco.seguridad.pdp.recursos.domain.ProtectedApplicationCriteria;
 import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.dto.request.SearchProtectedApplicationsRequest;
 import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.dto.request.raw.SearchProtectedApplicationsRawRequest;
@@ -8,7 +9,8 @@ import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.dto.
  * Los mismos dos pasos que el mapper de registro: validar a través de los setters, luego traducir.
  *
  * <p>El objeto de criterios se ensambla aquí en lugar de en el controlador, así que el punto de
- * entrada nunca construye una consulta — solo entrega parámetros.</p>
+ * entrada nunca construye una consulta — solo entrega parámetros. {@code tenantId} llega del
+ * interactor (leído del token autenticado, ADR-0003), no de {@code raw}.</p>
  */
 public final class SearchProtectedApplicationsRequestMapper {
 
@@ -17,7 +19,6 @@ public final class SearchProtectedApplicationsRequestMapper {
 
     public static SearchProtectedApplicationsRequest toValidatedRequest(SearchProtectedApplicationsRawRequest raw) {
         SearchProtectedApplicationsRequest request = new SearchProtectedApplicationsRequest();
-        request.setTenantId(raw.tenantId());
         request.setNameContains(raw.nameContains());
         request.setResourceContains(raw.resourceContains());
         request.setResultWindow(raw.page(), raw.size(), raw.offset(), raw.limit());
@@ -25,10 +26,10 @@ public final class SearchProtectedApplicationsRequestMapper {
     }
 
     public static co.edu.uco.seguridad.pdp.recursos.application.port.primary.dto.request.SearchProtectedApplicationsRequest toRequest(
-            SearchProtectedApplicationsRequest request) {
+            SearchProtectedApplicationsRequest request, TenantId tenantId) {
         return new co.edu.uco.seguridad.pdp.recursos.application.port.primary.dto.request.SearchProtectedApplicationsRequest(
                 new ProtectedApplicationCriteria(
-                        request.tenantId(), request.nameContains(), request.resourceContains()),
+                        tenantId, request.nameContains(), request.resourceContains()),
                 request.window());
     }
 }

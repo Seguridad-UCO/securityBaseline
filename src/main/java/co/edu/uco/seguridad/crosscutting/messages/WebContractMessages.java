@@ -29,6 +29,14 @@ public final class WebContractMessages {
         return "La solicitud no pudo ser completada";
     }
 
+    public static String unauthorized() {
+        return "Token ausente, inválido o expirado";
+    }
+
+    public static String forbidden() {
+        return "El token es válido pero no autoriza esta operación";
+    }
+
     public static String successApplicationRegistered() {
         return "Protected application and initial resource registered";
     }
