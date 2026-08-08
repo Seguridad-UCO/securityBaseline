@@ -1,0 +1,83 @@
+# Build, test, static analysis and packaging.
+#
+# One job rather than three, on purpose: SonarQube needs the compiled classes, the surefire
+# reports and the JaCoCo report to come from the same workspace. Splitting them would mean
+# publishing and re-downloading the whole target directory to gain nothing.
+stages:
+  - stage: BuildAndAnalyze
+    displayName: 'Construcción, pruebas y análisis'
+    jobs:
+      - job: Verify
+        displayName: 'Compilar, probar y analizar'
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - template: steps-java-setup.yml
+
+          # Prepares the scanner and injects the server URL and token from the service connection.
+          # `sonar.qualitygate.wait=true` is what makes a failed gate fail the build instead of
+          # only colouring the dashboard.
+          - task: SonarQubePrepare@7
+            displayName: 'Preparar análisis SonarQube'
+            inputs:
+              SonarQube: '$(sonarServiceConnection)'
+              scannerMode: 'Other'
+              extraProperties: |
+                sonar.projectKey=Seguridad-UCO_securityBaseline
+                sonar.projectName=Security Baseline PDP
+                sonar.qualitygate.wait=true
+                sonar.qualitygate.timeout=300
+                sonar.branch.name=$(Build.SourceBranchName)
+
+          # `verify` runs compile, tests, the JaCoCo report and the Sonar analysis in one reactor,
+          # so the coverage the gate sees is the coverage this build produced.
+          - task: Maven@4
+            displayName: 'mvn verify + análisis SonarQube'
+            inputs:
+              mavenPomFile: 'pom.xml'
+              goals: 'verify'
+              options: '$(mavenOptions)'
+              publishJUnitResults: true
+              testResultsFiles: '**/surefire-reports/TEST-*.xml'
+              testRunTitle: 'Pruebas unitarias e integración'
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: '$(javaVersion)'
+              mavenVersionOption: 'Default'
+              sonarQubeRunAnalysis: true
+              isJacocoCoverageReportXML: true
+              codeCoverageToolOption: 'JaCoCo'
+
+          - task: SonarQubePublish@7
+            displayName: 'Publicar resultado del Quality Gate'
+            condition: succeededOrFailed()
+            inputs:
+              pollingTimeoutSec: '300'
+
+          - task: PublishCodeCoverageResults@2
+            displayName: 'Publicar cobertura'
+            condition: succeededOrFailed()
+            inputs:
+              summaryFileLocation: '$(System.DefaultWorkingDirectory)/target/site/jacoco/jacoco.xml'
+              pathToSources: '$(System.DefaultWorkingDirectory)/src/main/java'
+
+          # Packaging is skipped on pull requests: a PR must be verified, never shipped.
+          - bash: |
+              set -euo pipefail
+              ./mvnw $(mavenOptions) -DskipTests package
+            displayName: 'Empaquetar artefacto'
+            condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+
+          - task: CopyFiles@2
+            displayName: 'Recolectar jar ejecutable'
+            condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+            inputs:
+              contents: 'target/*.jar'
+              targetFolder: '$(Build.ArtifactStagingDirectory)'
+              flattenFolders: true
+
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publicar artefacto'
+            condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+            inputs:
+              targetPath: '$(Build.ArtifactStagingDirectory)'
+              artifact: '$(artifactName)'

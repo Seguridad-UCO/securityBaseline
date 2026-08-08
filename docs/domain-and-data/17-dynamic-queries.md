@@ -1,22 +1,42 @@
 # 17. Construcción dinámica de consultas
 
+[← Repositorios](16-repository-strategy.md) · [Siguiente: paginación →](18-pagination.md)
+
 ## Decisión arquitectónica
 
-La consulta se construye desde parámetros opcionales convertidos en `ProtectedApplicationCriteria` en tiempo de ejecución.
+La consulta se construye en tiempo de ejecución desde parámetros opcionales convertidos en
+`ProtectedApplicationCriteria`.
 
 ## Justificación
 
-Un endpoint por combinación de filtros no escala y rompe el contrato. La construcción dinámica conserva una sola operación de catálogo.
+Un endpoint por combinación de filtros no escala: tres filtros opcionales darían ocho endpoints, y
+cada filtro nuevo duplicaría ese número. La construcción dinámica conserva una sola operación de
+catálogo.
 
 ## Implementación
 
-`tenantId`, `nameContains` y `resourceContains` se normalizan a `Optional`. `matches` aplica solo los que existan. El controller no construye una consulta de memoria/BD: crea el objeto de dominio y lo entrega al caso de uso.
+```text
+?tenantId=&nameContains=&resourceContains=
+        ↓  controller: los recibe como String, sin interpretarlos
+        ↓  mapper: normaliza a Optional y construye los value objects
+ProtectedApplicationCriteria
+        ↓  use case: la entrega sin inspeccionarla
+repositorio: decide cómo ejecutarla
+```
+
+El controlador **no** construye la consulta: solo entrega parámetros. El caso de uso tampoco la
+inspecciona — si lo hiciera, estaría duplicando la lógica de filtrado que ya vive en el criterio.
+
+Cada filtro ausente equivale a “no restringir”. Un fragmento en blanco cuenta como ausente.
 
 ## Ubicación verificable
 
-- [`ProtectedApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
-- [`ProtectedApplicationCriteria.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
+- [`SearchProtectedApplicationsRequestMapper.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/mapper/SearchProtectedApplicationsRequestMapper.java)
+- [`ProtectedApplicationCriteria.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/domain/ProtectedApplicationCriteria.java)
+- [`SearchProtectedApplicationsUseCaseImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/usecase/impl/SearchProtectedApplicationsUseCaseImpl.java)
 
 ## Evidencia y límite
 
-La prueba HTTP usa `tenantId` junto con rango. La semántica `contains` está documentada y será equivalente en el adaptador SurrealDB.
+Las pruebas del mapper verifican que solo los filtros presentes llegan al criterio, y las del caso
+de uso que la combinación es conjuntiva. La semántica `contains` está documentada aquí y deberá ser
+equivalente en el adaptador SurrealDB.

@@ -1,0 +1,13 @@
+# Non-sensitive settings shared by every stage.
+#
+# Nothing secret lives here or in any other YAML file. Credentials reach the pipeline only through
+# service connections and Azure Key Vault, both resolved at run time.
+variables:
+  javaVersion: '25'
+  mavenCacheFolder: $(Pipeline.Workspace)/.m2/repository
+  mavenOptions: '-Dmaven.repo.local=$(Pipeline.Workspace)/.m2/repository --batch-mode -Dstyle.color=never'
+  artifactName: 'pdp-application'
+
+  # Name of the SonarQube service connection configured in Azure DevOps.
+  # The connection holds the server URL and the analysis token; this is only its label.
+  sonarServiceConnection: 'SonarQube-UCO'

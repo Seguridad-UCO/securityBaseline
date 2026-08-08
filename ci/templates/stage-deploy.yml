@@ -1,0 +1,81 @@
+# One parameterised deployment stage, instantiated once per environment.
+#
+# DEV, QA and PROD differ only in their variable file and their Azure DevOps environment, so they
+# share this definition. Approvals are not expressed here: they are checks on the environment
+# object, which is what keeps a YAML edit from removing a production gate.
+parameters:
+  - name: stageName
+    type: string
+  - name: displayName
+    type: string
+  - name: variableFile
+    type: string
+  - name: dependsOn
+    type: string
+    default: 'BuildAndAnalyze'
+  - name: condition
+    type: string
+
+stages:
+  - stage: ${{ parameters.stageName }}
+    displayName: ${{ parameters.displayName }}
+    dependsOn: ${{ parameters.dependsOn }}
+    condition: ${{ parameters.condition }}
+    variables:
+      - template: ../variables/${{ parameters.variableFile }}
+    jobs:
+      - deployment: Deploy
+        displayName: ${{ parameters.displayName }}
+        pool:
+          vmImage: ubuntu-latest
+        environment: $(environmentName)
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: current
+                  artifact: $(artifactName)
+
+                # Secrets are read at deploy time and exposed only as masked pipeline variables.
+                # They are never written to a file, never echoed, and never stored in the repo.
+                - task: AzureKeyVault@2
+                  displayName: 'Leer secretos desde Azure Key Vault'
+                  inputs:
+                    azureSubscription: $(azureServiceConnection)
+                    KeyVaultName: $(keyVaultName)
+                    SecretsFilter: 'pdp-datasource-password,pdp-oidc-client-secret,pdp-otlp-token'
+                    RunAsPreJob: true
+
+                # The secret values are passed as app settings, so the running application reads
+                # them from the environment and no configuration file in Git ever holds one.
+                - task: AzureWebApp@1
+                  displayName: 'Desplegar en App Service'
+                  inputs:
+                    azureSubscription: $(azureServiceConnection)
+                    appType: 'webAppLinux'
+                    appName: $(webAppName)
+                    resourceGroupName: $(resourceGroupName)
+                    package: '$(Pipeline.Workspace)/$(artifactName)/*.jar'
+                    runtimeStack: 'JAVA|25-java25'
+                    appSettings: >-
+                      -SPRING_PROFILES_ACTIVE $(springProfile)
+                      -PDP_DATASOURCE_PASSWORD "$(pdp-datasource-password)"
+                      -PDP_OIDC_CLIENT_SECRET "$(pdp-oidc-client-secret)"
+                      -PDP_OTLP_TOKEN "$(pdp-otlp-token)"
+
+                # Fails the deployment if the application does not come back healthy, so a broken
+                # release is visible here instead of on the next request.
+                - bash: |
+                    set -euo pipefail
+                    for attempt in $(seq 1 20); do
+                      status=$(curl -s -o /dev/null -w "%{http_code}" "https://$(webAppName).azurewebsites.net/actuator/health" || true)
+                      if [ "$status" = "200" ]; then
+                        echo "Aplicación saludable tras $attempt intento(s)."
+                        exit 0
+                      fi
+                      echo "Intento $attempt: estado $status"
+                      sleep 15
+                    done
+                    echo "La aplicación no respondió saludable."
+                    exit 1
+                  displayName: 'Verificar salud del despliegue'

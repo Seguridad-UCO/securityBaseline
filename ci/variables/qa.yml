@@ -1,0 +1,8 @@
+# QA environment. Fed by the `qa` branch.
+variables:
+  environmentName: 'pdp-qa'
+  springProfile: 'qa'
+  azureServiceConnection: 'Azure-PDP-Qa'
+  keyVaultName: 'kv-pdp-qa'
+  webAppName: 'app-pdp-qa'
+  resourceGroupName: 'rg-pdp-qa'

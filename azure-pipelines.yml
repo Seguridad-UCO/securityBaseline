@@ -1,55 +1,70 @@
+# Pipeline único para la línea base del PDP.
+#
+# Estrategia de ramas:
+#
+#   feature/*  → build + test + SonarQube            (sin despliegue)
+#   develop    → build + test + SonarQube → DEV
+#   qa         → build + test + SonarQube → QA
+#   main       → build + test + SonarQube → PRODUCTION
+#
+# Un solo pipeline y no uno por ambiente: la verificación debe ser idéntica en las tres ramas, y
+# duplicar el YAML es precisamente cómo se logra que dejen de serlo. Lo único que cambia por
+# ambiente es el archivo de variables y el objeto `environment` de Azure DevOps.
+#
+# Ningún secreto aparece en este repositorio. Las credenciales llegan por service connection y por
+# Azure Key Vault, ambas resueltas en tiempo de ejecución.
+
+name: $(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
+
 trigger:
-- main
+  branches:
+    include:
+      - main
+      - qa
+      - develop
+      - feature/*
+
+# Validación de pull request. Con GitHub como origen, esto es lo que publica el resultado del
+# build de vuelta en el PR.
+pr:
+  branches:
+    include:
+      - develop
+      - qa
+      - main
+
+variables:
+  - template: ci/variables/common.yml
 
 stages:
-- stage: Build
-  displayName: 'Compilación'
-  jobs:
-  - job: CompileApplication
-    displayName: 'Compilar'
-    pool:
-      vmImage: ubuntu-latest
-    steps:
-    - task: JavaToolInstaller@0
-      displayName: 'Configurar Java'
-      inputs:
-        versionSpec: '25'
-        jdkArchitectureOption: 'x64'
-        jdkSourceOption: 'PreInstalled'
+  - template: ci/templates/stage-build-analyze.yml
 
-    - bash: |
-        set -euo pipefail
-        java -version
-        ./mvnw --version
-        ./mvnw --batch-mode -DskipTests package
-      displayName: 'Compilar el proyecto'
+  - template: ci/templates/stage-deploy.yml
+    parameters:
+      stageName: DeployDev
+      displayName: 'Despliegue a DEV'
+      variableFile: dev.yml
+      condition: >-
+        and(succeeded(),
+            eq(variables['Build.SourceBranch'], 'refs/heads/develop'),
+            ne(variables['Build.Reason'], 'PullRequest'))
 
-- stage: UnitTests
-  displayName: 'Pruebas unitarias'
-  dependsOn: Build
-  jobs:
-  - job: RunUnitTests
-    displayName: 'Pruebas unitarias'
-    pool:
-      vmImage: ubuntu-latest
-    steps:
-    - task: JavaToolInstaller@0
-      displayName: 'Configurar Java'
-      inputs:
-        versionSpec: '25'
-        jdkArchitectureOption: 'x64'
-        jdkSourceOption: 'PreInstalled'
+  - template: ci/templates/stage-deploy.yml
+    parameters:
+      stageName: DeployQa
+      displayName: 'Despliegue a QA'
+      variableFile: qa.yml
+      condition: >-
+        and(succeeded(),
+            eq(variables['Build.SourceBranch'], 'refs/heads/qa'),
+            ne(variables['Build.Reason'], 'PullRequest'))
 
-    - bash: |
-        set -euo pipefail
-        java -version
-        ./mvnw --batch-mode test
-      displayName: 'Ejecutar pruebas unitarias'
-
-    - task: PublishTestResults@2
-      displayName: 'Publicar resultados JUnit'
-      condition: succeededOrFailed()
-      inputs:
-        testResultsFormat: 'JUnit'
-        testResultsFiles: '**/surefire-reports/TEST-*.xml'
-        failTaskOnFailedTests: true
+  - template: ci/templates/stage-deploy.yml
+    parameters:
+      stageName: DeployProd
+      displayName: 'Despliegue a PRODUCCIÓN'
+      variableFile: prod.yml
+      condition: >-
+        and(succeeded(),
+            eq(variables['Build.SourceBranch'], 'refs/heads/main'),
+            ne(variables['Build.Reason'], 'PullRequest'))

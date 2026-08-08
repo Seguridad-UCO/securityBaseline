@@ -1,23 +1,42 @@
 # 15. Validación del dominio
 
+[← Transacciones](10-transactions.md) · [Siguiente: repositorios →](16-repository-strategy.md)
+
 ## Decisión arquitectónica
 
-Se combinan value objects/aggregate validators para invariantes y una Specification para criterios de consulta reutilizables.
+Dos mecanismos distintos para dos problemas distintos: **invariantes** en constructores de value
+objects y entidades, y **specification** para los criterios de consulta.
 
 ## Justificación
 
-Las reglas de creación deben ejecutarse siempre; los filtros deben poder combinarse sin duplicar métodos. Se descarta poner validación exclusiva en Bean Validation, porque no existe cuando se invoca el caso de uso desde otro adaptador.
+Las reglas de creación deben ejecutarse siempre, vengan de donde vengan. Los filtros deben poder
+combinarse sin duplicar métodos. Se descarta poner la validación de formato exclusivamente en Bean
+Validation, porque no existe cuando el caso de uso se invoca desde otro adaptador.
 
 ## Implementación
 
-Los constructores de VOs y agregado validan creación. `ProtectedApplicationCriteria.matches` representa una specification compuesta por tenant, nombre y recurso; cada condición ausente equivale a “no restringir”.
+**Invariantes.** El constructor compacto es el único camino de entrada. Una instancia que existe ya
+es válida, y por eso nada aguas abajo vuelve a comprobar `null` ni formato. Cada value object lanza
+su propia excepción (`InvalidResourceCodeException`, `InvalidPageWindowException`, …) en vez de un
+`IllegalArgumentException` genérico, para que el traductor HTTP pueda dar un código estable sin
+inspeccionar mensajes.
+
+**Specification.** `ProtectedApplicationCriteria.matches` compone tenant, nombre y recurso. Cada
+condición ausente equivale a “no restringir”. La semántica vive en el dominio, no en el adaptador:
+es lo que garantiza que el dummy y un futuro adaptador SurrealDB no puedan discrepar sobre qué
+significa `contains`.
+
+Un fragmento en blanco se normaliza a ausente, para que `?nameContains=` no se interprete como
+“nombres que contienen la cadena vacía”.
 
 ## Ubicación verificable
 
-- [`ProtectedApplicationCriteria.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
-- [`ProtectedApplication.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
-- [`ProtectedApplicationTests.java`](../../src/test/java/co/edu/uco/seguridad/pdp)
+- [`ProtectedApplicationCriteria.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/domain/ProtectedApplicationCriteria.java)
+- [`commons`](../../src/main/java/co/edu/uco/seguridad/pdp/commons) (value objects e invariantes)
+- Pruebas: [`ProtectedResourceDomainTests`](../../src/test/java/co/edu/uco/seguridad/pdp/recursos/domain/ProtectedResourceDomainTests.java)
 
 ## Evidencia y límite
 
-El patrón soporta añadir `and/or/not` si aparecen filtros complejos. Para E-1, tres criterios opcionales evitan sobreingeniería.
+Las pruebas cubren cada filtro por separado, la combinación conjuntiva de los tres, el criterio sin
+filtros y el fragmento en blanco. El patrón soporta `and/or/not` si aparecen filtros complejos; para
+E-1 tres criterios opcionales evitan sobreingeniería.

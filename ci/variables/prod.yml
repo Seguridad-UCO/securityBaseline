@@ -1,0 +1,8 @@
+# PRODUCTION environment. Fed by the `main` branch.
+variables:
+  environmentName: 'pdp-prod'
+  springProfile: 'prod'
+  azureServiceConnection: 'Azure-PDP-Prod'
+  keyVaultName: 'kv-pdp-prod'
+  webAppName: 'app-pdp-prod'
+  resourceGroupName: 'rg-pdp-prod'

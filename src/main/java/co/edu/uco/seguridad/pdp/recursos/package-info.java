@@ -1,2 +1,5 @@
-@org.springframework.modulith.ApplicationModule(allowedDependencies = {"commons", "tenants", "aplicaciones"})
+@org.springframework.modulith.ApplicationModule(allowedDependencies = {
+        "commons",
+        "tenants", "tenants :: dto", "tenants :: rule",
+        "aplicaciones", "aplicaciones :: dto", "aplicaciones :: exception"})
 package co.edu.uco.seguridad.pdp.recursos;

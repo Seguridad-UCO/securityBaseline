@@ -1,0 +1,74 @@
+package co.edu.uco.seguridad.pdp.aplicaciones.infrastructure.config;
+
+import co.edu.uco.seguridad.pdp.aplicaciones.ApplicationsModuleApi;
+import co.edu.uco.seguridad.pdp.aplicaciones.application.ApplicationsService;
+import co.edu.uco.seguridad.pdp.aplicaciones.application.usecase.RegisterApplicationUseCase;
+import co.edu.uco.seguridad.pdp.aplicaciones.application.usecase.RemoveApplicationUseCase;
+import co.edu.uco.seguridad.pdp.aplicaciones.application.port.secondary.repository.ApplicationRepository;
+import co.edu.uco.seguridad.pdp.aplicaciones.application.rule.ApplicationNameMustBeUniqueForTenantRule;
+import co.edu.uco.seguridad.pdp.aplicaciones.application.rule.ApplicationNameMustNotBeReservedRule;
+import co.edu.uco.seguridad.pdp.aplicaciones.application.rule.impl.ApplicationNameMustBeUniqueForTenantRuleImpl;
+import co.edu.uco.seguridad.pdp.aplicaciones.application.rule.impl.ApplicationNameMustNotBeReservedRuleImpl;
+import co.edu.uco.seguridad.pdp.aplicaciones.application.rulesvalidator.RegisterApplicationRulesValidator;
+import co.edu.uco.seguridad.pdp.aplicaciones.application.rulesvalidator.impl.RegisterApplicationRulesValidatorImpl;
+import co.edu.uco.seguridad.pdp.aplicaciones.application.usecase.impl.RegisterApplicationUseCaseImpl;
+import co.edu.uco.seguridad.pdp.aplicaciones.application.usecase.impl.RemoveApplicationUseCaseImpl;
+import co.edu.uco.seguridad.pdp.aplicaciones.infrastructure.adapter.secondary.persistence.repository.InMemoryApplicationRepository;
+import co.edu.uco.seguridad.pdp.aplicaciones.infrastructure.properties.ApplicationCatalogProperties;
+import co.edu.uco.seguridad.pdp.tenants.application.rule.TenantMustBeActiveRule;
+import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
+import co.edu.uco.seguridad.shared.port.TimeProvider;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+/**
+ * La única clase consciente de Spring en el módulo. Cada regla es un bean para que pueda ser reemplazada o
+ * decorada sin editar el validador que la compone.
+ */
+@Configuration
+@EnableConfigurationProperties(ApplicationCatalogProperties.class)
+public class ApplicationsConfiguration {
+
+    @Bean
+    ApplicationRepository applicationRepository() {
+        return new InMemoryApplicationRepository();
+    }
+
+    @Bean
+    ApplicationNameMustNotBeReservedRule applicationNameMustNotBeReservedRule(ApplicationCatalogProperties properties) {
+        return new ApplicationNameMustNotBeReservedRuleImpl(properties.reservedNames());
+    }
+
+    @Bean
+    ApplicationNameMustBeUniqueForTenantRule applicationNameMustBeUniqueForTenantRule(ApplicationRepository repository) {
+        return new ApplicationNameMustBeUniqueForTenantRuleImpl(repository);
+    }
+
+    @Bean
+    RegisterApplicationRulesValidator registerApplicationRulesValidator(
+            ApplicationNameMustNotBeReservedRule nameMustNotBeReserved,
+            TenantMustBeActiveRule tenantMustBeActive,
+            ApplicationNameMustBeUniqueForTenantRule nameMustBeUnique) {
+        return new RegisterApplicationRulesValidatorImpl(nameMustNotBeReserved, tenantMustBeActive, nameMustBeUnique);
+    }
+
+    @Bean
+    RegisterApplicationUseCase registerApplicationUseCase(RegisterApplicationRulesValidator rules,
+                                                          ApplicationRepository repository,
+                                                          IdentifierGenerator identifiers,
+                                                          TimeProvider time) {
+        return new RegisterApplicationUseCaseImpl(rules, repository, identifiers, time);
+    }
+
+    @Bean
+    RemoveApplicationUseCase removeApplicationUseCase(ApplicationRepository repository) {
+        return new RemoveApplicationUseCaseImpl(repository);
+    }
+
+    @Bean
+    ApplicationsModuleApi applicationsModuleApi(RegisterApplicationUseCase registerUseCase,
+                                                RemoveApplicationUseCase removeUseCase) {
+        return new ApplicationsService(registerUseCase, removeUseCase);
+    }
+}

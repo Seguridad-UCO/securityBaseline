@@ -4,23 +4,50 @@
 
 ## Decisión arquitectónica
 
-Solo se permite el flujo adaptador de entrada → caso de uso → dominio/puertos → adaptador de salida. El controlador no consulta memoria ni valida reglas de negocio; el dominio no conoce HTTP.
+Solo se permite el flujo adaptador de entrada → interactor → caso de uso → rules validator → rules →
+dominio/puertos → adaptador de salida. El controlador no consulta memoria ni decide reglas; el
+dominio no conoce HTTP.
 
 ## Justificación
 
-Esta dirección evita ciclos y hace visible dónde vive cada responsabilidad. Se descarta permitir llamadas horizontales entre controller, repositorio y auditoría porque dificulta cambiar infraestructura y probar inconsistencias.
+Esta dirección evita ciclos y hace visible dónde vive cada responsabilidad. Se descartan las
+llamadas horizontales entre controller, repositorio y auditoría porque dificultan cambiar la
+infraestructura y ocultan las inconsistencias.
 
 ## Implementación
 
-En un `POST`, el controller valida forma, mapea el DTO a comando y llama al puerto. El servicio verifica unicidad, construye el agregado, persiste y audita dentro de la transacción. El adaptador dummy realiza solo almacenamiento. La respuesta vuelve por mapper y envelope común.
+```text
+HTTP → RawRequest DTO → mapper → DTO validado → Controller
+                                                    ↓
+                                               Interactor
+                                                    ↓
+                                                Use Case
+                                                    ↓
+                                            Rules Validator
+                                                    ↓
+                                    Rules sin repo · Rules con repo
+                                                    ↓
+                                         Domain · port/out → adapters
+                                                    ↓
+                                     Interactor → Response mapper
+                                                    ↓
+                                              HTTP Response
+```
+
+El interactor adapta y mapea; el caso de uso orquesta; el rules validator compone reglas; cada regla
+decide una cosa. Ninguna de esas capas repite el trabajo de otra.
 
 ## Ubicación verificable
 
-- Entrada: [`ProtectedApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/pdp).
-- Orquestación: [`ProtectedApplicationService.java`](../../src/main/java/co/edu/uco/seguridad/pdp).
-- Salidas: [`ProtectedApplicationRepository.java`](../../src/main/java/co/edu/uco/seguridad/pdp) y [`AuditPort.java`](../../src/main/java/co/edu/uco/seguridad/pdp).
-- Verificación: [`ProtectedApplicationHttpTests.java`](../../src/test/java/co/edu/uco/seguridad/pdp).
+- Entrada: [`ProtectedApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/controller/ProtectedApplicationController.java)
+- Interactores: [`web/interactor`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/web/interactor)
+- Orquestación: [`RegisterProtectedApplicationUseCaseImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/usecase/impl/RegisterProtectedApplicationUseCaseImpl.java)
+- Reglas: [`recursos/application/rule`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/rule)
+- Salidas: [`recursos/application/port/out`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/port/out)
 
 ## Evidencia y límite
 
-La prueba HTTP recorre el flujo completo y la prueba Modulith detecta dependencias de módulo ilegales. Los límites internos de cada capa se complementan con revisión y pruebas de dominio; el siguiente paso de CI puede añadir ArchUnit específico por capa.
+[`ProtectedApplicationHttpTests`](../../src/test/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/ProtectedApplicationHttpTests.java)
+recorre el flujo completo y `ModulithStructureTests` detecta dependencias de módulo ilegales. Los
+límites internos de cada capa se sostienen con revisión y pruebas; añadir ArchUnit por capa es el
+siguiente refuerzo posible.

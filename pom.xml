@@ -29,6 +29,22 @@
 	<properties>
 		<java.version>25</java.version>
 		<spring-modulith.version>2.1.0</spring-modulith.version>
+		<jacoco.version>0.8.15</jacoco.version>
+
+		<!--
+			SonarQube analysis settings. The server URL and token are NOT here on purpose: the
+			pipeline supplies them through the SonarQube service connection, so no credential is
+			ever committed. Only non-sensitive analysis metadata belongs in this file.
+		-->
+		<sonar.projectKey>Seguridad-UCO_securityBaseline</sonar.projectKey>
+		<sonar.projectName>Security Baseline PDP</sonar.projectName>
+		<sonar.sources>src/main/java</sonar.sources>
+		<sonar.tests>src/test/java</sonar.tests>
+		<sonar.java.source>${java.version}</sonar.java.source>
+		<sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+		<sonar.junit.reportPaths>${project.build.directory}/surefire-reports</sonar.junit.reportPaths>
+		<!-- Configuration classes are wiring, not logic; excluding them keeps coverage honest. -->
+		<sonar.coverage.exclusions>**/PdpApplication.java,**/*Configuration.java,**/package-info.java</sonar.coverage.exclusions>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -46,10 +62,11 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webflux</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-validation</artifactId>
-		</dependency>
+		<!--
+			spring-boot-starter-validation is intentionally absent. Input validation runs as
+			explicit code in the web DTO setters (see RegisterProtectedApplicationRequest), so
+			Jakarta Validation annotations cannot creep back in: the API is not on the classpath.
+		-->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
@@ -85,6 +102,32 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+
+			<!--
+				Produces the coverage report SonarQube reads. The agent is attached before tests
+				run and the XML report is written after, so `mvn verify` alone is enough for the
+				pipeline to have everything the quality gate needs.
+			-->
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>${jacoco.version}</version>
+				<executions>
+					<execution>
+						<id>prepare-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>report</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>

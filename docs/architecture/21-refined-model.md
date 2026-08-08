@@ -4,24 +4,52 @@
 
 ## Decisión arquitectónica
 
-`ProtectedApplication` es una raíz de agregado con un recurso inicial propio. Tenant, nombre, identificador y ruta de recurso son value objects; no son `String` sin semántica.
+El modelo se reparte entre los módulos del mapa PDP en lugar de vivir en un único agregado
+`ProtectedApplication`. `Tenant`, `Application` y `ProtectedResource` son entidades de su módulo;
+`TenantId`, `ApplicationId`, `ResourceId`, `ApplicationName`, `ResourceCode`, `ActionCode` y
+`PageWindow` son value objects. Ningún concepto del dominio es un `String` sin semántica.
+
+> **Nota de reconciliación.** Versiones anteriores de este documento describían un agregado único
+> `ProtectedApplication` con `ResourceIdentifier`. Ese diseño nunca se implementó y fue reemplazado
+> por la separación en módulos de [`pdp-modulith-alignment.md`](pdp-modulith-alignment.md), que es
+> la decisión vigente y la que verifica `ModulithStructureTests`. Este documento se corrigió para
+> describir el código real.
 
 ## Justificación
 
-El primer sujeto de prueba debe conservar integridad desde su creación. Un modelo anémico permitiría registros sin tenant, nombre vacío o recurso relativo. Se descarta modelar tenant y recurso como agregados independientes: para E-1 no existe operación autónoma sobre ellos y sería complejidad prematura.
+El primer sujeto de prueba debe conservar integridad desde su creación. Un modelo anémico permitiría
+registros sin tenant, con nombre vacío o con un código de recurso que el PDP no podría resolver. La
+separación en módulos evita además que `recursos` alcance el almacenamiento de `aplicaciones`.
 
 ## Implementación
 
-La fábrica `register` crea el agregado solo con los cuatro valores requeridos. Su constructor exige una lista inmutable de cardinalidad uno. `TenantId`, `ApplicationName` y `ResourceIdentifier` validan formato y longitud. `ProtectedResource` es entidad interna del agregado.
+- **Cuándo `record`:** cuando el concepto *es* exactamente sus valores y no tiene estado oculto.
+  Aplica a todas las entidades y value objects del dominio.
+- **Cuándo constructor compacto:** siempre. Es el único camino de entrada, de modo que una instancia
+  que existe ya cumple sus invariantes y nada aguas abajo tiene que volver a comprobar `null`.
+- **Cuándo factoría con nombre:** cuando la creación tiene un significado propio —
+  `Application.register`, `ProtectedResource.register`, `PageWindow.ofPage` / `ofRange`.
+- **Cuándo comportamiento en la entidad:** cuando la pregunta se responde con los datos que ya
+  tiene — `belongsTo`, `isSameGrantAs`, `sameAs`, `contains`.
+- **Cuándo NO un value object:** los identificadores de correlación siguen siendo `String` en
+  `RequestContext`; son metadatos de transporte y no tienen invariante de negocio.
+
+Ninguna clase de dominio tiene setters, Lombok ni anotaciones de framework. La mutabilidad existe en
+exactamente dos lugares, ambos deliberados y ambos fuera del dominio: las entidades de persistencia
+(porque los drivers lo exigen) y los DTO validados (porque la validación por setter es la
+estrategia elegida en la frontera).
 
 ## Ubicación verificable
 
-- [`ProtectedApplication.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
-- [`TenantId.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
-- [`ApplicationName.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
-- [`ResourceIdentifier.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
-- Prueba: [`ProtectedApplicationTests.java`](../../src/test/java/co/edu/uco/seguridad/pdp)
+- [`commons`](../../src/main/java/co/edu/uco/seguridad/pdp/commons)
+- [`ProtectedResource.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/domain/ProtectedResource.java)
+- [`Application.java`](../../src/main/java/co/edu/uco/seguridad/pdp/aplicaciones/domain/Application.java)
+- [`Tenant.java`](../../src/main/java/co/edu/uco/seguridad/pdp/tenants/domain/Tenant.java)
+- Pruebas: [`ValueObjectTests`](../../src/test/java/co/edu/uco/seguridad/pdp/commons/ValueObjectTests.java) y
+  [`ProtectedResourceDomainTests`](../../src/test/java/co/edu/uco/seguridad/pdp/recursos/domain/ProtectedResourceDomainTests.java)
 
 ## Evidencia y límite
 
-Las pruebas prueban cardinalidad y formatos. Estados, múltiples recursos, entornos y relaciones gráficas se agregan cuando los casos de uso lo justifiquen; no se inventan en esta línea base.
+Las pruebas cubren formatos, longitudes límite, comparación sin distinguir mayúsculas y ausencia de
+partes obligatorias. Estados, múltiples recursos por aplicación y relaciones de grafo se agregarán
+cuando un caso de uso los justifique; no se inventan en esta línea base.

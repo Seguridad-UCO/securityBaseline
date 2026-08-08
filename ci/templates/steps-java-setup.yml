@@ -1,0 +1,24 @@
+# Java toolchain plus a Maven cache. Extracted because three jobs need exactly this preamble and
+# a drift between them would make one of them build against a different JDK.
+steps:
+  - task: JavaToolInstaller@0
+    displayName: 'Configurar JDK $(javaVersion)'
+    inputs:
+      versionSpec: '$(javaVersion)'
+      jdkArchitectureOption: 'x64'
+      jdkSourceOption: 'PreInstalled'
+
+  - task: Cache@2
+    displayName: 'Restaurar caché de Maven'
+    inputs:
+      key: 'maven | "$(Agent.OS)" | pom.xml'
+      restoreKeys: |
+        maven | "$(Agent.OS)"
+        maven
+      path: $(mavenCacheFolder)
+
+  - bash: |
+      set -euo pipefail
+      java -version
+      ./mvnw --version
+    displayName: 'Verificar herramientas'

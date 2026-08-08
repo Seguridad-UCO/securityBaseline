@@ -5,7 +5,7 @@ import org.slf4j.MDC;
 import reactor.core.publisher.Mono;
 import java.util.function.Function;
 
-/** Bridges Reactor Context into MDC only while a log statement is executed. */
+/** Puente de Reactor Context a MDC solo mientras se ejecuta una declaración de registro. */
 public final class ReactiveLogContext {
     private ReactiveLogContext() { }
     public static <T> Function<Mono<T>, Mono<T>> withContext(Logger log, String event) {

@@ -1,0 +1,15 @@
+package co.edu.uco.seguridad.pdp.recursos.application.port.primary.interactor;
+
+import co.edu.uco.seguridad.pdp.recursos.application.port.primary.dto.response.ProtectedApplicationResponse;
+import co.edu.uco.seguridad.pdp.recursos.application.port.primary.dto.request.RegisterProtectedApplicationRequest;
+import co.edu.uco.seguridad.shared.contract.ReactiveOperation;
+
+/**
+ * Interactor del puerto primario: punto de entrada de aplicación para registrar una aplicación protegida.
+ *
+ * <p>Recibe y devuelve DTOs de aplicación (no DTOs web). El adaptador primario mapea la entrada/salida
+ * de transporte; este contrato permanece independiente del canal.</p>
+ */
+public interface RegisterProtectedApplicationInteractor
+        extends ReactiveOperation<RegisterProtectedApplicationRequest, ProtectedApplicationResponse> {
+}

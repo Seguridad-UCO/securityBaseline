@@ -1,23 +1,58 @@
 # 03. Reglas de negocio e integridad de datos
 
+[← Dominio y datos](README.md) · [Siguiente: transacciones →](10-transactions.md)
+
 ## Decisión arquitectónica
 
-La integridad se protege en value objects, agregado y caso de uso; la base de datos solo refuerza, no sustituye, esas reglas.
+La integridad se protege en tres niveles con responsabilidades distintas: value objects (formato),
+entidades (partes obligatorias) y **rules** explícitas (política). La base de datos refuerza, nunca
+sustituye, esas reglas.
 
 ## Justificación
 
-Un `NOT NULL` no valida formato, cardinalidad ni unicidad funcional por tenant. Confiar solo en persistencia impediría pruebas puras y permitiría inconsistencias al cambiar adaptador.
+Un `NOT NULL` no valida formato, ni cardinalidad, ni unicidad funcional por tenant. Confiar solo en
+la persistencia impide probar el negocio sin base de datos y permite inconsistencias al cambiar de
+adaptador.
+
+Las reglas se sacaron del caso de uso porque una condición de negocio enterrada en un `if` dentro de
+una orquestación no se puede probar por separado, no se puede reutilizar y no se puede nombrar en
+una conversación con el negocio.
 
 ## Implementación
 
-`TenantId`, `ApplicationName` y `ResourceIdentifier` rechazan valores inválidos. `ProtectedApplication` exige exactamente un recurso. El servicio consulta existencia por `(tenant,name)` y emite excepción de negocio antes de guardar.
+Las reglas se separan por si necesitan o no infraestructura, porque esa diferencia determina su
+firma, su costo y el orden en que conviene ejecutarlas:
+
+| Regla | Repositorio | Excepción |
+|---|---|---|
+| `ApplicationNameMustNotBeReservedRule` | no | `ReservedApplicationNameException` |
+| `ProtectedResourceMustBelongToApplicationTenantRule` | no | `ResourceTenantMismatchException` |
+| `TenantMustBeActiveRule` | sí | `TenantNotFoundException` / `TenantNotActiveException` |
+| `ApplicationNameMustBeUniqueForTenantRule` | sí | `DuplicateApplicationException` |
+| `ProtectedResourceMustBeUniqueRule` | sí | `DuplicateProtectedResourceException` |
+
+Cada validator ejecuta primero las reglas sin repositorio: una petición inválida se rechaza sin
+tocar el almacenamiento.
+
+`TenantMustBeActiveRule` la publica el módulo `tenants` y la consumen `aplicaciones` y `recursos`.
+Es una única implementación inyectada, no una comprobación copiada, de modo que la decisión no puede
+divergir entre módulos.
+
+`recursos` **no** vuelve a validar el tenant al registrar: `aplicaciones` ya lo hace con esa misma
+regla durante el registro de la aplicación. Repetirla sería una segunda decisión sobre lo mismo y
+una consulta de más.
 
 ## Ubicación verificable
 
-- [`domain`](../../src/main/java/co/edu/uco/seguridad/pdp)
-- [`ProtectedApplicationService.java`](../../src/main/java/co/edu/uco/seguridad/pdp)
-- Pruebas: [`ProtectedApplicationTests.java`](../../src/test/java/co/edu/uco/seguridad/pdp) y [`ProtectedApplicationServiceTests.java`](../../src/test/java/co/edu/uco/seguridad/pdp).
+- [`aplicaciones/application/rule`](../../src/main/java/co/edu/uco/seguridad/pdp/aplicaciones/application/rule)
+- [`recursos/application/rule`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/rule)
+- [`TenantMustBeActiveRule.java`](../../src/main/java/co/edu/uco/seguridad/pdp/tenants/TenantMustBeActiveRule.java)
+- Pruebas: [`ApplicationRegistrationRuleTests`](../../src/test/java/co/edu/uco/seguridad/pdp/aplicaciones/application/rule/ApplicationRegistrationRuleTests.java),
+  [`ProtectedResourceRuleTests`](../../src/test/java/co/edu/uco/seguridad/pdp/recursos/application/rule/ProtectedResourceRuleTests.java),
+  [`TenantMustBeActiveRuleImplTests`](../../src/test/java/co/edu/uco/seguridad/pdp/tenants/application/rule/TenantMustBeActiveRuleImplTests.java)
 
 ## Evidencia y límite
 
-Las pruebas demuestran formato, recurso y duplicado. En SurrealDB se añadirá índice/constraint equivalente como segunda barrera, sin retirar las reglas del dominio.
+Cada regla se prueba aislada, con un stub por escenario. En SurrealDB se añadirá el índice único
+equivalente como segunda barrera, sin retirar las reglas del núcleo: el índice protege los datos,
+la regla explica el motivo.

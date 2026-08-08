@@ -1,0 +1,8 @@
+# DEV environment. Fed by the `develop` branch.
+variables:
+  environmentName: 'pdp-dev'
+  springProfile: 'dev'
+  azureServiceConnection: 'Azure-PDP-Dev'
+  keyVaultName: 'kv-pdp-dev'
+  webAppName: 'app-pdp-dev'
+  resourceGroupName: 'rg-pdp-dev'
