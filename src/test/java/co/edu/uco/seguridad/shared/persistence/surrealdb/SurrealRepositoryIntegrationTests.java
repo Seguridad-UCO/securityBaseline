@@ -17,7 +17,6 @@ import co.edu.uco.seguridad.pdp.recursos.domain.ResourceCode;
 import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.secondary.persistence.repository.SurrealProtectedResourceRepository;
 import co.edu.uco.seguridad.pdp.tenants.TenantStatus;
 import co.edu.uco.seguridad.pdp.tenants.application.port.secondary.repository.TenantRepository;
-import co.edu.uco.seguridad.pdp.tenants.domain.Tenant;
 import co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.secondary.persistence.repository.SurrealTenantRepository;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

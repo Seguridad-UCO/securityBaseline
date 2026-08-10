@@ -3,7 +3,6 @@ package co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.secondary.persi
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import reactor.core.publisher.Mono;
 
 import java.util.Map;
 import java.util.Objects;

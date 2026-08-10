@@ -43,10 +43,10 @@ el XML de JaCoCo del **mismo** workspace; separarlos obligaría a publicar y vol
 Orden de ejecución:
 
 1. `JavaToolInstaller` fija el JDK 25 y `Cache@2` restaura `~/.m2`.
-2. `SonarQubePrepare@7` inyecta URL y token desde la service connection.
+2. `SonarCloudPrepare@4` inyecta organización y token desde la service connection de SonarCloud.
 3. `Maven@4` ejecuta `verify`: compilación, pruebas, reporte JaCoCo y análisis Sonar en un solo
    reactor, de modo que la cobertura que evalúa el gate es la que produjo este build.
-4. `SonarQubePublish@7` publica el resultado en el resumen del build.
+4. `SonarCloudPublish@4` publica el resultado en el resumen del build.
 5. `PublishCodeCoverageResults@2` publica la cobertura.
 6. Empaquetado y publicación del artefacto, **omitidos en pull requests**: un PR se verifica, no se
    despacha.
@@ -54,7 +54,7 @@ Orden de ejecución:
 ## Quality Gate
 
 El gate rompe el build por `sonar.qualitygate.wait=true`, pasado como propiedad extra en el
-`SonarQubePrepare`. Sin esa propiedad el análisis se publica pero el pipeline sigue en verde, que
+`SonarCloudPrepare`. Sin esa propiedad el análisis se publica pero el pipeline sigue en verde, que
 es la falla silenciosa clásica de esta integración.
 
 Analiza bugs, vulnerabilidades, security hotspots, code smells, duplicación y cobertura. La
@@ -64,8 +64,30 @@ cobertura llega desde `target/site/jacoco/jacoco.xml`, declarado en el `pom.xml`
 `sonar.coverage.exclusions` excluye `*Configuration.java`, `PdpApplication.java` y `package-info.java`:
 son cableado de Spring, y cubrirlos infla el porcentaje sin probar ninguna regla.
 
-Cobertura actual de la línea base: **92,7 % de instrucciones, 91,5 % de líneas, 89,5 % de ramas**
-sobre 109 pruebas.
+## Cobertura en SonarQube Cloud
+
+Sonar **no calcula** cobertura: importa el XML que genera JaCoCo en el pipeline
+(`target/site/jacoco/jacoco.xml`). Si el tablero muestra
+*“A few extra steps are needed for SonarQube Cloud to analyze your code coverage”*, casi siempre
+falta una de estas tres cosas:
+
+1. **Análisis automático desactivado.** En SonarQube Cloud → proyecto → *Administration* →
+   *Analysis Method*: usa solo CI-based analysis. El análisis automático (GitHub/ADO sin build)
+   no lleva reporte JaCoCo y deja el tile de Coverage vacío.
+2. **Pipeline que genera e importa el XML.** `mvn verify` debe producir
+   `target/site/jacoco/jacoco.xml` **antes** de `sonar:sonar`. El `pom.xml` ya declara
+   `sonar.coverage.jacoco.xmlReportPaths` y el pipeline comprueba que el archivo exista.
+3. **Logs del análisis.** En el job de Azure DevOps, busca
+   `Sensor JaCoCo XML Report Importer` y confirma que encontró el XML (no “No report imported”).
+   El aviso amarillo *Last analysis had a warning* en el tablero suele detallar la misma causa.
+
+Comprobación local (sin publicar a Sonar):
+
+```bash
+./mvnw verify
+# debe existir:
+# target/site/jacoco/jacoco.xml
+```
 
 ## Configuración requerida en Azure DevOps
 
@@ -73,13 +95,14 @@ Nada de esto vive en el repositorio, y esa es la razón por la que hay que crear
 
 | Elemento | Nombre esperado | Contiene |
 |---|---|---|
-| Service connection SonarQube | `SonarQube-UCO` | URL del servidor y token de análisis |
+| Service connection **SonarCloud** | `SonarCloud-seguridad` (ver `ci/variables/common.yml`) | Token de análisis de sonarcloud.io |
 | Service connection Azure | `Azure-PDP-Dev` / `-Qa` / `-Prod` | Credenciales de la suscripción |
 | Environment | `pdp-dev`, `pdp-qa`, `pdp-prod` | Aprobaciones y checks |
-| Extensión | SonarQube (SonarSource) | Tareas `SonarQubePrepare@7` / `SonarQubePublish@7` |
+| Extensión | **SonarQube Cloud** (`SonarSource.sonarcloud`) | Tareas `SonarCloudPrepare@4` / `SonarCloudPublish@4` |
 
-Si la organización tiene instalada una versión anterior de la extensión, las tareas son `@5` o
-`@6`; el resto del YAML no cambia.
+Importante: la extensión *SonarQube Server* (`SonarQubePrepare@7`) y la de *SonarQube Cloud*
+(`SonarCloudPrepare@4`) son distintas. Contra `sonarcloud.io` hay que usar la de Cloud; si no,
+el scanner suele fallar con `Not authorized or project not found` al pedir feature flags.
 
 ## GitHub y Azure DevOps
 

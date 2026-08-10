@@ -32,7 +32,8 @@ class ApplicationRegistrationRuleTests {
         ApplicationNameMustNotBeReservedRule rule =
                 new ApplicationNameMustNotBeReservedRuleImpl(Set.of("admin", "pdp"));
 
-        assertThatThrownBy(() -> rule.execute(new ApplicationName("Admin")))
+        ApplicationName reserved = new ApplicationName("Admin");
+        assertThatThrownBy(() -> rule.execute(reserved))
                 .isInstanceOf(ReservedApplicationNameException.class)
                 .hasMessageContaining("reservado");
     }
