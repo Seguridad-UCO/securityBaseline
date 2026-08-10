@@ -9,5 +9,7 @@ class SeguridadApplicationTests extends AbstractSurrealDbIntegrationTest {
 
     @Test
     void contextLoads() {
+        // Intentionally empty: the test's only purpose is to fail if the Spring context
+        // does not start correctly.
     }
 }

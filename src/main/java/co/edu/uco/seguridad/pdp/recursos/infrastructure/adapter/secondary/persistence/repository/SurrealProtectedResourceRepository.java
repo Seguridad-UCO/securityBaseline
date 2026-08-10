@@ -32,6 +32,10 @@ import java.util.Objects;
 public final class SurrealProtectedResourceRepository implements ProtectedResourceRepository {
 
     private static final String TABLE = "protected_resource";
+    private static final String FIELD_APPLICATION_ID = "applicationId";
+    private static final String FIELD_RESOURCE_CODE = "resourceCode";
+    private static final String FIELD_ACTION = "action";
+    private static final String FIELD_TENANT_ID = "tenantId";
 
     private final SurrealDbClient client;
 
@@ -45,17 +49,17 @@ public final class SurrealProtectedResourceRepository implements ProtectedResour
                         "SELECT id FROM %s WHERE applicationId = $applicationId AND resourceCode = $resourceCode AND action = $action LIMIT 1;"
                                 .formatted(TABLE),
                         Map.of(
-                                "applicationId", applicationId.value().toString(),
-                                "resourceCode", resourceCode.value(),
-                                "action", action.value()))
-                .map(results -> !results.get(0).isEmpty());
+                                FIELD_APPLICATION_ID, applicationId.value().toString(),
+                                FIELD_RESOURCE_CODE, resourceCode.value(),
+                                FIELD_ACTION, action.value()))
+                .map(results -> !results.getFirst().isEmpty());
     }
 
     @Override
     public Mono<ResultPage<ProtectedResource>> findBy(ProtectedApplicationCriteria criteria, PageWindow window) {
         StringBuilder where = new StringBuilder("tenantId = $tenantId");
         Map<String, String> params = new HashMap<>();
-        params.put("tenantId", criteria.tenantId().value());
+        params.put(FIELD_TENANT_ID, criteria.tenantId().value());
         criteria.nameContains().ifPresent(fragment -> {
             where.append(" AND applicationName CONTAINS $nameContains");
             params.put("nameContains", fragment);
@@ -92,11 +96,11 @@ public final class SurrealProtectedResourceRepository implements ProtectedResour
                         """.formatted(TABLE),
                         Map.of(
                                 "id", resource.id().value().toString(),
-                                "applicationId", resource.applicationId().value().toString(),
-                                "tenantId", resource.tenantId().value(),
+                                FIELD_APPLICATION_ID, resource.applicationId().value().toString(),
+                                FIELD_TENANT_ID, resource.tenantId().value(),
                                 "applicationName", resource.applicationName().value(),
-                                "resourceCode", resource.code().value(),
-                                "action", resource.action().value(),
+                                FIELD_RESOURCE_CODE, resource.code().value(),
+                                FIELD_ACTION, resource.action().value(),
                                 "registeredAt", resource.registeredAt().toString()))
                 .thenReturn(resource);
     }
@@ -112,11 +116,11 @@ public final class SurrealProtectedResourceRepository implements ProtectedResour
     private static ProtectedResource toDomain(JsonNode row) {
         ProtectedResourceEntity entity = new ProtectedResourceEntity(
                 SurrealRecordId.idPart(row.path("id").asString()),
-                row.path("applicationId").asString(),
-                row.path("tenantId").asString(),
+                row.path(FIELD_APPLICATION_ID).asString(),
+                row.path(FIELD_TENANT_ID).asString(),
                 row.path("applicationName").asString(),
-                row.path("resourceCode").asString(),
-                row.path("action").asString(),
+                row.path(FIELD_RESOURCE_CODE).asString(),
+                row.path(FIELD_ACTION).asString(),
                 Instant.parse(row.path("registeredAt").asString()));
         return ProtectedResourcePersistenceMapper.toDomain(entity);
     }

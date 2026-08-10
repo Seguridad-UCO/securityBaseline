@@ -21,6 +21,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 class ValueObjectTests {
 
+    @Test
+    void applicationName_is_the_canonical_example_of_a_trimmed_value_object() {
+        assertThat(new ApplicationName("  gestion-academica  ").value()).isEqualTo("gestion-academica");
+    }
+
     @Nested
     @DisplayName("TenantId")
     class TenantIdTests {
