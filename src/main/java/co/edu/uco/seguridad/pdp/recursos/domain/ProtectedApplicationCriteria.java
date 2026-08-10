@@ -37,8 +37,6 @@ public record ProtectedApplicationCriteria(TenantId tenantId,
     }
 
     private static Optional<String> normalise(Optional<String> fragment) {
-        return fragment == null
-                ? Optional.empty()
-                : fragment.map(String::trim).filter(value -> !value.isEmpty());
+        return fragment.map(String::trim).filter(value -> !value.isEmpty());
     }
 }

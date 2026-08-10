@@ -29,6 +29,7 @@ stages:
                 sonar.qualitygate.wait=true
                 sonar.qualitygate.timeout=300
                 sonar.branch.name=$(Build.SourceBranchName)
+                sonar.coverage.jacoco.xmlReportPaths=$(System.DefaultWorkingDirectory)/target/site/jacoco/jacoco.xml
                 sonar.coverage.exclusions=**/PdpApplication.java,**/*Configuration.java,**/package-info.java
                 sonar.cpd.exclusions=**/*Test.java
                 sonar.java.source=$(javaVersion)
