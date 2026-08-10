@@ -25,8 +25,30 @@ stages:
           # properties also take precedence over pom.xml properties, so setting it here was
           # silently shadowing the pom.xml's absolute, always-correct
           # ${project.build.directory}-based path and breaking coverage detection.
+          #
+          # Branch vs PR: never set sonar.branch.name on a pull-request build. That property
+          # disables PR detection and makes Sonar treat the run as a normal branch (often only
+          # main is expected). GitHub hosts the PR; Azure only runs CI, so we pass the GitHub
+          # pullrequest.* properties explicitly when Build.Reason is PullRequest.
+          - bash: |
+              set -euo pipefail
+              if [ "$(Build.Reason)" = "PullRequest" ]; then
+                src="$(System.PullRequest.SourceBranch)"
+                base="$(System.PullRequest.TargetBranch)"
+                src="${src#refs/heads/}"
+                base="${base#refs/heads/}"
+                echo "##vso[task.setvariable variable=sonarPrKey]$(System.PullRequest.PullRequestNumber)"
+                echo "##vso[task.setvariable variable=sonarPrBranch]${src}"
+                echo "##vso[task.setvariable variable=sonarPrBase]${base}"
+                echo "Sonar PR analysis: key=$(System.PullRequest.PullRequestNumber) branch=${src} base=${base}"
+              else
+                echo "Sonar branch analysis: $(Build.SourceBranchName)"
+              fi
+            displayName: 'Resolver parámetros Sonar (branch vs PR)'
+
           - task: SonarQubePrepare@7
-            displayName: 'Preparar análisis SonarQube'
+            displayName: 'Preparar análisis SonarQube (branch)'
+            condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
             inputs:
               SonarQube: '$(sonarServiceConnection)'
               scannerMode: 'Other'
@@ -37,6 +59,30 @@ stages:
                 sonar.qualitygate.wait=true
                 sonar.qualitygate.timeout=300
                 sonar.branch.name=$(Build.SourceBranchName)
+                sonar.coverage.exclusions=**/PdpApplication.java,**/*Configuration.java,**/package-info.java
+                sonar.cpd.exclusions=**/*Test.java
+                sonar.java.source=$(javaVersion)
+                sonar.issue.ignore.multicriteria=e1
+                sonar.issue.ignore.multicriteria.e1.ruleKey=java:S110
+                sonar.issue.ignore.multicriteria.e1.resourceKey=*
+
+          - task: SonarQubePrepare@7
+            displayName: 'Preparar análisis SonarQube (pull request)'
+            condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+            inputs:
+              SonarQube: '$(sonarServiceConnection)'
+              scannerMode: 'Other'
+              extraProperties: |
+                sonar.organization=seguridad-uco
+                sonar.projectKey=Seguridad-UCO_securityBaseline
+                sonar.projectName=Security Baseline PDP
+                sonar.qualitygate.wait=true
+                sonar.qualitygate.timeout=300
+                sonar.pullrequest.key=$(sonarPrKey)
+                sonar.pullrequest.branch=$(sonarPrBranch)
+                sonar.pullrequest.base=$(sonarPrBase)
+                sonar.pullrequest.provider=github
+                sonar.pullrequest.github.repository=Seguridad-UCO/securityBaseline
                 sonar.coverage.exclusions=**/PdpApplication.java,**/*Configuration.java,**/package-info.java
                 sonar.cpd.exclusions=**/*Test.java
                 sonar.java.source=$(javaVersion)
