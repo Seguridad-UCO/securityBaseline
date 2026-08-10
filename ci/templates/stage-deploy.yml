@@ -38,8 +38,8 @@ stages:
                 - download: current
                   artifact: $(artifactName)
 
-                # Secrets are read at deploy time and exposed only as masked pipeline variables.
-                # They are never written to a file, never echoed, and never stored in the repo.
+                # Secrets become masked pipeline variables named like the Key Vault secret
+                # (e.g. pdp-jwt-signing-key). They are never written to a file or the repo.
                 - task: AzureKeyVault@2
                   displayName: 'Leer secretos desde Azure Key Vault'
                   inputs:
@@ -47,19 +47,30 @@ stages:
                     KeyVaultName: $(keyVaultName)
                     SecretsFilter: 'pdp-jwt-signing-key,pdp-datasource-password,pdp-oidc-client-secret,pdp-otlp-token'
 
-                - task: AzureAppServiceManage@0
-                  displayName: 'Reiniciar App Service (Docker)'
+                # Deploy the Spring Boot JAR and inject env vars the prod/qa profiles require.
+                # A bare restart (old step) never published the artifact — health stayed 502/503.
+                - task: AzureWebApp@1
+                  displayName: 'Desplegar JAR en App Service'
                   inputs:
                     azureSubscription: ${{ parameters.azureServiceConnectionName }}
-                    Action: 'Restart Azure App Service'
-                    WebAppName: $(webAppName)
-                    ResourceGroupName: $(resourceGroupName)
+                    appType: webAppLinux
+                    appName: $(webAppName)
+                    package: '$(Pipeline.Workspace)/$(artifactName)/*.jar'
+                    deploymentMethod: auto
+                    appSettings: >-
+                      -SPRING_PROFILES_ACTIVE $(springProfile)
+                      -PDP_JWT_SIGNING_KEY $(pdp-jwt-signing-key)
+                      -PDP_DATASOURCE_URL $(datasourceUrl)
+                      -PDP_DATASOURCE_USERNAME $(datasourceUsername)
+                      -PDP_DATASOURCE_PASSWORD $(pdp-datasource-password)
+                      -PDP_OIDC_CLIENT_SECRET $(pdp-oidc-client-secret)
+                      -PDP_OTLP_TOKEN $(pdp-otlp-token)
 
                 # Fails the deployment if the application does not come back healthy, so a broken
                 # release is visible here instead of on the next request.
                 - bash: |
                     set -euo pipefail
-                    for attempt in $(seq 1 20); do
+                    for attempt in $(seq 1 30); do
                       status=$(curl -s -o /dev/null -w "%{http_code}" "https://$(webAppName).azurewebsites.net/actuator/health" || true)
                       if [ "$status" = "200" ]; then
                         echo "Aplicación saludable tras $attempt intento(s)."
@@ -69,5 +80,6 @@ stages:
                       sleep 15
                     done
                     echo "La aplicación no respondió saludable."
+                    echo "Comprueba: App Service existe, runtime Java, y SurrealDB alcanzable en PDP_DATASOURCE_URL=$(datasourceUrl)"
                     exit 1
                   displayName: 'Verificar salud del despliegue'
