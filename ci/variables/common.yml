@@ -10,4 +10,4 @@ variables:
 
   # Name of the SonarQube service connection configured in Azure DevOps.
   # The connection holds the server URL and the analysis token; this is only its label.
-  sonarServiceConnection: 'SonarQube-UCO'
+  sonarServiceConnection: 'SonarQube-seguridad'
