@@ -17,6 +17,14 @@ stages:
           # Prepares the scanner and injects the server URL and token from the service connection.
           # `sonar.qualitygate.wait=true` is what makes a failed gate fail the build instead of
           # only colouring the dashboard.
+          #
+          # sonar.coverage.jacoco.xmlReportPaths is deliberately NOT set here: the Azure Sonar
+          # extension runs analysis through a separate, JRE-provisioned scanner engine process
+          # (visible in the logs as its own Java runtime), and a relative path passed as an
+          # extraProperty resolves against that process rather than the Maven basedir. Pipeline
+          # properties also take precedence over pom.xml properties, so setting it here was
+          # silently shadowing the pom.xml's absolute, always-correct
+          # ${project.build.directory}-based path and breaking coverage detection.
           - task: SonarQubePrepare@7
             displayName: 'Preparar análisis SonarQube'
             inputs:
@@ -29,7 +37,6 @@ stages:
                 sonar.qualitygate.wait=true
                 sonar.qualitygate.timeout=300
                 sonar.branch.name=$(Build.SourceBranchName)
-                sonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
                 sonar.coverage.exclusions=**/PdpApplication.java,**/*Configuration.java,**/package-info.java
                 sonar.cpd.exclusions=**/*Test.java
                 sonar.java.source=$(javaVersion)
