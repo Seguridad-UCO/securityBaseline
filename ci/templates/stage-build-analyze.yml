@@ -44,8 +44,8 @@ stages:
                 sonar.issue.ignore.multicriteria.e1.ruleKey=java:S110
                 sonar.issue.ignore.multicriteria.e1.resourceKey=*
 
-          # `verify` runs compile, tests, the JaCoCo report and the Sonar analysis in one reactor,
-          # so the coverage the gate sees is the coverage this build produced.
+          # `verify` runs compile, tests and the JaCoCo XML report; sonar:sonar runs after and
+          # imports target/site/jacoco/jacoco.xml via sonar.coverage.jacoco.xmlReportPaths in pom.xml.
           - task: Maven@4
             displayName: 'mvn verify + análisis SonarQube'
             inputs:
@@ -61,6 +61,19 @@ stages:
               sonarQubeRunAnalysis: true
               isJacocoCoverageReportXML: true
               codeCoverageToolOption: 'JaCoCo'
+
+          # Fails clearly if JaCoCo did not write the XML Sonar must import (common cause of the
+          # "A few extra steps are needed for coverage" tile on SonarQube Cloud).
+          - bash: |
+              set -euo pipefail
+              REPORT="$(System.DefaultWorkingDirectory)/target/site/jacoco/jacoco.xml"
+              if [[ ! -f "$REPORT" ]]; then
+                echo "##vso[task.logissue type=error]No se encontró $REPORT. Sin este archivo SonarQube Cloud no muestra cobertura."
+                exit 1
+              fi
+              echo "JaCoCo XML listo para Sonar: $REPORT ($(wc -c < "$REPORT") bytes)"
+            displayName: 'Verificar jacoco.xml para Sonar'
+            condition: succeededOrFailed()
 
           - task: SonarQubePublish@7
             displayName: 'Publicar resultado del Quality Gate'

@@ -5,7 +5,6 @@ import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.util.Map;
 import java.util.Objects;

@@ -64,8 +64,30 @@ cobertura llega desde `target/site/jacoco/jacoco.xml`, declarado en el `pom.xml`
 `sonar.coverage.exclusions` excluye `*Configuration.java`, `PdpApplication.java` y `package-info.java`:
 son cableado de Spring, y cubrirlos infla el porcentaje sin probar ninguna regla.
 
-Cobertura actual de la línea base: **92,7 % de instrucciones, 91,5 % de líneas, 89,5 % de ramas**
-sobre 109 pruebas.
+## Cobertura en SonarQube Cloud
+
+Sonar **no calcula** cobertura: importa el XML que genera JaCoCo en el pipeline
+(`target/site/jacoco/jacoco.xml`). Si el tablero muestra
+*“A few extra steps are needed for SonarQube Cloud to analyze your code coverage”*, casi siempre
+falta una de estas tres cosas:
+
+1. **Análisis automático desactivado.** En SonarQube Cloud → proyecto → *Administration* →
+   *Analysis Method*: usa solo CI-based analysis. El análisis automático (GitHub/ADO sin build)
+   no lleva reporte JaCoCo y deja el tile de Coverage vacío.
+2. **Pipeline que genera e importa el XML.** `mvn verify` debe producir
+   `target/site/jacoco/jacoco.xml` **antes** de `sonar:sonar`. El `pom.xml` ya declara
+   `sonar.coverage.jacoco.xmlReportPaths` y el pipeline comprueba que el archivo exista.
+3. **Logs del análisis.** En el job de Azure DevOps, busca
+   `Sensor JaCoCo XML Report Importer` y confirma que encontró el XML (no “No report imported”).
+   El aviso amarillo *Last analysis had a warning* en el tablero suele detallar la misma causa.
+
+Comprobación local (sin publicar a Sonar):
+
+```bash
+./mvnw verify
+# debe existir:
+# target/site/jacoco/jacoco.xml
+```
 
 ## Configuración requerida en Azure DevOps
 
@@ -73,7 +95,7 @@ Nada de esto vive en el repositorio, y esa es la razón por la que hay que crear
 
 | Elemento | Nombre esperado | Contiene |
 |---|---|---|
-| Service connection SonarQube | `SonarQube-UCO` | URL del servidor y token de análisis |
+| Service connection SonarQube | `SonarQube-seguridad` (ver `ci/variables/common.yml`) | URL de SonarQube Cloud y token de análisis |
 | Service connection Azure | `Azure-PDP-Dev` / `-Qa` / `-Prod` | Credenciales de la suscripción |
 | Environment | `pdp-dev`, `pdp-qa`, `pdp-prod` | Aprobaciones y checks |
 | Extensión | SonarQube (SonarSource) | Tareas `SonarQubePrepare@7` / `SonarQubePublish@7` |

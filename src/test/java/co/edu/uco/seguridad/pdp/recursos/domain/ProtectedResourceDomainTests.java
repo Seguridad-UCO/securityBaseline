@@ -50,9 +50,12 @@ class ProtectedResourceDomainTests {
 
     @Test
     void protected_resource_refuses_to_exist_without_every_part() {
+        ResourceId id = new ResourceId(UUID.randomUUID());
+        TenantId tenant = new TenantId("uco");
+        ApplicationName name = new ApplicationName("gestion-academica");
+        ResourceCode code = new ResourceCode("estudiantes");
         assertThatThrownBy(() -> ProtectedResource.register(
-                new ResourceId(UUID.randomUUID()), APPLICATION, new TenantId("uco"),
-                new ApplicationName("gestion-academica"), new ResourceCode("estudiantes"), null, AT))
+                id, APPLICATION, tenant, name, code, null, AT))
                 .isInstanceOf(NullPointerException.class);
     }
 

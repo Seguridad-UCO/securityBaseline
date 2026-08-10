@@ -53,8 +53,8 @@ class RegisterProtectedApplicationRequestMapperTests {
             "gestion-academica, estudiantes, NULL, action"
     })
     void reports_a_missing_field_by_name(String name, String code, String action, String expected) {
-        assertThatThrownBy(() -> RegisterProtectedApplicationRequestMapper.toRequest(
-                new RegisterProtectedApplicationRawRequest(name, code, action), TENANT))
+        var raw = new RegisterProtectedApplicationRawRequest(name, code, action);
+        assertThatThrownBy(() -> RegisterProtectedApplicationRequestMapper.toRequest(raw, TENANT))
                 .isInstanceOf(MissingRequestFieldException.class)
                 .extracting(error -> ((MissingRequestFieldException) error).field())
                 .isEqualTo(expected);
@@ -62,8 +62,8 @@ class RegisterProtectedApplicationRequestMapperTests {
 
     @Test
     void treats_a_blank_field_as_missing_rather_than_as_an_empty_value() {
-        assertThatThrownBy(() -> RegisterProtectedApplicationRequestMapper.toRequest(
-                new RegisterProtectedApplicationRawRequest("   ", "estudiantes", "consultar"), TENANT))
+        var raw = new RegisterProtectedApplicationRawRequest("   ", "estudiantes", "consultar");
+        assertThatThrownBy(() -> RegisterProtectedApplicationRequestMapper.toRequest(raw, TENANT))
                 .isInstanceOf(MissingRequestFieldException.class);
     }
 
@@ -74,8 +74,8 @@ class RegisterProtectedApplicationRequestMapperTests {
             "gestion-academica, estudiantes, CONSULTAR, action"
     })
     void reports_a_malformed_field_by_name(String name, String code, String action, String expected) {
-        assertThatThrownBy(() -> RegisterProtectedApplicationRequestMapper.toRequest(
-                new RegisterProtectedApplicationRawRequest(name, code, action), TENANT))
+        var raw = new RegisterProtectedApplicationRawRequest(name, code, action);
+        assertThatThrownBy(() -> RegisterProtectedApplicationRequestMapper.toRequest(raw, TENANT))
                 .isInstanceOf(MalformedRequestFieldException.class)
                 .extracting(error -> ((MalformedRequestFieldException) error).field())
                 .isEqualTo(expected);
@@ -83,8 +83,8 @@ class RegisterProtectedApplicationRequestMapperTests {
 
     @Test
     void reports_a_value_that_is_out_of_range() {
-        assertThatThrownBy(() -> RegisterProtectedApplicationRequestMapper.toRequest(
-                new RegisterProtectedApplicationRawRequest("x".repeat(101), "estudiantes", "consultar"), TENANT))
+        var raw = new RegisterProtectedApplicationRawRequest("x".repeat(101), "estudiantes", "consultar");
+        assertThatThrownBy(() -> RegisterProtectedApplicationRequestMapper.toRequest(raw, TENANT))
                 .isInstanceOf(MalformedRequestFieldException.class)
                 .hasMessageContaining("applicationName")
                 .hasMessageContaining("100 caracteres");
@@ -92,8 +92,8 @@ class RegisterProtectedApplicationRequestMapperTests {
 
     @Test
     void carries_the_reason_stated_by_the_value_object_instead_of_restating_the_format() {
-        assertThatThrownBy(() -> RegisterProtectedApplicationRequestMapper.toRequest(
-                new RegisterProtectedApplicationRawRequest("gestion-academica", "Estudiantes", "consultar"), TENANT))
+        var raw = new RegisterProtectedApplicationRawRequest("gestion-academica", "Estudiantes", "consultar");
+        assertThatThrownBy(() -> RegisterProtectedApplicationRequestMapper.toRequest(raw, TENANT))
                 .hasMessageContaining("kebab-case");
     }
 }

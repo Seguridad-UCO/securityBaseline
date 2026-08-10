@@ -36,6 +36,7 @@
 			pipeline supplies them through the SonarQube service connection, so no credential is
 			ever committed. Only non-sensitive analysis metadata belongs in this file.
 		-->
+		<sonar.organization>seguridad-uco</sonar.organization>
 		<sonar.projectKey>Seguridad-UCO_securityBaseline</sonar.projectKey>
 		<sonar.projectName>Security Baseline PDP</sonar.projectName>
 		<sonar.sources>src/main/java</sonar.sources>
@@ -166,6 +167,13 @@
 						<goals>
 							<goal>report</goal>
 						</goals>
+						<configuration>
+							<!-- SonarQube Cloud solo importa el XML; HTML/CSV son opcionales. -->
+							<formats>
+								<format>XML</format>
+								<format>HTML</format>
+							</formats>
+						</configuration>
 					</execution>
 					<execution>
 						<id>jacoco-check</id>

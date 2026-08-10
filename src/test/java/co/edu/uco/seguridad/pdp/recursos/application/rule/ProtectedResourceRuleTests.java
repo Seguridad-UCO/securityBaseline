@@ -47,7 +47,9 @@ class ProtectedResourceRuleTests {
         ProtectedResourceMustBelongToApplicationTenantRule rule =
                 new ProtectedResourceMustBelongToApplicationTenantRuleImpl();
 
-        assertThatThrownBy(() -> rule.execute(registration(TENANT, new TenantId("otra-universidad"))))
+        ProtectedResourceRegistration mismatched =
+                registration(TENANT, new TenantId("otra-universidad"));
+        assertThatThrownBy(() -> rule.execute(mismatched))
                 .isInstanceOf(ResourceTenantMismatchException.class);
     }
 

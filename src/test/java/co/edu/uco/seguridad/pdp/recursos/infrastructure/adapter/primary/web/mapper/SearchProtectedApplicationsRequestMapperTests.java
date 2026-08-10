@@ -58,27 +58,31 @@ class SearchProtectedApplicationsRequestMapperTests {
 
     @Test
     void refuses_an_offset_without_a_limit_because_the_intent_is_ambiguous() {
-        assertThatThrownBy(() -> map(raw(null, null, "10", null)))
+        var request = raw(null, null, "10", null);
+        assertThatThrownBy(() -> map(request))
                 .isInstanceOf(ConflictingRequestParametersException.class)
                 .hasMessageContaining("juntos");
     }
 
     @Test
     void refuses_a_limit_without_an_offset() {
-        assertThatThrownBy(() -> map(raw(null, null, null, "5")))
+        var request = raw(null, null, null, "5");
+        assertThatThrownBy(() -> map(request))
                 .isInstanceOf(ConflictingRequestParametersException.class);
     }
 
     @Test
     void refuses_paging_and_ranges_in_the_same_request() {
-        assertThatThrownBy(() -> map(raw("1", "10", "10", "5")))
+        var request = raw("1", "10", "10", "5");
+        assertThatThrownBy(() -> map(request))
                 .isInstanceOf(ConflictingRequestParametersException.class)
                 .hasMessageContaining("not both");
     }
 
     @Test
     void reports_a_non_numeric_window_parameter_as_a_wrong_type() {
-        assertThatThrownBy(() -> map(raw("first", "10", null, null)))
+        var request = raw("first", "10", null, null);
+        assertThatThrownBy(() -> map(request))
                 .isInstanceOf(MalformedRequestFieldException.class)
                 .extracting(error -> ((MalformedRequestFieldException) error).field())
                 .isEqualTo("page");
@@ -86,14 +90,16 @@ class SearchProtectedApplicationsRequestMapperTests {
 
     @Test
     void reports_a_window_beyond_the_protective_limit_as_out_of_range() {
-        assertThatThrownBy(() -> map(raw(null, "500", null, null)))
+        var request = raw(null, "500", null, null);
+        assertThatThrownBy(() -> map(request))
                 .isInstanceOf(MalformedRequestFieldException.class)
                 .hasMessageContaining("entre 1 y 100");
     }
 
     @Test
     void reports_a_negative_offset_as_out_of_range() {
-        assertThatThrownBy(() -> map(raw(null, null, "-1", "5")))
+        var request = raw(null, null, "-1", "5");
+        assertThatThrownBy(() -> map(request))
                 .isInstanceOf(MalformedRequestFieldException.class);
     }
 
