@@ -43,10 +43,10 @@ el XML de JaCoCo del **mismo** workspace; separarlos obligaría a publicar y vol
 Orden de ejecución:
 
 1. `JavaToolInstaller` fija el JDK 25 y `Cache@2` restaura `~/.m2`.
-2. `SonarQubePrepare@7` inyecta URL y token desde la service connection.
+2. `SonarCloudPrepare@4` inyecta organización y token desde la service connection de SonarCloud.
 3. `Maven@4` ejecuta `verify`: compilación, pruebas, reporte JaCoCo y análisis Sonar en un solo
    reactor, de modo que la cobertura que evalúa el gate es la que produjo este build.
-4. `SonarQubePublish@7` publica el resultado en el resumen del build.
+4. `SonarCloudPublish@4` publica el resultado en el resumen del build.
 5. `PublishCodeCoverageResults@2` publica la cobertura.
 6. Empaquetado y publicación del artefacto, **omitidos en pull requests**: un PR se verifica, no se
    despacha.
@@ -54,7 +54,7 @@ Orden de ejecución:
 ## Quality Gate
 
 El gate rompe el build por `sonar.qualitygate.wait=true`, pasado como propiedad extra en el
-`SonarQubePrepare`. Sin esa propiedad el análisis se publica pero el pipeline sigue en verde, que
+`SonarCloudPrepare`. Sin esa propiedad el análisis se publica pero el pipeline sigue en verde, que
 es la falla silenciosa clásica de esta integración.
 
 Analiza bugs, vulnerabilidades, security hotspots, code smells, duplicación y cobertura. La
@@ -95,13 +95,14 @@ Nada de esto vive en el repositorio, y esa es la razón por la que hay que crear
 
 | Elemento | Nombre esperado | Contiene |
 |---|---|---|
-| Service connection SonarQube | `SonarQube-seguridad` (ver `ci/variables/common.yml`) | URL de SonarQube Cloud y token de análisis |
+| Service connection **SonarCloud** | `SonarCloud-seguridad` (ver `ci/variables/common.yml`) | Token de análisis de sonarcloud.io |
 | Service connection Azure | `Azure-PDP-Dev` / `-Qa` / `-Prod` | Credenciales de la suscripción |
 | Environment | `pdp-dev`, `pdp-qa`, `pdp-prod` | Aprobaciones y checks |
-| Extensión | SonarQube (SonarSource) | Tareas `SonarQubePrepare@7` / `SonarQubePublish@7` |
+| Extensión | **SonarQube Cloud** (`SonarSource.sonarcloud`) | Tareas `SonarCloudPrepare@4` / `SonarCloudPublish@4` |
 
-Si la organización tiene instalada una versión anterior de la extensión, las tareas son `@5` o
-`@6`; el resto del YAML no cambia.
+Importante: la extensión *SonarQube Server* (`SonarQubePrepare@7`) y la de *SonarQube Cloud*
+(`SonarCloudPrepare@4`) son distintas. Contra `sonarcloud.io` hay que usar la de Cloud; si no,
+el scanner suele fallar con `Not authorized or project not found` al pedir feature flags.
 
 ## GitHub y Azure DevOps
 

@@ -8,6 +8,6 @@ variables:
   mavenOptions: '-Dmaven.repo.local=$(Pipeline.Workspace)/.m2/repository --batch-mode -Dstyle.color=never'
   artifactName: 'pdp-application'
 
-  # Name of the SonarQube service connection configured in Azure DevOps.
-  # The connection holds the server URL and the analysis token; this is only its label.
-  sonarServiceConnection: 'SonarQube-seguridad'
+  # Name of the SonarQube Cloud service connection in Azure DevOps (type: SonarCloud,
+  # from the "SonarQube Cloud" extension — not the "SonarQube Server" extension).
+  sonarServiceConnection: 'SonarCloud-seguridad'
