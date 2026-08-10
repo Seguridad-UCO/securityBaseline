@@ -75,7 +75,8 @@ resource applicationSecretsRead 'Microsoft.Authorization/roleAssignments@2022-04
   }
 }
 
-resource pipelineSecretsRead 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+// Only create pipeline access if it's a different principal than the application
+resource pipelineSecretsRead 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (pipelinePrincipalId != applicationPrincipalId) {
   scope: keyVault
   name: guid(keyVault.id, pipelinePrincipalId, keyVaultSecretsUserRoleId)
   properties: {

@@ -5,6 +5,6 @@ variables:
   azureServiceConnection: 'Azure-PDP-Prod'
   keyVaultName: 'kv-pdp-prod'
   webAppName: 'app-pdp-prod'
-  resourceGroupName: 'rg-pdp-prod'
+  resourceGroupName: 'rg-pdp-prod-v2'
   datasourceUrl: 'http://surrealdb-prod.example.com:8000'
   datasourceUsername: 'root'

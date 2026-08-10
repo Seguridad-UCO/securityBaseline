@@ -3,8 +3,8 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "environment": { "value": "qa" },
-    "applicationPrincipalId": { "value": "<object-id-de-la-identidad-administrada-de-app-pdp-qa>" },
-    "pipelinePrincipalId": { "value": "<object-id-del-service-principal-Azure-PDP-Qa>" },
+    "applicationPrincipalId": { "value": "89ec3733-e60f-4256-9d80-128bf6863f7a" },
+    "pipelinePrincipalId": { "value": "5a8d7218-3a7e-43c8-b84a-f53971611dbf" },
     "logAnalyticsWorkspaceId": { "value": "" }
   }
 }

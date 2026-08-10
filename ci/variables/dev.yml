@@ -5,4 +5,4 @@ variables:
   azureServiceConnection: 'Azure-PDP-Dev'
   keyVaultName: 'kv-pdp-dev'
   webAppName: 'app-pdp-dev'
-  resourceGroupName: 'rg-pdp-dev'
+  resourceGroupName: 'rg-pdp-dev-v2'
