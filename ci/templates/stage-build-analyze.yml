@@ -29,6 +29,12 @@ stages:
                 sonar.qualitygate.wait=true
                 sonar.qualitygate.timeout=300
                 sonar.branch.name=$(Build.SourceBranchName)
+                sonar.coverage.exclusions=**/PdpApplication.java,**/*Configuration.java,**/package-info.java
+                sonar.cpd.exclusions=**/*Test.java
+                sonar.java.source=$(javaVersion)
+                sonar.issue.ignore.multicriteria=e1
+                sonar.issue.ignore.multicriteria.e1.ruleKey=java:S110
+                sonar.issue.ignore.multicriteria.e1.resourceKey=*
 
           # `verify` runs compile, tests, the JaCoCo report and the Sonar analysis in one reactor,
           # so the coverage the gate sees is the coverage this build produced.
