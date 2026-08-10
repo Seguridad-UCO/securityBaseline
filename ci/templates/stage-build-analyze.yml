@@ -23,6 +23,7 @@ stages:
               SonarQube: '$(sonarServiceConnection)'
               scannerMode: 'Other'
               extraProperties: |
+                sonar.organization=seguridad-uco
                 sonar.projectKey=Seguridad-UCO_securityBaseline
                 sonar.projectName=Security Baseline PDP
                 sonar.qualitygate.wait=true
