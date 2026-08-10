@@ -51,9 +51,9 @@ stages:
                   displayName: 'Reiniciar App Service (Docker)'
                   inputs:
                     azureSubscription: ${{ parameters.azureServiceConnectionName }}
-                    action: 'Restart Azure App Service'
-                    appName: $(webAppName)
-                    resourceGroupName: $(resourceGroupName)
+                    Action: 'Restart Azure App Service'
+                    WebAppName: $(webAppName)
+                    ResourceGroupName: $(resourceGroupName)
 
                 # Fails the deployment if the application does not come back healthy, so a broken
                 # release is visible here instead of on the next request.
