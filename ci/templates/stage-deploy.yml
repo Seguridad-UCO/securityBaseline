@@ -46,25 +46,22 @@ stages:
                     SecretsFilter: 'pdp-jwt-signing-key,pdp-datasource-password,pdp-oidc-client-secret,pdp-otlp-token'
                     RunAsPreJob: true
 
-                # The secret values are passed as app settings, so the running application reads
-                # them from the environment and no configuration file in Git ever holds one.
-                - task: AzureWebApp@1
-                  displayName: 'Desplegar en App Service'
+                # Update app settings with secrets and environment variables. The application reads
+                # them from the environment, and no configuration file in Git ever holds a secret.
+                - task: AzureAppServiceSettings@1
+                  displayName: 'Actualizar configuración de App Service'
                   inputs:
                     azureSubscription: $(azureServiceConnection)
-                    appType: 'webAppLinux'
                     appName: $(webAppName)
                     resourceGroupName: $(resourceGroupName)
-                    package: '$(Pipeline.Workspace)/$(artifactName)/*.jar'
-                    runtimeStack: 'JAVA|25-java25'
-                    appSettings: >-
+                    appSettings: |
                       -SPRING_PROFILES_ACTIVE $(springProfile)
-                      -PDP_JWT_SIGNING_KEY "$(pdp-jwt-signing-key)"
-                      -PDP_DATASOURCE_URL "$(datasourceUrl)"
-                      -PDP_DATASOURCE_USERNAME "$(datasourceUsername)"
-                      -PDP_DATASOURCE_PASSWORD "$(pdp-datasource-password)"
-                      -PDP_OIDC_CLIENT_SECRET "$(pdp-oidc-client-secret)"
-                      -PDP_OTLP_TOKEN "$(pdp-otlp-token)"
+                      -PDP_JWT_SIGNING_KEY $(pdp-jwt-signing-key)
+                      -PDP_DATASOURCE_URL $(datasourceUrl)
+                      -PDP_DATASOURCE_USERNAME $(datasourceUsername)
+                      -PDP_DATASOURCE_PASSWORD $(pdp-datasource-password)
+                      -PDP_OIDC_CLIENT_SECRET $(pdp-oidc-client-secret)
+                      -PDP_OTLP_TOKEN $(pdp-otlp-token)
 
                 # Fails the deployment if the application does not come back healthy, so a broken
                 # release is visible here instead of on the next request.
