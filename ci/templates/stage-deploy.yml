@@ -10,6 +10,8 @@ parameters:
     type: string
   - name: variableFile
     type: string
+  - name: azureServiceConnectionName
+    type: string
   - name: dependsOn
     type: string
     default: 'BuildAndAnalyze'
@@ -23,15 +25,6 @@ stages:
     condition: ${{ parameters.condition }}
     variables:
       - template: ../variables/${{ parameters.variableFile }}
-      - ${{ if eq(parameters.variableFile, 'dev.yml') }}:
-        - name: azureServiceConnectionName
-          value: 'Azure-PDP-Dev'
-      - ${{ if eq(parameters.variableFile, 'qa.yml') }}:
-        - name: azureServiceConnectionName
-          value: 'Azure-PDP-Qa'
-      - ${{ if eq(parameters.variableFile, 'prod.yml') }}:
-        - name: azureServiceConnectionName
-          value: 'Azure-PDP-Prod'
     jobs:
       - deployment: Deploy
         displayName: ${{ parameters.displayName }}
@@ -50,14 +43,14 @@ stages:
                 - task: AzureKeyVault@2
                   displayName: 'Leer secretos desde Azure Key Vault'
                   inputs:
-                    azureSubscription: $(azureServiceConnectionName)
+                    azureSubscription: ${{ parameters.azureServiceConnectionName }}
                     KeyVaultName: $(keyVaultName)
                     SecretsFilter: 'pdp-jwt-signing-key,pdp-datasource-password,pdp-oidc-client-secret,pdp-otlp-token'
 
                 - task: AzureAppServiceManage@0
                   displayName: 'Reiniciar App Service (Docker)'
                   inputs:
-                    azureSubscription: $(azureServiceConnectionName)
+                    azureSubscription: ${{ parameters.azureServiceConnectionName }}
                     action: 'Restart Azure App Service'
                     appName: $(webAppName)
                     resourceGroupName: $(resourceGroupName)

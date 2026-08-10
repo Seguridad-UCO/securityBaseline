@@ -44,6 +44,7 @@ stages:
       stageName: DeployDev
       displayName: 'Despliegue a DEV'
       variableFile: dev.yml
+      azureServiceConnectionName: 'Azure-PDP-Dev'
       condition: >-
         and(succeeded(),
             eq(variables['Build.SourceBranch'], 'refs/heads/develop'),
@@ -54,6 +55,7 @@ stages:
       stageName: DeployQa
       displayName: 'Despliegue a QA'
       variableFile: qa.yml
+      azureServiceConnectionName: 'Azure-PDP-Qa'
       condition: >-
         and(succeeded(),
             eq(variables['Build.SourceBranch'], 'refs/heads/qa'),
@@ -64,6 +66,7 @@ stages:
       stageName: DeployProd
       displayName: 'Despliegue a PRODUCCIÓN'
       variableFile: prod.yml
+      azureServiceConnectionName: 'Azure-PDP-Prod'
       condition: >-
         and(succeeded(),
             eq(variables['Build.SourceBranch'], 'refs/heads/main'),
