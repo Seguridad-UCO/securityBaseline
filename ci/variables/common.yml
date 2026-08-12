@@ -8,6 +8,11 @@ variables:
   mavenOptions: '-Dmaven.repo.local=$(Pipeline.Workspace)/.m2/repository --batch-mode -Dstyle.color=never'
   artifactName: 'pdp-application'
 
+  # Shared by all three environments. App Service runs the application as a container (Java 25
+  # is not offered as a managed runtime by Azure App Service — see stage-deploy.yml), so the
+  # deploy stage builds and pushes here rather than shipping the JAR this pipeline also produces.
+  containerRegistryName: 'pdpacrueco'
+
   # Name of the SonarQube Cloud service connection in Azure DevOps (type: SonarCloud,
   # from the "SonarQube Cloud" extension — not the "SonarQube Server" extension).
   sonarServiceConnection: 'SonarCloud-seguridad'

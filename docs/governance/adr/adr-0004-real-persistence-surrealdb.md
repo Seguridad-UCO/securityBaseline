@@ -74,7 +74,7 @@ Decisiones que no estaban fijadas en el texto original de esta ADR y se tomaron 
   producción. Se descartó cada una de las tres opciones y se optó por hablar directamente con el
   *endpoint* HTTP `/sql` de SurrealDB usando el `WebClient` reactivo que el proyecto ya usa,
   enviando SurrealQL crudo con parámetros ligados por *query string* (`?nombre=valor` → `$nombre` en
-  la consulta). Esta decisión se confirmó explícitamente con el usuario antes de implementarla.
+  la consulta).
 - **`ReactiveTransactionPort` y `SnapshotCapable` se retiraron, no se reemplazaron.** Las
   transacciones `BEGIN/COMMIT` de SurrealDB solo cubren un lote de SurrealQL dentro de **una misma
   petición HTTP**; no pueden envolver el trabajo real del caso de uso de registro, que orquesta dos

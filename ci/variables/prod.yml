@@ -3,8 +3,11 @@ variables:
   environmentName: 'pdp-prod'
   springProfile: 'prod'
   azureServiceConnection: 'Azure-PDP-Prod'
-  keyVaultName: 'kv-pdp-prod'
+  # '-mx': the original kv-pdp-prod name is held by a soft-deleted, purge-protected vault from the
+  # brazilsouth-to-mexicocentral region migration and cannot be reused for 90 days.
+  keyVaultName: 'kv-pdp-prod-mx'
   webAppName: 'app-pdp-prod'
-  resourceGroupName: 'rg-pdp-prod-v2'
-  datasourceUrl: 'http://surrealdb-prod.example.com:8000'
+  resourceGroupName: 'rg-pdp-prod-v3'
+  # Dedicated instance, isolated from DEV/QA.
+  datasourceUrl: 'http://20.110.4.89:8000'
   datasourceUsername: 'root'

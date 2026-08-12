@@ -65,7 +65,7 @@ Azure Key Vault
       ├── service principal del pipeline ──► tarea AzureKeyVault@2
       │                                          │ variables enmascaradas
       │                                          ▼
-      │                                     AzureWebApp@1 ─► app settings
+      │                              az webapp config appsettings set ─► app settings
       │                                                          │
       └── identidad administrada de la app ◄─────────────────────┘
                                                                  ▼
@@ -117,6 +117,30 @@ Carga de un valor, siempre fuera de Git y fuera del historial del shell:
 ```bash
 az keyvault secret set --vault-name kv-pdp-dev --name pdp-datasource-password --file ./secreto.txt
 ```
+
+## Hospedaje de SurrealDB
+
+`PDP_DATASOURCE_URL` no apunta a un servicio gestionado de Azure: apunta a una VM Linux que corre
+SurrealDB en Docker, aprovisionada manualmente (sin Bicep todavía). La decisión completa — por qué
+una VM y no un servicio de contenedores gestionado, por qué DEV y QA comparten instancia, y las
+restricciones de cuota de la suscripción que la motivaron — vive en
+[ADR-015 del repositorio de arquitectura](../../security-platform-architecture/docs/01-governance/adr/ADR-015-surrealdb-azure-hosting.md).
+
+Resumen operativo:
+
+| Instancia | Ambientes | Aislamiento |
+|---|---|---|
+| `vm-pdp-surrealdb-shared` | DEV, QA | Mismo motor; `namespace`/`database` distintos por ambiente (`pdp_dev`, `pdp_qa` — ver `application-dev.properties`/`application-qa.properties`) |
+| `vm-pdp-surrealdb-prod` | PROD | Instancia y credenciales propias |
+
+`datasourceUrl` en cada `ci/variables/*.yml` es la IP pública de la VM correspondiente —
+configuración operativa, no secreto, igual que el resto de esa tabla. El puerto 8000 solo acepta
+tráfico desde las IPs de salida conocidas del App Service de ese ambiente (regla de NSG explícita),
+no desde Internet completo.
+
+Reaprovisionar una VM (recreación, cambio de tamaño) invalida su contraseña de SurrealDB: hay que
+generar una nueva y actualizar `pdp-datasource-password` en el Key Vault del ambiente afectado antes
+del siguiente despliegue.
 
 ## Reglas que no se negocian
 
