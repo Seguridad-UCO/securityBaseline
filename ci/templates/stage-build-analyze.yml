@@ -14,8 +14,12 @@ stages:
         steps:
           # Azure defaults to a shallow clone (fetchDepth: 1). Sonar needs full SCM history
           # (blame / new code) and the PR target ref (e.g. main) for pull-request analysis.
+          # persistCredentials: without it, Azure strips the injected auth right after checkout,
+          # and the later `git fetch` of the PR base branch fails with "could not read Username
+          # for 'https://github.com': terminal prompts disabled" against this private repo.
           - checkout: self
             fetchDepth: 0
+            persistCredentials: true
 
           - template: steps-java-setup.yml
 
