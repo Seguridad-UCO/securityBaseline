@@ -35,6 +35,10 @@ stages:
           runOnce:
             deploy:
               steps:
+                # Deployment jobs, unlike regular jobs, do not check out source by default —
+                # without this, `az acr build .` below has no Dockerfile to find.
+                - checkout: self
+
                 # Secrets become masked pipeline variables named like the Key Vault secret
                 # (e.g. pdp-jwt-signing-key). They are never written to a file or the repo.
                 - task: AzureKeyVault@2
