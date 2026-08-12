@@ -50,10 +50,12 @@ stages:
 
                 # App Service runs the application as a container: Azure App Service's managed
                 # Java runtime tops out at Java 21, and this project targets Java 25 (pom.xml).
-                # `az acr build` compiles the image from the Dockerfile in ACR itself, so the
-                # agent needs no local Docker daemon. The image tag is the build id, not `latest`
-                # — App Service does not repoll a mutable tag on its own, so a stable tag would
-                # leave the previous version running until a manual restart.
+                # Built on the agent itself with plain `docker build`/`push`, not `az acr build`
+                # — ACR Tasks (the remote-build service `az acr build` depends on) is blocked
+                # outright for this subscription ("TasksOperationsNotAllowed"), independent of any
+                # role assignment. The image tag is the build id, not `latest` — App Service does
+                # not repoll a mutable tag on its own, so a stable tag would leave the previous
+                # version running until a manual restart.
                 - task: AzureCLI@2
                   displayName: 'Construir y publicar imagen en Azure Container Registry'
                   inputs:
@@ -62,10 +64,9 @@ stages:
                     scriptLocation: inlineScript
                     inlineScript: |
                       set -euo pipefail
-                      az acr build \
-                        --registry $(containerRegistryName) \
-                        --image "pdp:$(Build.BuildId)" \
-                        .
+                      az acr login --name $(containerRegistryName)
+                      docker build -t "$(containerRegistryName).azurecr.io/pdp:$(Build.BuildId)" .
+                      docker push "$(containerRegistryName).azurecr.io/pdp:$(Build.BuildId)"
 
                 - task: AzureCLI@2
                   displayName: 'Desplegar imagen en App Service'
