@@ -22,7 +22,10 @@ param pipelinePrincipalId string
 @description('Log Analytics workspace for audit logs. Leave empty to skip diagnostics.')
 param logAnalyticsWorkspaceId string = ''
 
-var keyVaultName = 'kv-pdp-${environment}'
+@description('Appended to the default vault name (kv-pdp-<environment>). Needed when the default name is held by a soft-deleted, purge-protected vault from a prior region migration.')
+param nameSuffix string = ''
+
+var keyVaultName = 'kv-pdp-${environment}${nameSuffix}'
 
 // Built-in role. "Secrets User" grants read of secret values and nothing else — no write, no
 // management, no access to keys or certificates.

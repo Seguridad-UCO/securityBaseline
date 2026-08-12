@@ -35,9 +35,6 @@ stages:
           runOnce:
             deploy:
               steps:
-                - download: current
-                  artifact: $(artifactName)
-
                 # Secrets become masked pipeline variables named like the Key Vault secret
                 # (e.g. pdp-jwt-signing-key). They are never written to a file or the repo.
                 - task: AzureKeyVault@2
@@ -47,24 +44,50 @@ stages:
                     KeyVaultName: $(keyVaultName)
                     SecretsFilter: 'pdp-jwt-signing-key,pdp-datasource-password,pdp-oidc-client-secret,pdp-otlp-token'
 
-                # Deploy the Spring Boot JAR and inject env vars the prod/qa profiles require.
-                # A bare restart (old step) never published the artifact — health stayed 502/503.
-                - task: AzureWebApp@1
-                  displayName: 'Desplegar JAR en App Service'
+                # App Service runs the application as a container: Azure App Service's managed
+                # Java runtime tops out at Java 21, and this project targets Java 25 (pom.xml).
+                # `az acr build` compiles the image from the Dockerfile in ACR itself, so the
+                # agent needs no local Docker daemon. The image tag is the build id, not `latest`
+                # — App Service does not repoll a mutable tag on its own, so a stable tag would
+                # leave the previous version running until a manual restart.
+                - task: AzureCLI@2
+                  displayName: 'Construir y publicar imagen en Azure Container Registry'
                   inputs:
                     azureSubscription: ${{ parameters.azureServiceConnectionName }}
-                    appType: webAppLinux
-                    appName: $(webAppName)
-                    package: '$(Pipeline.Workspace)/$(artifactName)/*.jar'
-                    deploymentMethod: auto
-                    appSettings: >-
-                      -SPRING_PROFILES_ACTIVE $(springProfile)
-                      -PDP_JWT_SIGNING_KEY $(pdp-jwt-signing-key)
-                      -PDP_DATASOURCE_URL $(datasourceUrl)
-                      -PDP_DATASOURCE_USERNAME $(datasourceUsername)
-                      -PDP_DATASOURCE_PASSWORD $(pdp-datasource-password)
-                      -PDP_OIDC_CLIENT_SECRET $(pdp-oidc-client-secret)
-                      -PDP_OTLP_TOKEN $(pdp-otlp-token)
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      set -euo pipefail
+                      az acr build \
+                        --registry $(containerRegistryName) \
+                        --image "pdp:$(Build.BuildId)" \
+                        .
+
+                - task: AzureCLI@2
+                  displayName: 'Desplegar imagen en App Service'
+                  inputs:
+                    azureSubscription: ${{ parameters.azureServiceConnectionName }}
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      set -euo pipefail
+                      az webapp config container set \
+                        --name $(webAppName) \
+                        --resource-group $(resourceGroupName) \
+                        --container-image-name "$(containerRegistryName).azurecr.io/pdp:$(Build.BuildId)"
+                      az webapp config appsettings set \
+                        --name $(webAppName) \
+                        --resource-group $(resourceGroupName) \
+                        --settings \
+                          SPRING_PROFILES_ACTIVE=$(springProfile) \
+                          PDP_JWT_SIGNING_KEY=$(pdp-jwt-signing-key) \
+                          PDP_DATASOURCE_URL=$(datasourceUrl) \
+                          PDP_DATASOURCE_USERNAME=$(datasourceUsername) \
+                          PDP_DATASOURCE_PASSWORD=$(pdp-datasource-password) \
+                          PDP_OIDC_CLIENT_SECRET=$(pdp-oidc-client-secret) \
+                          PDP_OTLP_TOKEN=$(pdp-otlp-token) \
+                        --output none
+                      az webapp restart --name $(webAppName) --resource-group $(resourceGroupName)
 
                 # Fails the deployment if the application does not come back healthy, so a broken
                 # release is visible here instead of on the next request.
@@ -80,6 +103,6 @@ stages:
                       sleep 15
                     done
                     echo "La aplicación no respondió saludable."
-                    echo "Comprueba: App Service existe, runtime Java, y SurrealDB alcanzable en PDP_DATASOURCE_URL=$(datasourceUrl)"
+                    echo "Comprueba: App Service existe, runtime del contenedor, y SurrealDB alcanzable en PDP_DATASOURCE_URL=$(datasourceUrl)"
                     exit 1
                   displayName: 'Verificar salud del despliegue'

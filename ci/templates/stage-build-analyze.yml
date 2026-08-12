@@ -12,6 +12,11 @@ stages:
         pool:
           vmImage: ubuntu-latest
         steps:
+          # Azure defaults to a shallow clone (fetchDepth: 1). Sonar needs full SCM history
+          # (blame / new code) and the PR target ref (e.g. main) for pull-request analysis.
+          - checkout: self
+            fetchDepth: 0
+
           - template: steps-java-setup.yml
 
           # SonarQube Cloud (not SonarQube Server): use SonarCloudPrepare/Publish from the
@@ -29,10 +34,15 @@ stages:
                 base="$(System.PullRequest.TargetBranch)"
                 src="${src#refs/heads/}"
                 base="${base#refs/heads/}"
+                # PR checkouts often lack refs/heads/<base>; Sonar needs that ref to compute new code.
+                git fetch --no-tags origin "refs/heads/${base}:refs/remotes/origin/${base}"
+                git fetch --no-tags origin "refs/heads/${base}:refs/heads/${base}"
                 echo "##vso[task.setvariable variable=sonarPrKey]$(System.PullRequest.PullRequestNumber)"
                 echo "##vso[task.setvariable variable=sonarPrBranch]${src}"
                 echo "##vso[task.setvariable variable=sonarPrBase]${base}"
                 echo "Sonar PR analysis: key=$(System.PullRequest.PullRequestNumber) branch=${src} base=${base}"
+                git rev-parse --verify "refs/heads/${base}"
+                git rev-parse --verify "refs/remotes/origin/${base}"
               else
                 echo "Sonar branch analysis: $(Build.SourceBranchName)"
               fi

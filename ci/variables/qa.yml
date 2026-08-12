@@ -6,5 +6,7 @@ variables:
   keyVaultName: 'kv-pdp-qa'
   webAppName: 'app-pdp-qa'
   resourceGroupName: 'rg-pdp-qa-v2'
-  datasourceUrl: 'http://surrealdb-qa.example.com:8000'
+  # Shared with DEV (see ci/variables/dev.yml); namespace/database keep the two logically apart on
+  # the same instance.
+  datasourceUrl: 'http://20.242.47.139:8000'
   datasourceUsername: 'root'
