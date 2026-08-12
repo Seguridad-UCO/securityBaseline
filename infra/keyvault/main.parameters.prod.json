@@ -4,7 +4,7 @@
   "parameters": {
     "environment": { "value": "prod" },
     "applicationPrincipalId": { "value": "6f586933-6845-4b2d-af6e-238a0524adfb" },
-    "pipelinePrincipalId": { "value": "36bb02d2-2206-4117-ac6e-4e4188713cb8" },
+    "pipelinePrincipalId": { "value": "980975f5-95a5-4b6f-ade8-c4755eaf2bb1" },
     "logAnalyticsWorkspaceId": { "value": "" },
     "nameSuffix": { "value": "-mx" }
   }
