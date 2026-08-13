@@ -124,7 +124,7 @@ az keyvault secret set --vault-name kv-pdp-dev --name pdp-datasource-password --
 SurrealDB en Docker, aprovisionada manualmente (sin Bicep todavía). La decisión completa — por qué
 una VM y no un servicio de contenedores gestionado, por qué DEV y QA comparten instancia, y las
 restricciones de cuota de la suscripción que la motivaron — vive en
-[ADR-015 del repositorio de arquitectura](../../security-platform-architecture/docs/01-governance/adr/ADR-015-surrealdb-azure-hosting.md).
+[ADR-015 del repositorio de arquitectura](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-015-surrealdb-azure-hosting.md).
 
 Resumen operativo:
 

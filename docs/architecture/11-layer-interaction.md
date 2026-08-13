@@ -31,7 +31,7 @@ HTTP → Controller (arma RawRequest)
 
 El controlador solo recibe, ejecuta el interactor y envuelve. El interactor mapea; el caso de uso
 orquesta; el rules validator compone reglas; cada regla decide una cosa. Ver
-[ADR-0001](../governance/adr/adr-0001-keep-interactor-layer.md).
+[ADR-016](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-016-interactor-layer.md).
 
 ## Ubicación verificable
 

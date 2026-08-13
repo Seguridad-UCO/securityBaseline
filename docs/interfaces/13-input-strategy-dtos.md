@@ -90,7 +90,7 @@ exactamente la misma garantía que daban los setters del Web Request que se elim
 mutable que solo iba a vivir para volver a copiarse en un record. `tenantId` no pasa por
 `RequestFieldParser` porque no es texto sin analizar: para cuando el interactor lo lee, el
 `ReactiveJwtDecoder` ya verificó la firma del token y `PdpPrincipal.from` ya construyó el
-`TenantId` a partir del claim (ver [ADR-0003](../governance/adr/adr-0003-real-security-reactive-jwt.md)).
+`TenantId` a partir del claim (ver [ADR-018](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-018-jwt-reactive-security-implementation.md)).
 
 ### Búsqueda — el Web Request sigue siendo mutable a propósito
 

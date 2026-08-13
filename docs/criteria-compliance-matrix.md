@@ -63,19 +63,19 @@ Estado final: los 23 cumplen, con la evidencia enlazada desde cada página y ver
 
 - La auditoría real (fuera de memoria) sigue sin implementarse: `InMemoryAuditAdapter` sigue
   registrando solo identificadores como listener de `ProtectedResourceRegistered`
-  ([ADR-0002](governance/adr/adr-0002-domain-events-modulith-registry.md)). No estaba en el alcance
-  de las cuatro etapas.
+  ([ADR-017](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-017-domain-events-application-event-publisher.md)).
+  No estaba en el alcance de las cuatro etapas.
 - La auditoría por eventos usa entrega síncrona (`ApplicationEventPublisher`), no el Event
   Publication Registry de Modulith: aunque desde el Stage 4 ya hay persistencia real (SurrealDB),
   Modulith 2.1 no trae un backend de registry para SurrealDB (solo JPA/JDBC/MongoDB/Neo4j) — ver la
   actualización en la nota de implementación de
-  [ADR-0002](governance/adr/adr-0002-domain-events-modulith-registry.md#nota-de-implementación).
+  [ADR-017](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-017-domain-events-application-event-publisher.md#nota-de-implementación).
 - El Quality Gate contra SonarQube real requiere la service connection y la extensión en la
   organización.
 
 ## Evolución posterior
 
-Decisiones y etapas: [gobierno](governance/README.md) y
+Decisiones y etapas: [gobierno](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/README.md) y
 [hoja de ruta](plans/2026-08-07-architecture-and-roadmap.md).
 
 | Etapa | Cambio | Criterios tocados |

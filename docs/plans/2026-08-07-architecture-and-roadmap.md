@@ -1,12 +1,15 @@
 # Arquitectura objetivo y hoja de ruta
 
-[← Planes](.) · [Gobierno (ADR)](../governance/README.md) · [Diagramas C4](../architecture/c4/README.md)
+[← Planes](.) ·
+[Gobierno (ADR)](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/README.md) ·
+[Diagramas C4](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/03-architecture/c4/README.md)
 
 ## Contexto
 
 Hoja de ruta de evolución de `securityBaseline`: Clean Architecture + hexagonal por módulo sobre
 Spring Modulith, stack reactivo (WebFlux). Las decisiones grandes están en
-[gobierno](../governance/README.md) (ADR-0001 a ADR-0004).
+[gobierno](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/README.md)
+(ADR-016 a ADR-019).
 
 Regla invariante: `domain/` y `application/` no cambian cuando entran seguridad o persistencia
 reales — solo se añaden o sustituyen adaptadores en `infrastructure/`.
@@ -144,10 +147,10 @@ existe un JWT.
 | Mantener | Clean+Hexagonal por módulo Modulith; DI manual en `@Configuration` |
 | Mantener | VOs auto-validados; Specification; motor de reglas |
 | Mantener | Entrada String→VO sin `starter-validation`; `ApiErrorHandler` RFC7807 |
-| Mantener | Capa interactor ([ADR-0001](../governance/adr/adr-0001-keep-interactor-layer.md)) |
-| Incorporar | `AggregateRoot` + eventos ([ADR-0002](../governance/adr/adr-0002-domain-events-modulith-registry.md)) — hecho |
-| Incorporar | Spring Security reactivo + JWT ([ADR-0003](../governance/adr/adr-0003-real-security-reactive-jwt.md)) — hecho |
-| Incorporar | Persistencia SurrealDB ([ADR-0004](../governance/adr/adr-0004-real-persistence-surrealdb.md)) — hecho |
+| Mantener | Capa interactor ([ADR-016](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-016-interactor-layer.md)) |
+| Incorporar | `AggregateRoot` + eventos ([ADR-017](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-017-domain-events-application-event-publisher.md)) — hecho |
+| Incorporar | Spring Security reactivo + JWT ([ADR-018](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-018-jwt-reactive-security-implementation.md)) — hecho |
+| Incorporar | Persistencia SurrealDB ([ADR-019](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-019-surrealdb-implementation.md)) — hecho |
 | Retirado | Fachadas multi-método (`*ModuleApi` / `*Service`); DTO de registro duplicado; `tenantId` en el cuerpo/query (ahora viene del token); `ReactiveTransactionPort`/`SnapshotCapable` (ahora saga con compensación explícita, ADR-0004) |
 
 ## Etapas
