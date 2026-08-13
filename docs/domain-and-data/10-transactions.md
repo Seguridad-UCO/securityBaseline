@@ -13,7 +13,7 @@ que prometería una atomicidad que ningún motor involucrado puede dar.
 
 Esto no fue la decisión original: hasta el Stage 3, un puerto `ReactiveTransactionPort` con un
 adaptador de snapshot en memoria envolvía todo el flujo, dando la ilusión de una transacción única.
-Al llegar la persistencia real ([ADR-0004](../governance/adr/adr-0004-real-persistence-surrealdb.md))
+Al llegar la persistencia real ([ADR-019](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-019-surrealdb-implementation.md))
 quedó claro que esa ilusión no se sostenía: las transacciones `BEGIN/COMMIT` de SurrealDB solo cubren
 un lote de SurrealQL dentro de **una misma petición HTTP**, y el trabajo real del caso de uso cruza
 módulos Java y publica eventos, no solo ejecuta sentencias. Mantener el puerto habría significado que
@@ -39,7 +39,7 @@ o interactor que hizo el efecto original, encadenada con `onErrorResume`.
 - Flujo y compensación: [`RegisterProtectedApplicationUseCaseImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/usecase/impl/RegisterProtectedApplicationUseCaseImpl.java)
 - Prueba: `rolls_back_the_saved_resource_and_removes_the_application_when_event_publication_fails` en
   [`RegisterProtectedApplicationUseCaseImplTests`](../../src/test/java/co/edu/uco/seguridad/pdp/recursos/application/usecase/impl/RegisterProtectedApplicationUseCaseImplTests.java)
-- Nota de implementación con el razonamiento completo: [ADR-0004, sección de retiro de `ReactiveTransactionPort`](../governance/adr/adr-0004-real-persistence-surrealdb.md#nota-de-implementación)
+- Nota de implementación con el razonamiento completo: [ADR-019, sección de retiro de `ReactiveTransactionPort`](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-019-surrealdb-implementation.md#nota-de-implementación)
 
 ## Evidencia y límite
 

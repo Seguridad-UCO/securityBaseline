@@ -44,7 +44,7 @@ SurrealDB real), y las pruebas de dominio rechazan un código inválido sin WebF
 formatos, pero nunca toma decisiones de negocio: cuando una traducción necesite un `if` sobre
 significado, ese `if` pertenece a una regla.
 
-Desde el Stage 2 ([ADR-0002](../governance/adr/adr-0002-domain-events-modulith-registry.md)), "a
+Desde el Stage 2 ([ADR-017](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-017-domain-events-application-event-publisher.md)), "a
 quién le importa que algo se registró" tampoco es una decisión del adaptador web ni del caso de uso:
 la decide quien escucha `ProtectedResourceRegistered` como listener (`InMemoryAuditAdapter`, aún
 dummy en su contenido — solo identificadores, nunca el payload).

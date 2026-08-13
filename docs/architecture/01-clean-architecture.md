@@ -46,11 +46,11 @@ web → interactor → use case → rules validator → rules → domain
 Mensajes de error compartidos viven en el módulo OPEN `co.edu.uco.seguridad.crosscutting`.
 
 Tres decisiones registradas como ADR amplían esta estructura sin romper la regla de dependencias:
-eventos de dominio publicados por los agregados ([ADR-0002](../governance/adr/adr-0002-domain-events-modulith-registry.md)),
-un adaptador primario de seguridad delante del interactor ([ADR-0003](../governance/adr/adr-0003-real-security-reactive-jwt.md))
-y adaptadores secundarios reales sobre SurrealDB ([ADR-0004](../governance/adr/adr-0004-real-persistence-surrealdb.md)).
-Las tres están aceptadas pero pendientes de implementación; esta página describe la estructura vigente
-hoy, no la resultante de aplicarlas.
+eventos de dominio publicados por los agregados ([ADR-017](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-017-domain-events-application-event-publisher.md)),
+un adaptador primario de seguridad delante del interactor ([ADR-018](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-018-jwt-reactive-security-implementation.md))
+y adaptadores secundarios reales sobre SurrealDB ([ADR-019](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-019-surrealdb-implementation.md)).
+Las tres ya están implementadas; la estructura descrita arriba refleja el estado actual del código,
+no un objetivo pendiente.
 
 ## Ubicación verificable
 

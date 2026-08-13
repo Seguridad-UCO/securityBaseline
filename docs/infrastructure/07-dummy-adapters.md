@@ -4,7 +4,7 @@
 
 ## Estado actual
 
-Desde el Stage 4 ([ADR-0004](../governance/adr/adr-0004-real-persistence-surrealdb.md)) los tres
+Desde el Stage 4 ([ADR-019](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-019-surrealdb-implementation.md)) los tres
 repositorios secundarios (`TenantRepository`, `ApplicationRepository`,
 `ProtectedResourceRepository`) tienen implementaciones **reales** sobre SurrealDB. Este archivo
 conserva el nombre `07-dummy-adapters.md` porque otras páginas ya enlazan a él por ruta, pero ya no
@@ -29,12 +29,12 @@ No hay driver Java de SurrealDB en el classpath: los tres adaptadores hablan HTT
 cliente compartido
 [`SurrealDbClient`](../../src/main/java/co/edu/uco/seguridad/shared/persistence/surrealdb/SurrealDbClient.java)
 (sobre `WebClient`). El porqué de esta decisión —no había un driver Java viable— está documentado en
-la [Nota de implementación de ADR-0004](../governance/adr/adr-0004-real-persistence-surrealdb.md#nota-de-implementación).
+la [Nota de implementación de ADR-019](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-019-surrealdb-implementation.md#nota-de-implementación).
 
 `InMemoryAuditAdapter` sigue existiendo y sigue siendo un dummy — solo identificadores, nunca el
 payload — pero no implementa ningún puerto: desde el Stage 2 escucha `ProtectedResourceRegistered`
 con `@EventListener` en vez de que el caso de uso la invoque por un puerto de auditoría (ver
-[ADR-0002](../governance/adr/adr-0002-domain-events-modulith-registry.md)). Sustituirla por un
+[ADR-017](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-017-domain-events-application-event-publisher.md)). Sustituirla por un
 sumidero real (log estructurado, sistema externo) es trabajo futuro fuera del alcance de las cuatro
 etapas actuales.
 
@@ -82,4 +82,4 @@ declaraba— se resolvió en el Stage 1 con un puerto dedicado, `SnapshotCapable
 implementarse sobre SurrealDB: el modelo de transacción HTTP de SurrealDB no puede envolver trabajo
 que cruza módulos Java, así que `RegisterProtectedApplicationUseCaseImpl` pasó a una saga con
 compensación explícita por paso — ver la
-[Nota de implementación de ADR-0004](../governance/adr/adr-0004-real-persistence-surrealdb.md#nota-de-implementación).
+[Nota de implementación de ADR-019](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-019-surrealdb-implementation.md#nota-de-implementación).

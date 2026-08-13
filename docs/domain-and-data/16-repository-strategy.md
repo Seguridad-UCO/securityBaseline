@@ -20,7 +20,7 @@ Mono<ResultPage<ProtectedResource>> findBy(ProtectedApplicationCriteria criteria
 
 Un único método de lectura. La semántica del criterio la resuelve el dominio; el adaptador la traduce
 a su motor: `SurrealProtectedResourceRepository` la traduce a un `WHERE` dinámico de SurrealQL —
-ver [ADR-0004](../governance/adr/adr-0004-real-persistence-surrealdb.md), que fija SurrealDB como
+ver [ADR-019](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-019-surrealdb-implementation.md), que fija SurrealDB como
 motor y documenta que este puerto no cambió de forma al sustituir el adaptador dummy por el real.
 
 `existsGrant` es la excepción deliberada: la unicidad es una pregunta de sí o no, y responderla con

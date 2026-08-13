@@ -13,5 +13,8 @@
 | 22 | [Decisión reactiva](22-reactive-architecture.md) |
 
 La estructura del PDP se detalla en [Estructura PDP / Spring Modulith](pdp-modulith-alignment.md).
-Las decisiones detrás de esta estructura están registradas en [Gobierno arquitectónico](../governance/README.md)
-(ADR). El panorama visual (contexto y contenedor) está en [Diagramas C4](c4/README.md).
+Las decisiones detrás de esta estructura, y el panorama visual (C4, contexto y contenedor), están
+registradas en el
+[repositorio de arquitectura](https://github.com/Seguridad-UCO/security-platform-architecture)
+([gobierno](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/README.md) ·
+[C4](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/03-architecture/c4/README.md)).
