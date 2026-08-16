@@ -3,11 +3,15 @@
 # Estrategia de ramas:
 #
 #   feature/*  → build + test + SonarQube            (sin despliegue)
-#   develop    → build + test + SonarQube → DEV
-#   qa         → build + test + SonarQube → QA
-#   main       → build + test + SonarQube → PRODUCTION
+#   main       → build + test + SonarQube → DEV + PRODUCTION
 #
-# Un solo pipeline y no uno por ambiente: la verificación debe ser idéntica en las tres ramas, y
+# DEV y QA eran ambientes separados gateados por sus propias ramas (`develop`, `qa`), pero en la
+# práctica todo el trabajo fluye por PR contra `main` — esas ramas quedaban semanas sin un merge y
+# los ambientes que gateaban se volvían obsoletos sin que nadie lo notara. Se unificaron en un solo
+# ambiente no-prod (`DEV`) que dispara con el mismo push a `main` que ya dispara PRODUCTION: sirve
+# como verificación previa siempre actualizada en vez de un segundo ambiente fantasma.
+#
+# Un solo pipeline y no uno por ambiente: la verificación debe ser idéntica en ambas rutas, y
 # duplicar el YAML es precisamente cómo se logra que dejen de serlo. Lo único que cambia por
 # ambiente es el archivo de variables y el objeto `environment` de Azure DevOps.
 #
@@ -20,8 +24,6 @@ trigger:
   branches:
     include:
       - main
-      - qa
-      - develop
       - feature/*
 
 # Validación de pull request. Con GitHub como origen, esto es lo que publica el resultado del
@@ -29,8 +31,6 @@ trigger:
 pr:
   branches:
     include:
-      - develop
-      - qa
       - main
 
 variables:
@@ -47,26 +47,18 @@ stages:
       azureServiceConnectionName: 'Azure-PDP-Dev'
       condition: >-
         and(succeeded(),
-            eq(variables['Build.SourceBranch'], 'refs/heads/develop'),
+            eq(variables['Build.SourceBranch'], 'refs/heads/main'),
             ne(variables['Build.Reason'], 'PullRequest'))
 
-  - template: ci/templates/stage-deploy.yml
-    parameters:
-      stageName: DeployQa
-      displayName: 'Despliegue a QA'
-      variableFile: qa.yml
-      azureServiceConnectionName: 'Azure-PDP-Qa'
-      condition: >-
-        and(succeeded(),
-            eq(variables['Build.SourceBranch'], 'refs/heads/qa'),
-            ne(variables['Build.Reason'], 'PullRequest'))
-
+  # Depende de DeployDev, no solo de BuildAndAnalyze: si DEV no llega saludable, PRODUCCIÓN ni se
+  # intenta. DEV deja de ser un ambiente aparte y pasa a ser el chequeo previo real de cada release.
   - template: ci/templates/stage-deploy.yml
     parameters:
       stageName: DeployProd
       displayName: 'Despliegue a PRODUCCIÓN'
       variableFile: prod.yml
       azureServiceConnectionName: 'Azure-PDP-Prod'
+      dependsOn: DeployDev
       condition: >-
         and(succeeded(),
             eq(variables['Build.SourceBranch'], 'refs/heads/main'),

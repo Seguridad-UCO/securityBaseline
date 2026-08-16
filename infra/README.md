@@ -13,10 +13,9 @@ git grep -nIE "(password|secret|api[_-]?key|token|credential)" -- . ':!docs' ':!
 
 Esa búsqueda ahora sí encuentra algo real: `pdp.security.jwt.secret=dev-only-signing-key-...` en
 `application.properties`. No es una fuga — el valor está deliberadamente marcado como
-`dev-only-signing-key-not-for-production-use` y **`application-qa.properties`/`application-prod.properties`
-lo redefinen sin valor de respaldo** (`${PDP_JWT_SIGNING_KEY}`, sin `:default`), así que si la
-variable de entorno faltara en un despliegue real, el arranque falla en vez de operar en silencio
-con la clave de desarrollo. El dev-only value solo protege ejecuciones locales y pruebas.
+`dev-only-signing-key-not-for-production-use`, y tanto `application-dev.properties` como
+`application-prod.properties` lo vacían para usar JWKS contra Keycloak real en su lugar (ADR-020) —
+ningún ambiente desplegado hereda la clave de desarrollo.
 
 Lo que sigue sin existir es el exportador de telemetría; su mecanismo de secreto (Key Vault,
 `${PDP_OTLP_TOKEN}`) está preparado desde antes de que el subsistema exista, siguiendo el mismo
@@ -46,16 +45,19 @@ esté activa.
 
 | Secreto | Consumidor previsto | Variable de entorno |
 |---|---|---|
-| `pdp-jwt-signing-key` | Emisor/validador JWT propio (ADR-0003) — **en uso** | `PDP_JWT_SIGNING_KEY` |
+| `pdp-jwt-signing-key` | Emisor/validador JWT propio (ADR-0003) — huérfano desde ADR-020: ningún ambiente desplegado usa HMAC hoy, ver más abajo | `PDP_JWT_SIGNING_KEY` |
 | `pdp-datasource-password` | Adaptador SurrealDB (ADR-0004) — **en uso** | `PDP_DATASOURCE_PASSWORD` |
 | `pdp-oidc-client-secret` | Integración con Keycloak, reemplaza el emisor propio (ADR-0003) | `PDP_OIDC_CLIENT_SECRET` |
 | `pdp-otlp-token` | Exportación de trazas | `PDP_OTLP_TOKEN` |
 
-`pdp-jwt-signing-key` y `pdp-datasource-password` son, a la fecha de esta línea, los dos secretos de
-esta lista que un ambiente desplegado necesita para arrancar: `application-qa.properties` y
-`application-prod.properties` los exigen a ambos sin valor de respaldo (junto con
+`pdp-datasource-password` es, a la fecha de esta línea, el único secreto de esta lista que un
+ambiente desplegado necesita para arrancar: `application-dev.properties` y
+`application-prod.properties` lo exigen sin valor de respaldo (junto con
 `PDP_DATASOURCE_URL`/`PDP_DATASOURCE_USERNAME`, que son configuración operativa, no secretos, y
-también sin valor de respaldo).
+también sin valor de respaldo). `pdp-jwt-signing-key` sigue inyectándose como app setting por el
+pipeline pero ambos ambientes lo ignoran — DEV y PROD validan JWT vía JWKS contra Keycloak real
+(ADR-020), no con la clave HMAC propia. El modo HMAC sigue vivo solo en el perfil por defecto
+(tests, desarrollo local).
 
 ## Cómo se consumen
 
@@ -109,7 +111,7 @@ spring.datasource.password=${PDP_DATASOURCE_PASSWORD}
 az deployment group create --resource-group rg-pdp-dev --template-file infra/keyvault/main.bicep --parameters infra/keyvault/main.parameters.dev.json
 ```
 
-Repetir con `qa` y `prod`. Antes hay que completar en el archivo de parámetros el `object id` de
+Repetir con `prod`. Antes hay que completar en el archivo de parámetros el `object id` de
 la identidad administrada del App Service y el del service principal de la service connection.
 
 Carga de un valor, siempre fuera de Git y fuera del historial del shell:
@@ -122,15 +124,18 @@ az keyvault secret set --vault-name kv-pdp-dev --name pdp-datasource-password --
 
 `PDP_DATASOURCE_URL` no apunta a un servicio gestionado de Azure: apunta a una VM Linux que corre
 SurrealDB en Docker, aprovisionada manualmente (sin Bicep todavía). La decisión completa — por qué
-una VM y no un servicio de contenedores gestionado, por qué DEV y QA comparten instancia, y las
-restricciones de cuota de la suscripción que la motivaron — vive en
+una VM y no un servicio de contenedores gestionado, y las restricciones de cuota de la suscripción
+que la motivaron — vive en
 [ADR-015 del repositorio de arquitectura](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-015-surrealdb-azure-hosting.md).
+`vm-pdp-surrealdb-shared` se llamaba así por atender DEV y QA a la vez; QA se retiró (DEV/QA se
+unificaron en un solo ambiente no-prod), así que hoy solo tiene un consumidor — el nombre quedó,
+el propósito cambió.
 
 Resumen operativo:
 
 | Instancia | Ambientes | Aislamiento |
 |---|---|---|
-| `vm-pdp-surrealdb-shared` | DEV, QA | Mismo motor; `namespace`/`database` distintos por ambiente (`pdp_dev`, `pdp_qa` — ver `application-dev.properties`/`application-qa.properties`) |
+| `vm-pdp-surrealdb-shared` | DEV | `namespace`/`database` propios (`pdp_dev` — ver `application-dev.properties`) |
 | `vm-pdp-surrealdb-prod` | PROD | Instancia y credenciales propias |
 
 `datasourceUrl` en cada `ci/variables/*.yml` es la IP pública de la VM correspondiente —

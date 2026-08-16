@@ -1,4 +1,5 @@
-# DEV environment. Fed by the `develop` branch.
+# DEV/QA unified environment. Fed by `main` — see azure-pipelines.yml header for why QA as a
+# separate environment was retired.
 variables:
   environmentName: 'pdp-dev'
   springProfile: 'dev'
@@ -6,10 +7,8 @@ variables:
   keyVaultName: 'kv-pdp-dev'
   webAppName: 'app-pdp-dev'
   resourceGroupName: 'rg-pdp-dev-v2'
-  # Shared with QA (see ci/variables/qa.yml); namespace/database keep the two logically apart on
-  # the same instance.
   datasourceUrl: 'http://20.242.47.139:8000'
   datasourceUsername: 'root'
-  # Keycloak real (ADR-020), compartido con QA en su propia VM (rg-pdp-shared-v1).
+  # Keycloak real (ADR-020), en su propia VM (rg-pdp-shared-v1).
   idpIssuerUri: 'http://20.22.186.196:8080/realms/pdp'
   idpJwkSetUri: 'http://20.22.186.196:8080/realms/pdp/protocol/openid-connect/certs'
