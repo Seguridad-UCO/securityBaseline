@@ -26,8 +26,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
- * Frontera PEP reactiva (ADR-018). Único lugar del proyecto donde se decide qué ruta necesita un
- * token y cómo se valida ese token; ningún módulo de negocio importa una clase de Spring Security.
+ * Frontera PEP reactiva (ADR-018, ADR-020). Único lugar del proyecto donde se decide qué ruta
+ * necesita un token y cómo se valida ese token; ningún módulo de negocio importa una clase de
+ * Spring Security.
  */
 @Configuration
 @EnableWebFluxSecurity
@@ -52,17 +53,20 @@ class SecurityConfiguration {
     }
 
     /**
-     * HMAC simétrico porque el emisor es propio. El validador exige {@code sub}, {@code tenant} y
-     * {@code jti} presentes, y {@code aud} igual a la audiencia configurada, para rechazar un token
-     * incompleto o emitido para otra aplicación con 401 antes de que llegue al dominio. Validar
-     * {@code jti} aquí no revoca nada todavía — solo garantiza que todo token aceptado ya trae el
-     * identificador que una futura revocación (Redis) necesitará.
+     * Dos modos (ADR-020): {@code jwkSetUri} presente → RS256 contra las llaves públicas de
+     * Keycloak, el modo real de todo ambiente desplegado. Ausente → HMAC con {@code secret}, el
+     * emisor propio original (ADR-018), vivo solo para que pruebas y desarrollo local no dependan
+     * de un Keycloak real corriendo. El validador exige {@code sub}, {@code tenant} y {@code jti}
+     * presentes, y {@code aud} igual a la audiencia configurada, para rechazar un token incompleto
+     * o emitido para otra aplicación con 401 antes de que llegue al dominio. Validar {@code jti}
+     * aquí no revoca nada todavía — solo garantiza que todo token aceptado ya trae el identificador
+     * que una futura revocación (Redis) necesitará.
      */
     @Bean
     ReactiveJwtDecoder jwtDecoder(JwtSecurityProperties properties) {
-        SecretKeySpec key = new SecretKeySpec(
-                properties.secret().getBytes(StandardCharsets.UTF_8), "HmacSHA256");
-        NimbusReactiveJwtDecoder decoder = NimbusReactiveJwtDecoder.withSecretKey(key).build();
+        NimbusReactiveJwtDecoder decoder = properties.usesJwks()
+                ? NimbusReactiveJwtDecoder.withJwkSetUri(properties.jwkSetUri()).build()
+                : NimbusReactiveJwtDecoder.withSecretKey(hmacKey(properties.secret())).build();
 
         OAuth2TokenValidator<Jwt> validator = new DelegatingOAuth2TokenValidator<>(List.of(
                 new JwtTimestampValidator(),
@@ -74,6 +78,10 @@ class SecurityConfiguration {
                         audiences -> audiences != null && audiences.contains(properties.audience()))));
         decoder.setJwtValidator(validator);
         return decoder;
+    }
+
+    private static SecretKeySpec hmacKey(String secret) {
+        return new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
     }
 
     @Bean
