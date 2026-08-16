@@ -40,13 +40,17 @@ stages:
                 - checkout: self
 
                 # Secrets become masked pipeline variables named like the Key Vault secret
-                # (e.g. pdp-jwt-signing-key). They are never written to a file or the repo.
+                # (e.g. pdp-datasource-password). They are never written to a file or the repo.
+                # Filter only what a running environment actually consumes today — pdp-jwt-signing-key
+                # (dev/prod are on JWKS now, ADR-020), pdp-oidc-client-secret and pdp-otlp-token (no
+                # subsystem reads them yet) aren't referenced by any application-*.properties, and this
+                # task fails hard if a filtered secret doesn't exist in the vault.
                 - task: AzureKeyVault@2
                   displayName: 'Leer secretos desde Azure Key Vault'
                   inputs:
                     azureSubscription: ${{ parameters.azureServiceConnectionName }}
                     KeyVaultName: $(keyVaultName)
-                    SecretsFilter: 'pdp-jwt-signing-key,pdp-datasource-password,pdp-oidc-client-secret,pdp-otlp-token'
+                    SecretsFilter: 'pdp-datasource-password'
 
                 # App Service runs the application as a container: Azure App Service's managed
                 # Java runtime tops out at Java 21, and this project targets Java 25 (pom.xml).
@@ -85,14 +89,11 @@ stages:
                         --resource-group $(resourceGroupName) \
                         --settings \
                           SPRING_PROFILES_ACTIVE=$(springProfile) \
-                          PDP_JWT_SIGNING_KEY=$(pdp-jwt-signing-key) \
                           PDP_IDP_ISSUER_URI=$(idpIssuerUri) \
                           PDP_IDP_JWK_SET_URI=$(idpJwkSetUri) \
                           PDP_DATASOURCE_URL=$(datasourceUrl) \
                           PDP_DATASOURCE_USERNAME=$(datasourceUsername) \
                           PDP_DATASOURCE_PASSWORD=$(pdp-datasource-password) \
-                          PDP_OIDC_CLIENT_SECRET=$(pdp-oidc-client-secret) \
-                          PDP_OTLP_TOKEN=$(pdp-otlp-token) \
                         --output none
                       az webapp restart --name $(webAppName) --resource-group $(resourceGroupName)
 

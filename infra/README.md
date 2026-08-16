@@ -39,25 +39,21 @@ significar algo.
 
 ## Secretos reservados en el vault
 
-Estos son los nombres que el pipeline ya sabe leer. Se crean vacíos o no se crean hasta que el
-subsistema correspondiente exista; el pipeline solo los pedirá cuando la etapa de despliegue
-esté activa.
+Estos son los nombres reservados para cuando su subsistema exista. `stage-deploy.yml` solo pide y
+consume `pdp-datasource-password` hoy — es el único que un
+ambiente desplegado necesita para arrancar hoy (`application-dev.properties` y
+`application-prod.properties` lo exigen sin valor de respaldo, junto con
+`PDP_DATASOURCE_URL`/`PDP_DATASOURCE_USERNAME`, que son configuración operativa, no secretos). El
+`SecretsFilter` del pipeline se restringe deliberadamente a eso: pedir un secreto que no existe en
+el vault hace fallar la tarea `AzureKeyVault@2` completa, así que la fila queda tan corta como lo
+que realmente se usa.
 
-| Secreto | Consumidor previsto | Variable de entorno |
-|---|---|---|
-| `pdp-jwt-signing-key` | Emisor/validador JWT propio (ADR-0003) — huérfano desde ADR-020: ningún ambiente desplegado usa HMAC hoy, ver más abajo | `PDP_JWT_SIGNING_KEY` |
-| `pdp-datasource-password` | Adaptador SurrealDB (ADR-0004) — **en uso** | `PDP_DATASOURCE_PASSWORD` |
-| `pdp-oidc-client-secret` | Integración con Keycloak, reemplaza el emisor propio (ADR-0003) | `PDP_OIDC_CLIENT_SECRET` |
-| `pdp-otlp-token` | Exportación de trazas | `PDP_OTLP_TOKEN` |
-
-`pdp-datasource-password` es, a la fecha de esta línea, el único secreto de esta lista que un
-ambiente desplegado necesita para arrancar: `application-dev.properties` y
-`application-prod.properties` lo exigen sin valor de respaldo (junto con
-`PDP_DATASOURCE_URL`/`PDP_DATASOURCE_USERNAME`, que son configuración operativa, no secretos, y
-también sin valor de respaldo). `pdp-jwt-signing-key` sigue inyectándose como app setting por el
-pipeline pero ambos ambientes lo ignoran — DEV y PROD validan JWT vía JWKS contra Keycloak real
-(ADR-020), no con la clave HMAC propia. El modo HMAC sigue vivo solo en el perfil por defecto
-(tests, desarrollo local).
+| Secreto | Consumidor previsto | Variable de entorno | Estado |
+|---|---|---|---|
+| `pdp-datasource-password` | Adaptador SurrealDB (ADR-0004) | `PDP_DATASOURCE_PASSWORD` | **En uso** |
+| `pdp-jwt-signing-key` | Emisor/validador JWT propio (ADR-0003) | `PDP_JWT_SIGNING_KEY` | Huérfano desde ADR-020 — DEV y PROD validan vía JWKS contra Keycloak real, no HMAC. El modo HMAC sigue vivo solo en el perfil por defecto (tests, desarrollo local), que no lee este secreto |
+| `pdp-oidc-client-secret` | Integración con Keycloak (ADR-0003) | `PDP_OIDC_CLIENT_SECRET` | Reservado — ningún `application-*.properties` lo referencia |
+| `pdp-otlp-token` | Exportación de trazas | `PDP_OTLP_TOKEN` | Reservado — el subsistema de telemetría no existe todavía |
 
 ## Cómo se consumen
 
