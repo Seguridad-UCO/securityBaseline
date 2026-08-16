@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.pdp.tenants.application.usecase.impl;
 
+import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
 import co.edu.uco.seguridad.pdp.tenants.application.port.primary.dto.response.TenantResponse;
 import co.edu.uco.seguridad.pdp.tenants.application.port.secondary.repository.TenantRepository;
@@ -16,7 +17,7 @@ public final class FindTenantUseCaseImpl implements FindTenantUseCase {
     private final TenantRepository repository;
 
     public FindTenantUseCaseImpl(TenantRepository repository) {
-        this.repository = Objects.requireNonNull(repository, "se requiere repositorio de inquilino");
+        this.repository = Objects.requireNonNull(repository, RequiredArgumentMessages.TENANT_REPOSITORY);
     }
 
     @Override

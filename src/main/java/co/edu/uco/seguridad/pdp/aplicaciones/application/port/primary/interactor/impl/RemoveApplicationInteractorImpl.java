@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.pdp.aplicaciones.application.port.primary.interactor.impl;
 
+import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import co.edu.uco.seguridad.pdp.aplicaciones.application.port.primary.interactor.RemoveApplicationInteractor;
 import co.edu.uco.seguridad.pdp.aplicaciones.application.usecase.RemoveApplicationUseCase;
 import co.edu.uco.seguridad.pdp.commons.ApplicationId;
@@ -12,7 +13,7 @@ public final class RemoveApplicationInteractorImpl implements RemoveApplicationI
     private final RemoveApplicationUseCase useCase;
 
     public RemoveApplicationInteractorImpl(RemoveApplicationUseCase useCase) {
-        this.useCase = Objects.requireNonNull(useCase, "se requiere caso de uso de eliminación");
+        this.useCase = Objects.requireNonNull(useCase, RequiredArgumentMessages.REMOVE_USE_CASE);
     }
 
     @Override

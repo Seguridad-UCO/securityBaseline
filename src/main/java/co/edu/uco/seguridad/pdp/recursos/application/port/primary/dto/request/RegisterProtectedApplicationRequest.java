@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.pdp.recursos.application.port.primary.dto.request;
 
+import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import co.edu.uco.seguridad.pdp.commons.ApplicationName;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
 import co.edu.uco.seguridad.pdp.recursos.domain.ActionCode;
@@ -19,9 +20,9 @@ public record RegisterProtectedApplicationRequest(TenantId tenantId,
                                                   ActionCode action) {
 
     public RegisterProtectedApplicationRequest {
-        Objects.requireNonNull(tenantId, "se requiere id de inquilino");
-        Objects.requireNonNull(applicationName, "se requiere nombre de aplicación");
-        Objects.requireNonNull(resourceCode, "se requiere código de recurso");
-        Objects.requireNonNull(action, "se requiere código de acción");
+        Objects.requireNonNull(tenantId, RequiredArgumentMessages.TENANT_ID);
+        Objects.requireNonNull(applicationName, RequiredArgumentMessages.APPLICATION_NAME);
+        Objects.requireNonNull(resourceCode, RequiredArgumentMessages.RESOURCE_CODE);
+        Objects.requireNonNull(action, RequiredArgumentMessages.ACTION_CODE);
     }
 }

@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.pdp.aplicaciones.application.port.primary.dto.response;
 
+import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import co.edu.uco.seguridad.pdp.commons.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.ApplicationName;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
@@ -17,9 +18,9 @@ public record RegisteredApplicationResponse(ApplicationId id, TenantId tenantId,
                                             Instant registeredAt) {
 
     public RegisteredApplicationResponse {
-        Objects.requireNonNull(id, "se requiere id de aplicación");
-        Objects.requireNonNull(tenantId, "se requiere id de inquilino");
-        Objects.requireNonNull(name, "se requiere nombre de aplicación");
-        Objects.requireNonNull(registeredAt, "se requiere instante de registro");
+        Objects.requireNonNull(id, RequiredArgumentMessages.APPLICATION_ID);
+        Objects.requireNonNull(tenantId, RequiredArgumentMessages.TENANT_ID);
+        Objects.requireNonNull(name, RequiredArgumentMessages.APPLICATION_NAME);
+        Objects.requireNonNull(registeredAt, RequiredArgumentMessages.REGISTERED_AT);
     }
 }

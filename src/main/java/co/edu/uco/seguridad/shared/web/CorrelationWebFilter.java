@@ -11,13 +11,8 @@ import reactor.core.publisher.Mono;
 import java.util.UUID;
 
 /**
- * Primer filtro de la cadena: fija el id de solicitud y de correlación antes que cualquier otro
- * código vea la petición.
- *
- * <p>Ambos ids se toman de las cabeceras {@code X-Request-Id}/{@code X-Correlation-Id} cuando el
- * cliente los envía, o se generan aleatoriamente en caso contrario, para que un cliente que ya
- * correlaciona sus propias peticiones pueda seguir haciéndolo y uno que no lo hace obtenga igual
- * ids consistentes en logs y respuesta.</p>
+ * Primer filtro de la cadena: fija requestId/correlationId antes que cualquier otro código vea la
+ * petición, tomándolos de {@code X-Request-Id}/{@code X-Correlation-Id} si el cliente los manda.
  */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)

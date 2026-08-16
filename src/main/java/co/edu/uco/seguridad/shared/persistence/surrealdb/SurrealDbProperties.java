@@ -1,13 +1,13 @@
 package co.edu.uco.seguridad.shared.persistence.surrealdb;
 
+import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.Objects;
 
 /**
- * Conexión al único almacén real del contenedor PDP (ADR-0004). Un namespace/database compartido
- * entre módulos porque hoy son un solo proceso desplegable; separarlos por módulo sería una frontera
- * que Spring Modulith ya traza a nivel de código y que la base de datos no necesita repetir.
+ * Conexión al único almacén real del contenedor PDP (ADR-019). Namespace/database compartido entre
+ * módulos: Modulith ya traza esa frontera a nivel de código.
  *
  * @param url       base HTTP de la instancia SurrealDB (p. ej. {@code http://localhost:8000})
  * @param namespace namespace SurrealDB del contenedor PDP
@@ -19,10 +19,10 @@ import java.util.Objects;
 public record SurrealDbProperties(String url, String namespace, String database, String username, String password) {
 
     public SurrealDbProperties {
-        Objects.requireNonNull(url, "se requiere la URL de SurrealDB (pdp.persistence.surrealdb.url)");
-        Objects.requireNonNull(namespace, "se requiere el namespace de SurrealDB");
-        Objects.requireNonNull(database, "se requiere la database de SurrealDB");
-        Objects.requireNonNull(username, "se requiere el usuario de SurrealDB");
-        Objects.requireNonNull(password, "se requiere la contraseña de SurrealDB");
+        Objects.requireNonNull(url, RequiredArgumentMessages.SURREALDB_URL);
+        Objects.requireNonNull(namespace, RequiredArgumentMessages.SURREALDB_NAMESPACE);
+        Objects.requireNonNull(database, RequiredArgumentMessages.SURREALDB_DATABASE);
+        Objects.requireNonNull(username, RequiredArgumentMessages.SURREALDB_USERNAME);
+        Objects.requireNonNull(password, RequiredArgumentMessages.SURREALDB_SECRET);
     }
 }

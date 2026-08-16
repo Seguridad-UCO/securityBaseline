@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.pdp.aplicaciones.domain.event;
 
+import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import co.edu.uco.seguridad.pdp.aplicaciones.domain.Application;
 import co.edu.uco.seguridad.pdp.commons.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.ApplicationName;
@@ -20,10 +21,10 @@ public record ApplicationRegistered(ApplicationId applicationId,
                                     Instant occurredOn) implements DomainEvent {
 
     public ApplicationRegistered {
-        Objects.requireNonNull(applicationId, "se requiere id de aplicación");
-        Objects.requireNonNull(tenantId, "se requiere id de inquilino");
-        Objects.requireNonNull(applicationName, "se requiere nombre de aplicación");
-        Objects.requireNonNull(occurredOn, "se requiere instante del evento");
+        Objects.requireNonNull(applicationId, RequiredArgumentMessages.APPLICATION_ID);
+        Objects.requireNonNull(tenantId, RequiredArgumentMessages.TENANT_ID);
+        Objects.requireNonNull(applicationName, RequiredArgumentMessages.APPLICATION_NAME);
+        Objects.requireNonNull(occurredOn, RequiredArgumentMessages.EVENT_OCCURRED_ON);
     }
 
     public static ApplicationRegistered of(Application application) {

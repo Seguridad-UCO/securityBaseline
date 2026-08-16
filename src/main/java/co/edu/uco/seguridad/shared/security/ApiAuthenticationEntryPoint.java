@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.shared.security;
 
+import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import co.edu.uco.seguridad.crosscutting.messages.WebContractMessages;
 import tools.jackson.databind.ObjectMapper;
 import org.springframework.http.HttpStatus;
@@ -16,21 +17,16 @@ import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 /**
- * Token ausente, mal formado, con firma inválida o expirado: los cuatro casos que Spring Security
- * agrupa como fallo de autenticación. Devuelve el mismo {@link ProblemDetail} que
- * {@code ApiErrorHandler} usa para el resto de errores 4xx, para que un cliente no tenga que
- * distinguir entre dos formatos de error según de qué capa vino el rechazo.
- *
- * <p>No es un {@code @ExceptionHandler} en {@code ApiErrorHandler} porque el rechazo ocurre en la
- * cadena de filtros de seguridad, antes de que la petición llegue a un controlador — Spring Security
- * exige su propio punto de entrada para esto.</p>
+ * Token ausente, mal formado, inválido o expirado. Devuelve el mismo {@link ProblemDetail} que
+ * {@code ApiErrorHandler}, aunque no puede ser un {@code @ExceptionHandler} suyo: el rechazo ocurre
+ * en la cadena de filtros de seguridad, antes de llegar a un controlador.
  */
 public final class ApiAuthenticationEntryPoint implements ServerAuthenticationEntryPoint {
 
     private final ObjectMapper mapper;
 
     public ApiAuthenticationEntryPoint(ObjectMapper mapper) {
-        this.mapper = Objects.requireNonNull(mapper, "se requiere ObjectMapper");
+        this.mapper = Objects.requireNonNull(mapper, RequiredArgumentMessages.OBJECT_MAPPER);
     }
 
     @Override

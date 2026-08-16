@@ -1,16 +1,8 @@
 package co.edu.uco.seguridad.crosscutting.messages;
 
 /**
- * Catálogo central de mensajes de error de los objetos de valor.
- *
- * <p>Ningún objeto de valor, entidad de dominio ni excepción debe contener literales de texto
- * orientados al usuario directamente en su cuerpo. Todos los mensajes se definen aquí, agrupados
- * en clases internas estáticas por concepto, de modo que un cambio de redacción impacte un único
- * sitio y sea trivialmente rastreable con las herramientas del IDE.</p>
- *
- * <p>Incluye tanto fragmentos de razón (usados por los constructores de objetos de valor) como
- * plantillas de mensaje completo (usadas por las excepciones {@code Invalid*}), de forma que esas
- * clases de excepción no contengan literales en español.</p>
+ * Catálogo central de mensajes de error de los objetos de valor, agrupados por concepto en clases
+ * internas estáticas — ningún objeto de valor ni excepción {@code Invalid*} debe contener literales.
  */
 public final class ValueObjectMessages {
 

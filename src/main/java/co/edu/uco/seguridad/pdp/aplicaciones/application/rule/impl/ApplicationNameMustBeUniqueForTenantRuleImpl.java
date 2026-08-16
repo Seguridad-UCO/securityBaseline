@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.pdp.aplicaciones.application.rule.impl;
 
+import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import co.edu.uco.seguridad.pdp.aplicaciones.application.exception.DuplicateApplicationException;
 import co.edu.uco.seguridad.pdp.aplicaciones.application.port.primary.dto.request.RegisterApplicationRequest;
 import co.edu.uco.seguridad.pdp.aplicaciones.application.port.secondary.repository.ApplicationRepository;
@@ -13,7 +14,7 @@ public final class ApplicationNameMustBeUniqueForTenantRuleImpl implements Appli
     private final ApplicationRepository repository;
 
     public ApplicationNameMustBeUniqueForTenantRuleImpl(ApplicationRepository repository) {
-        this.repository = Objects.requireNonNull(repository, "se requiere repositorio de aplicación");
+        this.repository = Objects.requireNonNull(repository, RequiredArgumentMessages.APPLICATION_REPOSITORY);
     }
 
     @Override

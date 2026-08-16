@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.secondary.persistence.repository;
 
+import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import co.edu.uco.seguridad.pdp.commons.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.PageWindow;
 import co.edu.uco.seguridad.pdp.commons.ResourceId;
@@ -11,6 +12,7 @@ import co.edu.uco.seguridad.pdp.recursos.domain.ProtectedResource;
 import co.edu.uco.seguridad.pdp.recursos.domain.ResourceCode;
 import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.secondary.persistence.entity.ProtectedResourceEntity;
 import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.secondary.persistence.mapper.ProtectedResourcePersistenceMapper;
+import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.secondary.persistence.schema.ProtectedResourceSchema;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealRecordId;
 import reactor.core.publisher.Mono;
@@ -31,7 +33,7 @@ import java.util.Objects;
  */
 public final class SurrealProtectedResourceRepository implements ProtectedResourceRepository {
 
-    private static final String TABLE = "protected_resource";
+    private static final String TABLE = ProtectedResourceSchema.TABLE;
     private static final String FIELD_APPLICATION_ID = "applicationId";
     private static final String FIELD_RESOURCE_CODE = "resourceCode";
     private static final String FIELD_ACTION = "action";
@@ -40,7 +42,7 @@ public final class SurrealProtectedResourceRepository implements ProtectedResour
     private final SurrealDbClient client;
 
     public SurrealProtectedResourceRepository(SurrealDbClient client) {
-        this.client = Objects.requireNonNull(client, "se requiere el cliente de SurrealDB");
+        this.client = Objects.requireNonNull(client, RequiredArgumentMessages.SURREALDB_CLIENT);
     }
 
     @Override

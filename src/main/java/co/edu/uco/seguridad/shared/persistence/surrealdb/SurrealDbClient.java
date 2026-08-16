@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.shared.persistence.surrealdb;
 
+import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -12,18 +13,9 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Cliente reactivo mínimo para el endpoint HTTP {@code /sql} de SurrealDB (ADR-0004).
- *
- * <p>No hay un driver Java viable: el oficial (`com.surrealdb:surrealdb`) empaqueta el motor
- * embebido compilado para doce plataformas — 212&nbsp;MB, pensado para uso embebido/móvil, no para
- * un cliente delgado hacia un servidor remoto — y el driver "remoto" anterior
- * (`com.surrealdb:surrealdb-driver`) está abandonado desde 2023 en la versión 0.1.0. SurrealQL sobre
- * HTTP con el {@link WebClient} que el proyecto ya tiene (por {@code spring-boot-starter-webflux})
- * es más simple, totalmente reactivo, y no añade una sola dependencia nueva.</p>
- *
- * <p>Cada valor variable de una sentencia se ata como parámetro de query (<code>?campo=valor</code> →
- * <code>$campo</code> en la sentencia), nunca por concatenación de texto — así SurrealDB decide qué
- * es dato y qué es sintaxis, exactamente como lo haría un {@code PreparedStatement}.</p>
+ * Cliente reactivo mínimo para el endpoint HTTP {@code /sql} de SurrealDB — ver ADR-019 para por qué
+ * no hay driver Java. Cada valor variable se ata como parámetro de query, nunca por concatenación,
+ * para que SurrealDB decida qué es dato y qué es sintaxis.
  */
 public final class SurrealDbClient {
 
@@ -32,16 +24,12 @@ public final class SurrealDbClient {
     private final SurrealDbProperties properties;
 
     public SurrealDbClient(WebClient webClient, ObjectMapper objectMapper, SurrealDbProperties properties) {
-        this.webClient = Objects.requireNonNull(webClient, "se requiere el WebClient de SurrealDB");
-        this.objectMapper = Objects.requireNonNull(objectMapper, "se requiere ObjectMapper");
-        this.properties = Objects.requireNonNull(properties, "se requiere la configuración de SurrealDB");
+        this.webClient = Objects.requireNonNull(webClient, RequiredArgumentMessages.SURREALDB_WEBCLIENT);
+        this.objectMapper = Objects.requireNonNull(objectMapper, RequiredArgumentMessages.OBJECT_MAPPER);
+        this.properties = Objects.requireNonNull(properties, RequiredArgumentMessages.SURREALDB_PROPERTIES);
     }
 
-    /**
-     * Crea el namespace y la database configurados si todavía no existen. Cada módulo la llama antes
-     * de definir sus propias tablas, en vez de depender del orden de arranque entre módulos — es
-     * idempotente, así que llamarla varias veces no tiene costo más allá de una sentencia extra.
-     */
+    /** Idempotente — cada módulo la llama antes de definir sus tablas, sin depender del orden de arranque. */
     public Mono<Void> ensureNamespaceAndDatabase() {
         return execute(
                         "DEFINE NAMESPACE IF NOT EXISTS %s; DEFINE DATABASE IF NOT EXISTS %s;"

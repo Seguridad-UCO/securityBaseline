@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.pdp.recursos.application.usecase.impl;
 
+import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import co.edu.uco.seguridad.pdp.commons.ResultPage;
 import co.edu.uco.seguridad.pdp.recursos.application.port.primary.dto.request.SearchProtectedApplicationsRequest;
 import co.edu.uco.seguridad.pdp.recursos.application.port.secondary.repository.ProtectedResourceRepository;
@@ -25,8 +26,8 @@ public final class SearchProtectedApplicationsUseCaseImpl implements SearchProte
 
     public SearchProtectedApplicationsUseCaseImpl(SearchProtectedApplicationsRulesValidator rules,
                                                    ProtectedResourceRepository resources) {
-        this.rules = Objects.requireNonNull(rules, "se requiere validador de reglas");
-        this.resources = Objects.requireNonNull(resources, "se requiere repositorio de recurso protegido");
+        this.rules = Objects.requireNonNull(rules, RequiredArgumentMessages.RULES_VALIDATOR);
+        this.resources = Objects.requireNonNull(resources, RequiredArgumentMessages.PROTECTED_RESOURCE_REPOSITORY);
     }
 
     @Override

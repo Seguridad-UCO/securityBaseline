@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.secondary.persistence.schema;
 
+import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import co.edu.uco.seguridad.pdp.tenants.infrastructure.properties.TenantCatalogProperties;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import org.springframework.boot.ApplicationArguments;
@@ -26,17 +27,18 @@ public final class SurrealTenantSchemaInitializer implements ApplicationRunner {
     private final TenantCatalogProperties properties;
 
     public SurrealTenantSchemaInitializer(SurrealDbClient client, TenantCatalogProperties properties) {
-        this.client = Objects.requireNonNull(client, "se requiere el cliente de SurrealDB");
-        this.properties = Objects.requireNonNull(properties, "se requiere el catálogo de tenants");
+        this.client = Objects.requireNonNull(client, RequiredArgumentMessages.SURREALDB_CLIENT);
+        this.properties = Objects.requireNonNull(properties, RequiredArgumentMessages.TENANT_CATALOG);
     }
 
     @Override
     public void run(ApplicationArguments args) {
         client.ensureNamespaceAndDatabase()
-                .then(client.execute("DEFINE TABLE IF NOT EXISTS tenant SCHEMALESS;", Map.of()))
+                .then(client.execute(
+                        "DEFINE TABLE IF NOT EXISTS %s SCHEMALESS;".formatted(TenantSchema.TABLE), Map.of()))
                 .thenMany(Flux.fromIterable(properties.seed().entrySet()))
                 .concatMap(entry -> client.execute(
-                        "UPSERT type::record('tenant', $id) SET status = $status;",
+                        "UPSERT type::record('%s', $id) SET status = $status;".formatted(TenantSchema.TABLE),
                         Map.of("id", entry.getKey(), "status", entry.getValue())))
                 .then()
                 .block();

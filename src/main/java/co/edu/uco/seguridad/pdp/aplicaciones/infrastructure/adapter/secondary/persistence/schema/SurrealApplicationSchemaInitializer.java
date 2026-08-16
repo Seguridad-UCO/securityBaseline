@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.pdp.aplicaciones.infrastructure.adapter.secondary.persistence.schema;
 
+import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -18,7 +19,7 @@ public final class SurrealApplicationSchemaInitializer implements ApplicationRun
     private final SurrealDbClient client;
 
     public SurrealApplicationSchemaInitializer(SurrealDbClient client) {
-        this.client = Objects.requireNonNull(client, "se requiere el cliente de SurrealDB");
+        this.client = Objects.requireNonNull(client, RequiredArgumentMessages.SURREALDB_CLIENT);
     }
 
     @Override
@@ -26,10 +27,10 @@ public final class SurrealApplicationSchemaInitializer implements ApplicationRun
         client.ensureNamespaceAndDatabase()
                 .then(client.execute(
                         """
-                        DEFINE TABLE IF NOT EXISTS application SCHEMALESS;
-                        DEFINE INDEX IF NOT EXISTS application_tenant_name ON application \
+                        DEFINE TABLE IF NOT EXISTS %1$s SCHEMALESS;
+                        DEFINE INDEX IF NOT EXISTS %2$s ON %1$s \
                         COLUMNS tenantId, name UNIQUE;\
-                        """,
+                        """.formatted(ApplicationSchema.TABLE, ApplicationSchema.INDEX_TENANT_NAME),
                         Map.of()))
                 .then()
                 .block();

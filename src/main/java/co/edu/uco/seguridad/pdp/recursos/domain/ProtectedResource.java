@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.pdp.recursos.domain;
 
+import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import co.edu.uco.seguridad.pdp.commons.AggregateRoot;
 import co.edu.uco.seguridad.pdp.commons.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.ApplicationName;
@@ -11,11 +12,9 @@ import java.time.Instant;
 import java.util.Objects;
 
 /**
- * Un recurso de una aplicación protegida junto con la acción permitida sobre él.
- *
- * <p>Inmutable y libre de tipos de framework. Lleva {@code applicationName} a propósito: el
- * catálogo es un modelo de lectura propiedad de este módulo, y desnormalizar el nombre es lo que permite
- * que una búsqueda filtre por nombre sin acceder al almacenamiento de Aplicaciones.</p>
+ * Un recurso de una aplicación protegida junto con la acción permitida sobre él. Lleva
+ * {@code applicationName} desnormalizado a propósito: permite filtrar por nombre sin tocar el
+ * almacenamiento de Aplicaciones.
  */
 public record ProtectedResource(ResourceId id,
                                 ApplicationId applicationId,
@@ -26,13 +25,13 @@ public record ProtectedResource(ResourceId id,
                                 Instant registeredAt) {
 
     public ProtectedResource {
-        Objects.requireNonNull(id, "se requiere id de recurso");
-        Objects.requireNonNull(applicationId, "se requiere id de aplicación");
-        Objects.requireNonNull(tenantId, "se requiere id de inquilino");
-        Objects.requireNonNull(applicationName, "se requiere nombre de aplicación");
-        Objects.requireNonNull(code, "se requiere código de recurso");
-        Objects.requireNonNull(action, "se requiere código de acción");
-        Objects.requireNonNull(registeredAt, "se requiere instante de registro");
+        Objects.requireNonNull(id, RequiredArgumentMessages.RESOURCE_ID);
+        Objects.requireNonNull(applicationId, RequiredArgumentMessages.APPLICATION_ID);
+        Objects.requireNonNull(tenantId, RequiredArgumentMessages.TENANT_ID);
+        Objects.requireNonNull(applicationName, RequiredArgumentMessages.APPLICATION_NAME);
+        Objects.requireNonNull(code, RequiredArgumentMessages.RESOURCE_CODE);
+        Objects.requireNonNull(action, RequiredArgumentMessages.ACTION_CODE);
+        Objects.requireNonNull(registeredAt, RequiredArgumentMessages.REGISTERED_AT);
     }
 
     public static ProtectedResource register(ResourceId id,
@@ -45,11 +44,7 @@ public record ProtectedResource(ResourceId id,
         return new ProtectedResource(id, applicationId, tenantId, applicationName, code, action, registeredAt);
     }
 
-    /**
-     * Igual que {@link #register}, pero empareja el recurso con el evento que su registro produce
-     * (ver {@link AggregateRoot}). Es la fábrica que debe usar el caso de uso de escritura;
-     * {@link #register} sigue existiendo para reconstrucción desde persistencia.
-     */
+    /** Igual que {@link #register}, pero empareja el recurso con su evento — usar al escribir, no al leer. */
     public static AggregateRoot<ProtectedResource, ProtectedResourceRegistered> registerWithEvent(
             ResourceId id,
             ApplicationId applicationId,

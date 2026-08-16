@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.pdp.tenants.application.port.primary.dto.response;
 
+import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
 import co.edu.uco.seguridad.pdp.tenants.TenantStatus;
 
@@ -13,8 +14,8 @@ import java.util.Objects;
 public record TenantResponse(TenantId id, TenantStatus status) {
 
     public TenantResponse {
-        Objects.requireNonNull(id, "se requiere id de inquilino");
-        Objects.requireNonNull(status, "se requiere estado del inquilino");
+        Objects.requireNonNull(id, RequiredArgumentMessages.TENANT_ID);
+        Objects.requireNonNull(status, RequiredArgumentMessages.TENANT_STATUS);
     }
 
     public boolean active() {

@@ -9,20 +9,10 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
- * Adaptador secundario (driven) de auditoría ficticio sustituible (criterio 07).
- *
- * <p>No implementa ningún puerto de aplicación: el caso de uso ya no la conoce. Escucha
- * {@link ProtectedResourceRegistered} vía {@code @EventListener} de Spring — síncrono, en el mismo
- * proceso — en vez de que el caso de uso la invoque directamente (ADR-0002). Registra quién registró
- * qué y cuándo — nunca la carga completa, por lo que la evidencia de auditoría no puede convertirse
- * en una segunda copia de datos que la plataforma está destinada a proteger.</p>
- *
- * <p>No es {@code @ApplicationModuleListener} (Spring Modulith) a propósito: esa anotación entrega
- * de forma asíncrona tras el commit de una transacción real, respaldada por un Event Publication
- * Registry persistente — y ningún backend de ese registro (JDBC/JPA/MongoDB/Neo4j) encaja mientras
- * la persistencia siga siendo dummy. Adoptarla ahora habría exigido una base de datos desechable
- * solo para el registro de eventos. Este es el límite honesto de ADR-0002 en esta etapa; se
- * reconsidera junto con la persistencia real (ADR-0004).</p>
+ * Adaptador de auditoría ficticio sustituible (criterio 07): registra solo identificadores, nunca
+ * la carga completa. Escucha {@link ProtectedResourceRegistered} con {@code @EventListener} síncrono,
+ * no {@code @ApplicationModuleListener}, porque Spring Modulith no trae un backend de Event
+ * Publication Registry para SurrealDB — ver ADR-017.
  */
 public final class InMemoryAuditAdapter {
 

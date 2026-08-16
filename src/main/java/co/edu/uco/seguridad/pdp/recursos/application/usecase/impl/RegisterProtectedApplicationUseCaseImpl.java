@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.pdp.recursos.application.usecase.impl;
 
+import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import co.edu.uco.seguridad.pdp.aplicaciones.application.port.primary.dto.request.RegisterApplicationRequest;
 import co.edu.uco.seguridad.pdp.aplicaciones.application.port.primary.dto.response.RegisteredApplicationResponse;
 import co.edu.uco.seguridad.pdp.aplicaciones.application.port.primary.interactor.RegisterApplicationInteractor;
@@ -25,19 +26,7 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Orquesta E-1: registrar la aplicación a través de Aplicaciones, luego su primer recurso aquí,
- * como una saga con dos pasos y una compensación explícita por paso — no una transacción distribuida.
- *
- * <p>Ninguna transacción real puede envolver los dos pasos: viven detrás de puertos de módulos
- * distintos, y aunque hoy ambos hablan con la misma instancia de SurrealDB, el diseño no debe
- * asumirlo (ADR-0004). Si el registro del recurso falla <b>después</b> de guardarlo pero antes de
- * terminar (p. ej. al publicar su evento), {@link #compensateResource} lo borra; si cualquier parte
- * de {@link #registerResource} falla, {@link #compensateApplication} deshace el registro de la
- * aplicación en el otro módulo. Nombrar ambas compensaciones en vez de ocultarlas detrás de un
- * {@code ReactiveTransactionPort} genérico es lo que hace visible, para quien lea este archivo, que
- * la consistencia aquí es eventual y compensada, no atómica.</p>
- */
+/** Orquesta E-1 como saga con compensación explícita por paso — ver ADR-019. */
 public final class RegisterProtectedApplicationUseCaseImpl implements RegisterProtectedApplicationUseCase {
 
     private static final Logger LOG = LoggerFactory.getLogger(RegisterProtectedApplicationUseCaseImpl.class);
@@ -61,11 +50,11 @@ public final class RegisterProtectedApplicationUseCaseImpl implements RegisterPr
                 registerApplicationInteractor, "se requiere interactor de registro de aplicación");
         this.removeApplicationInteractor = Objects.requireNonNull(
                 removeApplicationInteractor, "se requiere interactor de eliminación de aplicación");
-        this.rules = Objects.requireNonNull(rules, "se requiere validador de reglas");
-        this.resources = Objects.requireNonNull(resources, "se requiere repositorio de recurso protegido");
-        this.events = Objects.requireNonNull(events, "se requiere publicador de eventos de dominio");
-        this.identifiers = Objects.requireNonNull(identifiers, "se requiere generador de identificadores");
-        this.time = Objects.requireNonNull(time, "se requiere proveedor de tiempo");
+        this.rules = Objects.requireNonNull(rules, RequiredArgumentMessages.RULES_VALIDATOR);
+        this.resources = Objects.requireNonNull(resources, RequiredArgumentMessages.PROTECTED_RESOURCE_REPOSITORY);
+        this.events = Objects.requireNonNull(events, RequiredArgumentMessages.DOMAIN_EVENT_PUBLISHER);
+        this.identifiers = Objects.requireNonNull(identifiers, RequiredArgumentMessages.IDENTIFIER_GENERATOR);
+        this.time = Objects.requireNonNull(time, RequiredArgumentMessages.TIME_PROVIDER);
     }
 
     @Override

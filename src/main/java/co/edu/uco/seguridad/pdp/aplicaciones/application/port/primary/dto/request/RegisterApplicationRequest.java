@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.pdp.aplicaciones.application.port.primary.dto.request;
 
+import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import co.edu.uco.seguridad.pdp.commons.ApplicationName;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
 
@@ -14,7 +15,7 @@ import java.util.Objects;
 public record RegisterApplicationRequest(TenantId tenantId, ApplicationName name) {
 
     public RegisterApplicationRequest {
-        Objects.requireNonNull(tenantId, "se requiere id de inquilino");
-        Objects.requireNonNull(name, "se requiere nombre de aplicación");
+        Objects.requireNonNull(tenantId, RequiredArgumentMessages.TENANT_ID);
+        Objects.requireNonNull(name, RequiredArgumentMessages.APPLICATION_NAME);
     }
 }

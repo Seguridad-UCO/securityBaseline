@@ -5,11 +5,8 @@ import co.edu.uco.seguridad.pdp.commons.TenantId;
 import co.edu.uco.seguridad.pdp.commons.exception.BusinessRuleViolationException;
 
 /**
- * El inquilino referenciado no existe. Distinto de {@link TenantNotActiveException}: un inquilino
- * desconocido es una solicitud incorrecta, uno suspendido es una decisión de política temporal.
- *
- * <p>Vive en {@code application} por la misma razón que {@link TenantNotActiveException}: la regla que la
- * lanza necesita el repositorio.</p>
+ * El inquilino referenciado no existe. Distinto de {@link TenantNotActiveException}: desconocido es
+ * una solicitud incorrecta, suspendido es una decisión de política temporal.
  */
 public final class TenantNotFoundException extends BusinessRuleViolationException {
 
