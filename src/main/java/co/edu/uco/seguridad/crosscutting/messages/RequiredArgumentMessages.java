@@ -56,8 +56,10 @@ public final class RequiredArgumentMessages {
     public static final String OBJECT_MAPPER = "se requiere ObjectMapper";
 
     // Seguridad JWT.
-    public static final String JWT_SECRET = "se requiere el secreto de firma JWT (pdp.security.jwt.secret)";
     public static final String JWT_ISSUER = "se requiere el emisor esperado (pdp.security.jwt.issuer)";
+    public static final String JWT_EXACTLY_ONE_MODE =
+            "se requiere exactamente uno de pdp.security.jwt.secret (HMAC, pruebas) o "
+                    + "pdp.security.jwt.jwk-set-uri (JWKS de Keycloak, ambientes reales) — nunca ambos ni ninguno";
     public static final String JWT_AUDIENCE = "se requiere la audiencia esperada (pdp.security.jwt.audience)";
     public static final String JWT_ID = "se requiere el identificador del token (jti)";
 

@@ -86,6 +86,8 @@ stages:
                         --settings \
                           SPRING_PROFILES_ACTIVE=$(springProfile) \
                           PDP_JWT_SIGNING_KEY=$(pdp-jwt-signing-key) \
+                          PDP_IDP_ISSUER_URI=$(idpIssuerUri) \
+                          PDP_IDP_JWK_SET_URI=$(idpJwkSetUri) \
                           PDP_DATASOURCE_URL=$(datasourceUrl) \
                           PDP_DATASOURCE_USERNAME=$(datasourceUsername) \
                           PDP_DATASOURCE_PASSWORD=$(pdp-datasource-password) \
