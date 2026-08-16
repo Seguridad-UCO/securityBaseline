@@ -52,8 +52,11 @@ class SecurityConfiguration {
     }
 
     /**
-     * HMAC simétrico porque el emisor es propio. El validador exige {@code sub} y {@code tenant}
-     * presentes, para rechazar un token incompleto con 401 antes de que llegue al dominio.
+     * HMAC simétrico porque el emisor es propio. El validador exige {@code sub}, {@code tenant} y
+     * {@code jti} presentes, y {@code aud} igual a la audiencia configurada, para rechazar un token
+     * incompleto o emitido para otra aplicación con 401 antes de que llegue al dominio. Validar
+     * {@code jti} aquí no revoca nada todavía — solo garantiza que todo token aceptado ya trae el
+     * identificador que una futura revocación (Redis) necesitará.
      */
     @Bean
     ReactiveJwtDecoder jwtDecoder(JwtSecurityProperties properties) {
@@ -65,7 +68,10 @@ class SecurityConfiguration {
                 new JwtTimestampValidator(),
                 new JwtIssuerValidator(properties.issuer()),
                 new JwtClaimValidator<String>("sub", StringUtils::hasText),
-                new JwtClaimValidator<String>("tenant", StringUtils::hasText)));
+                new JwtClaimValidator<String>("tenant", StringUtils::hasText),
+                new JwtClaimValidator<String>("jti", StringUtils::hasText),
+                new JwtClaimValidator<List<String>>("aud",
+                        audiences -> audiences != null && audiences.contains(properties.audience()))));
         decoder.setJwtValidator(validator);
         return decoder;
     }

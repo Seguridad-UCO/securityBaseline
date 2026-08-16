@@ -54,6 +54,22 @@ class SecurityWebFilterChainTests extends AbstractSurrealDbIntegrationTest {
     }
 
     @Test
+    void refuses_a_token_without_the_expected_audience() {
+        client().get().uri(PATH)
+                .header("Authorization", "Bearer " + TestJwtSupport.tokenWithoutAudience("universidad-uco", "test-subject"))
+                .exchange()
+                .expectStatus().isUnauthorized();
+    }
+
+    @Test
+    void refuses_a_token_without_a_jti() {
+        client().get().uri(PATH)
+                .header("Authorization", "Bearer " + TestJwtSupport.tokenWithoutJti("universidad-uco", "test-subject"))
+                .exchange()
+                .expectStatus().isUnauthorized();
+    }
+
+    @Test
     void refuses_a_malformed_bearer_value() {
         client().get().uri(PATH)
                 .header("Authorization", "Bearer not-a-jwt-at-all")

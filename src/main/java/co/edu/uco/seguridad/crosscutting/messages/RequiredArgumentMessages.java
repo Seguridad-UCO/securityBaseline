@@ -58,6 +58,8 @@ public final class RequiredArgumentMessages {
     // Seguridad JWT.
     public static final String JWT_SECRET = "se requiere el secreto de firma JWT (pdp.security.jwt.secret)";
     public static final String JWT_ISSUER = "se requiere el emisor esperado (pdp.security.jwt.issuer)";
+    public static final String JWT_AUDIENCE = "se requiere la audiencia esperada (pdp.security.jwt.audience)";
+    public static final String JWT_ID = "se requiere el identificador del token (jti)";
 
     // Eventos de dominio y excepciones (pdp/commons, shared/event).
     public static final String DOMAIN_EVENT = "se requiere el evento de dominio";
