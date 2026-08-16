@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.pdp.recursos.application.port.primary.dto.request;
 
+import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import co.edu.uco.seguridad.pdp.commons.PageWindow;
 import co.edu.uco.seguridad.pdp.recursos.domain.ProtectedApplicationCriteria;
 
@@ -13,7 +14,7 @@ import java.util.Objects;
 public record SearchProtectedApplicationsRequest(ProtectedApplicationCriteria criteria, PageWindow window) {
 
     public SearchProtectedApplicationsRequest {
-        Objects.requireNonNull(criteria, "se requieren criterios de búsqueda");
-        Objects.requireNonNull(window, "se requiere ventana de resultado");
+        Objects.requireNonNull(criteria, RequiredArgumentMessages.SEARCH_CRITERIA);
+        Objects.requireNonNull(window, RequiredArgumentMessages.RESULT_WINDOW);
     }
 }

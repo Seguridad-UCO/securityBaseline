@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.pdp.tenants.application.rule.impl;
 
+import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
 import co.edu.uco.seguridad.pdp.tenants.application.exception.TenantNotFoundException;
 import co.edu.uco.seguridad.pdp.tenants.application.port.primary.dto.response.TenantResponse;
@@ -21,8 +22,8 @@ public final class TenantMustBeActiveRuleImpl implements TenantMustBeActiveRule 
 
     public TenantMustBeActiveRuleImpl(TenantRepository repository,
                                       TenantStatusMustBeActiveRule statusMustBeActive) {
-        this.repository = Objects.requireNonNull(repository, "se requiere repositorio de inquilino");
-        this.statusMustBeActive = Objects.requireNonNull(statusMustBeActive, "se requiere regla de estado activo");
+        this.repository = Objects.requireNonNull(repository, RequiredArgumentMessages.TENANT_REPOSITORY);
+        this.statusMustBeActive = Objects.requireNonNull(statusMustBeActive, RequiredArgumentMessages.ACTIVE_STATUS_RULE);
     }
 
     @Override

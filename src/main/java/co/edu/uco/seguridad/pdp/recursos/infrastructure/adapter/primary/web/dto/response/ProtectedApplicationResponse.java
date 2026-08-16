@@ -3,11 +3,8 @@ package co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.dto
 import java.time.Instant;
 
 /**
- * El contrato HTTP de salida, propiedad del adaptador web.
- *
- * <p>Plano y primitivo a propósito: serializar la entrada del catálogo directamente publicaría la
- * forma de {@code TenantId}, {@code ResourceCode} y todos los demás objetos de valor, y renombrar un
- * campo dentro del dominio se convertiría silenciosamente en un cambio disruptivo de la API.</p>
+ * El contrato HTTP de salida, propiedad del adaptador web. Plano y primitivo a propósito: publicar
+ * los value objects directamente haría que renombrar un campo del dominio rompiera la API en silencio.
  */
 public record ProtectedApplicationResponse(String applicationId,
                                            String resourceId,

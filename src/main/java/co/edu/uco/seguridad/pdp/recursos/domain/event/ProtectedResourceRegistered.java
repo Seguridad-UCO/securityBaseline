@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.pdp.recursos.domain.event;
 
+import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import co.edu.uco.seguridad.pdp.commons.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.ResourceId;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
@@ -24,12 +25,12 @@ public record ProtectedResourceRegistered(ResourceId resourceId,
                                           Instant occurredOn) implements DomainEvent {
 
     public ProtectedResourceRegistered {
-        Objects.requireNonNull(resourceId, "se requiere id de recurso");
-        Objects.requireNonNull(applicationId, "se requiere id de aplicación");
-        Objects.requireNonNull(tenantId, "se requiere id de inquilino");
-        Objects.requireNonNull(resourceCode, "se requiere código de recurso");
-        Objects.requireNonNull(action, "se requiere código de acción");
-        Objects.requireNonNull(occurredOn, "se requiere instante del evento");
+        Objects.requireNonNull(resourceId, RequiredArgumentMessages.RESOURCE_ID);
+        Objects.requireNonNull(applicationId, RequiredArgumentMessages.APPLICATION_ID);
+        Objects.requireNonNull(tenantId, RequiredArgumentMessages.TENANT_ID);
+        Objects.requireNonNull(resourceCode, RequiredArgumentMessages.RESOURCE_CODE);
+        Objects.requireNonNull(action, RequiredArgumentMessages.ACTION_CODE);
+        Objects.requireNonNull(occurredOn, RequiredArgumentMessages.EVENT_OCCURRED_ON);
     }
 
     public static ProtectedResourceRegistered of(ProtectedResource resource) {

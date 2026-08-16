@@ -1,12 +1,6 @@
 package co.edu.uco.seguridad.pdp.tenants;
 
-/**
- * Estado del ciclo de vida de un inquilino. Forma parte del API publicado del módulo para que
- * los consumidores externos puedan interpretar un {@link co.edu.uco.seguridad.pdp.tenants.application.port.primary.dto.response.TenantResponse}
- * sin depender de tipos de dominio internos del módulo.
- *
- * <p>Solo los inquilinos {@link #ACTIVE} pueden registrar aplicaciones protegidas.</p>
- */
+/** Estado del ciclo de vida de un inquilino. Solo {@link #ACTIVE} puede registrar aplicaciones. */
 public enum TenantStatus {
 
     ACTIVE,

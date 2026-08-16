@@ -9,16 +9,9 @@ import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.dto.
 import co.edu.uco.seguridad.shared.web.RequestFieldParser;
 
 /**
- * La puerta entre el mundo exterior y la aplicación: DTO crudo entra, DTO tipado de aplicación sale.
- *
- * <p>Cada campo se analiza de forma independiente con {@link RequestFieldParser#parse}, que delega
- * el formato al objeto de valor y nombra el campo si falla. No existe un DTO intermedio mutable:
- * a diferencia de la búsqueda, aquí no hay nada que ensamblar más allá de los tres objetos de
- * valor que sí vienen del cuerpo.</p>
- *
- * <p>{@code tenantId} llega como parámetro aparte, no de {@code raw}: desde ADR-0003 es el
- * interactor quien lo lee del token autenticado antes de llamar a este mapper. El cuerpo de la
- * petición ya no tiene un campo {@code tenantId} que validar.</p>
+ * La puerta entre el mundo exterior y la aplicación: DTO crudo entra, DTO tipado sale. Cada campo se
+ * analiza con {@link RequestFieldParser#parse}. {@code tenantId} llega aparte, del token (ADR-018),
+ * no de {@code raw}.
  */
 public final class RegisterProtectedApplicationRequestMapper {
 

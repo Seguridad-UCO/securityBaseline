@@ -11,9 +11,7 @@ import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.secondary.persis
 
 import java.util.UUID;
 
-/**
- * Traducción de formato entre fila de almacenamiento y entidad de dominio, en ambas direcciones y nada más.
- */
+/** Traducción de formato entre fila de almacenamiento y entidad de dominio. */
 public final class ProtectedResourcePersistenceMapper {
 
     private ProtectedResourcePersistenceMapper() {
@@ -28,16 +26,5 @@ public final class ProtectedResourcePersistenceMapper {
                 new ResourceCode(entity.getResourceCode()),
                 new ActionCode(entity.getAction()),
                 entity.getRegisteredAt());
-    }
-
-    public static ProtectedResourceEntity toEntity(ProtectedResource resource) {
-        return new ProtectedResourceEntity(
-                resource.id().value().toString(),
-                resource.applicationId().value().toString(),
-                resource.tenantId().value(),
-                resource.applicationName().value(),
-                resource.code().value(),
-                resource.action().value(),
-                resource.registeredAt());
     }
 }

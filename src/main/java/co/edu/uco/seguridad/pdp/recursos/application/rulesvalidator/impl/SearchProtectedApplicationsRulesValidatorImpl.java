@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.pdp.recursos.application.rulesvalidator.impl;
 
+import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import co.edu.uco.seguridad.pdp.recursos.application.port.primary.dto.request.SearchProtectedApplicationsRequest;
 import co.edu.uco.seguridad.pdp.recursos.application.rulesvalidator.SearchProtectedApplicationsRulesValidator;
 import co.edu.uco.seguridad.pdp.tenants.application.rule.TenantMustBeActiveRule;
@@ -18,7 +19,7 @@ public final class SearchProtectedApplicationsRulesValidatorImpl
     private final TenantMustBeActiveRule tenantMustBeActive;
 
     public SearchProtectedApplicationsRulesValidatorImpl(TenantMustBeActiveRule tenantMustBeActive) {
-        this.tenantMustBeActive = Objects.requireNonNull(tenantMustBeActive, "se requiere regla de inquilino");
+        this.tenantMustBeActive = Objects.requireNonNull(tenantMustBeActive, RequiredArgumentMessages.TENANT_RULE);
     }
 
     @Override

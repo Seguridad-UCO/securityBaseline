@@ -1,9 +1,10 @@
 package co.edu.uco.seguridad.pdp.commons.exception;
 
+import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import java.util.Objects;
 
 /**
- * Raíz de todo fallo que el núcleo de PDP puede generar.
+ * Raíz de to do fallo que el núcleo de PDP puede generar.
  *
  * <p>El núcleo nunca conoce HTTP. Solo publica un {@code código} estable que el adaptador de punto de entrada
  * traduce una sola vez en una respuesta específica del transporte.</p>
@@ -13,8 +14,8 @@ public abstract class DomainException extends RuntimeException {
     private final String code;
 
     protected DomainException(String code, String message) {
-        super(Objects.requireNonNull(message, "se requiere mensaje de excepción de dominio"));
-        this.code = Objects.requireNonNull(code, "se requiere código de excepción de dominio");
+        super(Objects.requireNonNull(message, RequiredArgumentMessages.DOMAIN_EXCEPTION_MESSAGE));
+        this.code = Objects.requireNonNull(code, RequiredArgumentMessages.DOMAIN_EXCEPTION_CODE);
     }
 
     public String code() {

@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.pdp.recursos.application.port.primary.interactor.impl;
 
+import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import co.edu.uco.seguridad.pdp.recursos.application.port.primary.interactor.SearchProtectedApplicationsInteractor;
 import co.edu.uco.seguridad.pdp.recursos.application.port.primary.mapper.ProtectedResourceCatalogMapper;
 import co.edu.uco.seguridad.pdp.recursos.application.usecase.SearchProtectedApplicationsUseCase;
@@ -24,7 +25,7 @@ public final class SearchProtectedApplicationsInteractorImpl implements SearchPr
     private final SearchProtectedApplicationsUseCase useCase;
 
     public SearchProtectedApplicationsInteractorImpl(SearchProtectedApplicationsUseCase useCase) {
-        this.useCase = Objects.requireNonNull(useCase, "se requiere caso de uso de búsqueda");
+        this.useCase = Objects.requireNonNull(useCase, RequiredArgumentMessages.SEARCH_USE_CASE);
     }
 
     @Override

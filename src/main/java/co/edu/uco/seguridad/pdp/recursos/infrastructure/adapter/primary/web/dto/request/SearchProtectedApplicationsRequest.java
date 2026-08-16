@@ -11,15 +11,9 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
- * Nivel dos para la consulta de catálogo: filtros que se sabe que son analizables y una ventana que se
- * sabe que está acotada.
- *
- * <p>No incluye tenant: desde ADR-0003 el tenant de la consulta es el del token autenticado, así que
- * el mapper lo añade directamente al construir el {@code ProtectedApplicationCriteria}, sin pasar
- * por esta clase.</p>
- *
- * <p>La ventana tiene un solo setter para los cuatro parámetros porque paginación e intervalos son dos formas
- * de decir lo mismo, y su validez es una propiedad de la combinación, no de ningún valor individual.</p>
+ * Nivel dos para la consulta de catálogo: filtros ya analizados y una ventana acotada. Un solo setter
+ * para los cuatro parámetros de ventana porque paginación e intervalos son la misma cosa, y su validez
+ * depende de la combinación, no de un valor individual.
  */
 public final class SearchProtectedApplicationsRequest {
 

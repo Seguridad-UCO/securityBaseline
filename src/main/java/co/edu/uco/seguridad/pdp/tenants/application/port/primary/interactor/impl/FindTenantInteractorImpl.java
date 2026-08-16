@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.pdp.tenants.application.port.primary.interactor.impl;
 
+import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
 import co.edu.uco.seguridad.pdp.tenants.application.port.primary.dto.response.TenantResponse;
 import co.edu.uco.seguridad.pdp.tenants.application.port.primary.interactor.FindTenantInteractor;
@@ -13,7 +14,7 @@ public final class FindTenantInteractorImpl implements FindTenantInteractor {
     private final FindTenantUseCase useCase;
 
     public FindTenantInteractorImpl(FindTenantUseCase useCase) {
-        this.useCase = Objects.requireNonNull(useCase, "se requiere caso de uso de búsqueda");
+        this.useCase = Objects.requireNonNull(useCase, RequiredArgumentMessages.SEARCH_USE_CASE);
     }
 
     @Override

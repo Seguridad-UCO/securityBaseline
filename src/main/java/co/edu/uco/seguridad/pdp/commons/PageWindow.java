@@ -4,11 +4,8 @@ import co.edu.uco.seguridad.crosscutting.messages.ValueObjectMessages;
 import co.edu.uco.seguridad.pdp.commons.exception.InvalidPageWindowException;
 
 /**
- * Porción acotada de un conjunto de resultados, expresada como {@code offset + limit}.
- *
- * <p>Página/tamaño (criterio 18) e intervalos explícitos (criterio 19) son dos formas de nombrar la misma
- * ventana, por lo que ambas fábricas convergen aquí y cada búsqueda está acotada por construcción: no hay
- * forma de pedir al catálogo un número ilimitado de filas.</p>
+ * Porción acotada de un conjunto de resultados, expresada como {@code offset + limit}. Página/tamaño
+ * e intervalos explícitos convergen aquí: no hay forma de pedir un número ilimitado de filas.
  */
 public record PageWindow(int offset, int limit) {
 

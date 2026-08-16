@@ -5,14 +5,8 @@ import co.edu.uco.seguridad.pdp.commons.TenantId;
 import co.edu.uco.seguridad.pdp.commons.exception.BusinessRuleViolationException;
 
 /**
- * Generado por {@code ProtectedResourceMustBelongToApplicationTenantRule} y por nada más.
- *
- * <p>Protege contra un recurso adjunto a una aplicación propiedad de un inquilino diferente,
- * que en un punto de decisión de política significaría que un inquilino otorga acceso sobre datos de otro.</p>
- *
- * <p>Vive en {@code application} porque la regla que la lanza compara el comando contra la aplicación
- * ya registrada en otro módulo — una comparación entre dos agregados, no un invariante propio de un
- * único objeto de valor.</p>
+ * Generada por {@code ProtectedResourceMustBelongToApplicationTenantRule}: protege contra un recurso
+ * adjunto a una aplicación de otro inquilino.
  */
 public final class ResourceTenantMismatchException extends BusinessRuleViolationException {
 

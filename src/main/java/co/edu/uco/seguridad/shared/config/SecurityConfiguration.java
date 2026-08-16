@@ -26,7 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
- * Frontera PEP reactiva (ADR-0003). Único lugar del proyecto donde se decide qué ruta necesita un
+ * Frontera PEP reactiva (ADR-018). Único lugar del proyecto donde se decide qué ruta necesita un
  * token y cómo se valida ese token; ningún módulo de negocio importa una clase de Spring Security.
  */
 @Configuration
@@ -52,11 +52,8 @@ class SecurityConfiguration {
     }
 
     /**
-     * HMAC simétrico porque el emisor es propio (ver {@link JwtSecurityProperties}). El validador
-     * exige, además de expiración e emisor, que {@code sub} y {@code tenant} estén presentes: si
-     * faltaran, {@link co.edu.uco.seguridad.shared.security.PdpPrincipal#from} fallaría con una
-     * excepción de dominio en vez de un 401 — la frontera de seguridad debe rechazar un token
-     * incompleto antes de que llegue tan lejos.
+     * HMAC simétrico porque el emisor es propio. El validador exige {@code sub} y {@code tenant}
+     * presentes, para rechazar un token incompleto con 401 antes de que llegue al dominio.
      */
     @Bean
     ReactiveJwtDecoder jwtDecoder(JwtSecurityProperties properties) {

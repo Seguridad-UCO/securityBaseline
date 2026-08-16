@@ -7,17 +7,13 @@ import java.time.Instant;
  */
 public final class ProtectedResourceEntity {
 
-    private String id;
-    private String applicationId;
-    private String tenantId;
-    private String applicationName;
-    private String resourceCode;
-    private String action;
-    private Instant registeredAt;
-
-    public ProtectedResourceEntity() {
-        // Requerido por frameworks de persistencia.
-    }
+    private final String id;
+    private final String applicationId;
+    private final String tenantId;
+    private final String applicationName;
+    private final String resourceCode;
+    private final String action;
+    private final Instant registeredAt;
 
     public ProtectedResourceEntity(String id,
                                    String applicationId,
@@ -39,55 +35,27 @@ public final class ProtectedResourceEntity {
         return id;
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
     public String getApplicationId() {
         return applicationId;
-    }
-
-    public void setApplicationId(String applicationId) {
-        this.applicationId = applicationId;
     }
 
     public String getTenantId() {
         return tenantId;
     }
 
-    public void setTenantId(String tenantId) {
-        this.tenantId = tenantId;
-    }
-
     public String getApplicationName() {
         return applicationName;
-    }
-
-    public void setApplicationName(String applicationName) {
-        this.applicationName = applicationName;
     }
 
     public String getResourceCode() {
         return resourceCode;
     }
 
-    public void setResourceCode(String resourceCode) {
-        this.resourceCode = resourceCode;
-    }
-
     public String getAction() {
         return action;
     }
 
-    public void setAction(String action) {
-        this.action = action;
-    }
-
     public Instant getRegisteredAt() {
         return registeredAt;
-    }
-
-    public void setRegisteredAt(Instant registeredAt) {
-        this.registeredAt = registeredAt;
     }
 }

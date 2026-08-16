@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.pdp.aplicaciones.application.usecase.impl;
 
+import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import co.edu.uco.seguridad.pdp.aplicaciones.application.usecase.RegisterApplicationUseCase;
 import co.edu.uco.seguridad.pdp.aplicaciones.application.port.primary.dto.request.RegisterApplicationRequest;
 import co.edu.uco.seguridad.pdp.aplicaciones.application.port.primary.dto.response.RegisteredApplicationResponse;
@@ -21,11 +22,9 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Implementación de {@link RegisterApplicationUseCase}: valida reglas, construye la entidad,
- * la persiste y proyecta el resultado.
- *
- * <p>No contiene ninguna regla propia; la lógica de decisión está encapsulada en el
- * {@link RegisterApplicationRulesValidator} que se inyecta como dependencia.</p>
+ * Implementación de {@link RegisterApplicationUseCase}: valida reglas, construye la entidad, la
+ * persiste y proyecta el resultado. Sin reglas propias — la decisión vive en
+ * {@link RegisterApplicationRulesValidator}.
  */
 public final class RegisterApplicationUseCaseImpl implements RegisterApplicationUseCase {
 
@@ -42,11 +41,11 @@ public final class RegisterApplicationUseCaseImpl implements RegisterApplication
                                           DomainEventPublisher events,
                                           IdentifierGenerator identifiers,
                                           TimeProvider time) {
-        this.rules = Objects.requireNonNull(rules, "se requiere validador de reglas");
-        this.repository = Objects.requireNonNull(repository, "se requiere repositorio de aplicación");
-        this.events = Objects.requireNonNull(events, "se requiere publicador de eventos de dominio");
-        this.identifiers = Objects.requireNonNull(identifiers, "se requiere generador de identificadores");
-        this.time = Objects.requireNonNull(time, "se requiere proveedor de tiempo");
+        this.rules = Objects.requireNonNull(rules, RequiredArgumentMessages.RULES_VALIDATOR);
+        this.repository = Objects.requireNonNull(repository, RequiredArgumentMessages.APPLICATION_REPOSITORY);
+        this.events = Objects.requireNonNull(events, RequiredArgumentMessages.DOMAIN_EVENT_PUBLISHER);
+        this.identifiers = Objects.requireNonNull(identifiers, RequiredArgumentMessages.IDENTIFIER_GENERATOR);
+        this.time = Objects.requireNonNull(time, RequiredArgumentMessages.TIME_PROVIDER);
     }
 
     @Override

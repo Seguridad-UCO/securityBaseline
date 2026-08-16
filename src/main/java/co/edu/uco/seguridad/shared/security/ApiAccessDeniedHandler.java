@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.shared.security;
 
+import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import co.edu.uco.seguridad.crosscutting.messages.WebContractMessages;
 import tools.jackson.databind.ObjectMapper;
 import org.springframework.http.HttpStatus;
@@ -25,7 +26,7 @@ public final class ApiAccessDeniedHandler implements ServerAccessDeniedHandler {
     private final ObjectMapper mapper;
 
     public ApiAccessDeniedHandler(ObjectMapper mapper) {
-        this.mapper = Objects.requireNonNull(mapper, "se requiere ObjectMapper");
+        this.mapper = Objects.requireNonNull(mapper, RequiredArgumentMessages.OBJECT_MAPPER);
     }
 
     @Override

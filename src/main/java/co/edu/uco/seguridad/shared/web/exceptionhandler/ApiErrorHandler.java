@@ -21,16 +21,9 @@ import java.net.URI;
 import java.util.Locale;
 
 /**
- * El handler global de excepciones de la aplicación (adaptador primario/driving): el único lugar
- * donde un fallo se convierte en un estado HTTP (criterio 09). No hay ningún otro
- * {@code @RestControllerAdvice} en el proyecto — este es el único.
- *
- * <p>Los manejadores se declaran contra los dos tipos base ({@link InvalidValueException},
- * {@link BusinessRuleViolationException}) en lugar de contra cada excepción concreta, por lo que agregar
- * una regla nueva no necesita cambio aquí: la excepción ya lleva su propio {@code código} estable. El
- * estado se elige por significado — una solicitud malformada es 400, un registro repetido
- * ({@link ConflictBusinessRuleException}) es 409, cualquier cosa imprevista es un bare 500 cuyo detalle
- * es deliberadamente genérico, con la verdadera causa yendo al registro y no al cliente.</p>
+ * El único {@code @RestControllerAdvice} del proyecto (criterio 09). Los manejadores se declaran
+ * contra los dos tipos base ({@link InvalidValueException}, {@link BusinessRuleViolationException}),
+ * no contra cada excepción concreta, así que una regla nueva no necesita cambio aquí.
  */
 @RestControllerAdvice
 public class ApiErrorHandler {

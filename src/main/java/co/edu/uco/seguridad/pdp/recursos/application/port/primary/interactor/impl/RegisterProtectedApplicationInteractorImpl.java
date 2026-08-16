@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.pdp.recursos.application.port.primary.interactor.impl;
 
+import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import co.edu.uco.seguridad.pdp.recursos.application.port.primary.interactor.RegisterProtectedApplicationInteractor;
 import co.edu.uco.seguridad.pdp.recursos.application.port.primary.mapper.ProtectedResourceCatalogMapper;
 import co.edu.uco.seguridad.pdp.recursos.application.usecase.RegisterProtectedApplicationUseCase;
@@ -23,7 +24,7 @@ public final class RegisterProtectedApplicationInteractorImpl implements Registe
     private final RegisterProtectedApplicationUseCase useCase;
 
     public RegisterProtectedApplicationInteractorImpl(RegisterProtectedApplicationUseCase useCase) {
-        this.useCase = Objects.requireNonNull(useCase, "se requiere caso de uso de registro");
+        this.useCase = Objects.requireNonNull(useCase, RequiredArgumentMessages.REGISTER_USE_CASE);
     }
 
     @Override

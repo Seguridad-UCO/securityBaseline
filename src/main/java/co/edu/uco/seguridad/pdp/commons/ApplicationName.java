@@ -4,11 +4,8 @@ import co.edu.uco.seguridad.crosscutting.messages.ValueObjectMessages;
 import co.edu.uco.seguridad.pdp.commons.exception.InvalidApplicationNameException;
 
 /**
- * Nombre legible de una aplicación protegida, único por inquilino.
- *
- * <p>Vive en el núcleo compartido porque tanto {@code aplicaciones} (que posee el registro)
- * como {@code recursos} (que mantiene el modelo de lectura del catálogo) hablan del mismo concepto.
- * La comparación no distingue entre mayúsculas y minúsculas porque la unicidad es una regla funcional, no a nivel de bytes.</p>
+ * Nombre legible de una aplicación protegida, único por inquilino. Comparación sin distinguir
+ * mayúsculas: la unicidad es una regla funcional, no a nivel de bytes.
  */
 public record ApplicationName(String value) {
 
