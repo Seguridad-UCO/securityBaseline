@@ -51,7 +51,7 @@ public final class RequiredArgumentMessages {
     public static final String SURREALDB_NAMESPACE = "se requiere el namespace de SurrealDB";
     public static final String SURREALDB_DATABASE = "se requiere la database de SurrealDB";
     public static final String SURREALDB_USERNAME = "se requiere el usuario de SurrealDB";
-    public static final String SURREALDB_PASSWORD = "se requiere la contraseña de SurrealDB";
+    public static final String SURREALDB_SECRET = "se requiere la contraseña de SurrealDB";
     public static final String SURREALDB_URL = "se requiere la URL de SurrealDB (pdp.persistence.surrealdb.url)";
     public static final String OBJECT_MAPPER = "se requiere ObjectMapper";
 

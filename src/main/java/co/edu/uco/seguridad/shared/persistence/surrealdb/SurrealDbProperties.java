@@ -23,6 +23,6 @@ public record SurrealDbProperties(String url, String namespace, String database,
         Objects.requireNonNull(namespace, RequiredArgumentMessages.SURREALDB_NAMESPACE);
         Objects.requireNonNull(database, RequiredArgumentMessages.SURREALDB_DATABASE);
         Objects.requireNonNull(username, RequiredArgumentMessages.SURREALDB_USERNAME);
-        Objects.requireNonNull(password, RequiredArgumentMessages.SURREALDB_PASSWORD);
+        Objects.requireNonNull(password, RequiredArgumentMessages.SURREALDB_SECRET);
     }
 }
