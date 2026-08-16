@@ -7,18 +7,21 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import java.util.Objects;
 
 /**
- * El sujeto autenticado: quién es y de qué tenant, tomados del token, nunca del cuerpo ni la query
- * (ADR-018). {@code tenant} es un claim propio; reutiliza el constructor de {@link TenantId} para
- * que un claim inválido reporte el mismo error que un {@code TenantId} inválido en cualquier otro punto.
+ * El sujeto autenticado: quién es, de qué tenant y con qué token, tomados del token, nunca del
+ * cuerpo ni la query (ADR-018). {@code tenant} es un claim propio; reutiliza el constructor de
+ * {@link TenantId} para que un claim inválido reporte el mismo error que un {@code TenantId}
+ * inválido en cualquier otro punto. {@code tokenId} (jti) no se usa todavía — queda disponible para
+ * cuando exista revocación por Redis.
  */
-public record PdpPrincipal(TenantId tenantId, String subject) {
+public record PdpPrincipal(TenantId tenantId, String subject, String tokenId) {
 
     public PdpPrincipal {
         Objects.requireNonNull(tenantId, RequiredArgumentMessages.TENANT_ID);
         Objects.requireNonNull(subject, RequiredArgumentMessages.SUBJECT);
+        Objects.requireNonNull(tokenId, RequiredArgumentMessages.JWT_ID);
     }
 
     public static PdpPrincipal from(Jwt jwt) {
-        return new PdpPrincipal(new TenantId(jwt.getClaimAsString("tenant")), jwt.getSubject());
+        return new PdpPrincipal(new TenantId(jwt.getClaimAsString("tenant")), jwt.getSubject(), jwt.getId());
     }
 }
