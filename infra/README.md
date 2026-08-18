@@ -33,11 +33,19 @@ el mismo prefijo (`vm-pdp-surrealdb-sharedNSG`, etc.).
 | `kv-pdp-prod-mx` | Key Vault | Secretos de PROD (mexicocentral) — el nombre original `kv-pdp-prod` quedó tomado por un vault en soft-delete con purge protection (ver más abajo) |
 | `vm-pdp-surrealdb-prod` | VM (`Standard_B1s`) | SurrealDB dedicado de PROD (eastus2) — `20.110.4.89:8000` |
 
-### Vacíos — candidatos a borrar
+### Acceso — cómo dar permisos a alguien nuevo
 
-`rg-pdp-dev`, `rg-pdp-qa`, `rg-pdp-prod` (sin sufijo de versión) no tienen ningún recurso adentro —
-resto de una migración de región anterior a `-v2`/`-v3`/`-shared-v1`. Sin costo, pero ensucian
-cualquier búsqueda en el portal. Seguros de borrar cuando alguien confirme que nada los referencia.
+No se asignan roles persona por persona en cada resource group — eso es 3 asignaciones repetidas
+por cada alta y ninguna forma fácil de ver quién tiene qué. En vez de eso, un solo grupo de Entra ID,
+**`sg-pdp-securitybaseline`**, tiene `Contributor` en los tres resource groups del proyecto
+(`rg-pdp-dev-v2`, `rg-pdp-shared-v1`, `rg-pdp-prod-v3`). Dar acceso a alguien nuevo es agregarlo al
+grupo — nada de tocar roles de nuevo:
+
+```bash
+az ad group member add --group sg-pdp-securitybaseline --member-id <object-id-del-usuario>
+```
+
+Miembros actuales: Sebastian Suárez, David Alzate, Laura Agudelo (todos `@uco.net.co`).
 
 ### Cómo se relacionan (quién habla con quién)
 
