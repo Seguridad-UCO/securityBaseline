@@ -1,4 +1,67 @@
-# Infraestructura: Azure Key Vault y manejo de secretos
+# Infraestructura Azure
+
+## Inventario de recursos
+
+Todo lo que existe hoy, agrupado por resource group. `az resource list --resource-group <rg>` es la
+fuente de verdad — esta tabla es un snapshot, revisarla si algo no cuadra.
+
+### `rg-pdp-shared-v1` — compartido entre DEV y PROD (eastus2)
+
+| Recurso | Tipo | Para qué |
+|---|---|---|
+| `vm-pdp-surrealdb-shared` | VM (`Standard_B1s`) | SurrealDB de DEV — `20.242.47.139:8000` |
+| `vm-pdp-keycloak-shared` | VM (`Standard_B2s`) | Keycloak real, realm `pdp` (ADR-020) — `20.22.186.196:8080` |
+
+Cada VM trae su propio VNet, NSG, NIC, IP pública y disco — no listados aparte, se identifican por
+el mismo prefijo (`vm-pdp-surrealdb-sharedNSG`, etc.).
+
+### `rg-pdp-dev-v2` — DEV (eastus2)
+
+| Recurso | Tipo | Para qué |
+|---|---|---|
+| `app-pdp-dev` | App Service | API — `app-pdp-dev.azurewebsites.net` |
+| `asp-pdp-dev` | App Service Plan (B1) | Sostiene `app-pdp-dev` |
+| `kv-pdp-dev` | Key Vault | Secretos de DEV (`pdp-datasource-password`, `keycloak-*`) |
+| `pdpacrueco` | Container Registry (Basic) | **Compartido por los tres ambientes** — vive acá solo por dónde se creó primero |
+
+### `rg-pdp-prod-v3` — PROD (mixto: VM en eastus2, resto en mexicocentral)
+
+| Recurso | Tipo | Para qué |
+|---|---|---|
+| `app-pdp-prod` | App Service | API — `app-pdp-prod.azurewebsites.net` (mexicocentral) |
+| `asp-pdp-prod` | App Service Plan (B1) | Sostiene `app-pdp-prod` (mexicocentral) |
+| `kv-pdp-prod-mx` | Key Vault | Secretos de PROD (mexicocentral) — el nombre original `kv-pdp-prod` quedó tomado por un vault en soft-delete con purge protection (ver más abajo) |
+| `vm-pdp-surrealdb-prod` | VM (`Standard_B1s`) | SurrealDB dedicado de PROD (eastus2) — `20.110.4.89:8000` |
+
+### Acceso — cómo dar permisos a alguien nuevo
+
+No se asignan roles persona por persona en cada resource group — eso es 3 asignaciones repetidas
+por cada alta y ninguna forma fácil de ver quién tiene qué. En vez de eso, un solo grupo de Entra ID,
+**`sg-pdp-securitybaseline`**, tiene `Contributor` en los tres resource groups del proyecto
+(`rg-pdp-dev-v2`, `rg-pdp-shared-v1`, `rg-pdp-prod-v3`). Dar acceso a alguien nuevo es agregarlo al
+grupo — nada de tocar roles de nuevo:
+
+```bash
+az ad group member add --group sg-pdp-securitybaseline --member-id <object-id-del-usuario>
+```
+
+Miembros actuales: Sebastian Suárez, David Alzate, Laura Agudelo (todos `@uco.net.co`).
+
+### Cómo se relacionan (quién habla con quién)
+
+```text
+app-pdp-dev  ──JWKS──┐
+                     ├──► vm-pdp-keycloak-shared (Keycloak, realm pdp)
+app-pdp-prod ──JWKS──┘         NSG solo permite las IPs de salida de app-pdp-dev/app-pdp-prod
+
+app-pdp-dev  ──SurrealDB──► vm-pdp-surrealdb-shared
+app-pdp-prod ──SurrealDB──► vm-pdp-surrealdb-prod (instancia propia, aislada)
+
+kv-pdp-dev / kv-pdp-prod-mx: cada App Service lee sus secretos solo de su propio vault
+pdpacrueco: las tres imágenes de contenedor (dev y prod) se publican y se sirven desde acá
+```
+
+---
 
 ## Estado actual, sin adornos
 
