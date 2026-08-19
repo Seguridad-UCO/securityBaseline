@@ -28,7 +28,7 @@ public final class SurrealProtectedResourceSchemaInitializer implements Applicat
                         """
                         DEFINE TABLE IF NOT EXISTS %1$s SCHEMALESS;
                         DEFINE INDEX IF NOT EXISTS %2$s ON %1$s \
-                        COLUMNS applicationId, resourceCode, action UNIQUE;\
+                        COLUMNS applicationId, path, method UNIQUE;\
                         """.formatted(ProtectedResourceSchema.TABLE, ProtectedResourceSchema.INDEX_GRANT),
                         Map.of()))
                 .then()

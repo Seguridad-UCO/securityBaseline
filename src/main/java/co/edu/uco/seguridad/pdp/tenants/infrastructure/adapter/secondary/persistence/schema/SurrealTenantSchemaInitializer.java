@@ -38,9 +38,14 @@ public final class SurrealTenantSchemaInitializer implements ApplicationRunner {
                         "DEFINE TABLE IF NOT EXISTS %s SCHEMALESS;".formatted(TenantSchema.TABLE), Map.of()))
                 .thenMany(Flux.fromIterable(properties.seed().entrySet()))
                 .concatMap(entry -> client.execute(
-                        "UPSERT type::record('%s', $id) SET status = $status;".formatted(TenantSchema.TABLE),
-                        Map.of("id", entry.getKey(), "status", entry.getValue())))
+                        "UPSERT type::record('%s', $id) SET status = $status, name = $name;".formatted(TenantSchema.TABLE),
+                        Map.of("id", entry.getKey(), "status", entry.getValue(), "name", displayName(entry.getKey()))))
                 .then()
                 .block();
+    }
+
+    private static String displayName(String code) {
+        if ("universidad-uco".equals(code)) return "Universidad UCO";
+        return code.replace('-', ' ');
     }
 }

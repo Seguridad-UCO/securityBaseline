@@ -4,9 +4,13 @@ import co.edu.uco.seguridad.shared.security.ApiAccessDeniedHandler;
 import co.edu.uco.seguridad.shared.security.ApiAuthenticationEntryPoint;
 import co.edu.uco.seguridad.shared.security.CorsProperties;
 import co.edu.uco.seguridad.shared.security.JwtSecurityProperties;
+import co.edu.uco.seguridad.shared.security.KeycloakSessionProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.Primary;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
@@ -19,6 +23,14 @@ import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
 import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.context.WebSessionServerSecurityContextRepository;
+import org.springframework.security.web.server.csrf.CookieServerCsrfTokenRepository;
+import org.springframework.security.web.server.csrf.CsrfWebFilter;
+import org.springframework.security.web.server.csrf.ServerCsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.server.util.matcher.AndServerWebExchangeMatcher;
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
+import org.springframework.security.web.server.util.matcher.NegatedServerWebExchangeMatcher;
+import org.springframework.web.server.session.CookieWebSessionIdResolver;
 import org.springframework.util.StringUtils;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
@@ -28,6 +40,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import javax.crypto.spec.SecretKeySpec;
+import reactor.core.publisher.Mono;
 
 /**
  * Frontera PEP reactiva (ADR-018, ADR-020). Único lugar del proyecto donde se decide qué ruta
@@ -35,21 +48,33 @@ import javax.crypto.spec.SecretKeySpec;
  * Spring Security.
  */
 @Configuration
+@Profile("!keycloak")
 @EnableWebFluxSecurity
-@EnableConfigurationProperties({JwtSecurityProperties.class, CorsProperties.class})
+@EnableConfigurationProperties({JwtSecurityProperties.class, CorsProperties.class, KeycloakSessionProperties.class})
 class SecurityConfiguration {
 
     @Bean
-    SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http, ReactiveJwtDecoder jwtDecoder,
+    SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http, @Qualifier("jwtDecoder") ReactiveJwtDecoder jwtDecoder,
             ApiAuthenticationEntryPoint entryPoint, ApiAccessDeniedHandler accessDeniedHandler,
             CorsConfigurationSource corsConfigurationSource) {
+        CookieServerCsrfTokenRepository csrf = CookieServerCsrfTokenRepository.withHttpOnlyFalse();
+        csrf.setCookiePath("/");
         return http
-                .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .securityContextRepository(new WebSessionServerSecurityContextRepository())
+                .csrf(spec -> spec.csrfTokenRepository(csrf)
+                        // La SPA reenvía el valor crudo de XSRF-TOKEN como header. El handler
+                        // por defecto lo espera en formato XOR, por lo que rechaza la petición.
+                        .csrfTokenRequestHandler(new ServerCsrfTokenRequestAttributeHandler())
+                        .accessDeniedHandler(accessDeniedHandler)
+                        .requireCsrfProtectionMatcher(new AndServerWebExchangeMatcher(
+                                CsrfWebFilter.DEFAULT_CSRF_MATCHER,
+                                new NegatedServerWebExchangeMatcher(ServerWebExchangeMatchers.pathMatchers("/api/v1/auth/google")))))
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers(HttpMethod.GET, "/actuator/health", "/actuator/info").permitAll()
+                        .pathMatchers(HttpMethod.POST, "/api/v1/auth/google").permitAll()
                         .anyExchange().authenticated())
                 .exceptionHandling(exceptionHandling -> exceptionHandling
                         .authenticationEntryPoint(entryPoint)
@@ -70,11 +95,20 @@ class SecurityConfiguration {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(properties.allowedOrigins());
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-XSRF-TOKEN"));
+        configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    @Bean
+    CookieWebSessionIdResolver sessionIdResolver(KeycloakSessionProperties properties) {
+        CookieWebSessionIdResolver resolver = new CookieWebSessionIdResolver();
+        resolver.setCookieName("SECURITY_BASELINE_SESSION");
+        resolver.addCookieInitializer(cookie -> cookie.path("/").httpOnly(true).sameSite("Lax").secure(properties.secureCookies()));
+        return resolver;
     }
 
     /**
@@ -88,6 +122,7 @@ class SecurityConfiguration {
      * que una futura revocación (Redis) necesitará.
      */
     @Bean
+    @Primary
     ReactiveJwtDecoder jwtDecoder(JwtSecurityProperties properties) {
         NimbusReactiveJwtDecoder decoder = properties.usesJwks()
                 ? NimbusReactiveJwtDecoder.withJwkSetUri(properties.jwkSetUri()).build()
