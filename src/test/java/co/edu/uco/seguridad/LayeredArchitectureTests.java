@@ -10,7 +10,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 /**
  * Modulith ({@link ModulithStructureTests}) verifica fronteras ENTRE módulos — cortes verticales
- * (¿puede {@code recursos} importar {@code aplicaciones}?). No ve fronteras ENTRE CAPAS dentro de un
+ * (¿puede {@code resources} importar {@code applications}?). No ve fronteras ENTRE CAPAS dentro de un
  * mismo módulo, así que la regla de dependencias de Clean Architecture (ADR-0001: el dominio no
  * conoce el framework, la aplicación no conoce el adaptador) no tenía ningún enforcement automático
  * — se sostenía solo porque nadie la había violado todavía.

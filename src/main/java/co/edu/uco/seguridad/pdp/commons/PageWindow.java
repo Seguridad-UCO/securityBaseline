@@ -1,7 +1,7 @@
 package co.edu.uco.seguridad.pdp.commons;
 
-import co.edu.uco.seguridad.crosscutting.messages.ValueObjectMessages;
 import co.edu.uco.seguridad.pdp.commons.exception.InvalidPageWindowException;
+import co.edu.uco.seguridad.pdp.commons.message.ValueObjectMessages;
 
 /**
  * Porción acotada de un conjunto de resultados, expresada como {@code offset + limit}. Página/tamaño

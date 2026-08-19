@@ -1,6 +1,6 @@
 package co.edu.uco.seguridad.shared.event;
 
-import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
+import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import org.springframework.context.ApplicationEventPublisher;
 import reactor.core.publisher.Mono;
 

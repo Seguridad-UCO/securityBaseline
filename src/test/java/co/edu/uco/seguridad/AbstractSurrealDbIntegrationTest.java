@@ -9,7 +9,7 @@ import org.testcontainers.utility.DockerImageName;
 
 /**
  * Base para cualquier prueba que levante el contexto completo de Spring (ADR-0004): desde que
- * {@code TenantConfiguration}/{@code ApplicationsConfiguration}/{@code ResourcesConfiguration}
+ * {@code TenantsConfiguration}/{@code ApplicationsConfiguration}/{@code ResourcesConfiguration}
  * registran un {@code ApplicationRunner} que define el esquema en el arranque, el contexto ya no
  * levanta sin una SurrealDB real detrás.
  *

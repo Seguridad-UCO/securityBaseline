@@ -1,7 +1,7 @@
 package co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.secondary.persistence.schema;
 
-import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import co.edu.uco.seguridad.pdp.tenants.infrastructure.properties.TenantCatalogProperties;
+import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
