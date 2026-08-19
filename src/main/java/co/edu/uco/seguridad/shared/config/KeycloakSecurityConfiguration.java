@@ -22,6 +22,9 @@ import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.csrf.CookieServerCsrfTokenRepository;
 import org.springframework.security.web.server.csrf.ServerCsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.server.csrf.CsrfWebFilter;
+import org.springframework.security.web.server.util.matcher.AndServerWebExchangeMatcher;
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
@@ -46,7 +49,9 @@ class KeycloakSecurityConfiguration {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(spec -> spec.csrfTokenRepository(csrf)
                         .csrfTokenRequestHandler(new ServerCsrfTokenRequestAttributeHandler())
-                        .accessDeniedHandler(deniedHandler))
+                        .accessDeniedHandler(deniedHandler)
+                        .requireCsrfProtectionMatcher(new AndServerWebExchangeMatcher(
+                                CsrfWebFilter.DEFAULT_CSRF_MATCHER, bffSessionRequest())))
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
@@ -64,6 +69,12 @@ class KeycloakSecurityConfiguration {
                             .then(new RedirectServerAuthenticationSuccessHandler("http://localhost:5173").onAuthenticationSuccess(exchange, authentication));
                 }))
                 .build();
+    }
+
+    private static ServerWebExchangeMatcher bffSessionRequest() {
+        return exchange -> exchange.getRequest().getCookies().containsKey("SECURITY_BASELINE_SESSION")
+                ? ServerWebExchangeMatcher.MatchResult.match()
+                : ServerWebExchangeMatcher.MatchResult.notMatch();
     }
 
     private reactor.core.publisher.Mono<Void> saveLocalSession(org.springframework.web.server.ServerWebExchange exchange, LocalUserPrincipal user) {

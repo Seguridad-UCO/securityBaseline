@@ -28,6 +28,7 @@ import org.springframework.security.web.server.csrf.CookieServerCsrfTokenReposit
 import org.springframework.security.web.server.csrf.CsrfWebFilter;
 import org.springframework.security.web.server.csrf.ServerCsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.server.util.matcher.AndServerWebExchangeMatcher;
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
 import org.springframework.security.web.server.util.matcher.NegatedServerWebExchangeMatcher;
 import org.springframework.web.server.session.CookieWebSessionIdResolver;
@@ -68,6 +69,7 @@ class SecurityConfiguration {
                         .accessDeniedHandler(accessDeniedHandler)
                         .requireCsrfProtectionMatcher(new AndServerWebExchangeMatcher(
                                 CsrfWebFilter.DEFAULT_CSRF_MATCHER,
+                                bffSessionRequest(),
                                 new NegatedServerWebExchangeMatcher(ServerWebExchangeMatchers.pathMatchers("/api/v1/auth/google")))))
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
@@ -81,6 +83,13 @@ class SecurityConfiguration {
                         .accessDeniedHandler(accessDeniedHandler))
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtDecoder(jwtDecoder)))
                 .build();
+    }
+
+    /** CSRF solo aplica a la autenticación BFF por cookie, no a Bearer tokens servidor-a-servidor. */
+    private static ServerWebExchangeMatcher bffSessionRequest() {
+        return exchange -> exchange.getRequest().getCookies().containsKey("SECURITY_BASELINE_SESSION")
+                ? ServerWebExchangeMatcher.MatchResult.match()
+                : ServerWebExchangeMatcher.MatchResult.notMatch();
     }
 
     /**
