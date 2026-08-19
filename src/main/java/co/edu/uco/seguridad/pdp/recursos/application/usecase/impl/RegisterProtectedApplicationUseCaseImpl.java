@@ -26,7 +26,16 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.Objects;
 
-/** Orquesta E-1 como saga con compensación explícita por paso — ver ADR-019. */
+/**
+ * Orquesta E-1 como saga con compensación explícita por paso — ver ADR-019. Cruza el módulo
+ * {@code aplicaciones} (crea la aplicación, luego el recurso), así que no puede resolverse como una
+ * única transacción SurrealQL sin que este módulo conozca el esquema de persistencia de
+ * {@code aplicaciones} — exactamente el acoplamiento que Modulith impide en otro lado
+ * ({@code allowedDependencies} solo expone {@code interactor}/{@code dto}/{@code exception}, nunca
+ * el repositorio). La compensación registra su propio fallo y siempre repropaga el error original,
+ * nunca el de la compensación — perder ese rastro dejaría el registro huérfano sin ninguna pista de
+ * por qué.
+ */
 public final class RegisterProtectedApplicationUseCaseImpl implements RegisterProtectedApplicationUseCase {
 
     private static final Logger LOG = LoggerFactory.getLogger(RegisterProtectedApplicationUseCaseImpl.class);
@@ -47,9 +56,9 @@ public final class RegisterProtectedApplicationUseCaseImpl implements RegisterPr
                                                     IdentifierGenerator identifiers,
                                                     TimeProvider time) {
         this.registerApplicationInteractor = Objects.requireNonNull(
-                registerApplicationInteractor, "se requiere interactor de registro de aplicación");
+                registerApplicationInteractor, RequiredArgumentMessages.REGISTER_APPLICATION_INTERACTOR);
         this.removeApplicationInteractor = Objects.requireNonNull(
-                removeApplicationInteractor, "se requiere interactor de eliminación de aplicación");
+                removeApplicationInteractor, RequiredArgumentMessages.REMOVE_APPLICATION_INTERACTOR);
         this.rules = Objects.requireNonNull(rules, RequiredArgumentMessages.RULES_VALIDATOR);
         this.resources = Objects.requireNonNull(resources, RequiredArgumentMessages.PROTECTED_RESOURCE_REPOSITORY);
         this.events = Objects.requireNonNull(events, RequiredArgumentMessages.DOMAIN_EVENT_PUBLISHER);
@@ -61,7 +70,7 @@ public final class RegisterProtectedApplicationUseCaseImpl implements RegisterPr
     public Mono<ProtectedResource> execute(RegisterProtectedApplicationRequest dto) {
         return registerApplication(dto)
                 .flatMap(application -> registerResource(dto, application)
-                        .onErrorResume(error -> compensateApplication(application).then(Mono.error(error))))
+                        .onErrorResume(error -> compensateApplication(application, error).then(Mono.error(error))))
                 .transform(ReactiveLogContext.withContext(LOG, "protected_application.register"));
     }
 
@@ -78,7 +87,7 @@ public final class RegisterProtectedApplicationUseCaseImpl implements RegisterPr
                 .flatMap(outcome -> resources.save(outcome.entity())
                         .flatMap(saved -> publish(outcome.domainEvents())
                                 .thenReturn(saved)
-                                .onErrorResume(error -> compensateResource(saved).then(Mono.error(error)))));
+                                .onErrorResume(error -> compensateResource(saved, error).then(Mono.error(error)))));
     }
 
     private AggregateRoot<ProtectedResource, ProtectedResourceRegistered> buildResource(
@@ -97,11 +106,29 @@ public final class RegisterProtectedApplicationUseCaseImpl implements RegisterPr
         return Flux.fromIterable(domainEvents).concatMap(events::publish).then();
     }
 
-    private Mono<Void> compensateResource(ProtectedResource saved) {
-        return resources.deleteById(saved.id());
+    /**
+     * {@code originalError} es lo que el cliente termina viendo — la compensación nunca lo
+     * reemplaza. Si la compensación misma falla, ese segundo error solo se registra: propagarlo
+     * ocultaría la causa real (por ejemplo "recurso duplicado") detrás de un fallo de limpieza, y el
+     * cliente no puede hacer nada con "no se pudo compensar" que no pueda hacer con la causa real.
+     */
+    private Mono<Void> compensateResource(ProtectedResource saved, Throwable originalError) {
+        return resources.deleteById(saved.id())
+                .onErrorResume(compensationError -> {
+                    LOG.error("no se pudo compensar el recurso protegido {} tras fallo previo ({}) — queda huérfano "
+                                    + "en SurrealDB, requiere limpieza manual",
+                            saved.id(), originalError.toString(), compensationError);
+                    return Mono.empty();
+                });
     }
 
-    private Mono<Void> compensateApplication(RegisteredApplicationResponse application) {
-        return removeApplicationInteractor.execute(application.id());
+    private Mono<Void> compensateApplication(RegisteredApplicationResponse application, Throwable originalError) {
+        return removeApplicationInteractor.execute(application.id())
+                .onErrorResume(compensationError -> {
+                    LOG.error("no se pudo compensar la aplicación {} tras fallo previo ({}) — queda huérfana en "
+                                    + "SurrealDB, requiere limpieza manual",
+                            application.id(), originalError.toString(), compensationError);
+                    return Mono.empty();
+                });
     }
 }

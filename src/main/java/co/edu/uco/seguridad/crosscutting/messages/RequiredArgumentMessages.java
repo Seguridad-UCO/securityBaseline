@@ -41,6 +41,8 @@ public final class RequiredArgumentMessages {
     public static final String REGISTER_USE_CASE = "se requiere caso de uso de registro";
     public static final String SEARCH_USE_CASE = "se requiere caso de uso de búsqueda";
     public static final String REMOVE_USE_CASE = "se requiere caso de uso de eliminación";
+    public static final String REGISTER_APPLICATION_INTERACTOR = "se requiere interactor de registro de aplicación";
+    public static final String REMOVE_APPLICATION_INTERACTOR = "se requiere interactor de eliminación de aplicación";
     public static final String RESERVED_NAMES = "se requieren nombres reservados";
     public static final String TENANT_CATALOG = "se requiere el catálogo de tenants";
 

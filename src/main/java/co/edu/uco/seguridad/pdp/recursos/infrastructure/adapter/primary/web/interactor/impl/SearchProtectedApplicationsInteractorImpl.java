@@ -1,11 +1,11 @@
-package co.edu.uco.seguridad.pdp.recursos.application.port.primary.interactor.impl;
+package co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.interactor.impl;
 
 import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
-import co.edu.uco.seguridad.pdp.recursos.application.port.primary.interactor.SearchProtectedApplicationsInteractor;
 import co.edu.uco.seguridad.pdp.recursos.application.port.primary.mapper.ProtectedResourceCatalogMapper;
 import co.edu.uco.seguridad.pdp.recursos.application.usecase.SearchProtectedApplicationsUseCase;
 import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.dto.request.raw.SearchProtectedApplicationsRawRequest;
 import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.dto.response.ProtectedApplicationResponse;
+import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.interactor.SearchProtectedApplicationsInteractor;
 import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.mapper.ProtectedApplicationResponseMapper;
 import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.mapper.SearchProtectedApplicationsRequestMapper;
 import co.edu.uco.seguridad.shared.security.SecurityContext;
