@@ -21,7 +21,7 @@ public final class ProtectedResourceMustBeUniqueRuleImpl implements ProtectedRes
     @Override
     public Mono<Void> execute(ProtectedResourceRegistration registration) {
         RegisterProtectedApplicationRequest dto = registration.dto();
-        return repository.existsGrant(registration.application().id(), dto.resourceCode(), dto.action())
+        return repository.existsGrant(dto.tenantId(), registration.application().id(), dto.resourceCode(), dto.action())
                 .filter(Boolean::booleanValue)
                 .flatMap(exists -> Mono.<Void>error(
                         new DuplicateProtectedResourceException(dto.resourceCode(), dto.action())));

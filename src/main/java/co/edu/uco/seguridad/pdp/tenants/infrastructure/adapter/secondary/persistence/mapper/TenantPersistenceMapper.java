@@ -1,8 +1,8 @@
 package co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.secondary.persistence.mapper;
 
 import co.edu.uco.seguridad.pdp.commons.TenantId;
-import co.edu.uco.seguridad.pdp.tenants.TenantStatus;
 import co.edu.uco.seguridad.pdp.tenants.domain.Tenant;
+import co.edu.uco.seguridad.pdp.tenants.domain.TenantStatus;
 import co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.secondary.persistence.entity.TenantEntity;
 
 /**

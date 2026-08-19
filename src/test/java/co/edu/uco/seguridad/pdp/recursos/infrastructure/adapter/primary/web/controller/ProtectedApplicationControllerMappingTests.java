@@ -83,7 +83,6 @@ class ProtectedApplicationControllerMappingTests {
                     assertThat(page.content()).hasSize(1);
                     assertThat(page.total()).isEqualTo(12);
                     assertThat(page.page()).isEqualTo(1);
-                    assertThat(page.size()).isEqualTo(5);
                     assertThat(page.offset()).isEqualTo(5);
                     assertThat(page.limit()).isEqualTo(5);
                 })

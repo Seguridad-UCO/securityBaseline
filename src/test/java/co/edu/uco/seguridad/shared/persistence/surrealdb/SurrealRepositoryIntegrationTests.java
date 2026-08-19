@@ -15,8 +15,8 @@ import co.edu.uco.seguridad.pdp.recursos.domain.ProtectedApplicationCriteria;
 import co.edu.uco.seguridad.pdp.recursos.domain.ProtectedResource;
 import co.edu.uco.seguridad.pdp.recursos.domain.ResourceCode;
 import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.secondary.persistence.repository.SurrealProtectedResourceRepository;
-import co.edu.uco.seguridad.pdp.tenants.TenantStatus;
 import co.edu.uco.seguridad.pdp.tenants.application.port.secondary.repository.TenantRepository;
+import co.edu.uco.seguridad.pdp.tenants.domain.TenantStatus;
 import co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.secondary.persistence.repository.SurrealTenantRepository;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -135,14 +135,20 @@ class SurrealRepositoryIntegrationTests extends AbstractSurrealDbIntegrationTest
                 new ActionCode("consultar"),
                 Instant.now());
 
-        StepVerifier.create(repository.existsGrant(applicationId, resource.code(), resource.action()))
+        StepVerifier.create(repository.existsGrant(tenant, applicationId, resource.code(), resource.action()))
                 .expectNext(false)
                 .verifyComplete();
 
         StepVerifier.create(repository.save(resource)).expectNext(resource).verifyComplete();
 
-        StepVerifier.create(repository.existsGrant(applicationId, resource.code(), resource.action()))
+        StepVerifier.create(repository.existsGrant(tenant, applicationId, resource.code(), resource.action()))
                 .expectNext(true)
+                .verifyComplete();
+
+        StepVerifier.create(repository.existsGrant(
+                        new TenantId("another-tenant"), applicationId, resource.code(), resource.action()))
+                .as("the same applicationId/resourceCode/action must not leak across tenants")
+                .expectNext(false)
                 .verifyComplete();
 
         StepVerifier.create(repository.findBy(

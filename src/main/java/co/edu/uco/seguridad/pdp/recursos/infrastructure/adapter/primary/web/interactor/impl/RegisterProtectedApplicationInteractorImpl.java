@@ -1,7 +1,6 @@
 package co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.interactor.impl;
 
 import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
-import co.edu.uco.seguridad.pdp.recursos.application.port.primary.mapper.ProtectedResourceCatalogMapper;
 import co.edu.uco.seguridad.pdp.recursos.application.usecase.RegisterProtectedApplicationUseCase;
 import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.dto.request.raw.RegisterProtectedApplicationRawRequest;
 import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.dto.response.ProtectedApplicationResponse;
@@ -32,7 +31,6 @@ public final class RegisterProtectedApplicationInteractorImpl implements Registe
         return SecurityContext.currentPrincipal()
                 .map(principal -> RegisterProtectedApplicationRequestMapper.toRequest(raw, principal.tenantId()))
                 .flatMap(useCase::execute)
-                .map(ProtectedResourceCatalogMapper::toResponse)
                 .map(ProtectedApplicationResponseMapper::toResponse);
     }
 }

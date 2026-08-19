@@ -4,6 +4,7 @@ import co.edu.uco.seguridad.pdp.commons.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.PageWindow;
 import co.edu.uco.seguridad.pdp.commons.ResourceId;
 import co.edu.uco.seguridad.pdp.commons.ResultPage;
+import co.edu.uco.seguridad.pdp.commons.TenantId;
 import co.edu.uco.seguridad.pdp.recursos.application.port.secondary.repository.ProtectedResourceRepository;
 import co.edu.uco.seguridad.pdp.recursos.domain.ActionCode;
 import co.edu.uco.seguridad.pdp.recursos.domain.ProtectedApplicationCriteria;
@@ -26,9 +27,11 @@ final class FakeProtectedResourceRepository implements ProtectedResourceReposito
     private final Map<String, ProtectedResource> rows = new ConcurrentHashMap<>();
 
     @Override
-    public Mono<Boolean> existsGrant(ApplicationId applicationId, ResourceCode resourceCode, ActionCode action) {
+    public Mono<Boolean> existsGrant(TenantId tenantId, ApplicationId applicationId, ResourceCode resourceCode,
+            ActionCode action) {
         return Mono.fromSupplier(() -> rows.values().stream()
-                .anyMatch(resource -> resource.isSameGrantAs(applicationId, resourceCode, action)));
+                .anyMatch(resource -> resource.belongsTo(tenantId)
+                        && resource.isSameGrantAs(applicationId, resourceCode, action)));
     }
 
     @Override

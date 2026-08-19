@@ -1,7 +1,6 @@
 package co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.interactor.impl;
 
 import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
-import co.edu.uco.seguridad.pdp.recursos.application.port.primary.mapper.ProtectedResourceCatalogMapper;
 import co.edu.uco.seguridad.pdp.recursos.application.usecase.SearchProtectedApplicationsUseCase;
 import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.dto.request.raw.SearchProtectedApplicationsRawRequest;
 import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.dto.response.ProtectedApplicationResponse;
@@ -34,7 +33,6 @@ public final class SearchProtectedApplicationsInteractorImpl implements SearchPr
                 .map(principal -> SearchProtectedApplicationsRequestMapper.toRequest(
                         SearchProtectedApplicationsRequestMapper.toValidatedRequest(raw), principal.tenantId()))
                 .flatMap(useCase::execute)
-                .map(page -> page.map(ProtectedResourceCatalogMapper::toResponse))
                 .map(ProtectedApplicationResponseMapper::toPageResponse);
     }
 }

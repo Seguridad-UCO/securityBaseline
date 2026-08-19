@@ -1,13 +1,13 @@
 package co.edu.uco.seguridad.pdp.tenants.application.rule;
 
 import co.edu.uco.seguridad.pdp.commons.TenantId;
-import co.edu.uco.seguridad.pdp.tenants.TenantStatus;
 import co.edu.uco.seguridad.pdp.tenants.application.exception.TenantNotActiveException;
 import co.edu.uco.seguridad.pdp.tenants.application.exception.TenantNotFoundException;
 import co.edu.uco.seguridad.pdp.tenants.application.port.secondary.repository.TenantRepository;
 import co.edu.uco.seguridad.pdp.tenants.application.rule.impl.TenantMustBeActiveRuleImpl;
 import co.edu.uco.seguridad.pdp.tenants.application.rule.impl.TenantStatusMustBeActiveRuleImpl;
 import co.edu.uco.seguridad.pdp.tenants.domain.Tenant;
+import co.edu.uco.seguridad.pdp.tenants.domain.TenantStatus;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
