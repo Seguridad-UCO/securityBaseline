@@ -30,6 +30,8 @@ class PlatformAdministrationServiceImplTests {
     void rejects_invalid_resource_methods_paths_and_tenant_inputs_before_persistence() {
         assertThatThrownBy(() -> service.createResource("universidad-uco", "app", "empleados", "GET"))
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("path");
+        assertThatThrownBy(() -> service.createResource("universidad-uco", "app", "/empleados//historial", "GET"))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("path");
         assertThatThrownBy(() -> service.createResource("universidad-uco", "app", "/empleados", "TRACE").block())
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Método HTTP");
         assertThatThrownBy(() -> service.createTenant("MAYUSCULAS", "Tenant").block())
@@ -66,16 +68,16 @@ class PlatformAdministrationServiceImplTests {
                 .containsExactly("app-1", "Gestión horaria", "https://horarios.uco.edu");
 
         var existingApplication = mapper.readTree("[{\"id\":\"application:`app-1`\"}]");
-        var resource = mapper.readTree("[{\"id\":\"protected_resource:`resource-1`\",\"applicationId\":\"app-1\",\"path\":\"/empleados\",\"method\":\"GET\",\"registeredAt\":\"2026-08-19T00:00:00Z\"}]");
+        var resource = mapper.readTree("[{\"id\":\"protected_resource:`resource-1`\",\"applicationId\":\"app-1\",\"path\":\"/empleados/{employeeId}/historial/\",\"method\":\"GET\",\"registeredAt\":\"2026-08-19T00:00:00Z\"}]");
         SurrealDbClient resourceDb = mock(SurrealDbClient.class);
         when(resourceDb.execute(anyString(), anyMap())).thenReturn(
                 Mono.just(List.of(existingApplication)), Mono.just(List.of(empty)), Mono.just(List.of(empty, resource)));
 
         var createdResource = new PlatformAdministrationServiceImpl(resourceDb)
-                .createResource("universidad-uco", "app-1", "/empleados", "get").block();
+                .createResource("universidad-uco", "app-1", "/empleados/{employeeId}/historial/", "get").block();
 
         assertThat(createdResource).extracting("id", "applicationId", "path", "method")
-                .containsExactly("resource-1", "app-1", "/empleados", "GET");
+                .containsExactly("resource-1", "app-1", "/empleados/{employeeId}/historial/", "GET");
 
         var tenant = mapper.readTree("[{\"id\":\"tenant:estudiantes-uco\",\"name\":\"Estudiantes UCO\",\"status\":\"ACTIVE\"}]");
         SurrealDbClient tenantDb = mock(SurrealDbClient.class);

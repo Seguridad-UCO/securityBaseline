@@ -65,5 +65,22 @@ public final class PlatformAdministrationServiceImpl implements PlatformAdminist
     private UserView user(JsonNode x){return new UserView(id(x),x.path("email").asString(),x.path("name").asString(),"federado",x.path("tenantId").asString(),x.path("createdAt").asString(),x.path("lastLoginAt").asString());}
     private static void validName(String value){if(value==null||value.trim().length()<3)throw new IllegalArgumentException("El nombre debe tener al menos 3 caracteres.");}
     private static void validUrl(String value){try{URI uri=URI.create(value);if(uri.getScheme()==null||uri.getHost()==null)throw new IllegalArgumentException();}catch(Exception e){throw new IllegalArgumentException("La URL base debe ser absoluta.");}}
-    private static void validPath(String path){if(path==null||!path.matches("/(?:[A-Za-z0-9._~{}-]+/?)*"))throw new IllegalArgumentException("El path debe iniciar con / y no incluir query ni fragment.");}
+    private static void validPath(String path) {
+        if (path == null || path.isEmpty() || path.charAt(0) != '/') invalidPath();
+        for (int index = 1; index < path.length(); index++) {
+            char character = path.charAt(index);
+            if (character == '/') {
+                if (index > 1 && path.charAt(index - 1) == '/') invalidPath();
+            } else if (!isPathCharacter(character)) {
+                invalidPath();
+            }
+        }
+    }
+    private static boolean isPathCharacter(char character) {
+        return character >= 'A' && character <= 'Z' || character >= 'a' && character <= 'z'
+                || character >= '0' && character <= '9' || "._~{}-".indexOf(character) >= 0;
+    }
+    private static void invalidPath() {
+        throw new IllegalArgumentException("El path debe iniciar con / y no incluir query ni fragment.");
+    }
 }
