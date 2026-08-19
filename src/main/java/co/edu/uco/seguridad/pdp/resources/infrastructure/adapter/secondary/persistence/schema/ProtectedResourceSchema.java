@@ -7,7 +7,7 @@ package co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.pers
 public final class ProtectedResourceSchema {
 
     public static final String TABLE = "protected_resource";
-    public static final String INDEX_GRANT = "protected_resource_grant";
+    public static final String INDEX_GRANT = "protected_resource_endpoint";
 
     private ProtectedResourceSchema() {
     }

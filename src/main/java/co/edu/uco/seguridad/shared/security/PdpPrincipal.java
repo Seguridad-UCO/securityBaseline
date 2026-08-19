@@ -3,6 +3,7 @@ package co.edu.uco.seguridad.shared.security;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 
 import java.util.Objects;
 
@@ -23,5 +24,12 @@ public record PdpPrincipal(TenantId tenantId, String subject, String tokenId) {
 
     public static PdpPrincipal from(Jwt jwt) {
         return new PdpPrincipal(new TenantId(jwt.getClaimAsString("tenant")), jwt.getSubject(), jwt.getId());
+    }
+
+    /** La sesión BFF usa el ID token validado por el cliente OIDC de Spring; Keycloak debe emitir tenant y sid. */
+    public static PdpPrincipal from(OidcUser user) {
+        String sessionId = user.getClaimAsString("sid");
+        if (sessionId == null || sessionId.isBlank()) sessionId = user.getClaimAsString("jti");
+        return new PdpPrincipal(new TenantId(user.getClaimAsString("tenant")), user.getSubject(), sessionId);
     }
 }
