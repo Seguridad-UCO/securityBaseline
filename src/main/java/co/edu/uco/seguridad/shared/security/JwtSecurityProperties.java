@@ -9,7 +9,7 @@ import java.util.Objects;
  * Configuración del validador JWT (ADR-020). Dos modos, exactamente uno debe estar configurado:
  * {@code secret} (HMAC, el emisor propio original — sigue vivo solo para pruebas/desarrollo local
  * sin depender de un Keycloak real) o {@code jwkSetUri} (RS256 contra las llaves públicas de
- * Keycloak, usado en todo ambiente desplegado). {@code jwtDecoder()} en {@code SecurityConfiguration}
+ * Keycloak, usado en to-do ambiente desplegado). {@code jwtDecoder()} en {@code SecurityConfiguration}
  * decide cuál construir.
  *
  * @param secret    clave HMAC compartida, mínimo 256 bits (32 caracteres) para HS256 — modo prueba

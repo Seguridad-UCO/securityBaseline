@@ -19,12 +19,12 @@ public final class ProtectedResourcePersistenceMapper {
 
     public static ProtectedResource toDomain(ProtectedResourceEntity entity) {
         return new ProtectedResource(
-                new ResourceId(UUID.fromString(entity.getId())),
-                new ApplicationId(UUID.fromString(entity.getApplicationId())),
-                new TenantId(entity.getTenantId()),
-                new ApplicationName(entity.getApplicationName()),
-                new ResourceCode(entity.getResourceCode()),
-                new ActionCode(entity.getAction()),
-                entity.getRegisteredAt());
+                new ResourceId(UUID.fromString(entity.id())),
+                new ApplicationId(UUID.fromString(entity.applicationId())),
+                new TenantId(entity.tenantId()),
+                new ApplicationName(entity.applicationName()),
+                new ResourceCode(entity.resourceCode()),
+                new ActionCode(entity.action()),
+                entity.registeredAt());
     }
 }

@@ -66,12 +66,12 @@ public final class TestJwtSupport {
         return signedTokenExpiringIn(tenant, subject, -60, true, true);
     }
 
-    /** Válido en todo lo demás, pero sin el claim {@code aud} — para probar el rechazo de audiencia. */
+    /** Válido en to-do lo demás, pero sin el claim {@code aud} — para probar el rechazo de audiencia. */
     public static String tokenWithoutAudience(String tenant, String subject) {
         return signedTokenExpiringIn(tenant, subject, 300, false, true);
     }
 
-    /** Válido en todo lo demás, pero sin el claim {@code jti} — para probar el rechazo de identificador. */
+    /** Válido en to-do lo demás, pero sin el claim {@code jti} — para probar el rechazo de identificador. */
     public static String tokenWithoutJti(String tenant, String subject) {
         return signedTokenExpiringIn(tenant, subject, 300, true, false);
     }

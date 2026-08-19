@@ -77,9 +77,19 @@ class ValueObjectTests {
         }
 
         @Test
+        void is_never_the_same_as_a_null_name() {
+            assertThat(new ApplicationName("gestion-academica").sameAs(null)).isFalse();
+        }
+
+        @Test
         void matches_fragments_case_insensitively() {
             assertThat(new ApplicationName("gestion-academica").contains("ACADEMICA")).isTrue();
             assertThat(new ApplicationName("gestion-academica").contains("nomina")).isFalse();
+        }
+
+        @Test
+        void never_matches_a_null_fragment() {
+            assertThat(new ApplicationName("gestion-academica").contains(null)).isFalse();
         }
     }
 
@@ -97,6 +107,11 @@ class ValueObjectTests {
         void parse_well_formed_text_and_reject_the_rest() {
             UUID value = UUID.randomUUID();
             assertThat(ApplicationId.of(value.toString()).value()).isEqualTo(value);
+            assertThat(ResourceId.of(value.toString()).value()).isEqualTo(value);
+            assertThatThrownBy(() -> ApplicationId.of("not-a-uuid"))
+                    .isInstanceOf(InvalidIdentifierException.class)
+                    .extracting(error -> ((InvalidIdentifierException) error).code())
+                    .isEqualTo("INVALID_APPLICATION_ID");
             assertThatThrownBy(() -> ResourceId.of("not-a-uuid"))
                     .isInstanceOf(InvalidIdentifierException.class);
         }

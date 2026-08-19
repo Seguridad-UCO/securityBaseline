@@ -32,10 +32,6 @@ public final class RequestFieldParser {
         }
     }
 
-    public static <T> Optional<T> parseOptional(String field, String value, Function<String, T> factory) {
-        return optional(value).map(present -> parse(field, present, factory));
-    }
-
     public static int parseInt(String field, String value) {
         try {
             return Integer.parseInt(requirePresent(field, value));
