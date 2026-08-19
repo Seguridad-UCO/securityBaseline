@@ -1,7 +1,7 @@
 package co.edu.uco.seguridad.pdp.commons;
 
-import co.edu.uco.seguridad.crosscutting.messages.ValueObjectMessages;
 import co.edu.uco.seguridad.pdp.commons.exception.InvalidIdentifierException;
+import co.edu.uco.seguridad.pdp.commons.message.ValueObjectMessages;
 
 import java.util.Objects;
 import java.util.UUID;

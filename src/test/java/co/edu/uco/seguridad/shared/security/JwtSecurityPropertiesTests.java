@@ -1,6 +1,6 @@
 package co.edu.uco.seguridad.shared.security;
 
-import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
+import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

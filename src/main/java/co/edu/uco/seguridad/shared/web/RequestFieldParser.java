@@ -1,9 +1,9 @@
 package co.edu.uco.seguridad.shared.web;
 
-import co.edu.uco.seguridad.crosscutting.messages.WebContractMessages;
 import co.edu.uco.seguridad.pdp.commons.exception.InvalidValueException;
 import co.edu.uco.seguridad.shared.web.exception.MalformedRequestFieldException;
 import co.edu.uco.seguridad.shared.web.exception.MissingRequestFieldException;
+import co.edu.uco.seguridad.shared.web.message.WebContractMessages;
 
 import java.util.Optional;
 import java.util.function.Function;

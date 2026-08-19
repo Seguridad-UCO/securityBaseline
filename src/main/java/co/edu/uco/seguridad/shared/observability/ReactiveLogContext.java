@@ -1,9 +1,9 @@
 package co.edu.uco.seguridad.shared.observability;
 
+import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 import reactor.core.publisher.Mono;
-import java.util.function.Function;
 
 /** Puente de Reactor Context a MDC solo mientras se ejecuta una declaración de registro. */
 public final class ReactiveLogContext {

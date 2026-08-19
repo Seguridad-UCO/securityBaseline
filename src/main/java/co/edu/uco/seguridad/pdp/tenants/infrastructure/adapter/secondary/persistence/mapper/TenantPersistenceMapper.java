@@ -17,8 +17,4 @@ public final class TenantPersistenceMapper {
     public static Tenant toDomain(TenantEntity entity) {
         return new Tenant(new TenantId(entity.getId()), TenantStatus.valueOf(entity.getStatus()));
     }
-
-    public static TenantEntity toEntity(Tenant tenant) {
-        return new TenantEntity(tenant.id().value(), tenant.status().name());
-    }
 }

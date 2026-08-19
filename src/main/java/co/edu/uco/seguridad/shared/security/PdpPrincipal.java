@@ -1,7 +1,7 @@
 package co.edu.uco.seguridad.shared.security;
 
-import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
+import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.util.Objects;

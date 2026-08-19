@@ -1,6 +1,6 @@
 package co.edu.uco.seguridad.shared.persistence.surrealdb;
 
-import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
+import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;

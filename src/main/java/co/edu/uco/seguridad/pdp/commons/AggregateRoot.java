@@ -1,7 +1,7 @@
 package co.edu.uco.seguridad.pdp.commons;
 
-import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.event.DomainEvent;
+import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.List;
 import java.util.Objects;

@@ -1,7 +1,7 @@
 package co.edu.uco.seguridad.pdp.commons;
 
-import co.edu.uco.seguridad.crosscutting.messages.ValueObjectMessages;
 import co.edu.uco.seguridad.pdp.commons.exception.InvalidApplicationNameException;
+import co.edu.uco.seguridad.pdp.commons.message.ValueObjectMessages;
 
 /**
  * Nombre legible de una aplicación protegida, único por inquilino. Comparación sin distinguir

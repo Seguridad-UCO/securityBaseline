@@ -1,12 +1,12 @@
 package co.edu.uco.seguridad.shared.web.exceptionhandler;
 
-import co.edu.uco.seguridad.crosscutting.messages.WebContractMessages;
 import co.edu.uco.seguridad.pdp.commons.exception.BusinessRuleViolationException;
 import co.edu.uco.seguridad.pdp.commons.exception.ConflictBusinessRuleException;
 import co.edu.uco.seguridad.pdp.commons.exception.InvalidValueException;
 import co.edu.uco.seguridad.shared.web.CorrelationWebFilter;
 import co.edu.uco.seguridad.shared.web.RequestContext;
 import co.edu.uco.seguridad.shared.web.exception.RequestContractException;
+import co.edu.uco.seguridad.shared.web.message.WebContractMessages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;

@@ -1,12 +1,12 @@
 package co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.secondary.persistence.repository;
 
-import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
 import co.edu.uco.seguridad.pdp.tenants.application.port.secondary.repository.TenantRepository;
 import co.edu.uco.seguridad.pdp.tenants.domain.Tenant;
 import co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.secondary.persistence.entity.TenantEntity;
 import co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.secondary.persistence.mapper.TenantPersistenceMapper;
 import co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.secondary.persistence.schema.TenantSchema;
+import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealRecordId;
 import reactor.core.publisher.Mono;

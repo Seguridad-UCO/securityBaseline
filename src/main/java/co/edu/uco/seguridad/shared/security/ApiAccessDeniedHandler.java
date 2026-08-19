@@ -1,8 +1,7 @@
 package co.edu.uco.seguridad.shared.security;
 
-import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
-import co.edu.uco.seguridad.crosscutting.messages.WebContractMessages;
-import tools.jackson.databind.ObjectMapper;
+import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
+import co.edu.uco.seguridad.shared.web.message.WebContractMessages;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
@@ -11,6 +10,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.server.authorization.ServerAccessDeniedHandler;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+import tools.jackson.databind.ObjectMapper;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
