@@ -2,10 +2,10 @@ package co.edu.uco.seguridad.pdp.recursos.infrastructure.config;
 
 import co.edu.uco.seguridad.pdp.aplicaciones.application.port.primary.interactor.RegisterApplicationInteractor;
 import co.edu.uco.seguridad.pdp.aplicaciones.application.port.primary.interactor.RemoveApplicationInteractor;
-import co.edu.uco.seguridad.pdp.recursos.application.port.primary.interactor.RegisterProtectedApplicationInteractor;
-import co.edu.uco.seguridad.pdp.recursos.application.port.primary.interactor.SearchProtectedApplicationsInteractor;
-import co.edu.uco.seguridad.pdp.recursos.application.port.primary.interactor.impl.RegisterProtectedApplicationInteractorImpl;
-import co.edu.uco.seguridad.pdp.recursos.application.port.primary.interactor.impl.SearchProtectedApplicationsInteractorImpl;
+import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.interactor.RegisterProtectedApplicationInteractor;
+import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.interactor.SearchProtectedApplicationsInteractor;
+import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.interactor.impl.RegisterProtectedApplicationInteractorImpl;
+import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.interactor.impl.SearchProtectedApplicationsInteractorImpl;
 import co.edu.uco.seguridad.pdp.recursos.application.port.secondary.repository.ProtectedResourceRepository;
 import co.edu.uco.seguridad.pdp.recursos.application.rule.ProtectedResourceMustBeUniqueRule;
 import co.edu.uco.seguridad.pdp.recursos.application.rule.ProtectedResourceMustBelongToApplicationTenantRule;
@@ -65,10 +65,11 @@ public class ResourcesConfiguration {
 
     @Bean
     RegisterProtectedApplicationRulesValidator registerProtectedApplicationRulesValidator(
+            TenantMustBeActiveRule tenantMustBeActive,
             ProtectedResourceMustBelongToApplicationTenantRule resourceMustBelongToApplicationTenant,
             ProtectedResourceMustBeUniqueRule resourceMustBeUnique) {
         return new RegisterProtectedApplicationRulesValidatorImpl(
-                resourceMustBelongToApplicationTenant, resourceMustBeUnique);
+                tenantMustBeActive, resourceMustBelongToApplicationTenant, resourceMustBeUnique);
     }
 
     @Bean

@@ -1,8 +1,8 @@
 package co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.controller;
 
 import co.edu.uco.seguridad.crosscutting.messages.WebContractMessages;
-import co.edu.uco.seguridad.pdp.recursos.application.port.primary.interactor.RegisterProtectedApplicationInteractor;
-import co.edu.uco.seguridad.pdp.recursos.application.port.primary.interactor.SearchProtectedApplicationsInteractor;
+import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.interactor.RegisterProtectedApplicationInteractor;
+import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.interactor.SearchProtectedApplicationsInteractor;
 import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.dto.request.raw.RegisterProtectedApplicationRawRequest;
 import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.dto.request.raw.SearchProtectedApplicationsRawRequest;
 import co.edu.uco.seguridad.pdp.recursos.infrastructure.adapter.primary.web.dto.response.ProtectedApplicationResponse;

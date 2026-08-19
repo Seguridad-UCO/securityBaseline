@@ -18,6 +18,11 @@ import co.edu.uco.seguridad.pdp.recursos.domain.ActionCode;
 import co.edu.uco.seguridad.pdp.recursos.domain.ProtectedApplicationCriteria;
 import co.edu.uco.seguridad.pdp.recursos.domain.ResourceCode;
 import co.edu.uco.seguridad.pdp.recursos.domain.event.ProtectedResourceRegistered;
+import co.edu.uco.seguridad.pdp.tenants.TenantStatus;
+import co.edu.uco.seguridad.pdp.tenants.application.exception.TenantNotActiveException;
+import co.edu.uco.seguridad.pdp.tenants.application.exception.TenantNotFoundException;
+import co.edu.uco.seguridad.pdp.tenants.application.port.primary.dto.response.TenantResponse;
+import co.edu.uco.seguridad.pdp.tenants.application.rule.TenantMustBeActiveRule;
 import co.edu.uco.seguridad.shared.event.DomainEvent;
 import co.edu.uco.seguridad.shared.event.DomainEventPublisher;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
@@ -46,6 +51,7 @@ class RegisterProtectedApplicationUseCaseImplTests {
     private RecordingRegisterApplicationInteractor registerApplication;
     private RecordingRemoveApplicationInteractor removeApplication;
     private RecordingEventPublisher events;
+    private TenantMustBeActiveRule activeTenant;
 
     @BeforeEach
     void setUp() {
@@ -53,6 +59,9 @@ class RegisterProtectedApplicationUseCaseImplTests {
         registerApplication = new RecordingRegisterApplicationInteractor();
         removeApplication = new RecordingRemoveApplicationInteractor();
         events = new RecordingEventPublisher();
+        activeTenant = tenantId -> TENANT.equals(tenantId)
+                ? Mono.just(new TenantResponse(tenantId, TenantStatus.ACTIVE))
+                : Mono.error(new TenantNotFoundException(tenantId));
     }
 
     @Test
@@ -118,6 +127,33 @@ class RegisterProtectedApplicationUseCaseImplTests {
         assertThat(storedResources()).isEmpty();
     }
 
+    @Test
+    void surfaces_the_original_failure_even_when_compensation_itself_fails() {
+        RecordingEventPublisher failing = new RecordingEventPublisher();
+        IllegalStateException originalFailure = new IllegalStateException("event publication unavailable");
+        failing.failWith(originalFailure);
+        removeApplication.failWith(new IllegalStateException("compensation is down too"));
+
+        StepVerifier.create(service(failing).execute(dto("estudiantes", "consultar")))
+                .expectErrorSatisfies(error -> assertThat(error)
+                        .as("the client must see why registration failed, not why cleanup failed")
+                        .isSameAs(originalFailure))
+                .verify();
+    }
+
+    @Test
+    void refuses_to_register_a_protected_resource_for_a_tenant_that_is_not_active() {
+        activeTenant = tenantId -> Mono.error(new TenantNotActiveException(tenantId, TenantStatus.SUSPENDED));
+
+        StepVerifier.create(service(events).execute(dto("estudiantes", "consultar")))
+                .expectError(TenantNotActiveException.class)
+                .verify();
+
+        assertThat(storedResources())
+                .as("the resource must not be created before the tenant-active rule runs")
+                .isEmpty();
+    }
+
     private RegisterProtectedApplicationUseCaseImpl service(DomainEventPublisher eventPublisher) {
         TimeProvider time = () -> NOW;
         IdentifierGenerator identifiers = UUID::randomUUID;
@@ -125,6 +161,7 @@ class RegisterProtectedApplicationUseCaseImplTests {
                 registerApplication,
                 removeApplication,
                 new RegisterProtectedApplicationRulesValidatorImpl(
+                        activeTenant,
                         new ProtectedResourceMustBelongToApplicationTenantRuleImpl(),
                         new ProtectedResourceMustBeUniqueRuleImpl(resources)),
                 resources,
@@ -165,9 +202,17 @@ class RegisterProtectedApplicationUseCaseImplTests {
     private static final class RecordingRemoveApplicationInteractor implements RemoveApplicationInteractor {
 
         private final List<ApplicationId> removed = new ArrayList<>();
+        private RuntimeException failure;
+
+        void failWith(RuntimeException error) {
+            this.failure = error;
+        }
 
         @Override
         public Mono<Void> execute(ApplicationId applicationId) {
+            if (failure != null) {
+                return Mono.error(failure);
+            }
             return Mono.fromRunnable(() -> removed.add(applicationId));
         }
     }
