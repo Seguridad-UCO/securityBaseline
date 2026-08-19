@@ -4,6 +4,7 @@ import co.edu.uco.seguridad.pdp.commons.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.PageWindow;
 import co.edu.uco.seguridad.pdp.commons.ResourceId;
 import co.edu.uco.seguridad.pdp.commons.ResultPage;
+import co.edu.uco.seguridad.pdp.commons.TenantId;
 import co.edu.uco.seguridad.pdp.recursos.domain.ActionCode;
 import co.edu.uco.seguridad.pdp.recursos.domain.ProtectedApplicationCriteria;
 import co.edu.uco.seguridad.pdp.recursos.domain.ProtectedResource;
@@ -18,7 +19,14 @@ import reactor.core.publisher.Mono;
  */
 public interface ProtectedResourceRepository {
 
-    Mono<Boolean> existsGrant(ApplicationId applicationId, ResourceCode resourceCode, ActionCode action);
+    /**
+     * {@code tenantId} es obligatorio aunque {@code applicationId} ya identifique una aplicación de un
+     * tenant concreto: ningún método de este puerto sobre datos con dueño debería poder invocarse sin
+     * tenant — es la propiedad que hace que el aislamiento multi-tenant sea del adaptador, no una
+     * consecuencia de que todos los llamadores actuales se porten bien.
+     */
+    Mono<Boolean> existsGrant(TenantId tenantId, ApplicationId applicationId, ResourceCode resourceCode,
+            ActionCode action);
 
     Mono<ResultPage<ProtectedResource>> findBy(ProtectedApplicationCriteria criteria, PageWindow window);
 

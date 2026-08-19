@@ -2,7 +2,7 @@ package co.edu.uco.seguridad.pdp.tenants.domain;
 
 import co.edu.uco.seguridad.crosscutting.messages.RequiredArgumentMessages;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
-import co.edu.uco.seguridad.pdp.tenants.TenantStatus;
+import co.edu.uco.seguridad.pdp.tenants.domain.TenantStatus;
 
 import java.util.Objects;
 

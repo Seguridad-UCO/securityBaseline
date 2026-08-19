@@ -85,7 +85,8 @@ class ProtectedResourceRuleTests {
     private static ProtectedResourceRepository repositoryReporting(boolean exists) {
         return new ProtectedResourceRepository() {
             @Override
-            public Mono<Boolean> existsGrant(ApplicationId applicationId, ResourceCode code, ActionCode action) {
+            public Mono<Boolean> existsGrant(TenantId tenantId, ApplicationId applicationId, ResourceCode code,
+                    ActionCode action) {
                 return Mono.just(exists);
             }
 

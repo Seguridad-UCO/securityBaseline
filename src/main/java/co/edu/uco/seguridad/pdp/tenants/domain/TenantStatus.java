@@ -1,4 +1,4 @@
-package co.edu.uco.seguridad.pdp.tenants;
+package co.edu.uco.seguridad.pdp.tenants.domain;
 
 /** Estado del ciclo de vida de un inquilino. Solo {@link #ACTIVE} puede registrar aplicaciones. */
 public enum TenantStatus {

@@ -5,6 +5,7 @@ import co.edu.uco.seguridad.pdp.commons.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.PageWindow;
 import co.edu.uco.seguridad.pdp.commons.ResourceId;
 import co.edu.uco.seguridad.pdp.commons.ResultPage;
+import co.edu.uco.seguridad.pdp.commons.TenantId;
 import co.edu.uco.seguridad.pdp.recursos.application.port.secondary.repository.ProtectedResourceRepository;
 import co.edu.uco.seguridad.pdp.recursos.domain.ActionCode;
 import co.edu.uco.seguridad.pdp.recursos.domain.ProtectedApplicationCriteria;
@@ -46,11 +47,13 @@ public final class SurrealProtectedResourceRepository implements ProtectedResour
     }
 
     @Override
-    public Mono<Boolean> existsGrant(ApplicationId applicationId, ResourceCode resourceCode, ActionCode action) {
+    public Mono<Boolean> existsGrant(TenantId tenantId, ApplicationId applicationId, ResourceCode resourceCode,
+            ActionCode action) {
         return client.execute(
-                        "SELECT id FROM %s WHERE applicationId = $applicationId AND resourceCode = $resourceCode AND action = $action LIMIT 1;"
+                        "SELECT id FROM %s WHERE tenantId = $tenantId AND applicationId = $applicationId AND resourceCode = $resourceCode AND action = $action LIMIT 1;"
                                 .formatted(TABLE),
                         Map.of(
+                                FIELD_TENANT_ID, tenantId.value(),
                                 FIELD_APPLICATION_ID, applicationId.value().toString(),
                                 FIELD_RESOURCE_CODE, resourceCode.value(),
                                 FIELD_ACTION, action.value()))
