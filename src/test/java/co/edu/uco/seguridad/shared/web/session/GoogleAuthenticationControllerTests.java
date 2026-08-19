@@ -65,17 +65,30 @@ class GoogleAuthenticationControllerTests {
         assertThatThrownBy(() -> new GoogleAuthenticationController(credential -> Mono.just(unverified), users, CLIENT_ID)
                 .google(new GoogleAuthenticationController.GoogleCredentialRequest("token"), exchange).block())
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("no es válida");
+
+        for (Jwt invalid : List.of(jwt("https://issuer.invalid", List.of(CLIENT_ID), true, "david@uco.edu"),
+                jwt("https://accounts.google.com", List.of("another-client"), true, "david@uco.edu"),
+                jwt("https://accounts.google.com", List.of(CLIENT_ID), true, null))) {
+            assertThatThrownBy(() -> new GoogleAuthenticationController(credential -> Mono.just(invalid), users, CLIENT_ID)
+                    .google(new GoogleAuthenticationController.GoogleCredentialRequest("token"), exchange).block())
+                    .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("no es válida");
+        }
     }
 
     private static Jwt validGoogleJwt() {
-        return Jwt.withTokenValue("token")
+        return jwt("https://accounts.google.com", List.of(CLIENT_ID), true, "david@uco.edu");
+    }
+
+    private static Jwt jwt(String issuer, List<String> audience, boolean verified, String email) {
+        var builder = Jwt.withTokenValue("token")
                 .header("alg", "RS256")
-                .issuer("https://accounts.google.com")
+                .issuer(issuer)
                 .subject("google-subject")
-                .audience(List.of(CLIENT_ID))
-                .claim("email", "david@uco.edu")
+                .audience(audience)
                 .claim("name", "David Alzate")
-                .claim("email_verified", true)
-                .issuedAt(Instant.now()).expiresAt(Instant.now().plusSeconds(300)).build();
+                .claim("email_verified", verified)
+                .issuedAt(Instant.now()).expiresAt(Instant.now().plusSeconds(300));
+        if (email != null) builder.claim("email", email);
+        return builder.build();
     }
 }

@@ -114,4 +114,50 @@ class PlatformAdministrationServiceImplTests {
 
         assertThat(assigned).extracting("id", "tenantId").containsExactly("user-1", "estudiantes-uco");
     }
+
+    @Test
+    void rejects_duplicate_or_foreign_catalog_records_and_loads_a_known_identity() throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        var empty = mapper.createArrayNode();
+        var existing = mapper.readTree("[{\"id\":\"application:`app-1`\"}]");
+        SurrealDbClient duplicateApplicationDb = mock(SurrealDbClient.class);
+        when(duplicateApplicationDb.execute(anyString(), anyMap())).thenReturn(Mono.just(List.of(existing)));
+        assertThatThrownBy(() -> new PlatformAdministrationServiceImpl(duplicateApplicationDb)
+                .createApplication("universidad-uco", "Horarios", "Gestión", "https://horarios.uco.edu").block())
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Ya existe");
+
+        SurrealDbClient foreignApplicationDb = mock(SurrealDbClient.class);
+        when(foreignApplicationDb.execute(anyString(), anyMap())).thenReturn(Mono.just(List.of(empty)));
+        assertThatThrownBy(() -> new PlatformAdministrationServiceImpl(foreignApplicationDb)
+                .createResource("universidad-uco", "app-1", "/empleados", "GET").block())
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("no existe");
+
+        var duplicateResource = mapper.readTree("[{\"id\":\"protected_resource:`resource-1`\"}]");
+        SurrealDbClient duplicateResourceDb = mock(SurrealDbClient.class);
+        when(duplicateResourceDb.execute(anyString(), anyMap())).thenReturn(Mono.just(List.of(existing)), Mono.just(List.of(duplicateResource)));
+        assertThatThrownBy(() -> new PlatformAdministrationServiceImpl(duplicateResourceDb)
+                .createResource("universidad-uco", "app-1", "/empleados", "GET").block())
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("ya está registrado");
+
+        SurrealDbClient duplicateTenantDb = mock(SurrealDbClient.class);
+        when(duplicateTenantDb.execute(anyString(), anyMap())).thenReturn(Mono.just(List.of(existing)));
+        assertThatThrownBy(() -> new PlatformAdministrationServiceImpl(duplicateTenantDb)
+                .createTenant("estudiantes-uco", "Estudiantes UCO").block())
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("ya existe");
+
+        SurrealDbClient inactiveTenantDb = mock(SurrealDbClient.class);
+        when(inactiveTenantDb.execute(anyString(), anyMap())).thenReturn(Mono.just(List.of(empty)));
+        assertThatThrownBy(() -> new PlatformAdministrationServiceImpl(inactiveTenantDb)
+                .assignTenant("user-1", "inactivo").block())
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("no existe o está inactivo");
+
+        var identity = mapper.readTree("[{\"userId\":\"user-1\",\"subject\":\"google-subject\"}]");
+        var knownUser = mapper.readTree("[{\"tenantId\":\"universidad-uco\",\"email\":\"david@uco.edu\",\"name\":\"David Alzate\"}]");
+        SurrealDbClient knownIdentityDb = mock(SurrealDbClient.class);
+        when(knownIdentityDb.execute(anyString(), anyMap())).thenReturn(Mono.just(List.of(identity)), Mono.just(List.of(empty, knownUser)));
+
+        var known = new PlatformAdministrationServiceImpl(knownIdentityDb)
+                .provision("https://accounts.google.com", "google-subject", "david@uco.edu", "David Alzate").block();
+        assertThat(known.userId()).isEqualTo("user-1");
+    }
 }
