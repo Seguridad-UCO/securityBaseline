@@ -143,6 +143,20 @@ class RegisterProtectedApplicationUseCaseImplTests {
     }
 
     @Test
+    void surfaces_the_original_failure_even_when_the_resource_compensation_itself_fails() {
+        RecordingEventPublisher failing = new RecordingEventPublisher();
+        IllegalStateException originalFailure = new IllegalStateException("event publication unavailable");
+        failing.failWith(originalFailure);
+        resources.failDeleteWith(new IllegalStateException("SurrealDB is down too"));
+
+        StepVerifier.create(service(failing).execute(dto("estudiantes", "consultar")))
+                .expectErrorSatisfies(error -> assertThat(error)
+                        .as("the client must see why registration failed, not why the resource cleanup failed")
+                        .isSameAs(originalFailure))
+                .verify();
+    }
+
+    @Test
     void refuses_to_register_a_protected_resource_for_a_tenant_that_is_not_active() {
         activeTenant = tenantId -> Mono.error(new TenantNotActiveException(tenantId, TenantStatus.SUSPENDED));
 

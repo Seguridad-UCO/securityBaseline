@@ -25,6 +25,12 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class FakeProtectedResourceRepository implements ProtectedResourceRepository {
 
     private final Map<String, ProtectedResource> rows = new ConcurrentHashMap<>();
+    private RuntimeException deleteFailure;
+
+    /** Para probar que un fallo de compensación no reemplaza el error original que la disparó. */
+    public void failDeleteWith(RuntimeException error) {
+        this.deleteFailure = error;
+    }
 
     @Override
     public Mono<Boolean> existsGrant(TenantId tenantId, ApplicationId applicationId, ResourceCode resourceCode,
@@ -60,6 +66,9 @@ public final class FakeProtectedResourceRepository implements ProtectedResourceR
 
     @Override
     public Mono<Void> deleteById(ResourceId resourceId) {
+        if (deleteFailure != null) {
+            return Mono.error(deleteFailure);
+        }
         return Mono.fromRunnable(() -> rows.remove(resourceId.value().toString()));
     }
 }

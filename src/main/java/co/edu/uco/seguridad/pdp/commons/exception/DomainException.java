@@ -4,7 +4,7 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import java.util.Objects;
 
 /**
- * Raíz de todo fallo que el núcleo de PDP puede generar.
+ * Raíz de to-do fallo que el núcleo de PDP puede generar.
  *
  * <p>El núcleo nunca conoce HTTP. Solo publica un {@code código} estable que el adaptador de punto de entrada
  * traduce una sola vez en una respuesta específica del transporte.</p>

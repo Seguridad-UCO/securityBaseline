@@ -79,12 +79,12 @@ class SecurityConfiguration {
 
     /**
      * Dos modos (ADR-020): {@code jwkSetUri} presente → RS256 contra las llaves públicas de
-     * Keycloak, el modo real de todo ambiente desplegado. Ausente → HMAC con {@code secret}, el
+     * Keycloak, el modo real de to-do ambiente desplegado. Ausente → HMAC con {@code secret}, el
      * emisor propio original (ADR-018), vivo solo para que pruebas y desarrollo local no dependan
      * de un Keycloak real corriendo. El validador exige {@code sub}, {@code tenant} y {@code jti}
      * presentes, y {@code aud} igual a la audiencia configurada, para rechazar un token incompleto
      * o emitido para otra aplicación con 401 antes de que llegue al dominio. Validar {@code jti}
-     * aquí no revoca nada todavía — solo garantiza que todo token aceptado ya trae el identificador
+     * aquí no revoca nada todavía — solo garantiza que to-do token aceptado ya trae el identificador
      * que una futura revocación (Redis) necesitará.
      */
     @Bean

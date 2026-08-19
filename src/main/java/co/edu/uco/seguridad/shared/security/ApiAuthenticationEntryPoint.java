@@ -43,7 +43,7 @@ public final class ApiAuthenticationEntryPoint implements ServerAuthenticationEn
         return response.writeWith(Mono.fromSupplier(() -> {
             try {
                 return response.bufferFactory().wrap(mapper.writeValueAsBytes(problem));
-            } catch (Exception cause) {
+            } catch (Exception _) {
                 return response.bufferFactory().wrap(
                         "{\"detail\":\"unauthorized\"}".getBytes(StandardCharsets.UTF_8));
             }
