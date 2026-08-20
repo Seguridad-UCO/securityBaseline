@@ -6,6 +6,7 @@ import co.edu.uco.seguridad.shared.security.CorsProperties;
 import co.edu.uco.seguridad.shared.security.KeycloakSessionProperties;
 import co.edu.uco.seguridad.shared.security.LocalUserPrincipal;
 import co.edu.uco.seguridad.pdp.platform.application.PlatformAdministrationService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,7 +30,9 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 import org.springframework.web.server.session.CookieWebSessionIdResolver;
+import tools.jackson.databind.ObjectMapper;
 
+import java.util.Locale;
 import java.util.List;
 
 /** BFF reactivo: Keycloak autentica, WebFlux conserva una sesión HttpOnly y el navegador nunca recibe el JWT. */
@@ -42,10 +45,12 @@ class KeycloakSecurityConfiguration {
     @Bean
     SecurityWebFilterChain keycloakSecurityWebFilterChain(ServerHttpSecurity http,
             ApiAuthenticationEntryPoint entryPoint, ApiAccessDeniedHandler deniedHandler,
-            CorsConfigurationSource corsConfigurationSource, PlatformAdministrationService users) {
+            CorsConfigurationSource corsConfigurationSource, PlatformAdministrationService users,
+            @Value("${pdp.frontend.origin}") String frontendOrigin) {
         CookieServerCsrfTokenRepository csrf = CookieServerCsrfTokenRepository.withHttpOnlyFalse();
         csrf.setCookiePath("/");
         return http
+                .securityContextRepository(new WebSessionServerSecurityContextRepository())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(spec -> spec.csrfTokenRepository(csrf)
                         .csrfTokenRequestHandler(new ServerCsrfTokenRequestAttributeHandler())
@@ -64,11 +69,19 @@ class KeycloakSecurityConfiguration {
                     OidcUser oidc = (OidcUser) authentication.getPrincipal();
                     String email = oidc.getEmail();
                     if (email == null || email.isBlank()) return reactor.core.publisher.Mono.error(new IllegalArgumentException("Keycloak no entregó un correo verificable."));
-                    return users.provision(oidc.getIdToken().getIssuer().toString(), oidc.getSubject(), email, oidc.getFullName())
+                    String name = oidc.getFullName() == null || oidc.getFullName().isBlank() ? oidc.getGivenName() : oidc.getFullName();
+                    String provider = authProvider(oidc);
+                    var redirect = new RedirectServerAuthenticationSuccessHandler(frontendOrigin);
+                    return users.provision(oidc.getIdToken().getIssuer().toString(), oidc.getSubject(), email, name, provider)
                             .flatMap(local -> saveLocalSession(exchange.getExchange(), local))
-                            .then(new RedirectServerAuthenticationSuccessHandler("http://localhost:5173").onAuthenticationSuccess(exchange, authentication));
+                            .then(redirect.onAuthenticationSuccess(exchange, authentication));
                 }))
                 .build();
+    }
+
+    private static String authProvider(OidcUser oidc) {
+        String broker = oidc.getClaimAsString("identity_provider");
+        return broker == null || broker.isBlank() ? "keycloak-local" : broker.toLowerCase(Locale.ROOT);
     }
 
     private static ServerWebExchangeMatcher bffSessionRequest() {
@@ -101,5 +114,15 @@ class KeycloakSecurityConfiguration {
         resolver.addCookieInitializer(cookie -> cookie.path("/").httpOnly(true)
                 .sameSite("Lax").secure(properties.secureCookies()));
         return resolver;
+    }
+
+    @Bean
+    ApiAuthenticationEntryPoint keycloakApiAuthenticationEntryPoint(ObjectMapper mapper) {
+        return new ApiAuthenticationEntryPoint(mapper);
+    }
+
+    @Bean
+    ApiAccessDeniedHandler keycloakApiAccessDeniedHandler(ObjectMapper mapper) {
+        return new ApiAccessDeniedHandler(mapper);
     }
 }

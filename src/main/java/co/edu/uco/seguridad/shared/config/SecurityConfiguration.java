@@ -29,8 +29,6 @@ import org.springframework.security.web.server.csrf.CsrfWebFilter;
 import org.springframework.security.web.server.csrf.ServerCsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.server.util.matcher.AndServerWebExchangeMatcher;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
-import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
-import org.springframework.security.web.server.util.matcher.NegatedServerWebExchangeMatcher;
 import org.springframework.web.server.session.CookieWebSessionIdResolver;
 import org.springframework.util.StringUtils;
 import org.springframework.web.cors.CorsConfiguration;
@@ -68,15 +66,12 @@ class SecurityConfiguration {
                         .csrfTokenRequestHandler(new ServerCsrfTokenRequestAttributeHandler())
                         .accessDeniedHandler(accessDeniedHandler)
                         .requireCsrfProtectionMatcher(new AndServerWebExchangeMatcher(
-                                CsrfWebFilter.DEFAULT_CSRF_MATCHER,
-                                bffSessionRequest(),
-                                new NegatedServerWebExchangeMatcher(ServerWebExchangeMatchers.pathMatchers("/api/v1/auth/google")))))
+                                CsrfWebFilter.DEFAULT_CSRF_MATCHER, bffSessionRequest())))
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers(HttpMethod.GET, "/actuator/health", "/actuator/info").permitAll()
-                        .pathMatchers(HttpMethod.POST, "/api/v1/auth/google").permitAll()
                         .anyExchange().authenticated())
                 .exceptionHandling(exceptionHandling -> exceptionHandling
                         .authenticationEntryPoint(entryPoint)

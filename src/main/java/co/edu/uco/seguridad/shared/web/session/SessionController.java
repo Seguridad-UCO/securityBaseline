@@ -12,7 +12,7 @@ import org.springframework.security.web.server.csrf.CsrfToken;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import reactor.core.publisher.Mono;
 
-/** Punto de lectura de la sesión BFF. El navegador solo recibe identidad y tenant, nunca el access token. */
+/** Punto de lectura de la sesión BFF. La identidad y el tenant salen de la sesión local, no de Keycloak. */
 @RestController
 @RequestMapping("/api/v1/session")
 final class SessionController {

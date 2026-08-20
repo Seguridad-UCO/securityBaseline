@@ -11,7 +11,7 @@ public interface PlatformAdministrationService {
     record ResourceView(String id, String applicationId, String path, String method, String registeredAt) { }
     record TenantView(String code, String name, String status) { }
     record UserView(String id, String email, String name, String provider, String tenantId, String createdAt, String lastLoginAt) { }
-    Mono<LocalUserPrincipal> provision(String issuer, String subject, String email, String name);
+    Mono<LocalUserPrincipal> provision(String issuer, String subject, String email, String name, String provider);
     Mono<List<ApplicationView>> applications(String tenantId);
     Mono<ApplicationView> createApplication(String tenantId, String name, String description, String baseUrl);
     Mono<List<ResourceView>> resources(String tenantId, String applicationId);
