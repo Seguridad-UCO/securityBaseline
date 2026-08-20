@@ -1,7 +1,10 @@
 # PRODUCTION environment. Fed by the `main` branch.
 variables:
   environmentName: 'pdp-prod'
-  springProfile: 'prod,keycloak'
+  # NOTA: 'keycloak' se quitó temporalmente (ver commit de rollback) — el deploy stage todavía no
+  # inyecta PDP_KEYCLOAK_ISSUER/CLIENT_ID/CLIENT_SECRET, así que con el perfil activo el contenedor
+  # intenta resolver el issuer OIDC en http://localhost:9090 (el default de dev) y no arranca.
+  springProfile: 'prod'
   azureServiceConnection: 'Azure-PDP-Prod'
   # '-mx': the original kv-pdp-prod name is held by a soft-deleted, purge-protected vault from the
   # brazilsouth-to-mexicocentral region migration and cannot be reused for 90 days.
