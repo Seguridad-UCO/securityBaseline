@@ -1,22 +1,21 @@
 package co.edu.uco.seguridad.shared.config;
 
+import co.edu.uco.seguridad.shared.auth.service.OidcAuthenticationFailureHandler;
+import co.edu.uco.seguridad.shared.auth.service.OidcAuthenticationSuccessHandler;
 import co.edu.uco.seguridad.shared.security.ApiAccessDeniedHandler;
 import co.edu.uco.seguridad.shared.security.ApiAuthenticationEntryPoint;
 import co.edu.uco.seguridad.shared.security.CorsProperties;
 import co.edu.uco.seguridad.shared.security.KeycloakSessionProperties;
-import co.edu.uco.seguridad.shared.security.LocalUserPrincipal;
-import co.edu.uco.seguridad.pdp.platform.application.PlatformAdministrationService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.Customizer;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextImpl;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
-import org.springframework.security.web.server.authentication.RedirectServerAuthenticationSuccessHandler;
+import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.server.ServerAuthorizationRequestRepository;
+import org.springframework.security.oauth2.client.web.server.DefaultServerOAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.client.web.server.WebSessionOAuth2ServerAuthorizationRequestRepository;
 import org.springframework.security.web.server.context.WebSessionServerSecurityContextRepository;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
@@ -25,14 +24,15 @@ import org.springframework.security.web.server.csrf.CookieServerCsrfTokenReposit
 import org.springframework.security.web.server.csrf.ServerCsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.server.csrf.CsrfWebFilter;
 import org.springframework.security.web.server.util.matcher.AndServerWebExchangeMatcher;
+import org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 import org.springframework.web.server.session.CookieWebSessionIdResolver;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import tools.jackson.databind.ObjectMapper;
 
-import java.util.Locale;
 import java.util.List;
 
 /** BFF reactivo: Keycloak autentica, WebFlux conserva una sesión HttpOnly y el navegador nunca recibe el JWT. */
@@ -45,8 +45,11 @@ class KeycloakSecurityConfiguration {
     @Bean
     SecurityWebFilterChain keycloakSecurityWebFilterChain(ServerHttpSecurity http,
             ApiAuthenticationEntryPoint entryPoint, ApiAccessDeniedHandler deniedHandler,
-            CorsConfigurationSource corsConfigurationSource, PlatformAdministrationService users,
-            @Value("${pdp.frontend.origin}") String frontendOrigin) {
+            CorsConfigurationSource corsConfigurationSource,
+            OidcAuthenticationSuccessHandler successHandler,
+            OidcAuthenticationFailureHandler failureHandler,
+            ReactiveClientRegistrationRepository clientRegistrations,
+            ServerAuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository) {
         CookieServerCsrfTokenRepository csrf = CookieServerCsrfTokenRepository.withHttpOnlyFalse();
         csrf.setCookiePath("/");
         return http
@@ -61,38 +64,25 @@ class KeycloakSecurityConfiguration {
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers(HttpMethod.GET, "/actuator/health", "/actuator/info").permitAll()
+                        .pathMatchers(HttpMethod.GET, "/api/v1/session/logout").permitAll()
                         .pathMatchers("/oauth2/**", "/login/**").permitAll()
                         .anyExchange().authenticated())
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(entryPoint).accessDeniedHandler(deniedHandler))
-                .oauth2Login(login -> login.authenticationSuccessHandler((exchange, authentication) -> {
-                    OidcUser oidc = (OidcUser) authentication.getPrincipal();
-                    String email = oidc.getEmail();
-                    if (email == null || email.isBlank()) return reactor.core.publisher.Mono.error(new IllegalArgumentException("Keycloak no entregó un correo verificable."));
-                    String name = oidc.getFullName() == null || oidc.getFullName().isBlank() ? oidc.getGivenName() : oidc.getFullName();
-                    String provider = authProvider(oidc);
-                    var redirect = new RedirectServerAuthenticationSuccessHandler(frontendOrigin);
-                    return users.provision(oidc.getIdToken().getIssuer().toString(), oidc.getSubject(), email, name, provider)
-                            .flatMap(local -> saveLocalSession(exchange.getExchange(), local))
-                            .then(redirect.onAuthenticationSuccess(exchange, authentication));
-                }))
+                .oauth2Login(login -> login
+                        .authenticationMatcher(new PathPatternParserServerWebExchangeMatcher("/login/oauth2/code/{registrationId}"))
+                        .authorizationRequestResolver(new DefaultServerOAuth2AuthorizationRequestResolver(clientRegistrations,
+                                new PathPatternParserServerWebExchangeMatcher("/internal/oauth2/authorization/{registrationId}")))
+                        .authorizationRequestRepository(authorizationRequestRepository)
+                        .authenticationSuccessHandler(successHandler)
+                        .authenticationFailureHandler(failureHandler))
                 .build();
-    }
-
-    private static String authProvider(OidcUser oidc) {
-        String broker = oidc.getClaimAsString("identity_provider");
-        return broker == null || broker.isBlank() ? "keycloak-local" : broker.toLowerCase(Locale.ROOT);
     }
 
     private static ServerWebExchangeMatcher bffSessionRequest() {
         return exchange -> exchange.getRequest().getCookies().containsKey("SECURITY_BASELINE_SESSION")
                 ? ServerWebExchangeMatcher.MatchResult.match()
                 : ServerWebExchangeMatcher.MatchResult.notMatch();
-    }
-
-    private reactor.core.publisher.Mono<Void> saveLocalSession(org.springframework.web.server.ServerWebExchange exchange, LocalUserPrincipal user) {
-        var authentication = new UsernamePasswordAuthenticationToken(user, null, List.of());
-        return new WebSessionServerSecurityContextRepository().save(exchange, new SecurityContextImpl(authentication));
     }
 
     @Bean
@@ -124,5 +114,10 @@ class KeycloakSecurityConfiguration {
     @Bean
     ApiAccessDeniedHandler keycloakApiAccessDeniedHandler(ObjectMapper mapper) {
         return new ApiAccessDeniedHandler(mapper);
+    }
+
+    @Bean
+    ServerAuthorizationRequestRepository<OAuth2AuthorizationRequest> keycloakAuthorizationRequestRepository() {
+        return new WebSessionOAuth2ServerAuthorizationRequestRepository();
     }
 }

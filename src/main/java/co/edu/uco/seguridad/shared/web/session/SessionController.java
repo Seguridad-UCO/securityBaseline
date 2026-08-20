@@ -21,7 +21,7 @@ final class SessionController {
         Mono<CsrfToken> csrf = exchange.getAttribute(CsrfToken.class.getName());
         Mono<Void> bootstrapCsrfCookie = csrf == null ? Mono.empty() : csrf.then();
         return bootstrapCsrfCookie.then(ReactiveSecurityContextHolder.getContext())
-                .map(context -> context.getAuthentication().getPrincipal())
+                .map(securityContext -> securityContext.getAuthentication().getPrincipal())
                 .flatMap(authenticated -> {
                     if (authenticated instanceof LocalUserPrincipal user) {
                         return Mono.just(ApiResponse.success("SESSION_ACTIVE", "Authenticated session",
