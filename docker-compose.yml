@@ -4,3 +4,13 @@ services:
     command: start --user root --pass root memory
     ports:
       - "8000:8000"
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7.2
+    container_name: keycloak
+    command: start-dev9
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    ports:
+      - "9090:8080"
