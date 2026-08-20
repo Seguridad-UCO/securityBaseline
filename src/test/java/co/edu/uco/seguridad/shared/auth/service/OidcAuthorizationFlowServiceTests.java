@@ -31,6 +31,7 @@ class OidcAuthorizationFlowServiceTests {
         assertThat(location)
                 .startsWith("http://localhost:9090/realms/security-baseline/protocol/openid-connect/auth")
                 .contains("client_id=security-baseline-bff")
+                .doesNotContain("prompt=create")
                 .doesNotContain("kc_action=register");
         Object flowIntent = exchange.getSession().block().getAttribute(OidcFlowStateService.FLOW_INTENT_ATTRIBUTE);
         assertThat((String) flowIntent).isEqualTo(OidcFlowIntent.LOGIN.name());
@@ -48,8 +49,9 @@ class OidcAuthorizationFlowServiceTests {
         assertThat(exchange.getResponse().getStatusCode()).hasToString("302 FOUND");
         String location = exchange.getResponse().getHeaders().getLocation().toString();
         assertThat(location)
-                .startsWith("http://localhost:9090/realms/security-baseline/protocol/openid-connect/auth")
-                .contains("kc_action=register");
+                .startsWith("http://localhost:9090/realms/security-baseline/protocol/openid-connect/registrations")
+                .doesNotContain("prompt=create")
+                .doesNotContain("kc_action=register");
         Object flowIntent = exchange.getSession().block().getAttribute(OidcFlowStateService.FLOW_INTENT_ATTRIBUTE);
         assertThat((String) flowIntent).isEqualTo(OidcFlowIntent.REGISTER.name());
     }

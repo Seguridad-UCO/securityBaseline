@@ -45,13 +45,33 @@
     document.documentElement.classList.toggle('sb-register-view', isRegistrationView());
   }
 
+  function sanitizePrompt(url) {
+    if (url.searchParams.get('prompt') === 'create') {
+      url.searchParams.delete('prompt');
+    }
+    return url;
+  }
+
+  function decorateLoginLinks() {
+    const candidates = document.querySelectorAll(
+      '#kc-back-to-login, .back-link, a[href*="login-actions/authenticate"]'
+    );
+    candidates.forEach((anchor) => {
+      try {
+        const url = sanitizePrompt(new URL(anchor.href, window.location.origin));
+        anchor.href = url.toString();
+      } catch (_error) {
+      }
+    });
+  }
+
   function decorateGoogleLogin() {
     const candidates = document.querySelectorAll(
       '#kc-social-providers a[id*="google"], #kc-social-providers a[href*="/google"], #kc-social-providers a[href*="google"]'
     );
     candidates.forEach((anchor) => {
       try {
-        const url = new URL(anchor.href, window.location.origin);
+        const url = sanitizePrompt(new URL(anchor.href, window.location.origin));
         if (!url.searchParams.has('prompt')) {
           url.searchParams.set('prompt', 'select_account');
         }
@@ -65,11 +85,13 @@
     document.addEventListener('DOMContentLoaded', function () {
       applyIntentClasses();
       addBackLink();
+      decorateLoginLinks();
       decorateGoogleLogin();
     }, { once: true });
   } else {
     applyIntentClasses();
     addBackLink();
+    decorateLoginLinks();
     decorateGoogleLogin();
   }
 })();

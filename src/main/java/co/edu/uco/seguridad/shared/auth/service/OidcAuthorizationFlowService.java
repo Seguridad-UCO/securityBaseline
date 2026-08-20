@@ -15,12 +15,14 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
+import java.util.regex.Pattern;
 
 @Service
 public final class OidcAuthorizationFlowService {
 
-    private static final String REGISTRATION_FLOW_PARAMETER = "kc_action";
-    private static final String REGISTRATION_FLOW_VALUE = "register";
+    private static final String PROMPT_PARAMETER = "prompt";
+    private static final Pattern AUTHORIZATION_ENDPOINT_PATTERN =
+            Pattern.compile("(?<=/protocol/openid-connect)/auth(?=\\?|$)");
 
     private final DefaultServerOAuth2AuthorizationRequestResolver loginResolver;
     private final DefaultServerOAuth2AuthorizationRequestResolver registerResolver;
@@ -61,13 +63,18 @@ public final class OidcAuthorizationFlowService {
         OAuth2AuthorizationRequest.Builder builder = OAuth2AuthorizationRequest.from(request);
         builder.attributes(attributes -> attributes.put(OidcFlowStateService.FLOW_INTENT_ATTRIBUTE, intent.name()));
         if (intent == OidcFlowIntent.REGISTER) {
-            builder.additionalParameters(parameters -> parameters.put(REGISTRATION_FLOW_PARAMETER, REGISTRATION_FLOW_VALUE));
-        }
-        String prompt = exchange.getRequest().getQueryParams().getFirst("prompt");
-        if (StringUtils.hasText(prompt)) {
-            builder.additionalParameters(parameters -> parameters.put("prompt", prompt));
+            builder.authorizationRequestUri(registrationRequestUri(request.getAuthorizationRequestUri()));
+        } else {
+            String prompt = exchange.getRequest().getQueryParams().getFirst(PROMPT_PARAMETER);
+            if (StringUtils.hasText(prompt)) {
+                builder.additionalParameters(parameters -> parameters.put(PROMPT_PARAMETER, prompt));
+            }
         }
         return builder.build();
+    }
+
+    private String registrationRequestUri(String authorizationRequestUri) {
+        return AUTHORIZATION_ENDPOINT_PATTERN.matcher(authorizationRequestUri).replaceFirst("/registrations");
     }
 
     private Mono<Void> redirect(ServerWebExchange exchange, String uri) {
