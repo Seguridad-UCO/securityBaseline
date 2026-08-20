@@ -10,6 +10,12 @@ docker compose up keycloak surrealdb
 
 Keycloak queda en `http://localhost:9090`, persiste sus datos en el volumen Docker `keycloak_data`, monta el theme desde `./keycloak/themes` y deja preparada la importacion de realms desde `./keycloak/import`.
 
+Con Keycloak arriba, corre la aplicacion con el perfil `keycloak` activo (no se activa solo, para que las pruebas y el pipeline de build no dependan de un Keycloak real):
+
+```bash
+SPRING_PROFILES_ACTIVE=keycloak ./mvnw spring-boot:run
+```
+
 ## Persistencia local
 
 - `docker compose up keycloak` reutiliza la configuracion si el volumen `keycloak_data` ya existe.
