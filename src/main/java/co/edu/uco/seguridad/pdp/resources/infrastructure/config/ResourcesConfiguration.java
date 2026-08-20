@@ -10,6 +10,10 @@ import co.edu.uco.seguridad.pdp.resources.application.usecase.ListProtectedResou
 import co.edu.uco.seguridad.pdp.resources.application.usecase.RegisterProtectedResourceUseCase;
 import co.edu.uco.seguridad.pdp.resources.application.usecase.impl.ListProtectedResourcesUseCaseImpl;
 import co.edu.uco.seguridad.pdp.resources.application.usecase.impl.RegisterProtectedResourceUseCaseImpl;
+import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.interactor.ListProtectedResourcesInteractor;
+import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.interactor.RegisterProtectedResourceInteractor;
+import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.interactor.impl.ListProtectedResourcesInteractorImpl;
+import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.interactor.impl.RegisterProtectedResourceInteractorImpl;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.audit.InMemoryAuditAdapter;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.persistence.repository.SurrealProtectedResourceRepository;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.persistence.schema.SurrealProtectedResourceSchemaInitializer;
@@ -64,5 +68,15 @@ public class ResourcesConfiguration {
     @Bean
     ListProtectedResourcesUseCase listProtectedResourcesUseCase(ProtectedResourceRepository resources) {
         return new ListProtectedResourcesUseCaseImpl(resources);
+    }
+
+    @Bean
+    RegisterProtectedResourceInteractor registerProtectedResourceInteractor(RegisterProtectedResourceUseCase useCase) {
+        return new RegisterProtectedResourceInteractorImpl(useCase);
+    }
+
+    @Bean
+    ListProtectedResourcesInteractor listProtectedResourcesInteractor(ListProtectedResourcesUseCase useCase) {
+        return new ListProtectedResourcesInteractorImpl(useCase);
     }
 }

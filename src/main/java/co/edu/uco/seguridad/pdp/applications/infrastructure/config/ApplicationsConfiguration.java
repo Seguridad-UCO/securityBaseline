@@ -13,6 +13,10 @@ import co.edu.uco.seguridad.pdp.applications.application.usecase.RemoveApplicati
 import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.ListApplicationsUseCaseImpl;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.RegisterApplicationUseCaseImpl;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.RemoveApplicationUseCaseImpl;
+import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.ListApplicationsInteractor;
+import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.RegisterApplicationInteractor;
+import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.impl.ListApplicationsInteractorImpl;
+import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.impl.RegisterApplicationInteractorImpl;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.repository.SurrealApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.schema.SurrealApplicationSchemaInitializer;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.properties.ApplicationCatalogProperties;
@@ -77,5 +81,15 @@ public class ApplicationsConfiguration {
     @Bean
     RemoveApplicationUseCase removeApplicationUseCase(ApplicationRepository repository) {
         return new RemoveApplicationUseCaseImpl(repository);
+    }
+
+    @Bean
+    RegisterApplicationInteractor registerApplicationInteractor(RegisterApplicationUseCase useCase) {
+        return new RegisterApplicationInteractorImpl(useCase);
+    }
+
+    @Bean
+    ListApplicationsInteractor listApplicationsInteractor(ListApplicationsUseCase useCase) {
+        return new ListApplicationsInteractorImpl(useCase);
     }
 }

@@ -7,6 +7,10 @@ import co.edu.uco.seguridad.pdp.identity.application.usecase.ProvisionIdentityUs
 import co.edu.uco.seguridad.pdp.identity.application.usecase.impl.AssignTenantUseCaseImpl;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.impl.ListUsersUseCaseImpl;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.impl.ProvisionIdentityUseCaseImpl;
+import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.interactor.AssignTenantInteractor;
+import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.interactor.ListUsersInteractor;
+import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.interactor.impl.AssignTenantInteractorImpl;
+import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.interactor.impl.ListUsersInteractorImpl;
 import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.repository.SurrealSecurityUserRepository;
 import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.schema.SurrealIdentitySchemaInitializer;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
@@ -51,5 +55,15 @@ public class IdentityConfiguration {
     AssignTenantUseCase assignTenantUseCase(TenantMustBeActiveRule tenantMustBeActive,
             SecurityUserRepository repository) {
         return new AssignTenantUseCaseImpl(tenantMustBeActive, repository);
+    }
+
+    @Bean
+    ListUsersInteractor listUsersInteractor(ListUsersUseCase useCase) {
+        return new ListUsersInteractorImpl(useCase);
+    }
+
+    @Bean
+    AssignTenantInteractor assignTenantInteractor(AssignTenantUseCase useCase) {
+        return new AssignTenantInteractorImpl(useCase);
     }
 }

@@ -1,12 +1,11 @@
 package co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.controller;
 
-import co.edu.uco.seguridad.pdp.commons.TenantId;
-import co.edu.uco.seguridad.pdp.identity.application.port.primary.dto.response.UserResponse;
-import co.edu.uco.seguridad.pdp.identity.domain.UserId;
-import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.controller.UserController.TenantAssignmentRawRequest;
+import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.dto.request.raw.AssignTenantBodyRequest;
+import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.dto.response.UserWebResponse;
 import co.edu.uco.seguridad.shared.web.CorrelationWebFilter;
 import co.edu.uco.seguridad.shared.web.RequestContext;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
 import reactor.core.publisher.Mono;
@@ -20,36 +19,36 @@ import static org.assertj.core.api.Assertions.assertThat;
 class UserControllerTests {
 
     @Test
-    void list_returns_the_catalog_from_the_use_case() {
-        UserId id = new UserId(UUID.randomUUID());
-        UserResponse user = new UserResponse(id, "david@uco.edu", "David", "google",
-                new TenantId("universidad-uco"), Instant.now(), Instant.now());
-        UserController controller = new UserController(() -> Mono.just(List.of(user)), dto -> Mono.empty());
+    void list_delegates_to_the_interactor_and_replies_with_200() {
+        UserWebResponse user = new UserWebResponse(UUID.randomUUID().toString(), "david@uco.edu", "David", "google",
+                "universidad-uco", Instant.now(), Instant.now());
+        UserController controller = new UserController(() -> Mono.just(List.of(user)), raw -> Mono.empty());
         MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/api/v1/users").build());
         exchange.getAttributes().put(CorrelationWebFilter.CONTEXT_ATTRIBUTE, new RequestContext("req-1", "corr-1"));
 
-        Object response = controller.list(exchange).block();
+        var response = controller.list(exchange).block();
 
-        assertThat(response).isNotNull();
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().data()).containsExactly(user);
     }
 
     @Test
-    void assign_delegates_the_new_tenant_code() {
-        UserId id = new UserId(UUID.randomUUID());
-        UserResponse updated = new UserResponse(id, "david@uco.edu", "David", "google",
-                new TenantId("otra-universidad"), Instant.now(), Instant.now());
-        UserController controller = new UserController(() -> Mono.empty(), dto -> {
-            assertThat(dto.userId()).isEqualTo(id);
-            assertThat(dto.tenantId()).isEqualTo(new TenantId("otra-universidad"));
+    void assign_combines_the_path_id_with_the_body_and_replies_with_200() {
+        String id = UUID.randomUUID().toString();
+        UserWebResponse updated = new UserWebResponse(id, "david@uco.edu", "David", "google",
+                "otra-universidad", Instant.now(), Instant.now());
+        UserController controller = new UserController(() -> Mono.empty(), raw -> {
+            assertThat(raw.userId()).isEqualTo(id);
+            assertThat(raw.tenantCode()).isEqualTo("otra-universidad");
             return Mono.just(updated);
         });
         MockServerWebExchange exchange = MockServerWebExchange.from(
-                MockServerHttpRequest.put("/api/v1/users/" + id.value() + "/tenant").build());
+                MockServerHttpRequest.put("/api/v1/users/" + id + "/tenant").build());
         exchange.getAttributes().put(CorrelationWebFilter.CONTEXT_ATTRIBUTE, new RequestContext("req-1", "corr-1"));
 
-        Object response = controller.assign(id.value().toString(), new TenantAssignmentRawRequest("otra-universidad"),
-                exchange).block();
+        var response = controller.assign(id, new AssignTenantBodyRequest("otra-universidad"), exchange).block();
 
-        assertThat(response).isNotNull();
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().data()).isEqualTo(updated);
     }
 }

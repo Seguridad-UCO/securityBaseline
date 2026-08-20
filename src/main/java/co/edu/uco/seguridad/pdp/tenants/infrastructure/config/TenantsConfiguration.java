@@ -11,6 +11,10 @@ import co.edu.uco.seguridad.pdp.tenants.application.usecase.CreateTenantUseCase;
 import co.edu.uco.seguridad.pdp.tenants.application.usecase.ListTenantsUseCase;
 import co.edu.uco.seguridad.pdp.tenants.application.usecase.impl.CreateTenantUseCaseImpl;
 import co.edu.uco.seguridad.pdp.tenants.application.usecase.impl.ListTenantsUseCaseImpl;
+import co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.primary.web.interactor.CreateTenantInteractor;
+import co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.primary.web.interactor.ListTenantsInteractor;
+import co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.primary.web.interactor.impl.CreateTenantInteractorImpl;
+import co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.primary.web.interactor.impl.ListTenantsInteractorImpl;
 import co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.secondary.persistence.repository.SurrealTenantRepository;
 import co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.secondary.persistence.schema.SurrealTenantSchemaInitializer;
 import co.edu.uco.seguridad.pdp.tenants.infrastructure.properties.TenantCatalogProperties;
@@ -62,5 +66,15 @@ public class TenantsConfiguration {
     @Bean
     ListTenantsUseCase listTenantsUseCase(TenantRepository repository) {
         return new ListTenantsUseCaseImpl(repository);
+    }
+
+    @Bean
+    CreateTenantInteractor createTenantInteractor(CreateTenantUseCase useCase) {
+        return new CreateTenantInteractorImpl(useCase);
+    }
+
+    @Bean
+    ListTenantsInteractor listTenantsInteractor(ListTenantsUseCase useCase) {
+        return new ListTenantsInteractorImpl(useCase);
     }
 }
