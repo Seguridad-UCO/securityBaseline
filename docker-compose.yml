@@ -2,7 +2,8 @@ services:
   surrealdb:
     image: surrealdb/surrealdb:latest
     container_name: surrealdb
-    command: start --user root --pass root file:/data/database
+    user: root
+    command: start --user root --pass root rocksdb:/data/database
     ports:
       - "8000:8000"
     volumes:
@@ -30,3 +31,4 @@ services:
 
 volumes:
   keycloak_data:
+  surrealdb_data:
