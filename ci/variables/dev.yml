@@ -2,7 +2,10 @@
 # separate environment was retired.
 variables:
   environmentName: 'pdp-dev'
-  springProfile: 'dev,keycloak'
+  # NOTA: 'keycloak' se quitó temporalmente (ver commit de rollback) — el deploy stage todavía no
+  # inyecta PDP_KEYCLOAK_ISSUER/CLIENT_ID/CLIENT_SECRET, así que con el perfil activo el contenedor
+  # intenta resolver el issuer OIDC en http://localhost:9090 (el default de dev) y no arranca.
+  springProfile: 'dev'
   azureServiceConnection: 'Azure-PDP-Dev'
   keyVaultName: 'kv-pdp-dev'
   webAppName: 'app-pdp-dev'
