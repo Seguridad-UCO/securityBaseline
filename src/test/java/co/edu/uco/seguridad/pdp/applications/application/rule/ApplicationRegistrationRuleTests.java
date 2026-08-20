@@ -7,10 +7,12 @@ import co.edu.uco.seguridad.pdp.applications.application.port.secondary.reposito
 import co.edu.uco.seguridad.pdp.applications.application.rule.impl.ApplicationNameMustBeUniqueForTenantRuleImpl;
 import co.edu.uco.seguridad.pdp.applications.application.rule.impl.ApplicationNameMustNotBeReservedRuleImpl;
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
+import co.edu.uco.seguridad.pdp.applications.domain.ApplicationBaseUrl;
 import co.edu.uco.seguridad.pdp.commons.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.ApplicationName;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
 import org.junit.jupiter.api.Test;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -65,7 +67,8 @@ class ApplicationRegistrationRuleTests {
     }
 
     private static RegisterApplicationRequest dto(String name) {
-        return new RegisterApplicationRequest(TENANT, new ApplicationName(name));
+        return new RegisterApplicationRequest(TENANT, new ApplicationName(name), "",
+                new ApplicationBaseUrl("https://gestion-academica.example.com"));
     }
 
     private static ApplicationRepository repositoryReporting(boolean exists) {
@@ -73,6 +76,16 @@ class ApplicationRegistrationRuleTests {
             @Override
             public Mono<Boolean> existsByTenantAndName(TenantId tenantId, ApplicationName name) {
                 return Mono.just(exists);
+            }
+
+            @Override
+            public Mono<Application> findByTenantAndId(TenantId tenantId, ApplicationId applicationId) {
+                return Mono.empty();
+            }
+
+            @Override
+            public Flux<Application> findAllByTenant(TenantId tenantId) {
+                return Flux.empty();
             }
 
             @Override

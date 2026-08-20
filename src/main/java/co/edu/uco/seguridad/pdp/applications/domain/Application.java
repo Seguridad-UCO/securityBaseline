@@ -1,7 +1,5 @@
 package co.edu.uco.seguridad.pdp.applications.domain;
 
-import co.edu.uco.seguridad.pdp.applications.domain.event.ApplicationRegistered;
-import co.edu.uco.seguridad.pdp.commons.AggregateRoot;
 import co.edu.uco.seguridad.pdp.commons.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.ApplicationName;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
@@ -10,24 +8,32 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import java.time.Instant;
 import java.util.Objects;
 
-/** Entidad de aplicación: Java puro, inmutable, sin setters ni anotaciones de framework. */
-public record Application(ApplicationId id, TenantId tenantId, ApplicationName name, Instant registeredAt) {
+/**
+ * Entidad de aplicación: Java puro, inmutable, sin setters ni anotaciones de framework.
+ *
+ * <p>{@code baseUrl} es el origen de la aplicación externa que este catálogo protege; los recursos
+ * registrados bajo esta aplicación ({@link co.edu.uco.seguridad.pdp.resources.domain.ProtectedResource})
+ * son rutas relativas a esa base — el endpoint completo es {@code baseUrl + path}.</p>
+ */
+public record Application(ApplicationId id, TenantId tenantId, ApplicationName name, String description,
+        ApplicationBaseUrl baseUrl, Instant registeredAt) {
+
+    private static final int MAX_DESCRIPTION_LENGTH = 500;
 
     public Application {
         Objects.requireNonNull(id, RequiredArgumentMessages.APPLICATION_ID);
         Objects.requireNonNull(tenantId, RequiredArgumentMessages.TENANT_ID);
         Objects.requireNonNull(name, RequiredArgumentMessages.APPLICATION_NAME);
+        Objects.requireNonNull(baseUrl, RequiredArgumentMessages.APPLICATION_BASE_URL);
         Objects.requireNonNull(registeredAt, RequiredArgumentMessages.REGISTERED_AT);
+        description = description == null ? "" : description.trim();
+        if (description.length() > MAX_DESCRIPTION_LENGTH) {
+            description = description.substring(0, MAX_DESCRIPTION_LENGTH);
+        }
     }
 
-    public static Application register(ApplicationId id, TenantId tenantId, ApplicationName name, Instant registeredAt) {
-        return new Application(id, tenantId, name, registeredAt);
-    }
-
-    /** Igual que {@link #register}, pero empareja la aplicación con su evento — usar al escribir, no al leer. */
-    public static AggregateRoot<Application, ApplicationRegistered> registerWithEvent(
-            ApplicationId id, TenantId tenantId, ApplicationName name, Instant registeredAt) {
-        Application application = register(id, tenantId, name, registeredAt);
-        return AggregateRoot.of(application, ApplicationRegistered.of(application));
+    public static Application register(ApplicationId id, TenantId tenantId, ApplicationName name,
+            String description, ApplicationBaseUrl baseUrl, Instant registeredAt) {
+        return new Application(id, tenantId, name, description, baseUrl, registeredAt);
     }
 }

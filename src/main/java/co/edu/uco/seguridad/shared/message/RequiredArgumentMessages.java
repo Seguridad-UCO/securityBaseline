@@ -13,9 +13,18 @@ public final class RequiredArgumentMessages {
 
     // Identificadores y value objects de dominio, compartidos entre DTOs, entidades y eventos.
     public static final String TENANT_ID = "se requiere id de inquilino";
+    public static final String TENANT_NAME = "se requiere nombre de inquilino";
     public static final String APPLICATION_ID = "se requiere id de aplicación";
     public static final String RESOURCE_ID = "se requiere id de recurso";
     public static final String APPLICATION_NAME = "se requiere nombre de aplicación";
+    public static final String APPLICATION_BASE_URL = "se requiere la URL base de la aplicación";
+    public static final String RESOURCE_PATH = "se requiere la ruta del recurso";
+    public static final String HTTP_METHOD = "se requiere el método HTTP";
+    public static final String USER_ID = "se requiere id de usuario";
+    public static final String USER_EMAIL = "se requiere correo de usuario";
+    public static final String EXTERNAL_IDENTITY_ISSUER = "se requiere el issuer de la identidad externa";
+    public static final String EXTERNAL_IDENTITY_SUBJECT = "se requiere el subject de la identidad externa";
+    public static final String EXTERNAL_IDENTITY_PROVIDER = "se requiere el proveedor de la identidad externa";
     public static final String RESOURCE_CODE = "se requiere código de recurso";
     public static final String ACTION_CODE = "se requiere código de acción";
     public static final String REGISTERED_AT = "se requiere instante de registro";

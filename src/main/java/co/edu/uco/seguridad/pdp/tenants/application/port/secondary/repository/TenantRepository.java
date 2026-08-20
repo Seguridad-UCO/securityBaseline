@@ -2,6 +2,7 @@ package co.edu.uco.seguridad.pdp.tenants.application.port.secondary.repository;
 
 import co.edu.uco.seguridad.pdp.commons.TenantId;
 import co.edu.uco.seguridad.pdp.tenants.domain.Tenant;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
@@ -11,4 +12,10 @@ import reactor.core.publisher.Mono;
 public interface TenantRepository {
 
     Mono<Tenant> findById(TenantId tenantId);
+
+    Mono<Boolean> existsById(TenantId tenantId);
+
+    Mono<Tenant> save(Tenant tenant);
+
+    Flux<Tenant> findAll();
 }

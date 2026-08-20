@@ -1,6 +1,8 @@
 package co.edu.uco.seguridad.shared.auth.service;
 
-import co.edu.uco.seguridad.pdp.platform.application.PlatformAdministrationService;
+import co.edu.uco.seguridad.pdp.identity.application.port.primary.dto.request.ProvisionIdentityRequest;
+import co.edu.uco.seguridad.pdp.identity.application.usecase.ProvisionIdentityUseCase;
+import co.edu.uco.seguridad.pdp.identity.domain.Email;
 import co.edu.uco.seguridad.shared.auth.model.OidcFlowIntent;
 import co.edu.uco.seguridad.shared.security.LocalUserPrincipal;
 import co.edu.uco.seguridad.shared.web.session.KeycloakLogoutController;
@@ -24,16 +26,16 @@ import java.util.Locale;
 @Profile("keycloak")
 public final class OidcAuthenticationSuccessHandler implements ServerAuthenticationSuccessHandler {
 
-    private final PlatformAdministrationService users;
+    private final ProvisionIdentityUseCase provisionIdentity;
     private final OidcFlowStateService flowState;
     private final OidcRedirectPolicy redirectPolicy;
     private final KeycloakOidcSessionService oidcSessionService;
     private final WebSessionServerSecurityContextRepository securityContextRepository =
             new WebSessionServerSecurityContextRepository();
 
-    OidcAuthenticationSuccessHandler(PlatformAdministrationService users, OidcFlowStateService flowState,
+    OidcAuthenticationSuccessHandler(ProvisionIdentityUseCase provisionIdentity, OidcFlowStateService flowState,
             OidcRedirectPolicy redirectPolicy, KeycloakOidcSessionService oidcSessionService) {
-        this.users = users;
+        this.provisionIdentity = provisionIdentity;
         this.flowState = flowState;
         this.redirectPolicy = redirectPolicy;
         this.oidcSessionService = oidcSessionService;
@@ -55,7 +57,9 @@ public final class OidcAuthenticationSuccessHandler implements ServerAuthenticat
         }
         String name = oidc.getFullName() == null || oidc.getFullName().isBlank() ? oidc.getGivenName() : oidc.getFullName();
         String provider = authProvider(oidc);
-        return users.provision(oidc.getIdToken().getIssuer().toString(), oidc.getSubject(), email, name, provider)
+        ProvisionIdentityRequest request = new ProvisionIdentityRequest(oidc.getIdToken().getIssuer().toString(),
+                oidc.getSubject(), new Email(email), name, provider);
+        return provisionIdentity.execute(request)
                 .flatMap(localUser -> saveLocalSession(exchange, localUser, oidc.getIdToken().getTokenValue()))
                 .then(flowState.clear(exchange))
                 .then(redirect(exchange, redirectPolicy.frontendHome()));

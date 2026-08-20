@@ -5,8 +5,8 @@ import co.edu.uco.seguridad.pdp.PdpApplication;
 import co.edu.uco.seguridad.pdp.commons.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.ResourceId;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
-import co.edu.uco.seguridad.pdp.resources.domain.ActionCode;
-import co.edu.uco.seguridad.pdp.resources.domain.ResourceCode;
+import co.edu.uco.seguridad.pdp.resources.domain.HttpVerb;
+import co.edu.uco.seguridad.pdp.resources.domain.ResourcePath;
 import co.edu.uco.seguridad.pdp.resources.domain.event.ProtectedResourceRegistered;
 import co.edu.uco.seguridad.shared.event.DomainEventPublisher;
 import org.junit.jupiter.api.Test;
@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Prueba de publicación/consumo entre el caso de uso de registro y la auditoría: publica el evento
  * por el mismo puerto ({@link DomainEventPublisher}) que usa
- * {@code RegisterProtectedApplicationUseCaseImpl} y verifica que el listener de auditoría
+ * {@code RegisterProtectedResourceUseCaseImpl} y verifica que el listener de auditoría
  * ({@link InMemoryAuditAdapter}) lo recibe — a través del {@code ApplicationEventPublisher} real de
  * Spring, no de una llamada directa (ver ADR-0002). La entrega es síncrona: no hace falta esperar.
  */
@@ -40,8 +40,8 @@ class InMemoryAuditAdapterTests extends AbstractSurrealDbIntegrationTest {
                 new ResourceId(UUID.randomUUID()),
                 new ApplicationId(UUID.randomUUID()),
                 new TenantId("universidad-uco"),
-                new ResourceCode("estudiantes"),
-                new ActionCode("consultar"),
+                new ResourcePath("/estudiantes"),
+                HttpVerb.GET,
                 Instant.now());
 
         events.publish(event).block();

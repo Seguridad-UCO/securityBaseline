@@ -4,6 +4,7 @@ import co.edu.uco.seguridad.pdp.applications.domain.Application;
 import co.edu.uco.seguridad.pdp.commons.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.ApplicationName;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
@@ -15,6 +16,10 @@ import reactor.core.publisher.Mono;
 public interface ApplicationRepository {
 
     Mono<Boolean> existsByTenantAndName(TenantId tenantId, ApplicationName name);
+
+    Mono<Application> findByTenantAndId(TenantId tenantId, ApplicationId applicationId);
+
+    Flux<Application> findAllByTenant(TenantId tenantId);
 
     Mono<Application> save(Application application);
 

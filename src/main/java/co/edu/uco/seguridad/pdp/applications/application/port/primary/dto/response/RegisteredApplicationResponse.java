@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.pdp.applications.application.port.primary.dto.response;
 
+import co.edu.uco.seguridad.pdp.applications.domain.ApplicationBaseUrl;
 import co.edu.uco.seguridad.pdp.commons.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.ApplicationName;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
@@ -15,12 +16,14 @@ import java.util.Objects;
  * y nunca el agregado {@code Application} en sí.</p>
  */
 public record RegisteredApplicationResponse(ApplicationId id, TenantId tenantId, ApplicationName name,
-                                            Instant registeredAt) {
+        String description, ApplicationBaseUrl baseUrl, Instant registeredAt) {
 
     public RegisteredApplicationResponse {
         Objects.requireNonNull(id, RequiredArgumentMessages.APPLICATION_ID);
         Objects.requireNonNull(tenantId, RequiredArgumentMessages.TENANT_ID);
         Objects.requireNonNull(name, RequiredArgumentMessages.APPLICATION_NAME);
+        Objects.requireNonNull(baseUrl, RequiredArgumentMessages.APPLICATION_BASE_URL);
         Objects.requireNonNull(registeredAt, RequiredArgumentMessages.REGISTERED_AT);
+        description = description == null ? "" : description;
     }
 }

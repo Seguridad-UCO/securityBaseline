@@ -1,44 +1,29 @@
 package co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.persistence.repository;
 
 import co.edu.uco.seguridad.pdp.commons.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.PageWindow;
 import co.edu.uco.seguridad.pdp.commons.ResourceId;
-import co.edu.uco.seguridad.pdp.commons.ResultPage;
-import co.edu.uco.seguridad.pdp.commons.TenantId;
 import co.edu.uco.seguridad.pdp.resources.application.port.secondary.repository.ProtectedResourceRepository;
-import co.edu.uco.seguridad.pdp.resources.domain.ActionCode;
-import co.edu.uco.seguridad.pdp.resources.domain.ProtectedApplicationCriteria;
+import co.edu.uco.seguridad.pdp.resources.domain.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.ProtectedResource;
-import co.edu.uco.seguridad.pdp.resources.domain.ResourceCode;
+import co.edu.uco.seguridad.pdp.resources.domain.ResourcePath;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.persistence.entity.ProtectedResourceEntity;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.persistence.mapper.ProtectedResourcePersistenceMapper;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.persistence.schema.ProtectedResourceSchema;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealRecordId;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import tools.jackson.databind.JsonNode;
 
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 /**
- * Adaptador secundario (driven) real sobre SurrealDB (ADR-0004). {@code findBy} ejecuta la
- * specification que recibe traduciéndola a {@code WHERE}: {@code matches} sigue viviendo en
- * {@link ProtectedApplicationCriteria} para el adaptador en memoria (y para las pruebas de dominio),
- * pero este adaptador decide su propia forma de ejecutarla — exactamente la promesa que el puerto
- * documenta.
+ * Adaptador secundario (driven) real sobre SurrealDB (ADR-0004).
  */
 public final class SurrealProtectedResourceRepository implements ProtectedResourceRepository {
-
-    private static final String TABLE = ProtectedResourceSchema.TABLE;
-    private static final String FIELD_APPLICATION_ID = "applicationId";
-    private static final String FIELD_RESOURCE_CODE = "resourceCode";
-    private static final String FIELD_ACTION = "action";
-    private static final String FIELD_TENANT_ID = "tenantId";
 
     private final SurrealDbClient client;
 
@@ -47,48 +32,24 @@ public final class SurrealProtectedResourceRepository implements ProtectedResour
     }
 
     @Override
-    public Mono<Boolean> existsGrant(TenantId tenantId, ApplicationId applicationId, ResourceCode resourceCode,
-            ActionCode action) {
+    public Mono<Boolean> existsByApplicationPathAndMethod(ApplicationId applicationId, ResourcePath path,
+            HttpVerb method) {
         return client.execute(
-                        "SELECT id FROM %s WHERE tenantId = $tenantId AND applicationId = $applicationId AND resourceCode = $resourceCode AND action = $action LIMIT 1;"
-                                .formatted(TABLE),
-                        Map.of(
-                                FIELD_TENANT_ID, tenantId.value(),
-                                FIELD_APPLICATION_ID, applicationId.value().toString(),
-                                FIELD_RESOURCE_CODE, resourceCode.value(),
-                                FIELD_ACTION, action.value()))
-                .map(results -> !results.getFirst().isEmpty());
+                        "SELECT id FROM %s WHERE applicationId = $applicationId AND path = $path AND method = $method LIMIT 1;"
+                                .formatted(ProtectedResourceSchema.TABLE),
+                        Map.of("applicationId", applicationId.value().toString(), "path", path.value(),
+                                "method", method.name()))
+                .map(results -> !results.get(0).isEmpty());
     }
 
     @Override
-    public Mono<ResultPage<ProtectedResource>> findBy(ProtectedApplicationCriteria criteria, PageWindow window) {
-        StringBuilder where = new StringBuilder("tenantId = $tenantId");
-        Map<String, String> params = new HashMap<>();
-        params.put(FIELD_TENANT_ID, criteria.tenantId().value());
-        criteria.nameContains().ifPresent(fragment -> {
-            where.append(" AND applicationName CONTAINS $nameContains");
-            params.put("nameContains", fragment);
-        });
-        criteria.resourceContains().ifPresent(fragment -> {
-            where.append(" AND resourceCode CONTAINS $resourceContains");
-            params.put("resourceContains", fragment);
-        });
-        params.put("limit", String.valueOf(window.limit()));
-        params.put("offset", String.valueOf(window.offset()));
-
-        String surql = """
-                SELECT * FROM %s WHERE %s ORDER BY registeredAt ASC, id ASC LIMIT <int>$limit START <int>$offset;
-                SELECT count() FROM %s WHERE %s GROUP ALL;
-                """.formatted(TABLE, where, TABLE, where);
-
-        return client.execute(surql, params)
-                .map(results -> {
-                    List<ProtectedResource> content = results.get(0).valueStream()
-                            .map(SurrealProtectedResourceRepository::toDomain)
-                            .toList();
-                    long total = results.get(1).isEmpty() ? 0 : results.get(1).get(0).path("count").asLong();
-                    return ResultPage.of(content, total, window);
-                });
+    public Flux<ProtectedResource> findAllByApplication(ApplicationId applicationId) {
+        return client.execute(
+                        "SELECT * FROM %s WHERE applicationId = $applicationId ORDER BY registeredAt DESC;"
+                                .formatted(ProtectedResourceSchema.TABLE),
+                        Map.of("applicationId", applicationId.value().toString()))
+                .flatMapMany(results -> Flux.fromIterable(results.get(0).valueStream().toList()))
+                .map(SurrealProtectedResourceRepository::toDomain);
     }
 
     @Override
@@ -96,16 +57,15 @@ public final class SurrealProtectedResourceRepository implements ProtectedResour
         return client.execute(
                         """
                         CREATE type::record('%s', $id) SET \
-                        applicationId = $applicationId, tenantId = $tenantId, applicationName = $applicationName, \
-                        resourceCode = $resourceCode, action = $action, registeredAt = <datetime>$registeredAt;\
-                        """.formatted(TABLE),
+                        applicationId = $applicationId, tenantId = $tenantId, path = $path, method = $method, \
+                        registeredAt = <datetime>$registeredAt;\
+                        """.formatted(ProtectedResourceSchema.TABLE),
                         Map.of(
                                 "id", resource.id().value().toString(),
-                                FIELD_APPLICATION_ID, resource.applicationId().value().toString(),
-                                FIELD_TENANT_ID, resource.tenantId().value(),
-                                "applicationName", resource.applicationName().value(),
-                                FIELD_RESOURCE_CODE, resource.code().value(),
-                                FIELD_ACTION, resource.action().value(),
+                                "applicationId", resource.applicationId().value().toString(),
+                                "tenantId", resource.tenantId().value(),
+                                "path", resource.path().value(),
+                                "method", resource.method().name(),
                                 "registeredAt", resource.registeredAt().toString()))
                 .thenReturn(resource);
     }
@@ -113,7 +73,7 @@ public final class SurrealProtectedResourceRepository implements ProtectedResour
     @Override
     public Mono<Void> deleteById(ResourceId resourceId) {
         return client.execute(
-                        "DELETE type::record('%s', $id);".formatted(TABLE),
+                        "DELETE type::record('%s', $id);".formatted(ProtectedResourceSchema.TABLE),
                         Map.of("id", resourceId.value().toString()))
                 .then();
     }
@@ -121,11 +81,10 @@ public final class SurrealProtectedResourceRepository implements ProtectedResour
     private static ProtectedResource toDomain(JsonNode row) {
         ProtectedResourceEntity entity = new ProtectedResourceEntity(
                 SurrealRecordId.idPart(row.path("id").asString()),
-                row.path(FIELD_APPLICATION_ID).asString(),
-                row.path(FIELD_TENANT_ID).asString(),
-                row.path("applicationName").asString(),
-                row.path(FIELD_RESOURCE_CODE).asString(),
-                row.path(FIELD_ACTION).asString(),
+                row.path("applicationId").asString(),
+                row.path("tenantId").asString(),
+                row.path("path").asString(),
+                row.path("method").asString(),
                 Instant.parse(row.path("registeredAt").asString()));
         return ProtectedResourcePersistenceMapper.toDomain(entity);
     }

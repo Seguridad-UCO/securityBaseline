@@ -3,19 +3,26 @@ package co.edu.uco.seguridad.shared.persistence.surrealdb;
 import co.edu.uco.seguridad.AbstractSurrealDbIntegrationTest;
 import co.edu.uco.seguridad.pdp.applications.application.port.secondary.repository.ApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
+import co.edu.uco.seguridad.pdp.applications.domain.ApplicationBaseUrl;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.repository.SurrealApplicationRepository;
 import co.edu.uco.seguridad.pdp.commons.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.ApplicationName;
-import co.edu.uco.seguridad.pdp.commons.PageWindow;
 import co.edu.uco.seguridad.pdp.commons.ResourceId;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
+import co.edu.uco.seguridad.pdp.identity.application.port.secondary.repository.SecurityUserRepository;
+import co.edu.uco.seguridad.pdp.identity.domain.Email;
+import co.edu.uco.seguridad.pdp.identity.domain.ExternalIdentity;
+import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;
+import co.edu.uco.seguridad.pdp.identity.domain.UserId;
+import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.repository.SurrealSecurityUserRepository;
 import co.edu.uco.seguridad.pdp.resources.application.port.secondary.repository.ProtectedResourceRepository;
-import co.edu.uco.seguridad.pdp.resources.domain.ActionCode;
-import co.edu.uco.seguridad.pdp.resources.domain.ProtectedApplicationCriteria;
+import co.edu.uco.seguridad.pdp.resources.domain.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.ProtectedResource;
-import co.edu.uco.seguridad.pdp.resources.domain.ResourceCode;
+import co.edu.uco.seguridad.pdp.resources.domain.ResourcePath;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.persistence.repository.SurrealProtectedResourceRepository;
 import co.edu.uco.seguridad.pdp.tenants.application.port.secondary.repository.TenantRepository;
+import co.edu.uco.seguridad.pdp.tenants.domain.Tenant;
+import co.edu.uco.seguridad.pdp.tenants.domain.TenantName;
 import co.edu.uco.seguridad.pdp.tenants.domain.TenantStatus;
 import co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.secondary.persistence.repository.SurrealTenantRepository;
 import org.junit.jupiter.api.BeforeAll;
@@ -59,8 +66,8 @@ class SurrealRepositoryIntegrationTests extends AbstractSurrealDbIntegrationTest
     void tenant_repository_finds_a_seeded_tenant_and_returns_empty_for_an_unknown_one() {
         client.ensureNamespaceAndDatabase()
                 .then(client.execute("DEFINE TABLE IF NOT EXISTS tenant SCHEMALESS;", Map.of()))
-                .then(client.execute("UPSERT type::record('tenant', $id) SET status = $status;",
-                        Map.of("id", "surreal-it-tenant", "status", "ACTIVE")))
+                .then(client.execute("UPSERT type::record('tenant', $id) SET name = $name, status = $status;",
+                        Map.of("id", "surreal-it-tenant", "name", "Surreal IT Tenant", "status", "ACTIVE")))
                 .block();
 
         TenantRepository repository = new SurrealTenantRepository(client);
@@ -74,6 +81,23 @@ class SurrealRepositoryIntegrationTests extends AbstractSurrealDbIntegrationTest
 
         StepVerifier.create(repository.findById(new TenantId("no-such-tenant")))
                 .verifyComplete();
+    }
+
+    @Test
+    void tenant_repository_saves_a_new_tenant_and_reports_its_existence() {
+        client.ensureNamespaceAndDatabase()
+                .then(client.execute("DEFINE TABLE IF NOT EXISTS tenant SCHEMALESS;", Map.of()))
+                .block();
+
+        TenantRepository repository = new SurrealTenantRepository(client);
+        TenantId id = new TenantId("surreal-it-created-tenant");
+
+        StepVerifier.create(repository.existsById(id)).expectNext(false).verifyComplete();
+
+        Tenant tenant = Tenant.register(id, new TenantName("Created Tenant"));
+        StepVerifier.create(repository.save(tenant)).expectNext(tenant).verifyComplete();
+
+        StepVerifier.create(repository.existsById(id)).expectNext(true).verifyComplete();
     }
 
     @Test
@@ -91,8 +115,8 @@ class SurrealRepositoryIntegrationTests extends AbstractSurrealDbIntegrationTest
         ApplicationRepository repository = new SurrealApplicationRepository(client);
         TenantId tenant = new TenantId("surreal-it-apps");
         ApplicationName name = new ApplicationName("surreal-it-app");
-        Application application = Application.register(
-                new ApplicationId(UUID.randomUUID()), tenant, name, Instant.now());
+        Application application = Application.register(new ApplicationId(UUID.randomUUID()), tenant, name,
+                "Aplicación de prueba", new ApplicationBaseUrl("https://surreal-it-app.example.com"), Instant.now());
 
         StepVerifier.create(repository.existsByTenantAndName(tenant, name))
                 .expectNext(false)
@@ -102,6 +126,10 @@ class SurrealRepositoryIntegrationTests extends AbstractSurrealDbIntegrationTest
 
         StepVerifier.create(repository.existsByTenantAndName(tenant, name))
                 .expectNext(true)
+                .verifyComplete();
+
+        StepVerifier.create(repository.findByTenantAndId(tenant, application.id()))
+                .expectNext(application)
                 .verifyComplete();
 
         StepVerifier.create(repository.deleteById(application.id())).verifyComplete();
@@ -117,8 +145,8 @@ class SurrealRepositoryIntegrationTests extends AbstractSurrealDbIntegrationTest
                 .then(client.execute(
                         """
                         DEFINE TABLE IF NOT EXISTS protected_resource SCHEMALESS;
-                        DEFINE INDEX IF NOT EXISTS protected_resource_grant ON protected_resource \
-                        COLUMNS applicationId, resourceCode, action UNIQUE;\
+                        DEFINE INDEX IF NOT EXISTS protected_resource_endpoint ON protected_resource \
+                        COLUMNS applicationId, path, method UNIQUE;\
                         """,
                         Map.of()))
                 .block();
@@ -126,44 +154,72 @@ class SurrealRepositoryIntegrationTests extends AbstractSurrealDbIntegrationTest
         ProtectedResourceRepository repository = new SurrealProtectedResourceRepository(client);
         TenantId tenant = new TenantId("surreal-it-resources");
         ApplicationId applicationId = new ApplicationId(UUID.randomUUID());
+        ResourcePath path = new ResourcePath("/estudiantes");
         ProtectedResource resource = ProtectedResource.register(
-                new ResourceId(UUID.randomUUID()),
-                applicationId,
-                tenant,
-                new ApplicationName("surreal-it-catalog"),
-                new ResourceCode("estudiantes"),
-                new ActionCode("consultar"),
-                Instant.now());
+                new ResourceId(UUID.randomUUID()), applicationId, tenant, path, HttpVerb.GET, Instant.now());
 
-        StepVerifier.create(repository.existsGrant(tenant, applicationId, resource.code(), resource.action()))
+        StepVerifier.create(repository.existsByApplicationPathAndMethod(applicationId, path, HttpVerb.GET))
                 .expectNext(false)
                 .verifyComplete();
 
         StepVerifier.create(repository.save(resource)).expectNext(resource).verifyComplete();
 
-        StepVerifier.create(repository.existsGrant(tenant, applicationId, resource.code(), resource.action()))
+        StepVerifier.create(repository.existsByApplicationPathAndMethod(applicationId, path, HttpVerb.GET))
                 .expectNext(true)
                 .verifyComplete();
 
-        StepVerifier.create(repository.existsGrant(
-                        new TenantId("another-tenant"), applicationId, resource.code(), resource.action()))
-                .as("the same applicationId/resourceCode/action must not leak across tenants")
+        StepVerifier.create(repository.existsByApplicationPathAndMethod(
+                        new ApplicationId(UUID.randomUUID()), path, HttpVerb.GET))
+                .as("the same path/method must not leak across applications")
                 .expectNext(false)
                 .verifyComplete();
 
-        StepVerifier.create(repository.findBy(
-                        ProtectedApplicationCriteria.scopedTo(tenant), PageWindow.defaultWindow()))
-                .assertNext(page -> {
-                    assertThat(page.total()).isEqualTo(1);
-                    assertThat(page.content()).containsExactly(resource);
-                })
+        StepVerifier.create(repository.findAllByApplication(applicationId))
+                .assertNext(found -> assertThat(found).isEqualTo(resource))
                 .verifyComplete();
 
         StepVerifier.create(repository.deleteById(resource.id())).verifyComplete();
 
-        StepVerifier.create(repository.findBy(
-                        ProtectedApplicationCriteria.scopedTo(tenant), PageWindow.defaultWindow()))
-                .assertNext(page -> assertThat(page.total()).isZero())
+        StepVerifier.create(repository.findAllByApplication(applicationId)).verifyComplete();
+    }
+
+    @Test
+    void security_user_repository_links_an_identity_and_finds_it_by_issuer_and_subject() {
+        client.ensureNamespaceAndDatabase()
+                .then(client.execute(
+                        """
+                        DEFINE TABLE IF NOT EXISTS security_user SCHEMALESS;
+                        DEFINE TABLE IF NOT EXISTS external_identity SCHEMALESS;
+                        """,
+                        Map.of()))
+                .block();
+
+        SecurityUserRepository repository = new SurrealSecurityUserRepository(client);
+        SecurityUser user = SecurityUser.provision(new UserId(UUID.randomUUID()),
+                new TenantId("surreal-it-identity"), new Email("surreal-it-user@uco.edu"), "Surreal IT User",
+                Instant.now());
+
+        StepVerifier.create(repository.save(user)).expectNext(user).verifyComplete();
+
+        ExternalIdentity identity = new ExternalIdentity(user.id(), "surreal-it-issuer", "surreal-it-subject", "google");
+        StepVerifier.create(repository.linkIdentity(identity)).verifyComplete();
+
+        StepVerifier.create(repository.findIdentity("surreal-it-issuer", "surreal-it-subject"))
+                .assertNext(found -> assertThat(found.userId()).isEqualTo(user.id()))
+                .verifyComplete();
+
+        StepVerifier.create(repository.findByEmail(user.email()))
+                .assertNext(found -> assertThat(found.id()).isEqualTo(user.id()))
+                .verifyComplete();
+
+        StepVerifier.create(repository.findById(user.id()))
+                .assertNext(found -> assertThat(found).isEqualTo(user))
+                .verifyComplete();
+
+        StepVerifier.create(repository.providerFor(user.id())).expectNext("google").verifyComplete();
+
+        StepVerifier.create(repository.findAll().collectList())
+                .assertNext(found -> assertThat(found).extracting(SecurityUser::id).contains(user.id()))
                 .verifyComplete();
     }
 }
