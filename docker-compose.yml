@@ -1,6 +1,32 @@
 services:
   surrealdb:
     image: surrealdb/surrealdb:latest
-    command: start --user root --pass root memory
+    container_name: surrealdb
+    command: start --user root --pass root file:/data/database
     ports:
       - "8000:8000"
+    volumes:
+      - surrealdb_data:/data
+    restart: unless-stopped
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7.2
+    container_name: keycloak
+    command:
+      - start-dev
+      - --import-realm
+      - --spi-theme-static-max-age=-1
+      - --spi-theme-cache-themes=false
+      - --spi-theme-cache-templates=false
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    ports:
+      - "9090:8080"
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+      - ./keycloak/themes:/opt/keycloak/themes
+      - ./keycloak/import:/opt/keycloak/data/import
+
+volumes:
+  keycloak_data:

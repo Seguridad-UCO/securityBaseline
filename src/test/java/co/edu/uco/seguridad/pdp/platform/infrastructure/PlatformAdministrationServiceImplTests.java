@@ -101,7 +101,7 @@ class PlatformAdministrationServiceImplTests {
                 Mono.just(List.of(empty)), Mono.just(List.of(user)));
 
         var principal = new PlatformAdministrationServiceImpl(provisionDb)
-                .provision("https://accounts.google.com", "google-subject", "David@UCO.edu", "David Alzate").block();
+                .provision("https://accounts.google.com", "google-subject", "David@UCO.edu", "David Alzate", "google").block();
 
         assertThat(principal.userId()).isNotBlank();
         assertThat(principal.subject()).isEqualTo("google-subject");
@@ -115,6 +115,22 @@ class PlatformAdministrationServiceImplTests {
         var assigned = new PlatformAdministrationServiceImpl(assignmentDb).assignTenant("user-1", "estudiantes-uco").block();
 
         assertThat(assigned).extracting("id", "tenantId").containsExactly("user-1", "estudiantes-uco");
+    }
+
+    @Test
+    void reuses_a_known_identity_and_updates_the_local_profile_on_repeated_oidc_login() throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        var identity = mapper.readTree("[{\"userId\":\"user-1\",\"subject\":\"oidc-subject\"}]");
+        var updatedUser = mapper.readTree("[{\"tenantId\":\"universidad-uco\",\"email\":\"david@uco.edu\",\"name\":\"David desde Keycloak\"}]");
+        SurrealDbClient database = mock(SurrealDbClient.class);
+        when(database.execute(anyString(), anyMap()))
+                .thenReturn(Mono.just(List.of(identity)), Mono.just(List.of(mapper.createArrayNode(), updatedUser)));
+
+        var principal = new PlatformAdministrationServiceImpl(database)
+                .provision("http://localhost:9090/realms/security-baseline", "oidc-subject", "david@uco.edu", "David desde Keycloak", "keycloak-local").block();
+
+        assertThat(principal).extracting("userId", "subject", "tenantId.value", "name", "email")
+                .containsExactly("user-1", "oidc-subject", "universidad-uco", "David desde Keycloak", "david@uco.edu");
     }
 
     @Test
@@ -156,10 +172,10 @@ class PlatformAdministrationServiceImplTests {
         var identity = mapper.readTree("[{\"userId\":\"user-1\",\"subject\":\"google-subject\"}]");
         var knownUser = mapper.readTree("[{\"tenantId\":\"universidad-uco\",\"email\":\"david@uco.edu\",\"name\":\"David Alzate\"}]");
         SurrealDbClient knownIdentityDb = mock(SurrealDbClient.class);
-        when(knownIdentityDb.execute(anyString(), anyMap())).thenReturn(Mono.just(List.of(identity)), Mono.just(List.of(empty, knownUser)));
+        when(knownIdentityDb.execute(anyString(), anyMap())).thenReturn(Mono.just(List.of(identity)), Mono.just(List.of(empty)), Mono.just(List.of(empty, knownUser)));
 
         var known = new PlatformAdministrationServiceImpl(knownIdentityDb)
-                .provision("https://accounts.google.com", "google-subject", "david@uco.edu", "David Alzate").block();
+                .provision("https://accounts.google.com", "google-subject", "david@uco.edu", "David Alzate", "google").block();
         assertThat(known.userId()).isEqualTo("user-1");
     }
 }

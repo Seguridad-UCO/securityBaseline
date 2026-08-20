@@ -27,6 +27,7 @@ class SessionControllerTests {
         var response = new SessionController().current(exchange)
                 .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication)).block();
 
+        assertThat(response.code()).isEqualTo("SESSION_ACTIVE");
         assertThat(response.data().subject()).isEqualTo("google-sub");
         assertThat(response.data().name()).isEqualTo("David Alzate");
         assertThat(response.data().email()).isEqualTo("david@uco.edu");
@@ -45,6 +46,7 @@ class SessionControllerTests {
         var response = new SessionController().current(exchange)
                 .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication)).block();
 
+        assertThat(response.code()).isEqualTo("SESSION_ACTIVE");
         assertThat(response.data().subject()).isEqualTo("jwt-subject");
         assertThat(response.data().tenantId()).isEqualTo("estudiantes-uco");
         assertThat(response.data().name()).isEmpty();

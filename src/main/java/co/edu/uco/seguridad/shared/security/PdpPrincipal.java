@@ -26,7 +26,11 @@ public record PdpPrincipal(TenantId tenantId, String subject, String tokenId) {
         return new PdpPrincipal(new TenantId(jwt.getClaimAsString("tenant")), jwt.getSubject(), jwt.getId());
     }
 
-    /** La sesión BFF usa el ID token validado por el cliente OIDC de Spring; Keycloak debe emitir tenant y sid. */
+    /**
+     * Compatibilidad temporal para requests que todavía lleguen con un principal OIDC antes de que
+     * el BFF persista el {@link LocalUserPrincipal}. El tenant sigue siendo local; si este camino
+     * se usa, el token debe traer el claim mientras termina la transición.
+     */
     public static PdpPrincipal from(OidcUser user) {
         String sessionId = user.getClaimAsString("sid");
         if (sessionId == null || sessionId.isBlank()) sessionId = user.getClaimAsString("jti");
