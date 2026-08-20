@@ -2,17 +2,14 @@ package co.edu.uco.seguridad.pdp.resources.application.exception;
 
 import co.edu.uco.seguridad.pdp.commons.exception.ConflictBusinessRuleException;
 import co.edu.uco.seguridad.pdp.resources.application.message.ResourcesMessages;
-import co.edu.uco.seguridad.pdp.resources.domain.ActionCode;
-import co.edu.uco.seguridad.pdp.resources.domain.ResourceCode;
+import co.edu.uco.seguridad.pdp.resources.domain.HttpVerb;
+import co.edu.uco.seguridad.pdp.resources.domain.ResourcePath;
 
-/**
- * Generada por {@code ProtectedResourceMustBeUniqueRule}. Distinta de
- * {@code DuplicateApplicationException}: aquí la aplicación es legítima y solo se repite la concesión.
- */
+/** Generada por {@code ProtectedResourceMustBeUniqueRule}: el mismo método+ruta ya está registrado. */
 public final class DuplicateProtectedResourceException extends ConflictBusinessRuleException {
 
-    public DuplicateProtectedResourceException(ResourceCode resourceCode, ActionCode action) {
+    public DuplicateProtectedResourceException(ResourcePath path, HttpVerb method) {
         super("PROTECTED_RESOURCE_ALREADY_EXISTS",
-                ResourcesMessages.duplicateProtectedResource(resourceCode.value(), action.value()));
+                ResourcesMessages.duplicateProtectedResource(method.name(), path.value()));
     }
 }

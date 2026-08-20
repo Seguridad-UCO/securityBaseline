@@ -13,10 +13,11 @@ import java.util.Objects;
 /**
  * Define la tabla {@code tenant} y siembra el catálogo configurado (ADR-0004) al arrancar.
  *
- * <p>{@code UPSERT} en vez de {@code CREATE}: el catálogo de tenants es configuración, no un dato
- * que el negocio escriba en tiempo de ejecución (no existe un caso de uso "registrar tenant"), así
- * que cada arranque vuelve a aplicar la fuente de verdad — {@code application.properties} — sin
- * fallar si el registro ya existía de un arranque anterior.</p>
+ * <p>{@code UPSERT} en vez de {@code CREATE}: los tenants sembrados aquí son configuración de
+ * arranque (ambientes de desarrollo, demos), no el único punto de alta — {@code CreateTenantUseCase}
+ * cubre el alta en tiempo de ejecución. UPSERT deja que cada arranque reaplique esta semilla sin
+ * fallar si el registro ya existía, y sin pisar un tenant creado en tiempo de ejecución con el mismo
+ * código salvo que la semilla también lo declare.</p>
  *
  * <p>Corre en el hilo principal de arranque, antes de que Netty acepte tráfico, así que bloquear
  * aquí es seguro: no es el hilo de un event loop reactivo atendiendo una petición real.</p>

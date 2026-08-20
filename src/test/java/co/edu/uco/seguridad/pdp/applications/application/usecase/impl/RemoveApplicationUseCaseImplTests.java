@@ -6,6 +6,7 @@ import co.edu.uco.seguridad.pdp.commons.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.ApplicationName;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
 import org.junit.jupiter.api.Test;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -28,6 +29,16 @@ class RemoveApplicationUseCaseImplTests {
         ApplicationRepository repository = new ApplicationRepository() {
             @Override
             public Mono<Boolean> existsByTenantAndName(TenantId tenantId, ApplicationName name) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Application> findByTenantAndId(TenantId tenantId, ApplicationId applicationId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Flux<Application> findAllByTenant(TenantId tenantId) {
                 throw new UnsupportedOperationException();
             }
 

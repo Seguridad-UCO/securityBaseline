@@ -1,7 +1,8 @@
 package co.edu.uco.seguridad.shared.auth.service;
 
 import co.edu.uco.seguridad.pdp.commons.TenantId;
-import co.edu.uco.seguridad.pdp.platform.application.PlatformAdministrationService;
+import co.edu.uco.seguridad.pdp.identity.application.port.primary.dto.request.ProvisionIdentityRequest;
+import co.edu.uco.seguridad.pdp.identity.application.usecase.ProvisionIdentityUseCase;
 import co.edu.uco.seguridad.shared.auth.model.OidcFlowIntent;
 import co.edu.uco.seguridad.shared.security.LocalUserPrincipal;
 import org.junit.jupiter.api.Test;
@@ -35,9 +36,9 @@ class OidcAuthenticationSuccessHandlerTests {
     @Test
     void login_flow_provisions_the_local_user_and_redirects_to_the_frontend() {
         AtomicReference<String> provider = new AtomicReference<>();
-        PlatformAdministrationService users = provisioner(provider);
+        ProvisionIdentityUseCase provisionIdentity = provisioner(provider);
         OidcFlowStateService flowState = new OidcFlowStateService();
-        OidcAuthenticationSuccessHandler handler = new OidcAuthenticationSuccessHandler(users, flowState,
+        OidcAuthenticationSuccessHandler handler = new OidcAuthenticationSuccessHandler(provisionIdentity, flowState,
                 new OidcRedirectPolicy("http://localhost:5173"),
                 new KeycloakOidcSessionService(clientRegistrations()));
         MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/login/oauth2/code/keycloak").build());
@@ -69,22 +70,11 @@ class OidcAuthenticationSuccessHandlerTests {
                 "http://localhost:9090/realms/security-baseline/protocol/openid-connect/logout?client_id=security-baseline-bff&post_logout_redirect_uri=http://localhost:5173?registered%3Dsuccess&id_token_hint=id-token");
     }
 
-    private static PlatformAdministrationService provisioner(AtomicReference<String> provider) {
-        return new PlatformAdministrationService() {
-            @Override
-            public Mono<LocalUserPrincipal> provision(String issuer, String subject, String email, String name, String authProvider) {
-                provider.set(authProvider);
-                return Mono.just(new LocalUserPrincipal("user-1", subject, new TenantId("universidad-uco"), email, name));
-            }
-
-            @Override public Mono<List<ApplicationView>> applications(String tenantId) { return Mono.empty(); }
-            @Override public Mono<ApplicationView> createApplication(String tenantId, String name, String description, String baseUrl) { return Mono.empty(); }
-            @Override public Mono<List<ResourceView>> resources(String tenantId, String applicationId) { return Mono.empty(); }
-            @Override public Mono<ResourceView> createResource(String tenantId, String applicationId, String path, String method) { return Mono.empty(); }
-            @Override public Mono<List<TenantView>> tenants() { return Mono.empty(); }
-            @Override public Mono<TenantView> createTenant(String code, String name) { return Mono.empty(); }
-            @Override public Mono<List<UserView>> users() { return Mono.empty(); }
-            @Override public Mono<UserView> assignTenant(String userId, String tenantCode) { return Mono.empty(); }
+    private static ProvisionIdentityUseCase provisioner(AtomicReference<String> provider) {
+        return (ProvisionIdentityRequest dto) -> {
+            provider.set(dto.provider());
+            return Mono.just(new LocalUserPrincipal("user-1", dto.subject(), new TenantId("universidad-uco"),
+                    dto.email().value(), dto.name()));
         };
     }
 

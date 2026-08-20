@@ -2,6 +2,7 @@ package co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.secondary.persis
 
 import co.edu.uco.seguridad.pdp.commons.TenantId;
 import co.edu.uco.seguridad.pdp.tenants.domain.Tenant;
+import co.edu.uco.seguridad.pdp.tenants.domain.TenantName;
 import co.edu.uco.seguridad.pdp.tenants.domain.TenantStatus;
 import co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.secondary.persistence.entity.TenantEntity;
 
@@ -15,6 +16,6 @@ public final class TenantPersistenceMapper {
     }
 
     public static Tenant toDomain(TenantEntity entity) {
-        return new Tenant(new TenantId(entity.id()), TenantStatus.valueOf(entity.status()));
+        return new Tenant(new TenantId(entity.id()), new TenantName(entity.name()), TenantStatus.valueOf(entity.status()));
     }
 }

@@ -10,13 +10,12 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 
 /**
  * La frontera PEP como tal (ADR-0003): qué pasa antes de que una petición llegue al controlador.
- * {@code ProtectedApplicationHttpTests} cubre el flujo de negocio ya autenticado; este archivo
- * cubre los cuatro rechazos de autenticación y las dos rutas públicas.
+ * Cubre los cuatro rechazos de autenticación y las dos rutas públicas.
  */
 @SpringBootTest(classes = PdpApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class SecurityWebFilterChainTests extends AbstractSurrealDbIntegrationTest {
 
-    private static final String PATH = "/api/v1/protected-applications";
+    private static final String PATH = "/api/v1/applications";
 
     @LocalServerPort
     int port;
@@ -103,7 +102,7 @@ class SecurityWebFilterChainTests extends AbstractSurrealDbIntegrationTest {
     void register_still_rejects_an_unauthenticated_request() {
         client().post().uri(PATH)
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue("{\"applicationName\":\"sin-token\",\"resourceCode\":\"estudiantes\",\"action\":\"consultar\"}")
+                .bodyValue("{\"name\":\"sin-token\",\"description\":\"\",\"baseUrl\":\"https://sin-token.example.com\"}")
                 .exchange()
                 .expectStatus().isUnauthorized();
     }

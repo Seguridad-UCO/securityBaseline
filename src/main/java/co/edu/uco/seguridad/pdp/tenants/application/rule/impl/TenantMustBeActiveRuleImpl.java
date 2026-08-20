@@ -32,7 +32,7 @@ public final class TenantMustBeActiveRuleImpl implements TenantMustBeActiveRule 
                 .switchIfEmpty(Mono.error(() -> new TenantNotFoundException(tenantId)))
                 .map(tenant -> {
                     statusMustBeActive.execute(tenant);
-                    return new TenantResponse(tenant.id(), tenant.status());
+                    return new TenantResponse(tenant.id(), tenant.name(), tenant.status());
                 });
     }
 }

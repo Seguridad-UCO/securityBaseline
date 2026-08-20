@@ -1,6 +1,7 @@
 package co.edu.uco.seguridad.pdp.tenants.application.port.primary.dto.response;
 
 import co.edu.uco.seguridad.pdp.commons.TenantId;
+import co.edu.uco.seguridad.pdp.tenants.domain.TenantName;
 import co.edu.uco.seguridad.pdp.tenants.domain.TenantStatus;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
@@ -11,10 +12,11 @@ import java.util.Objects;
  *
  * <p>La entidad inquilino nunca sale del módulo. {@link TenantStatus} es un tipo publicado del módulo.</p>
  */
-public record TenantResponse(TenantId id, TenantStatus status) {
+public record TenantResponse(TenantId id, TenantName name, TenantStatus status) {
 
     public TenantResponse {
         Objects.requireNonNull(id, RequiredArgumentMessages.TENANT_ID);
+        Objects.requireNonNull(name, RequiredArgumentMessages.TENANT_NAME);
         Objects.requireNonNull(status, RequiredArgumentMessages.TENANT_STATUS);
     }
 

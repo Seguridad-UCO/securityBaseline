@@ -7,15 +7,16 @@ import co.edu.uco.seguridad.pdp.applications.application.rule.impl.ApplicationNa
 import co.edu.uco.seguridad.pdp.applications.application.rule.impl.ApplicationNameMustNotBeReservedRuleImpl;
 import co.edu.uco.seguridad.pdp.applications.application.rulesvalidator.RegisterApplicationRulesValidator;
 import co.edu.uco.seguridad.pdp.applications.application.rulesvalidator.impl.RegisterApplicationRulesValidatorImpl;
+import co.edu.uco.seguridad.pdp.applications.application.usecase.ListApplicationsUseCase;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RegisterApplicationUseCase;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RemoveApplicationUseCase;
+import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.ListApplicationsUseCaseImpl;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.RegisterApplicationUseCaseImpl;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.RemoveApplicationUseCaseImpl;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.repository.SurrealApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.schema.SurrealApplicationSchemaInitializer;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.properties.ApplicationCatalogProperties;
 import co.edu.uco.seguridad.pdp.tenants.application.rule.TenantMustBeActiveRule;
-import co.edu.uco.seguridad.shared.event.DomainEventPublisher;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
@@ -63,10 +64,14 @@ public class ApplicationsConfiguration {
     @Bean
     RegisterApplicationUseCase registerApplicationUseCase(RegisterApplicationRulesValidator rules,
                                                           ApplicationRepository repository,
-                                                          DomainEventPublisher events,
                                                           IdentifierGenerator identifiers,
                                                           TimeProvider time) {
-        return new RegisterApplicationUseCaseImpl(rules, repository, events, identifiers, time);
+        return new RegisterApplicationUseCaseImpl(rules, repository, identifiers, time);
+    }
+
+    @Bean
+    ListApplicationsUseCase listApplicationsUseCase(ApplicationRepository repository) {
+        return new ListApplicationsUseCaseImpl(repository);
     }
 
     @Bean

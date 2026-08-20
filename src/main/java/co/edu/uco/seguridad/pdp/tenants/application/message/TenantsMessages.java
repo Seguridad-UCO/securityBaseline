@@ -16,6 +16,10 @@ public final class TenantsMessages {
         return "El inquilino " + tenantId + " no puede registrar aplicaciones mientras está " + status;
     }
 
+    public static String duplicateTenant(String tenantId) {
+        return "Ya existe un inquilino con el id: " + tenantId;
+    }
+
     private TenantsMessages() {
     }
 }

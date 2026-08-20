@@ -17,6 +17,10 @@ public final class ApplicationsMessages {
                 + name;
     }
 
+    public static String applicationNotFound(String applicationId) {
+        return "La aplicación no existe en tu inquilino: " + applicationId;
+    }
+
     private ApplicationsMessages() {
     }
 }

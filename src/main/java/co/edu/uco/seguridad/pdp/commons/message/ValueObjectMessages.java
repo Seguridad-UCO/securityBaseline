@@ -16,6 +16,35 @@ public final class ValueObjectMessages {
         }
     }
 
+    public static final class TenantName {
+        public static final String LENGTH = "debe contener de 3 a 100 caracteres";
+
+        private TenantName() {
+        }
+    }
+
+    public static final class ApplicationBaseUrl {
+        public static final String FORMAT = "debe ser una URL absoluta (con esquema y host)";
+
+        private ApplicationBaseUrl() {
+        }
+    }
+
+    public static final class ResourcePath {
+        public static final String FORMAT =
+                "debe iniciar con / y no contener espacios, barras dobles, query ni fragment";
+
+        private ResourcePath() {
+        }
+    }
+
+    public static final class HttpMethod {
+        public static final String UNSUPPORTED = "debe ser uno de GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS";
+
+        private HttpMethod() {
+        }
+    }
+
     public static final class TenantId {
         public static final String FORMAT =
                 "debe tener de 2 a 64 caracteres alfanuméricos, guiones o guiones bajos";
@@ -87,6 +116,22 @@ public final class ValueObjectMessages {
     public static String invalidIdentifier(String identifierName, String rejectedValue) {
         return "El valor no es un válido " + identifierName.toLowerCase().replace('_', ' ')
                 + ": " + rejectedValue;
+    }
+
+    public static String invalidTenantName(String reason) {
+        return "El nombre del tenant es inválido: " + reason;
+    }
+
+    public static String invalidApplicationBaseUrl(String reason) {
+        return "La URL base de la aplicación es inválida: " + reason;
+    }
+
+    public static String invalidResourcePath(String reason) {
+        return "La ruta del recurso es inválida: " + reason;
+    }
+
+    public static String unsupportedHttpMethod(String reason) {
+        return "El método HTTP es inválido: " + reason;
     }
 
     private ValueObjectMessages() {
