@@ -4,6 +4,7 @@ import co.edu.uco.seguridad.pdp.platform.application.PlatformAdministrationServi
 import co.edu.uco.seguridad.shared.auth.model.OidcFlowIntent;
 import co.edu.uco.seguridad.shared.security.LocalUserPrincipal;
 import co.edu.uco.seguridad.shared.web.session.KeycloakLogoutController;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextImpl;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Locale;
 
 @Component
+@Profile("keycloak")
 public final class OidcAuthenticationSuccessHandler implements ServerAuthenticationSuccessHandler {
 
     private final PlatformAdministrationService users;

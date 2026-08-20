@@ -1,7 +1,7 @@
 # PRODUCTION environment. Fed by the `main` branch.
 variables:
   environmentName: 'pdp-prod'
-  springProfile: 'prod'
+  springProfile: 'prod,keycloak'
   azureServiceConnection: 'Azure-PDP-Prod'
   # '-mx': the original kv-pdp-prod name is held by a soft-deleted, purge-protected vault from the
   # brazilsouth-to-mexicocentral region migration and cannot be reused for 90 days.

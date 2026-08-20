@@ -1,6 +1,7 @@
 package co.edu.uco.seguridad.shared.auth.service;
 
 import co.edu.uco.seguridad.shared.auth.model.OidcFlowIntent;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
@@ -18,6 +19,7 @@ import java.net.URI;
 import java.util.regex.Pattern;
 
 @Service
+@Profile("keycloak")
 public final class OidcAuthorizationFlowService {
 
     private static final String PROMPT_PARAMETER = "prompt";
@@ -29,7 +31,7 @@ public final class OidcAuthorizationFlowService {
     private final ServerAuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository;
     private final OidcFlowStateService flowState;
 
-    OidcAuthorizationFlowService(ReactiveClientRegistrationRepository clientRegistrations,
+    public OidcAuthorizationFlowService(ReactiveClientRegistrationRepository clientRegistrations,
             ServerAuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository,
             OidcFlowStateService flowState) {
         this.authorizationRequestRepository = authorizationRequestRepository;

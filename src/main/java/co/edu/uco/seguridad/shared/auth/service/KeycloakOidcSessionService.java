@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.shared.auth.service;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
 import org.springframework.stereotype.Service;
@@ -11,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 @Service
+@Profile("keycloak")
 public final class KeycloakOidcSessionService {
 
     private static final String KEYCLOAK_REGISTRATION_ID = "keycloak";

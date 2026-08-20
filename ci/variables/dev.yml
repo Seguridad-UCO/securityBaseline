@@ -2,7 +2,7 @@
 # separate environment was retired.
 variables:
   environmentName: 'pdp-dev'
-  springProfile: 'dev'
+  springProfile: 'dev,keycloak'
   azureServiceConnection: 'Azure-PDP-Dev'
   keyVaultName: 'kv-pdp-dev'
   webAppName: 'app-pdp-dev'
