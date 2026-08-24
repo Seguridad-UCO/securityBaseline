@@ -2,16 +2,20 @@
 # separate environment was retired.
 variables:
   environmentName: 'pdp-dev'
-  # NOTA: 'keycloak' se quitó temporalmente (ver commit de rollback) — el deploy stage todavía no
-  # inyecta PDP_KEYCLOAK_ISSUER/CLIENT_ID/CLIENT_SECRET, así que con el perfil activo el contenedor
-  # intenta resolver el issuer OIDC en http://localhost:9090 (el default de dev) y no arranca.
-  springProfile: 'dev'
+  springProfile: 'dev,keycloak'
   azureServiceConnection: 'Azure-PDP-Dev'
   keyVaultName: 'kv-pdp-dev'
   webAppName: 'app-pdp-dev'
   resourceGroupName: 'rg-pdp-dev-v2'
   datasourceUrl: 'http://20.242.47.139:8000'
   datasourceUsername: 'root'
-  # Keycloak real (ADR-020), en su propia VM (rg-pdp-shared-v1).
-  idpIssuerUri: 'http://20.22.186.196:8080/realms/pdp'
-  idpJwkSetUri: 'http://20.22.186.196:8080/realms/pdp/protocol/openid-connect/certs'
+  # Keycloak real (ADR-020), en su propia VM (rg-pdp-shared-v1), realm 'security-baseline' (mismo
+  # nombre que el realm local, para que DEV/PROD y desarrollo local compartan una sola convención).
+  keycloakIssuerUri: 'http://20.22.186.196:8080/realms/security-baseline'
+  keycloakClientId: 'security-baseline-bff'
+  # La VM de Keycloak se prende bajo demanda para ahorrar crédito de Azure — si este deploy falla
+  # con "no se pudo resolver el issuer OIDC", prende la VM primero (az vm start -g rg-pdp-shared-v1
+  # -n vm-pdp-keycloak-shared) y vuelve a correr el deploy.
+  # Frontend real (PD-12), Azure Static Web Apps free tier, rg-pdp-dev-v2. El cliente de Keycloak
+  # ya tiene esta URL en sus post-logout redirect URIs.
+  frontendOrigin: 'https://blue-wave-07d0b0a0f.7.azurestaticapps.net'

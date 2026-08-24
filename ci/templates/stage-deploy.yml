@@ -42,15 +42,16 @@ stages:
                 # Secrets become masked pipeline variables named like the Key Vault secret
                 # (e.g. pdp-datasource-password). They are never written to a file or the repo.
                 # Filter only what a running environment actually consumes today — pdp-jwt-signing-key
-                # (dev/prod are on JWKS now, ADR-020), pdp-oidc-client-secret and pdp-otlp-token (no
-                # subsystem reads them yet) aren't referenced by any application-*.properties, and this
-                # task fails hard if a filtered secret doesn't exist in the vault.
+                # (dev/prod are on JWKS now, ADR-020) and pdp-otlp-token (no subsystem reads it yet)
+                # aren't referenced by any application-*.properties, and this task fails hard if a
+                # filtered secret doesn't exist in the vault. pdp-oidc-client-secret is in use since the
+                # 'keycloak' profile was reactivated in dev/prod.
                 - task: AzureKeyVault@2
                   displayName: 'Leer secretos desde Azure Key Vault'
                   inputs:
                     azureSubscription: ${{ parameters.azureServiceConnectionName }}
                     KeyVaultName: $(keyVaultName)
-                    SecretsFilter: 'pdp-datasource-password'
+                    SecretsFilter: 'pdp-datasource-password,pdp-oidc-client-secret'
 
                 # App Service runs the application as a container: Azure App Service's managed
                 # Java runtime tops out at Java 21, and this project targets Java 25 (pom.xml).
@@ -89,8 +90,11 @@ stages:
                         --resource-group $(resourceGroupName) \
                         --settings \
                           SPRING_PROFILES_ACTIVE=$(springProfile) \
-                          PDP_IDP_ISSUER_URI=$(idpIssuerUri) \
-                          PDP_IDP_JWK_SET_URI=$(idpJwkSetUri) \
+                          PDP_KEYCLOAK_ISSUER=$(keycloakIssuerUri) \
+                          PDP_KEYCLOAK_CLIENT_ID=$(keycloakClientId) \
+                          PDP_KEYCLOAK_CLIENT_SECRET=$(pdp-oidc-client-secret) \
+                          PDP_SECURITY_SESSION_SECURE_COOKIES=true \
+                          PDP_FRONTEND_ORIGIN=$(frontendOrigin) \
                           PDP_DATASOURCE_URL=$(datasourceUrl) \
                           PDP_DATASOURCE_USERNAME=$(datasourceUsername) \
                           PDP_DATASOURCE_PASSWORD=$(pdp-datasource-password) \
