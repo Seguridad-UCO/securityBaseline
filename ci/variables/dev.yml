@@ -11,7 +11,7 @@ variables:
   datasourceUsername: 'root'
   # Keycloak real (ADR-020), en su propia VM (rg-pdp-shared-v1), realm 'security-baseline' (mismo
   # nombre que el realm local, para que DEV/PROD y desarrollo local compartan una sola convención).
-  keycloakIssuerUri: 'http://20.22.186.196:8080/realms/security-baseline'
+  keycloakIssuerUri: 'https://pdp-keycloak.eastus2.cloudapp.azure.com/realms/security-baseline'
   keycloakClientId: 'security-baseline-bff'
   # La VM de Keycloak se prende bajo demanda para ahorrar crédito de Azure — si este deploy falla
   # con "no se pudo resolver el issuer OIDC", prende la VM primero (az vm start -g rg-pdp-shared-v1
