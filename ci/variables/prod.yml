@@ -19,3 +19,6 @@ variables:
   # La VM de Keycloak se prende bajo demanda para ahorrar crédito de Azure — si este deploy falla
   # con "no se pudo resolver el issuer OIDC", prende la VM primero (az vm start -g rg-pdp-shared-v1
   # -n vm-pdp-keycloak-shared) y vuelve a correr el deploy.
+  # Sin frontend propio todavía (PD-12): el único desplegado (Static Web Apps, ver dev.yml) trae
+  # VITE_API_BASE_URL fijo a app-pdp-dev, así que ningún navegador llama a PROD todavía.
+  frontendOrigin: ''

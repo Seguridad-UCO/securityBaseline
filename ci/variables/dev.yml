@@ -16,3 +16,6 @@ variables:
   # La VM de Keycloak se prende bajo demanda para ahorrar crédito de Azure — si este deploy falla
   # con "no se pudo resolver el issuer OIDC", prende la VM primero (az vm start -g rg-pdp-shared-v1
   # -n vm-pdp-keycloak-shared) y vuelve a correr el deploy.
+  # Frontend real (PD-12), Azure Static Web Apps free tier, rg-pdp-dev-v2. El cliente de Keycloak
+  # ya tiene esta URL en sus post-logout redirect URIs.
+  frontendOrigin: 'https://blue-wave-07d0b0a0f.7.azurestaticapps.net'

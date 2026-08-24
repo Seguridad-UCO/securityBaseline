@@ -94,6 +94,7 @@ stages:
                           PDP_KEYCLOAK_CLIENT_ID=$(keycloakClientId) \
                           PDP_KEYCLOAK_CLIENT_SECRET=$(pdp-oidc-client-secret) \
                           PDP_SECURITY_SESSION_SECURE_COOKIES=true \
+                          PDP_FRONTEND_ORIGIN=$(frontendOrigin) \
                           PDP_DATASOURCE_URL=$(datasourceUrl) \
                           PDP_DATASOURCE_USERNAME=$(datasourceUsername) \
                           PDP_DATASOURCE_PASSWORD=$(pdp-datasource-password) \
