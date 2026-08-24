@@ -1,8 +1,26 @@
 (function () {
   const frontendUrl = 'http://localhost:5173';
-  const backendUrl = 'http://localhost:8080';
-  const bffLoginUrl = backendUrl + '/oauth2/authorization/keycloak';
-  const bffRegisterUrl = backendUrl + '/oauth2/authorization/keycloak/register';
+
+  // DEV y PROD comparten un único realm/cliente con dos backends distintos (uno por ambiente), así
+  // que no hay una sola "backendUrl" fija que sirva para los tres contextos (local, DEV, PROD). En
+  // vez de hardcodearla, se deriva del parámetro client_data que Keycloak ya adjunta a cada enlace
+  // de esta página: viene del OAuth2AuthorizationRequest original y trae el redirect_uri exacto que
+  // el BFF que inició este flujo le pasó a Keycloak.
+  function currentBackendOrigin() {
+    try {
+      const raw = new URLSearchParams(window.location.search).get('client_data');
+      if (!raw) return null;
+      const base64 = raw.replace(/-/g, '+').replace(/_/g, '/').padEnd(raw.length + (4 - (raw.length % 4)) % 4, '=');
+      const decoded = JSON.parse(atob(base64));
+      return new URL(decoded.ru).origin;
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  const backendOrigin = currentBackendOrigin();
+  const bffLoginUrl = backendOrigin ? backendOrigin + '/oauth2/authorization/keycloak' : null;
+  const bffRegisterUrl = backendOrigin ? backendOrigin + '/oauth2/authorization/keycloak/register' : null;
 
   const labels = {
     en: 'Back to Security Baseline',
@@ -68,6 +86,9 @@
   }
 
   function decorateFlowLinks() {
+    // Sin client_data no hay forma segura de saber a qué backend volver; se deja el comportamiento
+    // por defecto de Keycloak en vez de arriesgar un enlace roto.
+    if (!bffLoginUrl || !bffRegisterUrl) return;
     redirectThroughBff('#kc-back-to-login, .back-link, a[href*="login-actions/authenticate"]', bffLoginUrl);
     redirectThroughBff('#kc-registration a, a[href*="login-actions/registration"]', bffRegisterUrl);
   }

@@ -1,10 +1,7 @@
 # PRODUCTION environment. Fed by the `main` branch.
 variables:
   environmentName: 'pdp-prod'
-  # NOTA: 'keycloak' se quitó temporalmente (ver commit de rollback) — el deploy stage todavía no
-  # inyecta PDP_KEYCLOAK_ISSUER/CLIENT_ID/CLIENT_SECRET, así que con el perfil activo el contenedor
-  # intenta resolver el issuer OIDC en http://localhost:9090 (el default de dev) y no arranca.
-  springProfile: 'prod'
+  springProfile: 'prod,keycloak'
   azureServiceConnection: 'Azure-PDP-Prod'
   # '-mx': the original kv-pdp-prod name is held by a soft-deleted, purge-protected vault from the
   # brazilsouth-to-mexicocentral region migration and cannot be reused for 90 days.
@@ -15,6 +12,10 @@ variables:
   datasourceUrl: 'http://20.110.4.89:8000'
   datasourceUsername: 'root'
   # Keycloak real (ADR-020), misma VM/realm compartida con DEV (rg-pdp-shared-v1) — sin cupo de
-  # vCPU para una instancia dedicada a PROD.
-  idpIssuerUri: 'http://20.22.186.196:8080/realms/pdp'
-  idpJwkSetUri: 'http://20.22.186.196:8080/realms/pdp/protocol/openid-connect/certs'
+  # vCPU para una instancia dedicada a PROD. Mismo cliente OIDC 'security-baseline-bff', con
+  # ambos callbacks (dev y prod) en sus Valid Redirect URIs.
+  keycloakIssuerUri: 'http://20.22.186.196:8080/realms/security-baseline'
+  keycloakClientId: 'security-baseline-bff'
+  # La VM de Keycloak se prende bajo demanda para ahorrar crédito de Azure — si este deploy falla
+  # con "no se pudo resolver el issuer OIDC", prende la VM primero (az vm start -g rg-pdp-shared-v1
+  # -n vm-pdp-keycloak-shared) y vuelve a correr el deploy.
