@@ -34,3 +34,8 @@ build/
 
 ### macOS ###
 .DS_Store
+
+### Flujo de agentes IA ###
+# Estado de trabajo de los agentes (planes, reportes de validación).
+# Los agentes SÍ se versionan (.claude/); su salida de trabajo NO.
+.workspace/
