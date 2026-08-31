@@ -1,8 +1,8 @@
 package co.edu.uco.seguridad.pdp.resources.application.rule.impl;
 
 import co.edu.uco.seguridad.pdp.resources.application.exception.DuplicateProtectedResourceException;
-import co.edu.uco.seguridad.pdp.resources.application.port.primary.dto.request.RegisterProtectedResourceRequest;
-import co.edu.uco.seguridad.pdp.resources.application.port.secondary.repository.ProtectedResourceRepository;
+import co.edu.uco.seguridad.pdp.resources.application.primaryport.request.RegisterProtectedResourceRequest;
+import co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository.ProtectedResourceRepository;
 import co.edu.uco.seguridad.pdp.resources.application.rule.ProtectedResourceMustBeUniqueRule;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import reactor.core.publisher.Mono;

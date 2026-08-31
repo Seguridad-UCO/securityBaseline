@@ -20,11 +20,7 @@
 | Caso de uso (impl) | `ListApplicationsUseCaseImpl`, `RegisterApplicationUseCaseImpl`, `RemoveApplicationUseCaseImpl` |
 | Caso de uso (contrato) | `ListApplicationsUseCase`, `RegisterApplicationUseCase`, `RemoveApplicationUseCase` |
 | Regla (impl) | `ApplicationMustExistForTenantRuleImpl`, `ApplicationNameMustBeUniqueForTenantRuleImpl`, `ApplicationNameMustNotBeReservedRuleImpl` |
-| Regla (contrato) | `ApplicationMustExistForTenantRule`, `ApplicationNameMustBeUniqueForTenantRule`, `ApplicationNameMustNotBeReservedRule` |
-| Coordinador de reglas | `RegisterApplicationRulesValidator`, `RegisterApplicationRulesValidatorImpl` |
-| Puerto de salida | `ApplicationRepository` |
-| DTO de entrada al nucleo | `ApplicationOwnershipQuery`, `ListApplicationsRequest`, `RegisterApplicationRequest` |
-| DTO de salida del nucleo | `RegisteredApplicationResponse` |
+| Regla (contrato) | `ApplicationMustExistForTenantRule`, `ApplicationNameMustBeUniqueForTenantRule`, `ApplicationNameMustNotBeReservedRule`, `RegisterApplicationRulesValidator`, `RegisterApplicationRulesValidatorImpl` |
 | Excepcion de aplicacion | `ApplicationNotFoundException`, `DuplicateApplicationException`, `ReservedApplicationNameException` |
 | Catalogo de mensajes | `ApplicationsMessages` |
 | Controller | `ApplicationController` |
@@ -39,6 +35,7 @@
 | Esquema de tabla | `ApplicationSchema`, `SurrealApplicationSchemaInitializer` |
 | Cableado (@Bean) | `ApplicationsConfiguration` |
 | Propiedades | `ApplicationCatalogProperties` |
+| Otro | `ApplicationOwnershipQuery`, `ApplicationRepository`, `ListApplicationsRequest`, `RegisterApplicationRequest`, `RegisteredApplicationResponse` |
 
 ### `commons` - 16 clases
 
@@ -56,9 +53,6 @@
 | Caso de uso (contrato) | `AssignTenantUseCase`, `ListUsersUseCase`, `ProvisionIdentityUseCase` |
 | Regla (impl) | `UserMustExistRuleImpl` |
 | Regla (contrato) | `UserMustExistRule` |
-| Puerto de salida | `SecurityUserRepository` |
-| DTO de entrada al nucleo | `AssignTenantRequest`, `ProvisionIdentityRequest` |
-| DTO de salida del nucleo | `UserResponse` |
 | Excepcion de aplicacion | `UserNotFoundException` |
 | Catalogo de mensajes | `IdentityMessages` |
 | Controller | `UserController` |
@@ -73,6 +67,7 @@
 | Esquema de tabla | `IdentitySchema`, `SurrealIdentitySchemaInitializer` |
 | Cableado (@Bean) | `IdentityConfiguration` |
 | Propiedades | `IdentityProvisioningProperties` |
+| Otro | `AssignTenantRequest`, `ProvisionIdentityRequest`, `SecurityUserRepository`, `UserResponse` |
 
 ### `resources` - 36 clases
 
@@ -84,11 +79,7 @@
 | Caso de uso (impl) | `ListProtectedResourcesUseCaseImpl`, `RegisterProtectedResourceUseCaseImpl` |
 | Caso de uso (contrato) | `ListProtectedResourcesUseCase`, `RegisterProtectedResourceUseCase` |
 | Regla (impl) | `ProtectedResourceMustBeUniqueRuleImpl` |
-| Regla (contrato) | `ProtectedResourceMustBeUniqueRule` |
-| Coordinador de reglas | `RegisterProtectedResourceRulesValidator`, `RegisterProtectedResourceRulesValidatorImpl` |
-| Puerto de salida | `ProtectedResourceRepository` |
-| DTO de entrada al nucleo | `RegisterProtectedResourceRequest` |
-| DTO de salida del nucleo | `RegisteredProtectedResourceResponse` |
+| Regla (contrato) | `ProtectedResourceMustBeUniqueRule`, `RegisterProtectedResourceRulesValidator`, `RegisterProtectedResourceRulesValidatorImpl` |
 | Excepcion de aplicacion | `DuplicateProtectedResourceException` |
 | Catalogo de mensajes | `ResourcesMessages` |
 | Controller | `ProtectedResourceController` |
@@ -103,6 +94,7 @@
 | Esquema de tabla | `ProtectedResourceSchema`, `SurrealProtectedResourceSchemaInitializer` |
 | Adaptador de auditoria | `InMemoryAuditAdapter` |
 | Cableado (@Bean) | `ResourcesConfiguration` |
+| Otro | `ProtectedResourceRepository`, `RegisteredProtectedResourceResponse`, `RegisterProtectedResourceRequest` |
 
 ### `tenants` - 37 clases
 
@@ -114,9 +106,6 @@
 | Caso de uso (contrato) | `CreateTenantUseCase`, `ListTenantsUseCase` |
 | Regla (impl) | `TenantCodeMustBeUniqueRuleImpl`, `TenantMustBeActiveRuleImpl`, `TenantStatusMustBeActiveRuleImpl` |
 | Regla (contrato) | `TenantCodeMustBeUniqueRule`, `TenantMustBeActiveRule`, `TenantStatusMustBeActiveRule` |
-| Puerto de salida | `TenantRepository` |
-| DTO de entrada al nucleo | `CreateTenantRequest` |
-| DTO de salida del nucleo | `TenantResponse` |
 | Excepcion de aplicacion | `DuplicateTenantException`, `TenantNotActiveException`, `TenantNotFoundException` |
 | Catalogo de mensajes | `TenantsMessages` |
 | Controller | `TenantController` |
@@ -131,6 +120,7 @@
 | Esquema de tabla | `SurrealTenantSchemaInitializer`, `TenantSchema` |
 | Cableado (@Bean) | `TenantsConfiguration` |
 | Propiedades | `TenantCatalogProperties` |
+| Otro | `CreateTenantRequest`, `TenantRepository`, `TenantResponse` |
 
 ---
 
@@ -161,10 +151,6 @@
 
 | Puerto | Implementado por |
 |---|---|
-| `ApplicationRepository` | `SurrealApplicationRepository` |
-| `ProtectedResourceRepository` | `SurrealProtectedResourceRepository` |
-| `SecurityUserRepository` | `SurrealSecurityUserRepository` |
-| `TenantRepository` | `SurrealTenantRepository` |
 
 ---
 

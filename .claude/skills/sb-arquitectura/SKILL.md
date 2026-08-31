@@ -35,7 +35,7 @@ Para nomenclatura, excepciones, mensajes, DTOs y estilo, ver `sb-estandares`. Pa
 | Slice | Responsabilidad |
 |---|---|
 | `tenants` | Inquilinos del PDP. **Slice de referencia** — el más pequeño y completo |
-| `applications` | Aplicaciones protegidas registradas por un inquilino. El más completo: tiene `rulesvalidator/` y eventos |
+| `applications` | Aplicaciones protegidas registradas por un inquilino. El más completo: tiene `rule/validator/` y eventos |
 | `resources` | Recursos protegidos y sus concesiones. Tiene `domain/event/` |
 | `identity` | Provisión de usuarios y asignación de inquilino |
 | `commons` | Vocabulario de negocio **compartido entre slices**: `TenantId`, `ApplicationId`, `ResourceId`, `ApplicationName`, `PageWindow`, `ResultPage`, `AggregateRoot`, y la jerarquía de excepciones. Java puro |
@@ -82,9 +82,9 @@ Rutas relativas a `src/main/java/co/edu/uco/seguridad/pdp/tenants/`.
 | `application/usecase/impl/CreateTenantUseCaseImpl.java` | `final class`, constructor con `Objects.requireNonNull`, orquesta reglas y puertos |
 | `application/rule/TenantCodeMustBeUniqueRule.java` | Interfaz vacía que extiende un contrato base |
 | `application/rule/impl/TenantCodeMustBeUniqueRuleImpl.java` | La regla real |
-| `application/port/secondary/repository/TenantRepository.java` | Puerto de salida: firmas `Mono`/`Flux`, habla en tipos de **dominio** |
-| `application/port/primary/dto/request/CreateTenantRequest.java` | DTO de entrada: `record` con **value objects**, no Strings |
-| `application/port/primary/dto/response/TenantResponse.java` | DTO de salida del núcleo: `record` con value objects |
+| `application/secondaryport/repository/TenantRepository.java` | Puerto de salida: firmas `Mono`/`Flux`, habla en tipos de **dominio** |
+| `application/primaryport/request/CreateTenantRequest.java` | DTO de entrada: `record` con **value objects**, no Strings |
+| `application/primaryport/response/TenantResponse.java` | DTO de salida del núcleo: `record` con value objects |
 | `application/exception/TenantNotFoundException.java` | Excepción de regla de negocio |
 | `application/message/TenantsMessages.java` | Catálogo de mensajes del slice, en español |
 
@@ -173,9 +173,9 @@ Dos reglas que este flujo impone:
 | Caso de uso (interfaz + impl) | `{slice}/application/usecase/` + `/impl/` |
 | Restricción de negocio | `{slice}/application/rule/` + `/impl/` |
 | Coordinador de varias reglas | `{slice}/application/rulesvalidator/` |
-| Puerto de salida | `{slice}/application/port/secondary/repository/` |
-| DTO que entra al núcleo | `{slice}/application/port/primary/dto/request/` |
-| DTO que sale del núcleo | `{slice}/application/port/primary/dto/response/` |
+| Puerto de salida | `{slice}/application/secondaryport/repository/` |
+| DTO que entra al núcleo | `{slice}/application/primaryport/request/` |
+| DTO que sale del núcleo | `{slice}/application/primaryport/response/` |
 | Excepción de regla de negocio | `{slice}/application/exception/` |
 | Mensaje de usuario del slice | `{slice}/application/message/{Slice}Messages.java` |
 | Endpoint | `{slice}/infrastructure/adapter/primary/web/controller/` |

@@ -3,7 +3,7 @@ package co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.ma
 import co.edu.uco.seguridad.pdp.commons.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.ResourceId;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
-import co.edu.uco.seguridad.pdp.resources.application.port.primary.dto.response.RegisteredProtectedResourceResponse;
+import co.edu.uco.seguridad.pdp.resources.application.primaryport.response.RegisteredProtectedResourceResponse;
 import co.edu.uco.seguridad.pdp.resources.domain.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.ResourcePath;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.dto.response.ProtectedResourceWebResponse;

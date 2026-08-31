@@ -1,6 +1,6 @@
 package co.edu.uco.seguridad.pdp.identity.application.usecase;
 
-import co.edu.uco.seguridad.pdp.identity.application.port.primary.dto.request.ProvisionIdentityRequest;
+import co.edu.uco.seguridad.pdp.identity.application.primaryport.request.ProvisionIdentityRequest;
 import co.edu.uco.seguridad.shared.contract.ReactiveOperation;
 import co.edu.uco.seguridad.shared.security.LocalUserPrincipal;
 

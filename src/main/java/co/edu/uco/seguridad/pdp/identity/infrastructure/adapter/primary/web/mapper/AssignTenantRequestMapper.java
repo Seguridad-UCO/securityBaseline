@@ -1,7 +1,7 @@
 package co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.mapper;
 
 import co.edu.uco.seguridad.pdp.commons.TenantId;
-import co.edu.uco.seguridad.pdp.identity.application.port.primary.dto.request.AssignTenantRequest;
+import co.edu.uco.seguridad.pdp.identity.application.primaryport.request.AssignTenantRequest;
 import co.edu.uco.seguridad.pdp.identity.domain.UserId;
 import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.dto.request.raw.AssignTenantRawRequest;
 import co.edu.uco.seguridad.shared.web.RequestFieldParser;

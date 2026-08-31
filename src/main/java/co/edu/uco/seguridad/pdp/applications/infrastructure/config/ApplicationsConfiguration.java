@@ -1,14 +1,14 @@
 package co.edu.uco.seguridad.pdp.applications.infrastructure.config;
 
-import co.edu.uco.seguridad.pdp.applications.application.port.secondary.repository.ApplicationRepository;
+import co.edu.uco.seguridad.pdp.applications.application.secondaryport.repository.ApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.application.rule.ApplicationMustExistForTenantRule;
 import co.edu.uco.seguridad.pdp.applications.application.rule.ApplicationNameMustBeUniqueForTenantRule;
 import co.edu.uco.seguridad.pdp.applications.application.rule.ApplicationNameMustNotBeReservedRule;
 import co.edu.uco.seguridad.pdp.applications.application.rule.impl.ApplicationMustExistForTenantRuleImpl;
 import co.edu.uco.seguridad.pdp.applications.application.rule.impl.ApplicationNameMustBeUniqueForTenantRuleImpl;
 import co.edu.uco.seguridad.pdp.applications.application.rule.impl.ApplicationNameMustNotBeReservedRuleImpl;
-import co.edu.uco.seguridad.pdp.applications.application.rulesvalidator.RegisterApplicationRulesValidator;
-import co.edu.uco.seguridad.pdp.applications.application.rulesvalidator.impl.RegisterApplicationRulesValidatorImpl;
+import co.edu.uco.seguridad.pdp.applications.application.rule.validator.RegisterApplicationRulesValidator;
+import co.edu.uco.seguridad.pdp.applications.application.rule.validator.impl.RegisterApplicationRulesValidatorImpl;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.ListApplicationsUseCase;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RegisterApplicationUseCase;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RemoveApplicationUseCase;

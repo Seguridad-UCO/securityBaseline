@@ -1,8 +1,8 @@
 package co.edu.uco.seguridad.pdp.identity.application.usecase.impl;
 
-import co.edu.uco.seguridad.pdp.identity.application.port.primary.dto.request.AssignTenantRequest;
-import co.edu.uco.seguridad.pdp.identity.application.port.primary.dto.response.UserResponse;
-import co.edu.uco.seguridad.pdp.identity.application.port.secondary.repository.SecurityUserRepository;
+import co.edu.uco.seguridad.pdp.identity.application.primaryport.request.AssignTenantRequest;
+import co.edu.uco.seguridad.pdp.identity.application.primaryport.response.UserResponse;
+import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.SecurityUserRepository;
 import co.edu.uco.seguridad.pdp.identity.application.rule.UserMustExistRule;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.AssignTenantUseCase;
 import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;

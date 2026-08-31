@@ -2,8 +2,8 @@ package co.edu.uco.seguridad.pdp.tenants.application.rule.impl;
 
 import co.edu.uco.seguridad.pdp.commons.TenantId;
 import co.edu.uco.seguridad.pdp.tenants.application.exception.TenantNotFoundException;
-import co.edu.uco.seguridad.pdp.tenants.application.port.primary.dto.response.TenantResponse;
-import co.edu.uco.seguridad.pdp.tenants.application.port.secondary.repository.TenantRepository;
+import co.edu.uco.seguridad.pdp.tenants.application.primaryport.response.TenantResponse;
+import co.edu.uco.seguridad.pdp.tenants.application.secondaryport.repository.TenantRepository;
 import co.edu.uco.seguridad.pdp.tenants.application.rule.TenantMustBeActiveRule;
 import co.edu.uco.seguridad.pdp.tenants.application.rule.TenantStatusMustBeActiveRule;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;

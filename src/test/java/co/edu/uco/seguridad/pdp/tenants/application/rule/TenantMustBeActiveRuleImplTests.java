@@ -3,7 +3,7 @@ package co.edu.uco.seguridad.pdp.tenants.application.rule;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
 import co.edu.uco.seguridad.pdp.tenants.application.exception.TenantNotActiveException;
 import co.edu.uco.seguridad.pdp.tenants.application.exception.TenantNotFoundException;
-import co.edu.uco.seguridad.pdp.tenants.application.port.secondary.repository.TenantRepository;
+import co.edu.uco.seguridad.pdp.tenants.application.secondaryport.repository.TenantRepository;
 import co.edu.uco.seguridad.pdp.tenants.application.rule.impl.TenantMustBeActiveRuleImpl;
 import co.edu.uco.seguridad.pdp.tenants.application.rule.impl.TenantStatusMustBeActiveRuleImpl;
 import co.edu.uco.seguridad.pdp.tenants.domain.Tenant;

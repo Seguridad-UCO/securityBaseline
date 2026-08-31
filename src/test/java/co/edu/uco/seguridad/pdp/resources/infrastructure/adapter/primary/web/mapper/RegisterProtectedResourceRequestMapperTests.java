@@ -2,7 +2,7 @@ package co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.ma
 
 import co.edu.uco.seguridad.pdp.commons.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
-import co.edu.uco.seguridad.pdp.resources.application.port.primary.dto.request.RegisterProtectedResourceRequest;
+import co.edu.uco.seguridad.pdp.resources.application.primaryport.request.RegisterProtectedResourceRequest;
 import co.edu.uco.seguridad.pdp.resources.domain.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.dto.request.raw.RegisterProtectedResourceRawRequest;
 import org.junit.jupiter.api.Test;

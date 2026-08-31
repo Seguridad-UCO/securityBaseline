@@ -1,6 +1,6 @@
 package co.edu.uco.seguridad.pdp.identity.infrastructure.config;
 
-import co.edu.uco.seguridad.pdp.identity.application.port.secondary.repository.SecurityUserRepository;
+import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.SecurityUserRepository;
 import co.edu.uco.seguridad.pdp.identity.application.rule.UserMustExistRule;
 import co.edu.uco.seguridad.pdp.identity.application.rule.impl.UserMustExistRuleImpl;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.AssignTenantUseCase;

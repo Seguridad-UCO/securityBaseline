@@ -70,7 +70,7 @@ foreach ($slice in $slices) {
     foreach ($par in @(
         @{ C = 'application/usecase';                                R = 'application/usecase/impl';                                Que = 'caso de uso' },
         @{ C = 'application/rule';                                   R = 'application/rule/impl';                                   Que = 'regla' },
-        @{ C = 'application/rulesvalidator';                         R = 'application/rulesvalidator/impl';                         Que = 'coordinador de reglas' },
+        @{ C = 'application/rule/validator';                        R = 'application/rule/validator/impl';                        Que = 'coordinador de reglas' },
         @{ C = 'infrastructure/adapter/primary/web/interactor';      R = 'infrastructure/adapter/primary/web/interactor/impl';      Que = 'interactor' }
     )) {
         $contratos = Names $par.C

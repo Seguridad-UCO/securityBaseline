@@ -1,7 +1,7 @@
 package co.edu.uco.seguridad.pdp.identity.application.rule.impl;
 
 import co.edu.uco.seguridad.pdp.identity.application.exception.UserNotFoundException;
-import co.edu.uco.seguridad.pdp.identity.application.port.secondary.repository.SecurityUserRepository;
+import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.SecurityUserRepository;
 import co.edu.uco.seguridad.pdp.identity.application.rule.UserMustExistRule;
 import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;
 import co.edu.uco.seguridad.pdp.identity.domain.UserId;

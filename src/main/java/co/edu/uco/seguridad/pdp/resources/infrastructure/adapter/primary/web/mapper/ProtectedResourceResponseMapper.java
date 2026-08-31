@@ -1,6 +1,6 @@
 package co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.mapper;
 
-import co.edu.uco.seguridad.pdp.resources.application.port.primary.dto.response.RegisteredProtectedResourceResponse;
+import co.edu.uco.seguridad.pdp.resources.application.primaryport.response.RegisteredProtectedResourceResponse;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.dto.response.ProtectedResourceWebResponse;
 
 import java.util.List;

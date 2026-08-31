@@ -25,9 +25,9 @@ Cada módulo repite la misma estructura interna:
 ├── domain/                   Java puro: entidades, value objects, especificaciones
 ├── application/
 │   ├── usecase/ (+ impl)     casos de uso
-│   ├── port/primary/         dto (request/response) + interactor
-│   ├── port/secondary/       repository/ y los puertos que cada módulo necesite
-│   ├── rule/ + rulesvalidator/
+│   ├── primaryport/         dto (request/response) + interactor
+│   ├── secondaryport/       repository/ y los puertos que cada módulo necesite
+│   ├── rule/ + rule/validator/
 │   └── exception/
 └── infrastructure/           config Spring, adapter/primary (web), adapter/secondary
 ```
@@ -38,7 +38,7 @@ síncrono y sin anotaciones: sus invariantes no hacen I/O.
 ```text
 web → interactor → use case → rules validator → rules → domain
                         │                          │
-                        └──────► port/secondary ◄──┘
+                        └──────► secondaryport ◄──┘
                                     │
                                  adapters
 ```
@@ -57,7 +57,7 @@ no un objetivo pendiente.
 - Dominio puro: [`resources/domain`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/domain) y
   [`commons`](../../src/main/java/co/edu/uco/seguridad/pdp/commons).
 - Casos de uso: [`RegisterApplicationUseCase.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/application/usecase/RegisterApplicationUseCase.java).
-- Puertos secundarios: [`resources/application/port/secondary`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/application/port/secondary).
+- Puertos secundarios: [`resources/application/secondaryport`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/application/secondaryport).
 - Adaptadores: [`resources/infrastructure`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure).
 - Prueba de estructura: [`ModulithStructureTests.java`](../../src/test/java/co/edu/uco/seguridad/ModulithStructureTests.java).
 

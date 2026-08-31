@@ -24,7 +24,7 @@ HTTP → Controller (arma RawRequest)
             ├─ mapper → DTO tipado
             ├─ Use Case
             │     ├─ Rules Validator → Rules
-            │     └─ Domain · port/secondary → adapters
+            │     └─ Domain · secondaryport → adapters
             └─ proyección → respuesta HTTP
             ↓
        Controller → ApiResponse
@@ -37,10 +37,10 @@ orquesta; el rules validator compone reglas; cada regla decide una cosa. Ver
 ## Ubicación verificable
 
 - Entrada: [`ApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/infrastructure/adapter/primary/web/controller/ApplicationController.java)
-- Interactores: [`application/port/primary/interactor`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure/adapter/primary/web/interactor)
+- Interactores: [`infrastructure/adapter/primary/web/interactor`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure/adapter/primary/web/interactor)
 - Orquestación: [`RegisterApplicationUseCaseImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/application/usecase/impl/RegisterApplicationUseCaseImpl.java)
 - Reglas: [`resources/application/rule`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/application/rule)
-- Salidas: [`resources/application/port/secondary`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/application/port/secondary)
+- Salidas: [`resources/application/secondaryport`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/application/secondaryport)
 
 ## Evidencia y límite
 

@@ -139,7 +139,7 @@ Reglas:
 - Una regla que además trae el dato devuelve el DTO y usa
   `.switchIfEmpty(Mono.error(() -> new XNotFoundException(...)))`. Ver `TenantMustBeActiveRuleImpl`.
 - **Nunca `if/throw` suelto dentro del use case.** Si hay una condición de negocio, es una regla.
-- Cuando un caso de uso necesita coordinar varias reglas, va un `rulesvalidator/` (ver `applications`).
+- Cuando un caso de uso necesita coordinar varias reglas, va un `rule/validator/` (ver `applications`).
 
 ---
 

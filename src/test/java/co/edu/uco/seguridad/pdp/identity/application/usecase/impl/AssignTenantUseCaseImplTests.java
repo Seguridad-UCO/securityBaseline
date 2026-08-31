@@ -2,13 +2,13 @@ package co.edu.uco.seguridad.pdp.identity.application.usecase.impl;
 
 import co.edu.uco.seguridad.pdp.commons.TenantId;
 import co.edu.uco.seguridad.pdp.identity.application.exception.UserNotFoundException;
-import co.edu.uco.seguridad.pdp.identity.application.port.primary.dto.request.AssignTenantRequest;
-import co.edu.uco.seguridad.pdp.identity.application.port.secondary.repository.SecurityUserRepository;
+import co.edu.uco.seguridad.pdp.identity.application.primaryport.request.AssignTenantRequest;
+import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.SecurityUserRepository;
 import co.edu.uco.seguridad.pdp.identity.domain.Email;
 import co.edu.uco.seguridad.pdp.identity.domain.ExternalIdentity;
 import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;
 import co.edu.uco.seguridad.pdp.identity.domain.UserId;
-import co.edu.uco.seguridad.pdp.tenants.application.port.primary.dto.response.TenantResponse;
+import co.edu.uco.seguridad.pdp.tenants.application.primaryport.response.TenantResponse;
 import co.edu.uco.seguridad.pdp.tenants.domain.TenantName;
 import co.edu.uco.seguridad.pdp.tenants.domain.TenantStatus;
 import org.junit.jupiter.api.Test;

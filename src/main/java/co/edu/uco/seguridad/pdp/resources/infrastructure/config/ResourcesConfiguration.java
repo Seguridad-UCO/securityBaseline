@@ -1,11 +1,11 @@
 package co.edu.uco.seguridad.pdp.resources.infrastructure.config;
 
 import co.edu.uco.seguridad.pdp.applications.application.rule.ApplicationMustExistForTenantRule;
-import co.edu.uco.seguridad.pdp.resources.application.port.secondary.repository.ProtectedResourceRepository;
+import co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository.ProtectedResourceRepository;
 import co.edu.uco.seguridad.pdp.resources.application.rule.ProtectedResourceMustBeUniqueRule;
 import co.edu.uco.seguridad.pdp.resources.application.rule.impl.ProtectedResourceMustBeUniqueRuleImpl;
-import co.edu.uco.seguridad.pdp.resources.application.rulesvalidator.RegisterProtectedResourceRulesValidator;
-import co.edu.uco.seguridad.pdp.resources.application.rulesvalidator.impl.RegisterProtectedResourceRulesValidatorImpl;
+import co.edu.uco.seguridad.pdp.resources.application.rule.validator.RegisterProtectedResourceRulesValidator;
+import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.RegisterProtectedResourceRulesValidatorImpl;
 import co.edu.uco.seguridad.pdp.resources.application.usecase.ListProtectedResourcesUseCase;
 import co.edu.uco.seguridad.pdp.resources.application.usecase.RegisterProtectedResourceUseCase;
 import co.edu.uco.seguridad.pdp.resources.application.usecase.impl.ListProtectedResourcesUseCaseImpl;

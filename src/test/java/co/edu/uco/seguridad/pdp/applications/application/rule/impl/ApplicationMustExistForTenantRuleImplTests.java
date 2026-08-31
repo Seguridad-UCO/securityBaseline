@@ -1,8 +1,8 @@
 package co.edu.uco.seguridad.pdp.applications.application.rule.impl;
 
 import co.edu.uco.seguridad.pdp.applications.application.exception.ApplicationNotFoundException;
-import co.edu.uco.seguridad.pdp.applications.application.port.primary.dto.request.ApplicationOwnershipQuery;
-import co.edu.uco.seguridad.pdp.applications.application.port.secondary.repository.ApplicationRepository;
+import co.edu.uco.seguridad.pdp.applications.application.primaryport.request.ApplicationOwnershipQuery;
+import co.edu.uco.seguridad.pdp.applications.application.secondaryport.repository.ApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
 import co.edu.uco.seguridad.pdp.applications.domain.ApplicationBaseUrl;
 import co.edu.uco.seguridad.pdp.applications.domain.ApplicationCriteria;

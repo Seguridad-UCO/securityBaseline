@@ -1,7 +1,7 @@
 package co.edu.uco.seguridad.pdp.tenants.application.rule;
 
 import co.edu.uco.seguridad.pdp.commons.TenantId;
-import co.edu.uco.seguridad.pdp.tenants.application.port.primary.dto.response.TenantResponse;
+import co.edu.uco.seguridad.pdp.tenants.application.primaryport.response.TenantResponse;
 import co.edu.uco.seguridad.shared.contract.ReactiveOperation;
 
 /**

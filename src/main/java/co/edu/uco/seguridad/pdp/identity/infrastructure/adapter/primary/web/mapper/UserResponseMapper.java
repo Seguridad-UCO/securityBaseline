@@ -1,6 +1,6 @@
 package co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.mapper;
 
-import co.edu.uco.seguridad.pdp.identity.application.port.primary.dto.response.UserResponse;
+import co.edu.uco.seguridad.pdp.identity.application.primaryport.response.UserResponse;
 import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.dto.response.UserWebResponse;
 
 import java.util.List;

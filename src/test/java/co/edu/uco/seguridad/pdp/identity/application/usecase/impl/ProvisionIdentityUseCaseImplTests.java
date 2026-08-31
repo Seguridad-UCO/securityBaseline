@@ -1,8 +1,8 @@
 package co.edu.uco.seguridad.pdp.identity.application.usecase.impl;
 
 import co.edu.uco.seguridad.pdp.commons.TenantId;
-import co.edu.uco.seguridad.pdp.identity.application.port.primary.dto.request.ProvisionIdentityRequest;
-import co.edu.uco.seguridad.pdp.identity.application.port.secondary.repository.SecurityUserRepository;
+import co.edu.uco.seguridad.pdp.identity.application.primaryport.request.ProvisionIdentityRequest;
+import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.SecurityUserRepository;
 import co.edu.uco.seguridad.pdp.identity.domain.Email;
 import co.edu.uco.seguridad.pdp.identity.domain.ExternalIdentity;
 import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;

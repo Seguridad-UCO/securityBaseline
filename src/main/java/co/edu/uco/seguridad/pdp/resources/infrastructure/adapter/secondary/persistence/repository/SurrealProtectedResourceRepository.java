@@ -2,7 +2,7 @@ package co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.pers
 
 import co.edu.uco.seguridad.pdp.commons.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.ResourceId;
-import co.edu.uco.seguridad.pdp.resources.application.port.secondary.repository.ProtectedResourceRepository;
+import co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository.ProtectedResourceRepository;
 import co.edu.uco.seguridad.pdp.resources.domain.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.ProtectedResource;
 import co.edu.uco.seguridad.pdp.resources.domain.ResourcePath;

@@ -1,6 +1,6 @@
 package co.edu.uco.seguridad.pdp.applications.application.rule;
 
-import co.edu.uco.seguridad.pdp.applications.application.port.primary.dto.request.ApplicationOwnershipQuery;
+import co.edu.uco.seguridad.pdp.applications.application.primaryport.request.ApplicationOwnershipQuery;
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
 import co.edu.uco.seguridad.shared.contract.ReactiveOperation;
 

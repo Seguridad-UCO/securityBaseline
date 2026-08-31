@@ -1,12 +1,12 @@
 package co.edu.uco.seguridad.pdp.resources.application.usecase.impl;
 
-import co.edu.uco.seguridad.pdp.applications.application.port.primary.dto.request.ApplicationOwnershipQuery;
+import co.edu.uco.seguridad.pdp.applications.application.primaryport.request.ApplicationOwnershipQuery;
 import co.edu.uco.seguridad.pdp.applications.application.rule.ApplicationMustExistForTenantRule;
 import co.edu.uco.seguridad.pdp.commons.ResourceId;
-import co.edu.uco.seguridad.pdp.resources.application.port.primary.dto.request.RegisterProtectedResourceRequest;
-import co.edu.uco.seguridad.pdp.resources.application.port.primary.dto.response.RegisteredProtectedResourceResponse;
-import co.edu.uco.seguridad.pdp.resources.application.port.secondary.repository.ProtectedResourceRepository;
-import co.edu.uco.seguridad.pdp.resources.application.rulesvalidator.RegisterProtectedResourceRulesValidator;
+import co.edu.uco.seguridad.pdp.resources.application.primaryport.request.RegisterProtectedResourceRequest;
+import co.edu.uco.seguridad.pdp.resources.application.primaryport.response.RegisteredProtectedResourceResponse;
+import co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository.ProtectedResourceRepository;
+import co.edu.uco.seguridad.pdp.resources.application.rule.validator.RegisterProtectedResourceRulesValidator;
 import co.edu.uco.seguridad.pdp.resources.application.usecase.RegisterProtectedResourceUseCase;
 import co.edu.uco.seguridad.pdp.resources.domain.ProtectedResource;
 import co.edu.uco.seguridad.pdp.resources.domain.event.ProtectedResourceRegistered;

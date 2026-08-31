@@ -1,6 +1,6 @@
 package co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.mapper;
 
-import co.edu.uco.seguridad.pdp.applications.application.port.primary.dto.request.RegisterApplicationRequest;
+import co.edu.uco.seguridad.pdp.applications.application.primaryport.request.RegisterApplicationRequest;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.request.raw.RegisterApplicationRawRequest;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
 import org.junit.jupiter.api.Test;

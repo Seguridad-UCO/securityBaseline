@@ -1,7 +1,7 @@
 package co.edu.uco.seguridad.pdp.tenants.application.usecase.impl;
 
-import co.edu.uco.seguridad.pdp.tenants.application.port.primary.dto.response.TenantResponse;
-import co.edu.uco.seguridad.pdp.tenants.application.port.secondary.repository.TenantRepository;
+import co.edu.uco.seguridad.pdp.tenants.application.primaryport.response.TenantResponse;
+import co.edu.uco.seguridad.pdp.tenants.application.secondaryport.repository.TenantRepository;
 import co.edu.uco.seguridad.pdp.tenants.application.usecase.ListTenantsUseCase;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import reactor.core.publisher.Mono;

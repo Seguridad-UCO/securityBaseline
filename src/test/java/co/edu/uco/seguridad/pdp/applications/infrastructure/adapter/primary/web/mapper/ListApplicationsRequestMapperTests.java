@@ -1,6 +1,6 @@
 package co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.mapper;
 
-import co.edu.uco.seguridad.pdp.applications.application.port.primary.dto.request.ListApplicationsRequest;
+import co.edu.uco.seguridad.pdp.applications.application.primaryport.request.ListApplicationsRequest;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.request.raw.ListApplicationsRawRequest;
 import co.edu.uco.seguridad.pdp.commons.PageWindow;
 import co.edu.uco.seguridad.pdp.commons.TenantId;

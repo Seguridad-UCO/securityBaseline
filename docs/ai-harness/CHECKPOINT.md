@@ -13,6 +13,7 @@ Estado del trabajo para retomarlo en cualquier máquina. Se actualiza al cerrar 
 | 1c | Skills rescatadas de la PR #24 (`sb-reactivo`, `sb-fuentes`) · `CLAUDE.md` | ✅ |
 | HU-001 | Implementada: 225 pruebas, criterios 16-19 cerrados, 22/23 | ✅ |
 | 1d | Consistencia arquitectónica: `consistencia.ps1` + 9 divergencias corregidas | ✅ |
+| 1e | Capa `application` aplanada · resiliencia de arranque · DEV saludable | ✅ |
 | 2 | `2-tester-spec` y `3-implementador` ✅ · slash commands, mutation testing, `5-entrega` ⏳ | 🟡 |
 | 3 | Grafo nivel 1 y 2 | ⏳ |
 
@@ -181,6 +182,54 @@ publica `TenantMustBeActiveRule` — una implementación inyectada, no una compr
 Evidencia tomada del proyecto de referencia, como se pidió: en `arquisoft-backend@develop` **todos**
 los contextos usan `entity` + `mapper` + `repository` juntos, sin excepción. Y los ADRs 008, 009 y
 016 del repo de arquitectura respaldan las tres decisiones.
+
+---
+
+## El despliegue a DEV, y por qué fallaba (2026-08-31)
+
+El pipeline daba **503 durante 30 intentos** y su mensaje culpaba a SurrealDB. Eran **dos causas
+distintas, ninguna en el código, y ninguna era la que el mensaje señalaba**:
+
+1. **Keycloak apagado.** `vm-pdp-keycloak-shared` estaba *deallocated* — se apaga a propósito para
+   ahorrar crédito, y el propio `ci/variables/dev.yml` ya lo documentaba. Spring resuelve el issuer
+   OIDC al construir el contexto, así que sin Keycloak la aplicación no llega a arrancar.
+2. **SurrealDB colgado.** La VM estaba *running* y el NSG permitía las 32 IPs de salida del App
+   Service, pero el contenedor llevaba **20 días «Up» y `unhealthy`**: el puerto publicado, y el
+   proceso sin responder ni a `localhost`. Su último log era del 11 de agosto.
+
+Encendida la VM y reiniciado el contenedor —los datos son `rocksdb` sobre volumen, no se pierden—,
+**DEV responde `status: UP`**.
+
+### Lo que se cambió para que no vuelva a ser mudo
+
+| Cambio | Por qué |
+|---|---|
+| `SurrealSchemaInitializer` | Los cuatro inicializadores hacían `.block()` **sin plazo** en un `ApplicationRunner`. Una base que no responde dejaba el arranque colgado. Ahora se espera 15 s y un fallo se registra en vez de tumbar el contexto |
+| `SurrealDbHealthIndicator` | No existía: `/actuator/health` no podía decir que la base estaba caída. Sigue dando `DOWN` —un deploy contra una base caída debe fallar— pero ahora **dice por qué** |
+| Mensaje del pipeline | Nombra a Keycloak como causa más probable, da el comando para encenderla, y vuelca el cuerpo de `/actuator/health` antes de salir |
+
+**Rutina de entorno:** antes de un deploy a DEV, `az vm start -g rg-pdp-shared-v1 -n vm-pdp-keycloak-shared`.
+
+---
+
+## La capa `application`, aplanada (2026-08-31)
+
+Tenía **11 paquetes para 23 archivos** y profundidad de 5 (`port/primary/dto/request`), con
+`rulesvalidator` colgando suelto al lado de `rule`. Se tomó el empaquetado del proyecto de
+referencia, que agrupa por dirección del puerto:
+
+| Antes | Ahora |
+|---|---|
+| `application/port/primary/dto/request` | `application/primaryport/request` |
+| `application/port/primary/dto/response` | `application/primaryport/response` |
+| `application/port/secondary/repository` | `application/secondaryport/repository` |
+| `application/rulesvalidator` | `application/rule/validator` |
+
+La ruta de un DTO de entrada pasa de cinco segmentos a tres, y el coordinador de reglas queda
+dentro de lo que coordina. Los nombres de las interfaces nombradas de Modulith (`dto`, `repository`,
+`rule`) **no cambian**, así que ningún `allowedDependencies` se toca.
+
+95 archivos con `package`/`import` reescritos, 234 pruebas en verde, Modulith y ArchUnit intactos.
 
 ---
 

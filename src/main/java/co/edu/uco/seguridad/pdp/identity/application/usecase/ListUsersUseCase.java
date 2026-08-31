@@ -1,6 +1,6 @@
 package co.edu.uco.seguridad.pdp.identity.application.usecase;
 
-import co.edu.uco.seguridad.pdp.identity.application.port.primary.dto.response.UserResponse;
+import co.edu.uco.seguridad.pdp.identity.application.primaryport.response.UserResponse;
 import co.edu.uco.seguridad.shared.contract.ReactiveOperationWithoutInput;
 
 import java.util.List;
