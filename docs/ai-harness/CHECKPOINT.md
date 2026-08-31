@@ -124,6 +124,37 @@ además están verificadas contra el código.
 
 ---
 
+## Veredicto sobre `2-tester-spec`, tras escribir las pruebas a mano
+
+**Sí vale la pena, con un reparto distinto del que preveía el diseño.**
+
+Lo que se vio al hacerlo a mano:
+
+- Escribir las pruebas contra la SPEC fue **directo**: las firmas estaban completas y no hubo que
+  inventar nada. Los 14 casos del mapper salieron de la tabla de resolución de ventana del plan.
+  Eso es exactamente la tarea acotada y verificable que justifica un modelo estándar.
+- El rojo fue limpio y significativo: `UnsupportedOperationException: pendiente: HU-001`, no un
+  fallo de compilación ni una aserción mal escrita.
+- Pero **la mitad del trabajo no fue escribir pruebas**: fue aplicar las firmas `[M]` y arreglar los
+  cuatro fakes que dejaron de compilar. Trabajo mecánico, sin juicio, y ahí es donde un agente rinde.
+
+### El reparto que se propone
+
+El diseño original dejaba las `[M]` al implementador, pero eso choca con su propia prohibición de
+tocar `src/test`: cambiar una firma rompe los fakes, y arreglarlos es tocar pruebas.
+
+| Agente | Hace | Deja |
+|---|---|---|
+| `2-tester-spec` | Aplica las firmas **[M]** con cuerpos que lanzan · escribe las pruebas de la sección 9 · arregla los fakes que el cambio rompió | **ROJO**, y solo por `UnsupportedOperationException` |
+| `3-implementador` | Rellena cuerpos en `src/main`. **No toca `src/test` jamás** | **VERDE** |
+
+Así cada uno tiene un contrato limpio y una condición de terminado medible:
+`verificar.ps1 -Prueba X` en rojo por la razón correcta para el primero, en verde para el segundo.
+Y se conserva lo que hace valiosa la separación: el implementador no puede reescribir una prueba
+para que pase, porque no la tiene en su contexto.
+
+---
+
 ## Deudas conocidas
 
 | Deuda | Dónde |
