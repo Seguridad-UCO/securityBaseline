@@ -12,11 +12,12 @@ Estado del trabajo para retomarlo en cualquier máquina. Se actualiza al cerrar 
 | 1b | Deriva doc↔código corregida y verificable · criterios realineados | ✅ |
 | 1c | Skills rescatadas de la PR #24 (`sb-reactivo`, `sb-fuentes`) · `CLAUDE.md` | ✅ |
 | HU-001 | Implementada: 225 pruebas, criterios 16-19 cerrados, 22/23 | ✅ |
-| 2 | `2-tester-spec`, `3-implementador`, slash commands, mutation testing, `5-entrega` | ⏳ |
+| 1d | Consistencia arquitectónica: `consistencia.ps1` + 9 divergencias corregidas | ✅ |
+| 2 | `2-tester-spec` y `3-implementador` ✅ · slash commands, mutation testing, `5-entrega` ⏳ | 🟡 |
 | 3 | Grafo nivel 1 y 2 | ⏳ |
 
-**Lo siguiente:** decidir si se construye `2-tester-spec` con lo aprendido en HU-001, y abrir la
-historia que cierre el criterio 10 (cablear la saga de compensación).
+**Lo siguiente:** estrenar `2-tester-spec` y `3-implementador` con la historia que cierre el
+criterio 10 (cablear la saga de compensación), que es la única deuda de la línea base.
 
 ---
 
@@ -155,10 +156,39 @@ para que pase, porque no la tiene en su contexto.
 
 ---
 
+## La consistencia, verificada (2026-08-31)
+
+`ArchUnit` comprueba la **dirección** de las dependencias y Modulith el **mapa** entre módulos.
+Ninguno comprueba que un slice tenga la misma **forma** que los demás: se puede resolver el mismo
+problema de tres maneras distintas sin romper una sola regla de capas. Eso es lo que hacía que
+entrar en un módulo no se pareciera a entrar en el de al lado.
+
+`.claude/tools/consistencia.ps1` lo convierte en comprobación ejecutable. La primera pasada encontró
+**9 divergencias reales**, todas corregidas:
+
+| Slice | Divergencia | Corrección |
+|---|---|---|
+| `applications`, `identity` | El adaptador construía el agregado directamente desde el JSON, mientras `tenants` y `resources` pasaban por `Entity` + `Mapper` | `ApplicationEntity`, `SecurityUserEntity`, `ExternalIdentityEntity` y sus mappers |
+| `identity` | Sin `application/message`: el texto vivía como literal dentro de la excepción | `IdentityMessages` |
+| `identity` | `AssignTenantUseCaseImpl` hacía «busca o lanza» inline; en `tenants` eso es una `Rule` | `UserMustExistRule` |
+| `resources` | Consultaba el repositorio de `applications` y lanzaba su excepción inline | `applications` publica `ApplicationMustExistForTenantRule` y `resources` la consume |
+| `identity` | `toUser` / `toIdentity` frente a `toDomain` en el resto | `toSecurityUser` / `toExternalIdentity` |
+
+El caso de `resources` **estrecha** la frontera de Modulith en vez de ampliarla: pasa de necesitar
+`applications :: repository` a `applications :: rule`. Es el mismo patrón con el que `tenants`
+publica `TenantMustBeActiveRule` — una implementación inyectada, no una comprobación copiada.
+
+Evidencia tomada del proyecto de referencia, como se pidió: en `arquisoft-backend@develop` **todos**
+los contextos usan `entity` + `mapper` + `repository` juntos, sin excepción. Y los ADRs 008, 009 y
+016 del repo de arquitectura respaldan las tres decisiones.
+
+---
+
 ## Deudas conocidas
 
 | Deuda | Dónde |
 |---|---|
 | **Criterio 10** — la operación compensatoria existe y ningún flujo la invoca | `docs/criteria-compliance-matrix.md`. Necesita su propia historia |
 | Las herramientas son solo PowerShell | Si entra alguien en Linux/macOS, hay que portarlas |
+| `repository-structure.md` del repo de arquitectura sigue siendo un stub | Ahora que la estructura está verificada por herramienta, se puede elaborar |
 | El agente `5-entrega` no existe | Los commits y PRs se hacen a mano, con los dos gates igualmente |

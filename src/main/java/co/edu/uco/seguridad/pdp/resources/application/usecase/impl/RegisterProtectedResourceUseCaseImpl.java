@@ -1,7 +1,7 @@
 package co.edu.uco.seguridad.pdp.resources.application.usecase.impl;
 
-import co.edu.uco.seguridad.pdp.applications.application.exception.ApplicationNotFoundException;
-import co.edu.uco.seguridad.pdp.applications.application.port.secondary.repository.ApplicationRepository;
+import co.edu.uco.seguridad.pdp.applications.application.port.primary.dto.request.ApplicationOwnershipQuery;
+import co.edu.uco.seguridad.pdp.applications.application.rule.ApplicationMustExistForTenantRule;
 import co.edu.uco.seguridad.pdp.commons.ResourceId;
 import co.edu.uco.seguridad.pdp.resources.application.port.primary.dto.request.RegisterProtectedResourceRequest;
 import co.edu.uco.seguridad.pdp.resources.application.port.primary.dto.response.RegisteredProtectedResourceResponse;
@@ -33,17 +33,17 @@ public final class RegisterProtectedResourceUseCaseImpl implements RegisterProte
 
     private static final Logger LOG = LoggerFactory.getLogger(RegisterProtectedResourceUseCaseImpl.class);
 
-    private final ApplicationRepository applications;
+    private final ApplicationMustExistForTenantRule applicationMustExist;
     private final RegisterProtectedResourceRulesValidator rules;
     private final ProtectedResourceRepository resources;
     private final DomainEventPublisher events;
     private final IdentifierGenerator identifiers;
     private final TimeProvider time;
 
-    public RegisterProtectedResourceUseCaseImpl(ApplicationRepository applications,
+    public RegisterProtectedResourceUseCaseImpl(ApplicationMustExistForTenantRule applicationMustExist,
             RegisterProtectedResourceRulesValidator rules, ProtectedResourceRepository resources,
             DomainEventPublisher events, IdentifierGenerator identifiers, TimeProvider time) {
-        this.applications = Objects.requireNonNull(applications, RequiredArgumentMessages.APPLICATION_REPOSITORY);
+        this.applicationMustExist = Objects.requireNonNull(applicationMustExist, RequiredArgumentMessages.APPLICATION_RULE);
         this.rules = Objects.requireNonNull(rules, RequiredArgumentMessages.RULES_VALIDATOR);
         this.resources = Objects.requireNonNull(resources, RequiredArgumentMessages.PROTECTED_RESOURCE_REPOSITORY);
         this.events = Objects.requireNonNull(events, RequiredArgumentMessages.DOMAIN_EVENT_PUBLISHER);
@@ -53,8 +53,7 @@ public final class RegisterProtectedResourceUseCaseImpl implements RegisterProte
 
     @Override
     public Mono<RegisteredProtectedResourceResponse> execute(RegisterProtectedResourceRequest dto) {
-        return applications.findByTenantAndId(dto.tenantId(), dto.applicationId())
-                .switchIfEmpty(Mono.error(() -> new ApplicationNotFoundException(dto.applicationId())))
+        return applicationMustExist.execute(new ApplicationOwnershipQuery(dto.tenantId(), dto.applicationId()))
                 .then(rules.execute(dto))
                 .then(Mono.fromSupplier(() -> ProtectedResource.registerWithEvent(new ResourceId(identifiers.next()),
                         dto.applicationId(), dto.tenantId(), dto.path(), dto.method(), time.now())))

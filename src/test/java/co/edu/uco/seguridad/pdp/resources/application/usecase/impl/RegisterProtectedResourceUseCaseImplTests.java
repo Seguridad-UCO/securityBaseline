@@ -1,15 +1,11 @@
 package co.edu.uco.seguridad.pdp.resources.application.usecase.impl;
 
 import co.edu.uco.seguridad.pdp.applications.application.exception.ApplicationNotFoundException;
-import co.edu.uco.seguridad.pdp.applications.application.port.secondary.repository.ApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
-import co.edu.uco.seguridad.pdp.applications.domain.ApplicationCriteria;
 import co.edu.uco.seguridad.pdp.applications.domain.ApplicationBaseUrl;
 import co.edu.uco.seguridad.pdp.commons.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.ApplicationName;
 import co.edu.uco.seguridad.pdp.commons.ResourceId;
-import co.edu.uco.seguridad.pdp.commons.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.ResultPage;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
 import co.edu.uco.seguridad.pdp.resources.application.port.primary.dto.request.RegisterProtectedResourceRequest;
 import co.edu.uco.seguridad.pdp.resources.application.port.secondary.repository.ProtectedResourceRepository;
@@ -38,9 +34,9 @@ class RegisterProtectedResourceUseCaseImplTests {
     @Test
     void refuses_to_register_a_resource_under_an_application_that_does_not_belong_to_the_tenant() {
         ApplicationId applicationId = new ApplicationId(UUID.randomUUID());
-        ApplicationRepository applications = repositoryReturning(null);
         RegisterProtectedResourceUseCaseImpl useCase = new RegisterProtectedResourceUseCaseImpl(
-                applications, dto -> Mono.empty(), unreachableResourceRepository(), events(),
+                query -> Mono.error(new ApplicationNotFoundException(query.applicationId())),
+                dto -> Mono.empty(), unreachableResourceRepository(), events(),
                 UUID::randomUUID, () -> NOW);
 
         RegisterProtectedResourceRequest request = new RegisterProtectedResourceRequest(
@@ -55,7 +51,6 @@ class RegisterProtectedResourceUseCaseImplTests {
     void registers_the_resource_and_publishes_the_registration_event() {
         Application application = Application.register(new ApplicationId(UUID.randomUUID()), TENANT,
                 new ApplicationName("gestion-academica"), "", new ApplicationBaseUrl("https://example.com"), NOW);
-        ApplicationRepository applications = repositoryReturning(application);
         List<ProtectedResource> saved = new ArrayList<>();
         ProtectedResourceRepository resources = new ProtectedResourceRepository() {
             @Override
@@ -83,7 +78,7 @@ class RegisterProtectedResourceUseCaseImplTests {
         List<DomainEvent> published = new ArrayList<>();
         UUID fixedId = UUID.randomUUID();
         RegisterProtectedResourceUseCaseImpl useCase = new RegisterProtectedResourceUseCaseImpl(
-                applications, dto -> Mono.empty(), resources, event -> {
+                query -> Mono.just(application), dto -> Mono.empty(), resources, event -> {
                     published.add(event);
                     return Mono.empty();
                 }, () -> fixedId, () -> NOW);
@@ -104,34 +99,6 @@ class RegisterProtectedResourceUseCaseImplTests {
         assertThat(published).hasSize(1);
     }
 
-    private static ApplicationRepository repositoryReturning(Application application) {
-        return new ApplicationRepository() {
-            @Override
-            public Mono<Boolean> existsByTenantAndName(TenantId tenantId, ApplicationName name) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public Mono<Application> findByTenantAndId(TenantId tenantId, ApplicationId applicationId) {
-                return application == null ? Mono.empty() : Mono.just(application);
-            }
-
-            @Override
-            public Mono<ResultPage<Application>> findBy(ApplicationCriteria criteria, PageWindow window) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public Mono<Application> save(Application app) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public Mono<Void> deleteById(ApplicationId applicationId) {
-                throw new UnsupportedOperationException();
-            }
-        };
-    }
 
     private static ProtectedResourceRepository unreachableResourceRepository() {
         return new ProtectedResourceRepository() {

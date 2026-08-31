@@ -1,8 +1,10 @@
 package co.edu.uco.seguridad.pdp.applications.infrastructure.config;
 
 import co.edu.uco.seguridad.pdp.applications.application.port.secondary.repository.ApplicationRepository;
+import co.edu.uco.seguridad.pdp.applications.application.rule.ApplicationMustExistForTenantRule;
 import co.edu.uco.seguridad.pdp.applications.application.rule.ApplicationNameMustBeUniqueForTenantRule;
 import co.edu.uco.seguridad.pdp.applications.application.rule.ApplicationNameMustNotBeReservedRule;
+import co.edu.uco.seguridad.pdp.applications.application.rule.impl.ApplicationMustExistForTenantRuleImpl;
 import co.edu.uco.seguridad.pdp.applications.application.rule.impl.ApplicationNameMustBeUniqueForTenantRuleImpl;
 import co.edu.uco.seguridad.pdp.applications.application.rule.impl.ApplicationNameMustNotBeReservedRuleImpl;
 import co.edu.uco.seguridad.pdp.applications.application.rulesvalidator.RegisterApplicationRulesValidator;
@@ -91,5 +93,10 @@ public class ApplicationsConfiguration {
     @Bean
     ListApplicationsInteractor listApplicationsInteractor(ListApplicationsUseCase useCase) {
         return new ListApplicationsInteractorImpl(useCase);
+    }
+
+    @Bean
+    ApplicationMustExistForTenantRule applicationMustExistForTenantRule(ApplicationRepository repository) {
+        return new ApplicationMustExistForTenantRuleImpl(repository);
     }
 }

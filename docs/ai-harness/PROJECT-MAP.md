@@ -3,15 +3,15 @@
 > Generado por `.claude/tools/mapa.ps1`. **No editar a mano** - se regenera desde el codigo.
 > Es el nivel 0 del grafo de conocimiento: responde "que existe y donde va lo nuevo".
 
-- Clases de produccion: **215**
-- Clases de prueba: **64**
+- Clases de produccion: **226**
+- Clases de prueba: **68**
 - Slices de negocio: **5** (applications, commons, identity, resources, tenants)
 
 ---
 
 ## Slices de negocio (`pdp`)
 
-### `applications` - 40 clases
+### `applications` - 45 clases
 
 | Rol | Clases |
 |---|---|
@@ -19,11 +19,11 @@
 | Dominio (entidad / VO / enum) | `Application`, `ApplicationBaseUrl`, `ApplicationCriteria` |
 | Caso de uso (impl) | `ListApplicationsUseCaseImpl`, `RegisterApplicationUseCaseImpl`, `RemoveApplicationUseCaseImpl` |
 | Caso de uso (contrato) | `ListApplicationsUseCase`, `RegisterApplicationUseCase`, `RemoveApplicationUseCase` |
-| Regla (impl) | `ApplicationNameMustBeUniqueForTenantRuleImpl`, `ApplicationNameMustNotBeReservedRuleImpl` |
-| Regla (contrato) | `ApplicationNameMustBeUniqueForTenantRule`, `ApplicationNameMustNotBeReservedRule` |
+| Regla (impl) | `ApplicationMustExistForTenantRuleImpl`, `ApplicationNameMustBeUniqueForTenantRuleImpl`, `ApplicationNameMustNotBeReservedRuleImpl` |
+| Regla (contrato) | `ApplicationMustExistForTenantRule`, `ApplicationNameMustBeUniqueForTenantRule`, `ApplicationNameMustNotBeReservedRule` |
 | Coordinador de reglas | `RegisterApplicationRulesValidator`, `RegisterApplicationRulesValidatorImpl` |
 | Puerto de salida | `ApplicationRepository` |
-| DTO de entrada al nucleo | `ListApplicationsRequest`, `RegisterApplicationRequest` |
+| DTO de entrada al nucleo | `ApplicationOwnershipQuery`, `ListApplicationsRequest`, `RegisterApplicationRequest` |
 | DTO de salida del nucleo | `RegisteredApplicationResponse` |
 | Excepcion de aplicacion | `ApplicationNotFoundException`, `DuplicateApplicationException`, `ReservedApplicationNameException` |
 | Catalogo de mensajes | `ApplicationsMessages` |
@@ -33,6 +33,8 @@
 | Interactor (impl) | `ListApplicationsInteractorImpl`, `RegisterApplicationInteractorImpl` |
 | Interactor (contrato) | `ListApplicationsInteractor`, `RegisterApplicationInteractor` |
 | Mapper web | `ApplicationResponseMapper`, `ListApplicationsRequestMapper`, `RegisterApplicationRequestMapper` |
+| Entidad de persistencia | `ApplicationEntity` |
+| Mapper de persistencia | `ApplicationPersistenceMapper` |
 | Adaptador de repositorio | `SurrealApplicationRepository` |
 | Esquema de tabla | `ApplicationSchema`, `SurrealApplicationSchemaInitializer` |
 | Cableado (@Bean) | `ApplicationsConfiguration` |
@@ -44,7 +46,7 @@
 |---|---|
 | Otro | `AggregateRoot`, `ApplicationId`, `ApplicationName`, `BusinessRuleViolationException`, `ConflictBusinessRuleException`, `DomainException`, `InvalidApplicationNameException`, `InvalidIdentifierException`, `InvalidPageWindowException`, `InvalidTenantIdException`, `InvalidValueException`, `PageWindow`, `ResourceId`, `ResultPage`, `TenantId`, `ValueObjectMessages` |
 
-### `identity` - 31 clases
+### `identity` - 37 clases
 
 | Rol | Clases |
 |---|---|
@@ -52,16 +54,21 @@
 | Dominio (entidad / VO / enum) | `Email`, `ExternalIdentity`, `SecurityUser`, `UserId` |
 | Caso de uso (impl) | `AssignTenantUseCaseImpl`, `ListUsersUseCaseImpl`, `ProvisionIdentityUseCaseImpl` |
 | Caso de uso (contrato) | `AssignTenantUseCase`, `ListUsersUseCase`, `ProvisionIdentityUseCase` |
+| Regla (impl) | `UserMustExistRuleImpl` |
+| Regla (contrato) | `UserMustExistRule` |
 | Puerto de salida | `SecurityUserRepository` |
 | DTO de entrada al nucleo | `AssignTenantRequest`, `ProvisionIdentityRequest` |
 | DTO de salida del nucleo | `UserResponse` |
 | Excepcion de aplicacion | `UserNotFoundException` |
+| Catalogo de mensajes | `IdentityMessages` |
 | Controller | `UserController` |
 | DTO crudo HTTP | `AssignTenantBodyRequest`, `AssignTenantRawRequest` |
 | DTO de respuesta HTTP | `UserWebResponse` |
 | Interactor (impl) | `AssignTenantInteractorImpl`, `ListUsersInteractorImpl` |
 | Interactor (contrato) | `AssignTenantInteractor`, `ListUsersInteractor` |
 | Mapper web | `AssignTenantRequestMapper`, `UserResponseMapper` |
+| Entidad de persistencia | `ExternalIdentityEntity`, `SecurityUserEntity` |
+| Mapper de persistencia | `SecurityUserPersistenceMapper` |
 | Adaptador de repositorio | `SurrealSecurityUserRepository` |
 | Esquema de tabla | `IdentitySchema`, `SurrealIdentitySchemaInitializer` |
 | Cableado (@Bean) | `IdentityConfiguration` |
@@ -184,9 +191,9 @@
 
 | Area | Clases de prueba |
 |---|---|
-| `pdp/applications` | `ApplicationBaseUrlTests`, `ApplicationCatalogPropertiesTests`, `ApplicationControllerTests`, `ApplicationCriteriaTests`, `ApplicationHttpTests`, `ApplicationRegistrationRuleTests`, `ApplicationResponseMapperTests`, `ListApplicationsRequestMapperTests`, `ListApplicationsUseCaseImplTests`, `RegisterApplicationRequestMapperTests`, `RegisterApplicationUseCaseImplTests`, `RemoveApplicationUseCaseImplTests` |
+| `pdp/applications` | `ApplicationBaseUrlTests`, `ApplicationCatalogPropertiesTests`, `ApplicationControllerTests`, `ApplicationCriteriaTests`, `ApplicationHttpTests`, `ApplicationMustExistForTenantRuleImplTests`, `ApplicationPersistenceMapperTests`, `ApplicationRegistrationRuleTests`, `ApplicationResponseMapperTests`, `ListApplicationsRequestMapperTests`, `ListApplicationsUseCaseImplTests`, `RegisterApplicationRequestMapperTests`, `RegisterApplicationUseCaseImplTests`, `RemoveApplicationUseCaseImplTests` |
 | `pdp/commons` | `PageWindowTests`, `ResultPageTests`, `ValueObjectTests` |
-| `pdp/identity` | `AssignTenantRequestMapperTests`, `AssignTenantUseCaseImplTests`, `EmailTests`, `ProvisionIdentityUseCaseImplTests`, `UserControllerTests`, `UserResponseMapperTests` |
+| `pdp/identity` | `AssignTenantRequestMapperTests`, `AssignTenantUseCaseImplTests`, `EmailTests`, `ProvisionIdentityUseCaseImplTests`, `SecurityUserPersistenceMapperTests`, `UserControllerTests`, `UserMustExistRuleImplTests`, `UserResponseMapperTests` |
 | `pdp/resources` | `HttpVerbTests`, `InMemoryAuditAdapterTests`, `ProtectedResourceControllerTests`, `ProtectedResourceMustBeUniqueRuleImplTests`, `ProtectedResourceResponseMapperTests`, `RegisterProtectedResourceRequestMapperTests`, `RegisterProtectedResourceUseCaseImplTests`, `ResourcePathTests` |
 | `pdp/tenants` | `CreateTenantRequestMapperTests`, `CreateTenantUseCaseImplTests`, `TenantCatalogPropertiesTests`, `TenantControllerTests`, `TenantMustBeActiveRuleImplTests`, `TenantNameTests`, `TenantResponseMapperTests` |
 | `raiz` | `AbstractSurrealDbIntegrationTest`, `LayeredArchitectureTests`, `ModulithStructureTests`, `PdpApplicationTests` |

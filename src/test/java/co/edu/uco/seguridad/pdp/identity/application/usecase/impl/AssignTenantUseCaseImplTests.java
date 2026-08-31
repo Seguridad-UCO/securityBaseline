@@ -31,6 +31,7 @@ class AssignTenantUseCaseImplTests {
                 new Email("david@uco.edu"), "David", Instant.now());
         AssignTenantUseCaseImpl useCase = new AssignTenantUseCaseImpl(
                 tenantId -> Mono.just(new TenantResponse(tenantId, new TenantName("Otra"), TenantStatus.ACTIVE)),
+                userId -> Mono.just(user),
                 repositoryWithUser(user));
 
         StepVerifier.create(useCase.execute(new AssignTenantRequest(user.id(), NEW_TENANT)))
@@ -43,6 +44,7 @@ class AssignTenantUseCaseImplTests {
         UserId missing = new UserId(UUID.randomUUID());
         AssignTenantUseCaseImpl useCase = new AssignTenantUseCaseImpl(
                 tenantId -> Mono.just(new TenantResponse(tenantId, new TenantName("Otra"), TenantStatus.ACTIVE)),
+                userId -> Mono.error(new UserNotFoundException(userId)),
                 repositoryWithUser(null));
 
         StepVerifier.create(useCase.execute(new AssignTenantRequest(missing, NEW_TENANT)))

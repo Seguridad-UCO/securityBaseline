@@ -1,6 +1,6 @@
 package co.edu.uco.seguridad.pdp.resources.infrastructure.config;
 
-import co.edu.uco.seguridad.pdp.applications.application.port.secondary.repository.ApplicationRepository;
+import co.edu.uco.seguridad.pdp.applications.application.rule.ApplicationMustExistForTenantRule;
 import co.edu.uco.seguridad.pdp.resources.application.port.secondary.repository.ProtectedResourceRepository;
 import co.edu.uco.seguridad.pdp.resources.application.rule.ProtectedResourceMustBeUniqueRule;
 import co.edu.uco.seguridad.pdp.resources.application.rule.impl.ProtectedResourceMustBeUniqueRuleImpl;
@@ -59,10 +59,10 @@ public class ResourcesConfiguration {
     }
 
     @Bean
-    RegisterProtectedResourceUseCase registerProtectedResourceUseCase(ApplicationRepository applications,
+    RegisterProtectedResourceUseCase registerProtectedResourceUseCase(ApplicationMustExistForTenantRule applicationMustExist,
             RegisterProtectedResourceRulesValidator rules, ProtectedResourceRepository resources,
             DomainEventPublisher events, IdentifierGenerator identifiers, TimeProvider time) {
-        return new RegisterProtectedResourceUseCaseImpl(applications, rules, resources, events, identifiers, time);
+        return new RegisterProtectedResourceUseCaseImpl(applicationMustExist, rules, resources, events, identifiers, time);
     }
 
     @Bean

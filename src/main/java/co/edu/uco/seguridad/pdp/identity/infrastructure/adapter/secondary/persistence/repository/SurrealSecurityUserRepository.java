@@ -6,6 +6,9 @@ import co.edu.uco.seguridad.pdp.identity.domain.Email;
 import co.edu.uco.seguridad.pdp.identity.domain.ExternalIdentity;
 import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;
 import co.edu.uco.seguridad.pdp.identity.domain.UserId;
+import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.entity.ExternalIdentityEntity;
+import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.entity.SecurityUserEntity;
+import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.mapper.SecurityUserPersistenceMapper;
 import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.schema.IdentitySchema;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
@@ -37,7 +40,7 @@ public final class SurrealSecurityUserRepository implements SecurityUserReposito
                                 .formatted(IdentitySchema.IDENTITY_TABLE),
                         Map.of("issuer", issuer, "subject", subject))
                 .map(results -> results.get(0))
-                .flatMap(rows -> rows.isEmpty() ? Mono.empty() : Mono.just(toIdentity(rows.get(0))));
+                .flatMap(rows -> rows.isEmpty() ? Mono.empty() : Mono.just(toExternalIdentity(rows.get(0))));
     }
 
     @Override
@@ -46,7 +49,7 @@ public final class SurrealSecurityUserRepository implements SecurityUserReposito
                         "SELECT * FROM %s WHERE email = $email LIMIT 1;".formatted(IdentitySchema.USER_TABLE),
                         Map.of("email", email.value()))
                 .map(results -> results.get(0))
-                .flatMap(rows -> rows.isEmpty() ? Mono.empty() : Mono.just(toUser(rows.get(0))));
+                .flatMap(rows -> rows.isEmpty() ? Mono.empty() : Mono.just(toSecurityUser(rows.get(0))));
     }
 
     @Override
@@ -55,7 +58,7 @@ public final class SurrealSecurityUserRepository implements SecurityUserReposito
                         "SELECT * FROM type::record('%s', $id);".formatted(IdentitySchema.USER_TABLE),
                         Map.of("id", userId.value().toString()))
                 .map(results -> results.get(0))
-                .flatMap(rows -> rows.isEmpty() ? Mono.empty() : Mono.just(toUser(rows.get(0))));
+                .flatMap(rows -> rows.isEmpty() ? Mono.empty() : Mono.just(toSecurityUser(rows.get(0))));
     }
 
     @Override
@@ -106,24 +109,26 @@ public final class SurrealSecurityUserRepository implements SecurityUserReposito
     public Flux<SecurityUser> findAll() {
         return client.execute("SELECT * FROM %s ORDER BY lastLoginAt DESC;".formatted(IdentitySchema.USER_TABLE), Map.of())
                 .flatMapMany(results -> Flux.fromIterable(results.get(0).valueStream().toList()))
-                .map(SurrealSecurityUserRepository::toUser);
+                .map(SurrealSecurityUserRepository::toSecurityUser);
     }
 
-    private static SecurityUser toUser(JsonNode row) {
-        return new SecurityUser(
-                new UserId(UUID.fromString(SurrealRecordId.idPart(row.path("id").asString()))),
-                new TenantId(row.path("tenantId").asString()),
-                new Email(row.path("email").asString()),
+    private static SecurityUser toSecurityUser(JsonNode row) {
+        SecurityUserEntity entity = new SecurityUserEntity(
+                SurrealRecordId.idPart(row.path("id").asString()),
+                row.path("tenantId").asString(),
+                row.path("email").asString(),
                 row.path("name").asString(""),
-                Instant.parse(row.path("createdAt").asString()),
-                Instant.parse(row.path("lastLoginAt").asString()));
+                row.path("createdAt").asString(),
+                row.path("lastLoginAt").asString());
+        return SecurityUserPersistenceMapper.toDomain(entity);
     }
 
-    private static ExternalIdentity toIdentity(JsonNode row) {
-        return new ExternalIdentity(
-                new UserId(UUID.fromString(row.path("userId").asString())),
+    private static ExternalIdentity toExternalIdentity(JsonNode row) {
+        ExternalIdentityEntity entity = new ExternalIdentityEntity(
+                row.path("userId").asString(),
                 row.path("issuer").asString(),
                 row.path("subject").asString(),
                 row.path("provider").asString());
+        return SecurityUserPersistenceMapper.toDomain(entity);
     }
 }

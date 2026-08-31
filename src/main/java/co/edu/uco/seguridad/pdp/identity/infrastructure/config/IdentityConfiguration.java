@@ -1,6 +1,8 @@
 package co.edu.uco.seguridad.pdp.identity.infrastructure.config;
 
 import co.edu.uco.seguridad.pdp.identity.application.port.secondary.repository.SecurityUserRepository;
+import co.edu.uco.seguridad.pdp.identity.application.rule.UserMustExistRule;
+import co.edu.uco.seguridad.pdp.identity.application.rule.impl.UserMustExistRuleImpl;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.AssignTenantUseCase;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.ListUsersUseCase;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.ProvisionIdentityUseCase;
@@ -53,8 +55,8 @@ public class IdentityConfiguration {
 
     @Bean
     AssignTenantUseCase assignTenantUseCase(TenantMustBeActiveRule tenantMustBeActive,
-            SecurityUserRepository repository) {
-        return new AssignTenantUseCaseImpl(tenantMustBeActive, repository);
+            SecurityUserRepository repository, UserMustExistRule userMustExist) {
+        return new AssignTenantUseCaseImpl(tenantMustBeActive, userMustExist, repository);
     }
 
     @Bean
@@ -65,5 +67,10 @@ public class IdentityConfiguration {
     @Bean
     AssignTenantInteractor assignTenantInteractor(AssignTenantUseCase useCase) {
         return new AssignTenantInteractorImpl(useCase);
+    }
+
+    @Bean
+    UserMustExistRule userMustExistRule(SecurityUserRepository repository) {
+        return new UserMustExistRuleImpl(repository);
     }
 }

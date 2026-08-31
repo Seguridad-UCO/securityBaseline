@@ -99,7 +99,8 @@ Rutas relativas a `src/main/java/co/edu/uco/seguridad/pdp/tenants/`.
 | `infrastructure/adapter/primary/web/interactor/impl/CreateTenantInteractorImpl.java` | Mapea raw → request, llama al use case, mapea response → web |
 | `infrastructure/adapter/primary/web/mapper/CreateTenantRequestMapper.java` | `final class` con constructor privado y estáticos. Usa `RequestFieldParser` |
 | `infrastructure/adapter/secondary/persistence/entity/TenantEntity.java` | `record` de Strings — la forma de la fila, no del dominio |
-| `infrastructure/adapter/secondary/persistence/repository/SurrealTenantRepository.java` | Implementa el puerto con `SurrealDbClient` |
+| `infrastructure/adapter/secondary/persistence/mapper/TenantPersistenceMapper.java` | Traduce `Entity` → dominio. Los VOs validan aquí |
+| `infrastructure/adapter/secondary/persistence/repository/SurrealTenantRepository.java` | Implementa el puerto con `SurrealDbClient`. Su `toDomain(JsonNode)` construye la `Entity` y delega en el mapper |
 | `infrastructure/adapter/secondary/persistence/schema/TenantSchema.java` | Constante del nombre de tabla. **Nunca un literal suelto en la consulta** |
 | `infrastructure/config/TenantsConfiguration.java` | **Todo el cableado del slice**, con `@Bean` explícito |
 | `infrastructure/properties/TenantCatalogProperties.java` | `@ConfigurationProperties` del slice |
@@ -209,6 +210,40 @@ Dos reglas que este flujo impone:
 
 ---
 
+## Todos los slices se ven igual
+
+Un slice no es «lo que hizo falta»: es la misma forma siempre, para que entrar en uno cualquiera no
+obligue a reaprender nada. `.claude/tools/consistencia.ps1` lo verifica.
+
+| Si el slice tiene… | Entonces tiene, sin excepción |
+|---|---|
+| adaptador de persistencia | `persistence/entity`, `persistence/mapper`, `persistence/repository`, `persistence/schema` |
+| controller | `dto/request/raw`, `dto/response`, `interactor` + `impl`, `mapper` |
+| un contrato (`UseCase`, `Rule`, `Interactor`, `RulesValidator`) | su `Impl` en el subpaquete `impl/` |
+| excepciones propias | su `{Slice}Messages` en `application/message` |
+| cualquier cosa | su `{Slice}Configuration` |
+
+Dos consecuencias que se incumplían hasta el 2026-08-31 y ahora no:
+
+- **El adaptador nunca construye el agregado desde el JSON.** Lee la fila en una `{X}Entity` y
+  delega en `{X}PersistenceMapper.toDomain(entity)`. Separar «leer la fila» de «reconstruir el
+  agregado» deja el mapeo y su validación en un solo sitio.
+- **El método que convierte fila → dominio se llama `toDomain`**, o `to{Tipo}` si el adaptador
+  maneja más de un agregado. Nunca `toUser`, `toRow` ni un nombre inventado.
+
+### Una regla que dos módulos necesitan la publica su dueño
+
+Cuando un slice necesita decidir algo sobre otro —«esta aplicación existe y es de este inquilino»—
+**no consulta el repositorio ajeno**: consume una `Rule` que el dueño publica como interfaz nombrada
+de Modulith. Una sola implementación inyectada, no una comprobación copiada, para que la decisión no
+pueda divergir.
+
+Ejemplos vivos: `tenants` publica `TenantMustBeActiveRule`; `applications` publica
+`ApplicationMustExistForTenantRule`. Ambas con `@NamedInterface("rule")` en el `package-info` de
+`application/rule`, y declaradas en el `allowedDependencies` del consumidor.
+
+---
+
 ## Reglas invariantes
 
 1. `domain` y `application` **no importan `org.springframework`**. Ni una anotación.
@@ -220,3 +255,6 @@ Dos reglas que este flujo impone:
 7. La respuesta web nunca expone value objects: sale plana.
 8. Un nombre de tabla vive en su `{X}Schema`, nunca como literal en la consulta.
 9. Si dudas de dónde va algo, mira `tenants` — y si `tenants` no lo tiene, mira `applications`.
+10. El adaptador de persistencia pasa por `Entity` + `PersistenceMapper`, siempre.
+11. Una decisión sobre otro módulo se consume como `Rule` publicada, nunca consultando su repositorio.
+12. Antes de cerrar, `consistencia.ps1` sale limpio.
