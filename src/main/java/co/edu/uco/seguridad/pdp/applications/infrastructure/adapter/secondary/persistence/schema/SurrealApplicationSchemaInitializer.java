@@ -2,8 +2,9 @@ package co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.p
 
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
-import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.ApplicationRunner;
+import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealSchemaInitializer;
+
+import reactor.core.publisher.Mono;
 
 import java.util.Map;
 import java.util.Objects;
@@ -14,7 +15,7 @@ import java.util.Objects;
  * mensaje de error normal; este índice solo evita que una condición de carrera deje dos filas con el
  * mismo tenant y nombre si dos peticiones pasan el chequeo casi al mismo tiempo.
  */
-public final class SurrealApplicationSchemaInitializer implements ApplicationRunner {
+public final class SurrealApplicationSchemaInitializer extends SurrealSchemaInitializer {
 
     private final SurrealDbClient client;
 
@@ -23,8 +24,13 @@ public final class SurrealApplicationSchemaInitializer implements ApplicationRun
     }
 
     @Override
-    public void run(ApplicationArguments args) {
-        client.ensureNamespaceAndDatabase()
+    protected String module() {
+        return "applications";
+    }
+
+    @Override
+    protected Mono<Void> defineSchema() {
+        return client.ensureNamespaceAndDatabase()
                 .then(client.execute(
                         """
                         DEFINE TABLE IF NOT EXISTS %1$s SCHEMALESS;
@@ -32,7 +38,6 @@ public final class SurrealApplicationSchemaInitializer implements ApplicationRun
                         COLUMNS tenantId, name UNIQUE;\
                         """.formatted(ApplicationSchema.TABLE, ApplicationSchema.INDEX_TENANT_NAME),
                         Map.of()))
-                .then()
-                .block();
+                .then();
     }
 }

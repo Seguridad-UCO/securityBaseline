@@ -3,7 +3,7 @@
 > Generado por `.claude/tools/mapa.ps1`. **No editar a mano** - se regenera desde el codigo.
 > Es el nivel 0 del grafo de conocimiento: responde "que existe y donde va lo nuevo".
 
-- Clases de produccion: **226**
+- Clases de produccion: **228**
 - Clases de prueba: **68**
 - Slices de negocio: **5** (applications, commons, identity, resources, tenants)
 
@@ -146,7 +146,7 @@
 | `event` | `DomainEvent`, `DomainEventPublisher`, `SpringDomainEventPublisher` |
 | `message` | `RequiredArgumentMessages` |
 | `observability` | `ReactiveLogContext` |
-| `persistence/surrealdb` | `SurrealDbClient`, `SurrealDbException`, `SurrealDbProperties`, `SurrealRecordId` |
+| `persistence/surrealdb` | `SurrealDbClient`, `SurrealDbException`, `SurrealDbHealthIndicator`, `SurrealDbProperties`, `SurrealRecordId`, `SurrealSchemaInitializer` |
 | `port` | `IdentifierGenerator`, `TimeProvider` |
 | `security` | `ApiAccessDeniedHandler`, `ApiAuthenticationEntryPoint`, `CorsProperties`, `JwtSecurityProperties`, `KeycloakSessionProperties`, `LocalUserPrincipal`, `PdpPrincipal`, `SecurityContext` |
 | `web` | `ApiResponse`, `CorrelationWebFilter`, `PageResponse`, `RequestContext`, `RequestFieldParser` |

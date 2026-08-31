@@ -1,6 +1,7 @@
 package co.edu.uco.seguridad.shared.config;
 
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
+import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbHealthIndicator;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -28,5 +29,14 @@ class SurrealDbConfiguration {
                 })
                 .build();
         return new SurrealDbClient(webClient, objectMapper, properties);
+    }
+
+    /**
+     * Publica el estado de SurrealDB en {@code /actuator/health}. Sin esto, una base caída se
+     * manifestaba como un 503 sin explicación y había que adivinar la causa.
+     */
+    @Bean
+    SurrealDbHealthIndicator surrealDbHealthIndicator(SurrealDbClient client, SurrealDbProperties properties) {
+        return new SurrealDbHealthIndicator(client, properties);
     }
 }

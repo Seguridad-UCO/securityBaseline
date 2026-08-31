@@ -2,8 +2,9 @@ package co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.pers
 
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
-import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.ApplicationRunner;
+import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealSchemaInitializer;
+
+import reactor.core.publisher.Mono;
 
 import java.util.Map;
 import java.util.Objects;
@@ -13,7 +14,7 @@ import java.util.Objects;
  * {@code ProtectedResourceMustBeUniqueRule} sigue siendo quien produce el mensaje de error normal;
  * este índice solo cierra la ventana de carrera entre el chequeo y la escritura.
  */
-public final class SurrealProtectedResourceSchemaInitializer implements ApplicationRunner {
+public final class SurrealProtectedResourceSchemaInitializer extends SurrealSchemaInitializer {
 
     private final SurrealDbClient client;
 
@@ -22,8 +23,13 @@ public final class SurrealProtectedResourceSchemaInitializer implements Applicat
     }
 
     @Override
-    public void run(ApplicationArguments args) {
-        client.ensureNamespaceAndDatabase()
+    protected String module() {
+        return "resources";
+    }
+
+    @Override
+    protected Mono<Void> defineSchema() {
+        return client.ensureNamespaceAndDatabase()
                 .then(client.execute(
                         """
                         DEFINE TABLE IF NOT EXISTS %1$s SCHEMALESS;
@@ -31,7 +37,6 @@ public final class SurrealProtectedResourceSchemaInitializer implements Applicat
                         COLUMNS applicationId, path, method UNIQUE;\
                         """.formatted(ProtectedResourceSchema.TABLE, ProtectedResourceSchema.INDEX_GRANT),
                         Map.of()))
-                .then()
-                .block();
+                .then();
     }
 }

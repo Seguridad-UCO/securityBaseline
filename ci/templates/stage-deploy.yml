@@ -114,7 +114,23 @@ stages:
                       echo "Intento $attempt: estado $status"
                       sleep 15
                     done
-                    echo "La aplicación no respondió saludable."
-                    echo "Comprueba: App Service existe, runtime del contenedor, y SurrealDB alcanzable en PDP_DATASOURCE_URL=$(datasourceUrl)"
+                    echo "La aplicación no respondió saludable tras 30 intentos."
+                    echo ""
+                    echo "Causa más probable: la VM de Keycloak está apagada. Se apaga a propósito para"
+                    echo "ahorrar crédito, y el arranque la necesita — Spring resuelve el issuer OIDC"
+                    echo "(descubrimiento de /.well-known/openid-configuration) al construir el contexto,"
+                    echo "asi que si no responde la aplicación no llega a arrancar y esto devuelve 503 mudo."
+                    echo ""
+                    echo "  az vm start -g rg-pdp-shared-v1 -n vm-pdp-keycloak-shared"
+                    echo ""
+                    echo "Comprueba también, en este orden:"
+                    echo "  1. Keycloak responde:  $(keycloakIssuerUri)/.well-known/openid-configuration"
+                    echo "  2. SurrealDB responde: $(datasourceUrl)/health"
+                    echo "     (una base caída ya NO impide arrancar: se reporta como DOWN en el health)"
+                    echo "  3. El App Service existe y el contenedor arrancó (revisa el log stream)"
+                    echo ""
+                    echo "Último cuerpo de /actuator/health, si la aplicación llegó a responder:"
+                    curl -s --max-time 10 "https://$(webAppName).azurewebsites.net/actuator/health" || echo "  (sin respuesta: el contenedor no está sirviendo)"
+                    echo ""
                     exit 1
                   displayName: 'Verificar salud del despliegue'
