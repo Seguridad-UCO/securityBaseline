@@ -1,0 +1,46 @@
+# Excepciones declaradas del detector de deriva (.claude/tools/drift.ps1).
+#
+# Solo se declara una excepcion para algo que esta pendiente A PROPOSITO y documentado como tal
+# en el documento que lo menciona. Nunca para silenciar un hallazgo real: eso es exactamente el
+# fallo que este detector existe para impedir.
+#
+# Formato:
+#   doc:<patron>   ignora el documento completo
+#   <patron>       ignora un destino de enlace o un nombre de clase (admite comodines)
+
+# --- Documentos historicos ---------------------------------------------------
+# Un reporte fechado o un plan cerrado describe el estado de OTRO momento. Sus referencias a
+# clases que ya no existen son correctas: son el registro de lo que habia entonces. Corregirlas
+# falsearia el historial.
+doc:docs/delivery/refactor-report-2026-08-07.md
+doc:docs/plans/*
+
+# --- Documentacion del propio harness ----------------------------------------
+# Cita los nombres ausentes precisamente para documentar que faltan.
+doc:docs/ai-harness/README.md
+
+# --- Planes -------------------------------------------------------------------
+# Un plan es la especificacion de lo que VA a existir: nombrar clases que aun no estan es su
+# naturaleza, no deriva. Lo que el plan promete lo verifica el validador contra el codigo, no
+# este detector.
+doc:docs/ai-harness/workspace/planes/*
+doc:docs/ai-harness/workspace/HU-*.md
+
+# --- Pendientes de HU-001 ----------------------------------------------------
+# Busqueda con criterios y paginacion, y la prueba HTTP end-to-end. Los documentos que los
+# mencionan llevan un aviso de estado explicito desde 2026-08-31, y la matriz de cumplimiento
+# declara los criterios 10 y 16-19 como no cumplidos o parciales.
+#
+# ESTAS TRES LINEAS SE BORRAN AL CERRAR HU-001. Si la historia se implementa y siguen aqui,
+# el detector dejaria de verificar precisamente lo que la historia construyo.
+ProtectedApplicationCriteria
+SearchProtectedApplications*
+ProtectedApplicationHttpTests
+
+# --- Adaptadores retirados en el Stage 4 -------------------------------------
+# La seccion "Historia: los dummies de los Stages 0-3" de 07-dummy-adapters.md los lista como
+# retirados. Nombrar algo que ya no existe, diciendo que ya no existe, no es deriva.
+InMemoryTenantRepository
+InMemoryApplicationRepository
+InMemoryProtectedResourceRepository
+SnapshotReactiveTransactionAdapter
