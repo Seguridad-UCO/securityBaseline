@@ -2,11 +2,6 @@
 
 [← Validación](15-domain-validation.md) · [Siguiente: consultas dinámicas →](17-dynamic-queries.md)
 
-> **Estado — 2026-08-31.** Lo que este documento describe sobre la **búsqueda con criterios y
-> paginación** (`ProtectedApplicationCriteria`, `SearchProtectedApplicationsUseCase` y sus mappers y
-> pruebas) es el **diseño acordado, no código existente**. `PageWindow`, `ResultPage` y `PageResponse`
-> existen y están probados, pero ningún caso de uso los usa todavía. Pendiente de la historia
-> **HU-001**; ver [el harness](../ai-harness/README.md).
 
 ## Decisión arquitectónica
 
@@ -21,7 +16,7 @@ un cambio de la API del puerto y de todos sus adaptadores.
 ## Implementación
 
 ```java
-Mono<ResultPage<ProtectedResource>> findBy(ProtectedApplicationCriteria criteria, PageWindow window);
+Mono<ResultPage<ProtectedResource>> findBy(ApplicationCriteria criteria, PageWindow window);
 ```
 
 Un único método de lectura. La semántica del criterio la resuelve el dominio; el adaptador la traduce
@@ -48,7 +43,7 @@ estable, dos páginas consecutivas podrían repetir u omitir filas según el ord
 
 ## Evidencia y límite
 
-`SearchProtectedApplicationsUseCaseImplTests` *(no implementado)*
+`ListApplicationsUseCaseImplTests`
 comprueba, con un doble en memoria, que las páginas son estables y no se solapan.
 [`SurrealRepositoryIntegrationTests`](../../src/test/java/co/edu/uco/seguridad/shared/persistence/surrealdb/SurrealRepositoryIntegrationTests.java)
 ejercita el mismo contrato contra una SurrealDB real (Testcontainers), incluyendo el conteo total

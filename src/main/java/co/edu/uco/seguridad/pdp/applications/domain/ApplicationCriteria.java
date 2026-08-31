@@ -3,6 +3,7 @@ package co.edu.uco.seguridad.pdp.applications.domain;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -20,28 +21,32 @@ import java.util.Optional;
  * {@code hashCode} operando sobre el campo mientras el accessor anuncia otro tipo. Y usar
  * {@code ""} como «sin filtro» confundiría ausente con vacío, que es justo lo que hay que
  * distinguir. Es una decisión consciente: no la «corrijas» a un campo anulable.
- *
- * <p>Esqueleto de la SPEC de HU-001 — sin lógica todavía.
  */
 public record ApplicationCriteria(TenantId tenantId, Optional<String> nameContains) {
 
     public ApplicationCriteria {
-        throw new UnsupportedOperationException("pendiente: HU-001");
+        Objects.requireNonNull(tenantId, RequiredArgumentMessages.TENANT_ID);
+        Objects.requireNonNull(nameContains, RequiredArgumentMessages.NAME_FILTER);
     }
 
     public static ApplicationCriteria of(TenantId tenantId, Optional<String> nameContains) {
-        throw new UnsupportedOperationException("pendiente: HU-001");
+        return new ApplicationCriteria(tenantId, nameContains);
     }
 
+    /** Todas las aplicaciones del inquilino, sin filtrar por nombre. */
     public static ApplicationCriteria ofTenant(TenantId tenantId) {
-        throw new UnsupportedOperationException("pendiente: HU-001");
+        return new ApplicationCriteria(tenantId, Optional.empty());
     }
 
     /**
-     * Decide si una aplicación satisface el criterio: mismo inquilino y, si hay filtro de nombre,
-     * que el nombre lo contenga sin distinguir mayúsculas.
+     * Decide si una aplicación satisface el criterio. El inquilino se comprueba siempre; el nombre,
+     * solo si hay filtro, y delegando la comparación al propio value object.
      */
     public boolean matches(Application application) {
-        throw new UnsupportedOperationException("pendiente: HU-001");
+        Objects.requireNonNull(application, RequiredArgumentMessages.APPLICATION_NAME);
+        if (!application.tenantId().equals(tenantId)) {
+            return false;
+        }
+        return nameContains.map(fragment -> application.name().contains(fragment)).orElse(true);
     }
 }

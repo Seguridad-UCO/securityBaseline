@@ -2,11 +2,6 @@
 
 [← SOLID](12-solid.md) · [Siguiente: modelo →](21-refined-model.md)
 
-> **Estado — 2026-08-31.** Lo que este documento describe sobre la **búsqueda con criterios y
-> paginación** (`ProtectedApplicationCriteria`, `SearchProtectedApplicationsUseCase` y sus mappers y
-> pruebas) es el **diseño acordado, no código existente**. `PageWindow`, `ResultPage` y `PageResponse`
-> existen y están probados, pero ningún caso de uso los usa todavía. Pendiente de la historia
-> **HU-001**; ver [el harness](../ai-harness/README.md).
 
 ## Decisión arquitectónica
 
@@ -33,7 +28,7 @@ Las decisiones que podrían haberse filtrado al adaptador y no lo hicieron:
 |---|---|
 | Formato de un código de recurso | `ResourceCode` |
 | Comparación de nombres sin distinguir mayúsculas | `ApplicationName.sameAs` |
-| Qué significa que un filtro esté ausente | `ProtectedApplicationCriteria` |
+| Qué significa que un filtro esté ausente | `ApplicationCriteria` |
 | Límite máximo de una ventana | `PageWindow` |
 | Unicidad de una concesión | `ProtectedResourceMustBeUniqueRule` |
 

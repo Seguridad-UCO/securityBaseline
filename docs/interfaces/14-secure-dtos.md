@@ -37,7 +37,7 @@ dependencia, el compilador lo impide.
 ## Ubicación verificable
 
 - [`resources/infrastructure/web/dto`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/infrastructure/adapter/primary/web/dto)
-- `ApplicationWebResponse.java` *(no implementado)*
+- `ApplicationWebResponse.java`
 - Ausencia de la dependencia: [`pom.xml`](../../pom.xml)
 - [Reglas de dominio](../domain-and-data/03-business-rules-data-integrity.md)
 

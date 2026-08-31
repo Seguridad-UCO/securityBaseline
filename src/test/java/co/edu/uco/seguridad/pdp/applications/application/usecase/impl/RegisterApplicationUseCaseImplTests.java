@@ -4,9 +4,12 @@ import co.edu.uco.seguridad.pdp.applications.application.port.primary.dto.reques
 import co.edu.uco.seguridad.pdp.applications.application.port.secondary.repository.ApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.application.rulesvalidator.RegisterApplicationRulesValidator;
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
+import co.edu.uco.seguridad.pdp.applications.domain.ApplicationCriteria;
 import co.edu.uco.seguridad.pdp.applications.domain.ApplicationBaseUrl;
 import co.edu.uco.seguridad.pdp.commons.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.ApplicationName;
+import co.edu.uco.seguridad.pdp.commons.PageWindow;
+import co.edu.uco.seguridad.pdp.commons.ResultPage;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
@@ -44,8 +47,8 @@ class RegisterApplicationUseCaseImplTests {
             }
 
             @Override
-            public Flux<Application> findAllByTenant(TenantId tenantId) {
-                return Flux.empty();
+            public Mono<ResultPage<Application>> findBy(ApplicationCriteria criteria, PageWindow window) {
+                throw new UnsupportedOperationException();
             }
 
             @Override
@@ -95,7 +98,7 @@ class RegisterApplicationUseCaseImplTests {
             }
 
             @Override
-            public Flux<Application> findAllByTenant(TenantId tenantId) {
+            public Mono<ResultPage<Application>> findBy(ApplicationCriteria criteria, PageWindow window) {
                 throw new UnsupportedOperationException();
             }
 

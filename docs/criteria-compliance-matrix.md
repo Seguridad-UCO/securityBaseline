@@ -8,8 +8,8 @@ Auditoría realizada el 2026-08-07 sobre el commit `6a31033` y resultado tras la
 
 La documentación describía una arquitectura considerablemente más completa que el código. Ocho
 criterios estaban **documentados pero no implementados**: sus páginas enlazaban a clases que nunca
-existieron (`ProtectedApplicationCriteria`, `PageWindow`, `ApplicationPage`,
-`SearchProtectedApplicationsUseCase`, `ApplicationResponseMapper`, `ApplicationRepository`,
+existieron (`ApplicationCriteria`, `PageWindow`, `ApplicationPage`,
+`ListApplicationsUseCase`, `ApplicationResponseMapper`, `ApplicationRepository`,
 `ReactiveTransactionPort`, `SnapshotReactiveTransactionAdapter`, `InMemoryAuditAdapter`,
 `DomainException`, `TimeProvider`, `ApplicationIdGenerator`, `ResourceIdentifier`).
 
@@ -25,7 +25,7 @@ código.
 | # | Criterio | Estado inicial | Problema encontrado | Cambio realizado | Estado final |
 |---|---|---|---|---|---|
 | 1 | Clean Architecture | Parcial | Capas presentes pero sin `port/out` explícito; puertos declarados como interfaces anidadas dentro de los servicios | Puertos extraídos a `application/port/out`; `domain`/`application`/`infrastructure` en los tres módulos | Cumple |
-| 2 | Contratos de servicios | Parcial | Solo existía el caso de uso de registro; `SearchProtectedApplicationsUseCase`, documentado, no existía | Añadido el caso de uso de consulta; convención de firmas (`Mono<T>`, `Mono<Void>`, `Mono<ResultPage<T>>`) documentada y aplicada | Cumple |
+| 2 | Contratos de servicios | Parcial | Solo existía el caso de uso de registro; `ListApplicationsUseCase`, documentado, no existía | Añadido el caso de uso de consulta; convención de firmas (`Mono<T>`, `Mono<Void>`, `Mono<ResultPage<T>>`) documentada y aplicada | Cumple |
 | 3 | Reglas e integridad | Parcial | Las reglas eran `if` y ternarios dentro de los servicios; no eran probables por separado | 5 rules con interfaz e implementación, separadas por uso de repositorio, coordinadas por rules validators | Cumple |
 | 4 | Capacidades transversales | Parcial | Faltaban reloj, generador de identificadores y transacción; `Instant.now()` y `UUID.randomUUID()` en línea | `shared/port` con `TimeProvider`, `IdentifierGenerator`, `ReactiveTransactionPort`; `shared/rule`; `shared/config` | Cumple |
 | 5 | Manejo de mensajes | Parcial | Envelope correcto, pero el handler mapeaba tipos concretos y no cubría fallos no previstos | Handler enganchado a las jerarquías base usando el `code()` de cada excepción; añadido 500 sin datos técnicos | Cumple |
@@ -38,11 +38,11 @@ código.
 | 12 | SOLID | Parcial | ISP y DIP débiles: puertos anidados en las implementaciones; servicios con varias responsabilidades | Contratos mínimos y separados; reglas como beans sustituibles; lógica en implementaciones | Cumple |
 | 13 | DTOs | Parcial | Un solo DTO con anotaciones Jakarta; el controlador devolvía el modelo de lectura del núcleo | Estrategia en dos niveles: raw `String` → mapper → DTO validado con setters; DTO de respuesta propio | Cumple |
 | 14 | DTOs seguros | Parcial | Dependía de Bean Validation; el response exponía value objects | `spring-boot-starter-validation` retirado del POM; tres barreras independientes; respuestas planas | Cumple |
-| 15 | Validación de dominio | Parcial | Invariantes en VOs sí; la specification documentada no existía | `ProtectedApplicationCriteria` con `matches`; cada VO lanza su excepción específica | Cumple |
-| 16 | Repositorios dinámicos | No cumplía | Los stores tenían métodos concretos; no había `findBy(criteria, window)` | Los cuatro puertos siguen exponiendo métodos concretos (`findAllByTenant`, `findAllByApplication`) | **No cumple** — no existe `findBy(criteria, window)` en ningún puerto |
-| 17 | Consultas dinámicas | No cumplía | No existía ninguna consulta | `RequestFieldParser.optional` existe, pero ninguna specification lo consume | **No cumple** — no existe la specification de filtros |
-| 18 | Paginación | No cumplía | `PageWindow` y `ApplicationPage` no existían | `PageWindow` (1..100, `ofPage`/`ofRange`), `ResultPage` y `PageResponse` existen y están probados | **Parcial** — son código muerto: ningún caso de uso, puerto ni endpoint los usa |
-| 19 | Rangos | No cumplía | No existía | `offset`/`limit` convergentes en `PageWindow`; combinaciones ambiguas rechazadas | **Parcial** — la lógica existe y está probada, pero ningún endpoint la expone |
+| 15 | Validación de dominio | Parcial | Invariantes en VOs sí; la specification documentada no existía | `ApplicationCriteria` con `matches`; cada VO lanza su excepción específica | Cumple |
+| 16 | Repositorios dinámicos | No cumplía | Los stores tenían métodos concretos; no había `findBy(criteria, window)` | `ApplicationRepository.findBy(criteria, window)`; se retiró `findAllByTenant` (HU-001) | Cumple |
+| 17 | Consultas dinámicas | No cumplía | No existía ninguna consulta | `ApplicationCriteria` con `matches`; el filtro opcional se traduce a la consulta solo si está presente (HU-001) | Cumple |
+| 18 | Paginación | No cumplía | `PageWindow` y `ApplicationPage` no existían | `PageWindow` (1..100), `ResultPage` y `PageResponse` conectados de extremo a extremo en `GET /api/v1/applications` (HU-001) | Cumple |
+| 19 | Rangos | No cumplía | No existía | `offset`/`limit` convergentes con `page`/`size` y expuestos en la query; la mezcla se rechaza con 400 (HU-001) | Cumple |
 | 20 | Adaptadores limpios | Parcial | El controlador construía el comando y devolvía el tipo del núcleo | Controlador delgado; mapper delega el formato al VO; dummies sin decisiones | Cumple |
 | 21 | Modelo refinado | Parcial | Records anémicos sin factorías ni comportamiento; doc describía un agregado inexistente | Factorías con nombre, comportamiento en las entidades, criterio explícito record/clase/VO; doc reconciliada | Cumple |
 | 22 | Arquitectura reactiva | Cumplía | Sin hallazgos de fondo; faltaba documentar por qué la transacción usa `Supplier` + `defer` | Documentado; reglas sin I/O deliberadamente síncronas | Cumple |
@@ -52,19 +52,19 @@ código.
 
 | Estado | Criterios |
 |---|---|
-| **Cumple** | 18 |
-| **Parcial** | 2 — el 18 y el 19 |
-| **No cumple** | 3 — el 10, el 16 y el 17 |
+| **Cumple** | 22 |
+| **No cumple** | 1 — el 10 |
 
-**Estado final: 18 de 23.** La auditoría de agosto dejó los 23 en verde, pero la refactorización
+**Estado final: 22 de 23.** La auditoría de agosto dejó los 23 en verde, pero la refactorización
 posterior desconectó la búsqueda con criterios y la saga de compensación sin actualizar esta matriz.
-Se corrige aquí en vez de mantener el número.
+En vez de mantener el número, se declaró el estado real (18/23) y se cerraron los criterios 16 a 19
+con código en **HU-001**. Queda el 10: cablear la saga de compensación es su propia historia.
 
 > **Revisión — 2026-08-31.** Al construir el harness de IA se volvió a comprobar la matriz contra el
 > código, y reapareció exactamente el hallazgo transversal de agosto: la evidencia no correspondía al
 > código. Concretamente:
 >
-> - `ProtectedApplicationCriteria`, `SearchProtectedApplicationsUseCase` y sus mappers y pruebas
+> - `ApplicationCriteria`, `ListApplicationsUseCase` y sus mappers y pruebas
 >   **nunca llegaron a existir**; los criterios 16 y 17 dependían de ellos.
 > - `PageWindow`, `ResultPage` y `PageResponse` existen y están probados, pero **ningún caso de uso,
 >   puerto ni endpoint los usa**: son código muerto, así que 18 y 19 quedan en parcial.
@@ -74,9 +74,10 @@ Se corrige aquí en vez de mantener el número.
 >   se sustituyeron por nada.
 > - De las quince pruebas que la guía de evidencia mapeaba a criterios, **nueve no existían**.
 >
-> Cerrar 10 y 16-19 —y reponer la prueba HTTP end-to-end— es el alcance de la historia **HU-001**,
-> que además es la primera que se ejecuta por el flujo agéntico. La comprobación es ahora ejecutable:
-> `.claude/tools/drift.ps1`.
+> **Cerrado el 2026-08-31 por HU-001**, la primera historia que se ejecutó por el flujo agéntico:
+> los criterios 16 a 19 se cumplen con código, y `ApplicationHttpTests` repone la evidencia
+> end-to-end de 5, 6, 9 y 22. Sigue abierto el criterio 10. La comprobación de que la documentación
+> no vuelva a adelantarse al código es ahora ejecutable: `.claude/tools/drift.ps1`.
 
 ## Lo que sigue sin estar hecho, y se dice aquí
 

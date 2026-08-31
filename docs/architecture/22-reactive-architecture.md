@@ -2,10 +2,6 @@
 
 [← Modelo](21-refined-model.md) · [↑ Arquitectura](README.md)
 
-> **Estado — 2026-08-31.** La prueba HTTP end-to-end `ProtectedApplicationHttpTests` que este
-> documento cita como evidencia **no existe**. Lo que hoy cubre esta área son pruebas unitarias
-> (`ApiErrorHandlerTests`, `SecurityWebFilterChainTests`, los tests de controller y de mapper).
-> Reponerla es parte de la historia **HU-001**; ver [el harness](../ai-harness/README.md).
 
 ## Decisión arquitectónica
 
@@ -43,7 +39,7 @@ si la cadena anterior emitió error, preservando el error original tras compensa
 - Controlador: [`ApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/infrastructure/adapter/primary/web/controller/ApplicationController.java)
 - Flujo: [`RegisterApplicationUseCaseImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/application/usecase/impl/RegisterApplicationUseCaseImpl.java)
 - Cliente HTTP reactivo: [`SurrealDbClient.java`](../../src/main/java/co/edu/uco/seguridad/shared/persistence/surrealdb/SurrealDbClient.java)
-- Prueba real sobre Netty: `ProtectedApplicationHttpTests` *(no implementado)*
+- Prueba real sobre Netty: `ApplicationHttpTests`
 
 ## Evidencia y límite
 

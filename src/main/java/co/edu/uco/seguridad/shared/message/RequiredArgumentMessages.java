@@ -29,6 +29,9 @@ public final class RequiredArgumentMessages {
     public static final String ACTION_CODE = "se requiere código de acción";
     public static final String REGISTERED_AT = "se requiere instante de registro";
     public static final String EVENT_OCCURRED_ON = "se requiere instante del evento";
+    public static final String NAME_FILTER = "se requiere el filtro de nombre";
+    public static final String APPLICATION_CRITERIA = "se requiere el criterio de consulta";
+    public static final String PAGE_WINDOW = "se requiere la ventana de paginación";
     public static final String TENANT_STATUS = "se requiere estado del inquilino";
     public static final String SUBJECT = "se requiere sujeto";
     public static final String SEARCH_CRITERIA = "se requieren criterios de búsqueda";

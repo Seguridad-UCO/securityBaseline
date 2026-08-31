@@ -11,23 +11,21 @@ una implementación cumple su criterio funcional pero rompe uno de estos, está 
 - El planificador **declara** en el PLAN qué criterios toca la historia.
 - El validador **comprueba** esos criterios sobre el código, no sobre la documentación.
 
-## Estado real: 18 de 23 (verificado 2026-08-31)
+## Estado real: 22 de 23 (verificado 2026-08-31)
 
-Cinco criterios **no están cumplidos**, aunque la documentación los daba por buenos hasta que se
-auditó. Están declarados así en `docs/criteria-compliance-matrix.md`.
+Un criterio **no está cumplido**, y está declarado así en `docs/criteria-compliance-matrix.md`:
 
 | # | Estado | Por qué |
 |---|---|---|
 | 10 | ⛔ No cumple | `RemoveApplicationUseCase` existe como operación compensatoria y **ningún caso de uso la invoca**. No hay saga cableada |
-| 16 | ⛔ No cumple | Ningún puerto expone `findBy(criteria, window)`; siguen siendo métodos concretos |
-| 17 | ⛔ No cumple | No existe la specification de filtros (`ProtectedApplicationCriteria` nunca se creó) |
-| 18 | ⚠️ Parcial | `PageWindow`/`ResultPage`/`PageResponse` existen y están probados, pero **nadie los usa** |
-| 19 | ⚠️ Parcial | La lógica de rangos existe y está probada, pero ningún endpoint la expone |
 
-Cerrarlos —y reponer la prueba HTTP end-to-end— es el alcance de la historia **HU-001**.
+**No lo planifiques ni lo valides como si estuviera hecho.** Cablear la compensación es su propia
+historia.
 
-**No planifiques ni valides como si estuvieran hechos.** Si una historia toca paginación o consulta
-por criterios, está construyendo el criterio, no reutilizándolo.
+Los criterios **16 a 19 se cerraron con HU-001**, la primera historia que pasó por el flujo agéntico:
+`ApplicationCriteria` es la specification, `ApplicationRepository.findBy(criteria, window)` el puerto
+dinámico, y `GET /api/v1/applications` expone la ventana con `page`/`size` u `offset`/`limit`.
+Son el patrón a copiar para cualquier otra consulta paginada.
 
 ## La evidencia es el archivo, no la tabla
 
@@ -67,10 +65,10 @@ por cumplido. Los criterios marcados 🤖 los verifica una prueba automatizada: 
 | 13 | DTOs | Dos niveles: raw de `String` → mapper → DTO tipado con value objects |
 | 14 | DTOs seguros | Sin Jakarta Validation. Tres barreras: campo presente, VO válido, `requireNonNull` en el record. La respuesta sale plana |
 | 15 | Validación de dominio | Invariantes en el constructor compacto del VO/entidad. Un VO nunca existe inválido |
-| 16 | Repositorios dinámicos | ⛔ **pendiente.** Consulta por criterio y ventana, no un método por combinación de filtros |
-| 17 | Consultas dinámicas | ⛔ **pendiente.** Filtros opcionales normalizados a `Optional` y aplicados en tiempo de ejecución |
-| 18 | Paginación | ⚠️ **parcial.** `PageWindow` de `pdp/commons` (máximo 100) existe; falta que un endpoint lo use |
-| 19 | Rangos | ⚠️ **parcial.** `offset`/`limit` convergentes en `PageWindow`; falta exponerlos |
+| 16 | Repositorios dinámicos | Consulta por criterio y ventana, no un método por combinación de filtros. Patrón: `ApplicationRepository.findBy` |
+| 17 | Consultas dinámicas | Filtros opcionales normalizados a `Optional` y aplicados en tiempo de ejecución. Patrón: `ApplicationCriteria` |
+| 18 | Paginación | `PageWindow` de `pdp/commons` (máximo 100). Nunca una página sin límite |
+| 19 | Rangos | `offset`/`limit` convergentes con página/tamaño; las combinaciones ambiguas se rechazan con 400 |
 | 20 | Adaptadores limpios | Controller, mappers y adaptadores sin reglas de negocio. El mapper delega el formato al VO |
 | 21 | Modelo refinado | `record` inmutables, Java puro, **sin Lombok**, con factorías con nombre y comportamiento. Nada de entidades anémicas |
 | 22 | Arquitectura reactiva | `Mono`/`Flux` en toda la cadena. **Sin `block()` en el camino de una petición** (solo en `ApplicationRunner` de arranque) |

@@ -2,16 +2,11 @@
 
 [← Repositorios](16-repository-strategy.md) · [Siguiente: paginación →](18-pagination.md)
 
-> **Estado — 2026-08-31.** Lo que este documento describe sobre la **búsqueda con criterios y
-> paginación** (`ProtectedApplicationCriteria`, `SearchProtectedApplicationsUseCase` y sus mappers y
-> pruebas) es el **diseño acordado, no código existente**. `PageWindow`, `ResultPage` y `PageResponse`
-> existen y están probados, pero ningún caso de uso los usa todavía. Pendiente de la historia
-> **HU-001**; ver [el harness](../ai-harness/README.md).
 
 ## Decisión arquitectónica
 
 La consulta se construye en tiempo de ejecución desde parámetros opcionales convertidos en
-`ProtectedApplicationCriteria`.
+`ApplicationCriteria`.
 
 ## Justificación
 
@@ -26,7 +21,7 @@ Authorization: Bearer <jwt>          →  interactor: SecurityContext.currentPri
 ?nameContains=&resourceContains=
         ↓  controller: los recibe como String, sin interpretarlos
         ↓  mapper: normaliza a Optional, construye los value objects y añade el tenant del principal
-ProtectedApplicationCriteria(tenantId obligatorio, nameContains, resourceContains)
+ApplicationCriteria(tenantId obligatorio, nameContains, resourceContains)
         ↓  use case: la entrega sin inspeccionarla
 repositorio: decide cómo ejecutarla
 ```
@@ -41,9 +36,9 @@ cuenta como ausente.
 
 ## Ubicación verificable
 
-- `SearchProtectedApplicationsRequestMapper.java` *(no implementado)*
-- `ProtectedApplicationCriteria.java` *(no implementado)*
-- `SearchProtectedApplicationsUseCaseImpl.java` *(no implementado)*
+- `ListApplicationsRequestMapper.java`
+- `ApplicationCriteria.java`
+- `ListApplicationsUseCaseImpl.java`
 
 ## Evidencia y límite
 

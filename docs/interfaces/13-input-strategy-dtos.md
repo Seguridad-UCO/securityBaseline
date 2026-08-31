@@ -2,11 +2,6 @@
 
 [← Parámetros](06-parameter-handling.md) · [Siguiente: DTOs seguros →](14-secure-dtos.md)
 
-> **Estado — 2026-08-31.** Lo que este documento describe sobre la **búsqueda con criterios y
-> paginación** (`ProtectedApplicationCriteria`, `SearchProtectedApplicationsUseCase` y sus mappers y
-> pruebas) es el **diseño acordado, no código existente**. `PageWindow`, `ResultPage` y `PageResponse`
-> existen y están probados, pero ningún caso de uso los usa todavía. Pendiente de la historia
-> **HU-001**; ver [el harness](../ai-harness/README.md).
 
 ## Decisión arquitectónica
 
@@ -65,7 +60,7 @@ eliminó: el mapper de registro ahora construye el App Request directamente, cam
 conserva la misma precisión de error por campo porque sigue usando `RequestFieldParser.parse` para
 cada uno. La búsqueda sí necesita el paso intermedio, porque `nameContains`/`resourceContains` y la
 ventana de paginación se **consolidan**, junto con el tenant del principal, en un objeto
-`ProtectedApplicationCriteria` (una Specification) — eso es una transformación real, no una copia.
+`ApplicationCriteria` (una Specification) — eso es una transformación real, no una copia.
 
 ## Implementación
 
@@ -113,26 +108,26 @@ necesita los valores ya construidos (los filtros opcionales y la ventana) antes 
 combinarlos con el tenant que trae el interactor.
 
 Pasado el mapper de búsqueda, el adaptador proyecta al **App Request** ensamblando
-`ProtectedApplicationCriteria` a partir de los campos ya tipados. El App Request y el Web Request
+`ApplicationCriteria` a partir de los campos ya tipados. El App Request y el Web Request
 pueden compartir nombre simple; viven en paquetes distintos y los mappers usan nombres completamente
 cualificados cuando hace falta.
 
 ## Ubicación verificable
 
 - Crudo: [`RegisterApplicationRawRequest.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/infrastructure/adapter/primary/web/dto/request/raw/RegisterApplicationRawRequest.java),
-  `SearchProtectedApplicationsRawRequest.java` *(no implementado)*
-- Web Request (solo búsqueda): `SearchProtectedApplicationsRequest.java` *(no implementado)*
+  `SearchProtectedApplicationsRawRequest.java`
+- Web Request (solo búsqueda): `SearchProtectedApplicationsRequest.java`
 - [`RequestFieldParser.java`](../../src/main/java/co/edu/uco/seguridad/shared/web/RequestFieldParser.java)
   — utilidad compartida del adaptador web; el interactor invoca los mappers que la usan
 - Tenant: [`PdpPrincipal.java`](../../src/main/java/co/edu/uco/seguridad/shared/security/PdpPrincipal.java),
   [`SecurityContext.java`](../../src/main/java/co/edu/uco/seguridad/shared/security/SecurityContext.java)
 - App Request: [`application/port/primary/dto/request`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/application/port/primary/dto/request)
 - Mappers: [`RegisterApplicationRequestMapper.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/infrastructure/adapter/primary/web/mapper/RegisterApplicationRequestMapper.java),
-  `SearchProtectedApplicationsRequestMapper.java` *(no implementado)*
-- Interactores: `RegisterProtectedApplicationInteractorImpl.java` *(no implementado)*,
-  `SearchProtectedApplicationsInteractorImpl.java` *(no implementado)*
+  `ListApplicationsRequestMapper.java`
+- Interactores: `RegisterProtectedApplicationInteractorImpl.java`,
+  `SearchProtectedApplicationsInteractorImpl.java`
 - Pruebas: [`RegisterApplicationRequestMapperTests`](../../src/test/java/co/edu/uco/seguridad/pdp/applications/infrastructure/adapter/primary/web/mapper/RegisterApplicationRequestMapperTests.java),
-  `SearchProtectedApplicationsRequestMapperTests` *(no implementado)*
+  `ListApplicationsRequestMapperTests`
 
 ## Evidencia y límite
 

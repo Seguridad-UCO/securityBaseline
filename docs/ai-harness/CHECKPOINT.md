@@ -9,15 +9,14 @@ Estado del trabajo para retomarlo en cualquier máquina. Se actualiza al cerrar 
 | Fase | Contenido | Estado |
 |---|---|---|
 | 1 | Skills, herramientas, `1-planificador`, `4-validador`, plantillas | ✅ |
-| 1b | Deriva doc↔código corregida y verificable · criterios realineados a 18/23 | ✅ |
+| 1b | Deriva doc↔código corregida y verificable · criterios realineados | ✅ |
 | 1c | Skills rescatadas de la PR #24 (`sb-reactivo`, `sb-fuentes`) · `CLAUDE.md` | ✅ |
-| HU-001 | Plan aprobado (gate 1) · esqueletos [N] materializados | 🟡 en curso |
+| HU-001 | Implementada: 225 pruebas, criterios 16-19 cerrados, 22/23 | ✅ |
 | 2 | `2-tester-spec`, `3-implementador`, slash commands, mutation testing, `5-entrega` | ⏳ |
 | 3 | Grafo nivel 1 y 2 | ⏳ |
 
-**Lo siguiente:** escribir las pruebas de HU-001 en rojo, contra la SPEC de la sección 7 del plan.
-Ese es el momento de decidir si se construye el agente `2-tester-spec` o se escriben a mano primero
-para validar el ciclo.
+**Lo siguiente:** decidir si se construye `2-tester-spec` con lo aprendido en HU-001, y abrir la
+historia que cierre el criterio 10 (cablear la saga de compensación).
 
 ---
 
@@ -53,7 +52,7 @@ Semillero/
 ### Comprobar que todo está sano
 
 ```bash
-powershell -NoProfile -ExecutionPolicy Bypass -File .claude/tools/verificar.ps1   # VERDE, 189 pruebas
+powershell -NoProfile -ExecutionPolicy Bypass -File .claude/tools/verificar.ps1   # VERDE, 225 pruebas
 powershell -NoProfile -ExecutionPolicy Bypass -File .claude/tools/mapa.ps1 -Check # al día
 powershell -NoProfile -ExecutionPolicy Bypass -File .claude/tools/drift.ps1       # sin deriva
 ```
@@ -64,7 +63,7 @@ Las sesiones de Claude Code son **locales a cada máquina**: no se sincronizan. 
 diseñado justo para que eso no importe — el estado está en el repositorio, no en el historial de
 chat. En la máquina nueva basta con abrir el proyecto y decir:
 
-> «Lee `docs/ai-harness/CHECKPOINT.md` y continuamos con HU-001.»
+> «Lee `docs/ai-harness/CHECKPOINT.md` y seguimos.»
 
 `CLAUDE.md` se carga solo al arrancar y da el contexto del proyecto; las skills y los agentes de
 `.claude/` quedan registrados en cuanto arranca la sesión.
@@ -91,6 +90,22 @@ chat. En la máquina nueva basta con abrir el proyecto y decir:
 
 ---
 
+## Lo que enseñó HU-001, la primera historia por el flujo
+
+| Hallazgo | Ajuste |
+|---|---|
+| El planificador no puede materializar cambios de firma sin romper `src/test`, que tiene prohibido tocar | Distinción **[N]** / **[M]** en la SPEC |
+| `drift.ps1` marcaba el propio plan | Un plan nombra por definición lo que aún no existe: `doc:…/planes/*` en el ignore |
+| Publicar esqueletos solos tumbó el pipeline: el Quality Gate exige ≥ 80 % de cobertura en código nuevo y un esqueleto no tiene ninguna | El ciclo completo llega junto a la rama; los esqueletos son estado local |
+| `drift.ps1` solo miraba `docs/`, así que una skill desactualizada pasaba desapercibida | Ampliado a `.claude/`: encontró dos hallazgos en las propias skills |
+| Al retirar un método del puerto se rompen todos los fakes que lo doblan | Documentado en `sb-testing` como trabajo del implementador |
+
+La fase 2 del planificador funcionó como se esperaba: descubrió que el endpoint ya existía, que
+`ApplicationName.contains()` ya resolvía el filtro y que `PageWindow` estaba completo. Eso convirtió
+la historia en cableado en vez de construcción, y evitó tres preguntas al usuario.
+
+---
+
 ## Qué se rescató de la PR #24
 
 Aquella rama traía 6 agentes, 3 skills y un `CLAUDE.md`. Los agentes seguían el diseño que este
@@ -102,7 +117,7 @@ verificándolas una a una contra el código:
 |---|---|---|
 | `reactive-stack` | `sb-reactivo` | Ninguna: todas sus afirmaciones se verificaron (Jackson 3, `@EventListener`, `ReactiveJwtDecoder`…) |
 | `docs-reader` | `sb-fuentes` | **Sí**: describía `docs/09-artefactos`, que no existe. Los artefactos están en el repo hermano `artefactos-referencia` |
-| `CLAUDE.md` | `CLAUDE.md` | Actualizado al flujo actual, a las herramientas del harness y al estado real de 18/23 |
+| `CLAUDE.md` | `CLAUDE.md` | Actualizado al flujo actual, a las herramientas del harness y al estado real de la línea base |
 
 Se descartó `pdp-context` (464 líneas) por solaparse con `sb-arquitectura` y `sb-estandares`, que
 además están verificadas contra el código.
@@ -113,8 +128,6 @@ además están verificadas contra el código.
 
 | Deuda | Dónde |
 |---|---|
-| Criterios 10, 16 y 17 no se cumplen; 18 y 19 parciales | `docs/criteria-compliance-matrix.md`. 16-19 los cierra HU-001; el 10 necesita su propia historia |
-| No hay prueba HTTP end-to-end | La repone HU-001 |
+| **Criterio 10** — la operación compensatoria existe y ningún flujo la invoca | `docs/criteria-compliance-matrix.md`. Necesita su propia historia |
 | Las herramientas son solo PowerShell | Si entra alguien en Linux/macOS, hay que portarlas |
-| `securityBaseline-fr` no tiene `.idea/` en su `.gitignore` | Ensucia el `git status` de ese repo |
 | El agente `5-entrega` no existe | Los commits y PRs se hacen a mano, con los dos gates igualmente |

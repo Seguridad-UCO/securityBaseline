@@ -53,7 +53,14 @@ if (Test-Path $srcDir) {
     }
 }
 
-$docs = Get-ChildItem -Path $docsDir -Recurse -Filter *.md
+# Las skills y los agentes de .claude/ afirman cosas sobre el codigo igual que docs/, y envejecen
+# igual de mal: una skill que describe una convencion retirada convierte a cada agente en un
+# multiplicador del error. Se verifican con la misma vara.
+$docs = @(Get-ChildItem -Path $docsDir -Recurse -Filter *.md)
+$claudeDir = Join-Path $repo '.claude'
+if (Test-Path $claudeDir) {
+    $docs += @(Get-ChildItem -Path $claudeDir -Recurse -Filter *.md)
+}
 
 # --- 1. Enlaces relativos rotos ---------------------------------------------
 $enlacesRotos = @()

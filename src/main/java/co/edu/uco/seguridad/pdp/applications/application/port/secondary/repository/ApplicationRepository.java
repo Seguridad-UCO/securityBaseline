@@ -1,10 +1,12 @@
 package co.edu.uco.seguridad.pdp.applications.application.port.secondary.repository;
 
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
+import co.edu.uco.seguridad.pdp.applications.domain.ApplicationCriteria;
+import co.edu.uco.seguridad.pdp.commons.PageWindow;
+import co.edu.uco.seguridad.pdp.commons.ResultPage;
 import co.edu.uco.seguridad.pdp.commons.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.ApplicationName;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
@@ -19,7 +21,11 @@ public interface ApplicationRepository {
 
     Mono<Application> findByTenantAndId(TenantId tenantId, ApplicationId applicationId);
 
-    Flux<Application> findAllByTenant(TenantId tenantId);
+    /**
+     * Consulta por criterio y ventana. Sustituye a los métodos por combinación de filtros: añadir un
+     * filtro nuevo es ampliar {@link ApplicationCriteria}, no añadir un método aquí.
+     */
+    Mono<ResultPage<Application>> findBy(ApplicationCriteria criteria, PageWindow window);
 
     Mono<Application> save(Application application);
 

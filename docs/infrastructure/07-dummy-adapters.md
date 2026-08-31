@@ -2,10 +2,6 @@
 
 [← Infraestructura](README.md)
 
-> **Estado — 2026-08-31.** La prueba HTTP end-to-end `ProtectedApplicationHttpTests` que este
-> documento cita como evidencia **no existe**. Lo que hoy cubre esta área son pruebas unitarias
-> (`ApiErrorHandlerTests`, `SecurityWebFilterChainTests`, los tests de controller y de mapper).
-> Reponerla es parte de la historia **HU-001**; ver [el harness](../ai-harness/README.md).
 
 ## Estado actual
 
@@ -59,7 +55,7 @@ igual que antes — sustituir el almacén no cambió esa disciplina.
 
 ## Evidencia y límite
 
-Las pruebas de integración con contexto de Spring completo (`ProtectedApplicationHttpTests`,
+Las pruebas de integración con contexto de Spring completo (`ApplicationHttpTests`,
 `SecurityWebFilterChainTests`, `PdpApplicationTests`, `InMemoryAuditAdapterTests`)
 corren contra una SurrealDB real provista por Testcontainers — ver
 [`AbstractSurrealDbIntegrationTest`](../../src/test/java/co/edu/uco/seguridad/AbstractSurrealDbIntegrationTest.java).

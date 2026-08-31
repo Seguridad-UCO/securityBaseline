@@ -1,16 +1,29 @@
 package co.edu.uco.seguridad.pdp.applications.application.usecase.impl;
 
+import co.edu.uco.seguridad.pdp.applications.application.port.primary.dto.request.ListApplicationsRequest;
 import co.edu.uco.seguridad.pdp.applications.application.port.primary.dto.response.RegisteredApplicationResponse;
 import co.edu.uco.seguridad.pdp.applications.application.port.secondary.repository.ApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.ListApplicationsUseCase;
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
-import co.edu.uco.seguridad.pdp.commons.TenantId;
+import co.edu.uco.seguridad.pdp.commons.ResultPage;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
-import reactor.core.publisher.Flux;
+import co.edu.uco.seguridad.shared.observability.ReactiveLogContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 
+/**
+ * Consulta paginada del catálogo de aplicaciones de un inquilino.
+ *
+ * <p>No decide nada: el criterio y la ventana llegan ya validados desde el borde, y el orden lo fija
+ * el adaptador. Aquí solo se delega y se proyecta el resultado al DTO de salida, conservando el
+ * total y la ventana que devolvió el puerto.
+ */
 public final class ListApplicationsUseCaseImpl implements ListApplicationsUseCase {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ListApplicationsUseCaseImpl.class);
 
     private final ApplicationRepository repository;
 
@@ -19,8 +32,10 @@ public final class ListApplicationsUseCaseImpl implements ListApplicationsUseCas
     }
 
     @Override
-    public Flux<RegisteredApplicationResponse> execute(TenantId tenantId) {
-        return repository.findAllByTenant(tenantId).map(ListApplicationsUseCaseImpl::toRegistered);
+    public Mono<ResultPage<RegisteredApplicationResponse>> execute(ListApplicationsRequest dto) {
+        return repository.findBy(dto.criteria(), dto.window())
+                .map(page -> page.map(ListApplicationsUseCaseImpl::toRegistered))
+                .transform(ReactiveLogContext.withContext(LOG, "application.list"));
     }
 
     private static RegisteredApplicationResponse toRegistered(Application application) {

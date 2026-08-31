@@ -2,11 +2,6 @@
 
 [← Interacción](11-layer-interaction.md) · [Siguiente: adaptadores →](20-clean-adapters.md)
 
-> **Estado — 2026-08-31.** Lo que este documento describe sobre la **búsqueda con criterios y
-> paginación** (`ProtectedApplicationCriteria`, `SearchProtectedApplicationsUseCase` y sus mappers y
-> pruebas) es el **diseño acordado, no código existente**. `PageWindow`, `ResultPage` y `PageResponse`
-> existen y están probados, pero ningún caso de uso los usa todavía. Pendiente de la historia
-> **HU-001**; ver [el harness](../ai-harness/README.md).
 
 ## Decisión arquitectónica
 
@@ -22,7 +17,7 @@ infraestructura.
 
 - **SRP:** cada regla decide una sola cosa y lanza una sola excepción. El rules validator compone;
   el caso de uso orquesta; el interactor mapea; el controller transporta; el dummy almacena.
-- **OCP:** `ProtectedApplicationCriteria` admite nuevos filtros sin crear métodos de repositorio por
+- **OCP:** `ApplicationCriteria` admite nuevos filtros sin crear métodos de repositorio por
   atributo. Añadir una regla es añadir una clase y una línea en el validator, no editar el caso de
   uso.
 - **LSP:** `SurrealProtectedResourceRepository`, `SurrealApplicationRepository` y
@@ -38,7 +33,7 @@ infraestructura.
 
 - [`shared/rule`](../../src/main/java/co/edu/uco/seguridad/shared/contract) y [`shared/port`](../../src/main/java/co/edu/uco/seguridad/shared/port)
 - [`resources/application/rule`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/application/rule)
-- `ProtectedApplicationCriteria.java` *(no implementado)*
+- `ApplicationCriteria.java`
 - [`ResourcesConfiguration.java`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure/config/ResourcesConfiguration.java)
 
 ## Evidencia y límite

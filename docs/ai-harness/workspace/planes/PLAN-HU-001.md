@@ -281,11 +281,20 @@ Presupuesto: **22-26 pruebas**.
 | Fase | Estado | Fecha |
 |---|---|---|
 | Plan | ✅ Generado | 2026-08-31 |
-| Contrato aprobado (gate 1) | ⏳ Pendiente | |
-| Pruebas en rojo | ⏳ Pendiente | |
-| Implementación en verde | ⏳ Pendiente | |
+| Contrato aprobado (gate 1) | ✅ Aprobado | 2026-08-31 |
+| Pruebas en rojo | ✅ 22 pruebas fallando por `UnsupportedOperationException` | 2026-08-31 |
+| Implementación en verde | ✅ 225 pruebas; 98-100 % de cobertura en lo nuevo | 2026-08-31 |
 | Validación | ⏳ Pendiente | |
 | Entrega (gate 2) | ⏳ Pendiente | |
+
+### Desviaciones respecto al plan
+
+| Desviación | Por qué |
+|---|---|
+| `RequiredArgumentMessages` gana tres constantes | El plan no las declaró, pero la convención exige que `requireNonNull` no lleve literales |
+| `LIMIT`/`START` se interpolan en la consulta en vez de ir como parámetros | `SurrealDbClient.execute` solo acepta `Map<String,String>` y SurrealQL exige números ahí. Son dos `int` que `PageWindow` ya validó, no texto de usuario; el filtro de nombre, que sí lo es, va ligado |
+| El mapper comprueba los rangos además del value object | El borde HTTP debe decir **qué campo** viene mal (criterio 6). No duplica ni el umbral (`PageWindow.MAX_LIMIT`) ni el texto (catálogo) |
+| Se actualizaron cuatro clases de prueba existentes | Sus fakes del puerto implementaban `findAllByTenant`. Consecuencia directa de una firma `[M]` |
 
 ## 11. Al cerrar la historia
 

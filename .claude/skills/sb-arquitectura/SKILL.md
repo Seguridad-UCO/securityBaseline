@@ -5,9 +5,10 @@ description: Arquitectura real de securityBaseline (PDP) — modulith de slices 
 
 # Skill: sb-arquitectura
 
-Fuente de verdad para agentes. **Derivada del código, no de `docs/`.** La documentación de `docs/`
-tiene deriva conocida (cita `pdp/aplicaciones`, `pdp/recursos` y `ProtectedApplicationCriteria`, que
-no existen) — úsala como contexto de intención, nunca como referencia de convención.
+Fuente de verdad para agentes. **Derivada del código, no de `docs/`.** La documentación describe la
+intención del proyecto y ya se saneó, pero envejece con cada refactorización: para convención manda
+el código. `.claude/tools/drift.ps1` verifica que ni `docs/` ni estas skills afirmen lo que el
+código no sostiene — **córrelo cuando cambies una convención aquí**.
 
 **Regla de esta skill:** ningún ejemplo se pega como bloque de código. Cada fila apunta al archivo
 real de `tenants` — el slice más pequeño y completo, y el patrón a copiar. Ábrelo con `Read` cuando

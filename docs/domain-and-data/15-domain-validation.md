@@ -21,7 +21,7 @@ su propia excepción (`InvalidResourceCodeException`, `InvalidPageWindowExceptio
 `IllegalArgumentException` genérico, para que el traductor HTTP pueda dar un código estable sin
 inspeccionar mensajes.
 
-**Specification.** `ProtectedApplicationCriteria.matches` compone tenant, nombre y recurso. Cada
+**Specification.** `ApplicationCriteria.matches` compone tenant, nombre y recurso. Cada
 condición ausente equivale a “no restringir”. La semántica vive en el dominio, no en el adaptador:
 es lo que garantiza que el dummy y un futuro adaptador SurrealDB no puedan discrepar sobre qué
 significa `contains`.
@@ -31,7 +31,7 @@ Un fragmento en blanco se normaliza a ausente, para que `?nameContains=` no se i
 
 ## Ubicación verificable
 
-- `ProtectedApplicationCriteria.java` *(no implementado)*
+- `ApplicationCriteria.java`
 - [`commons`](../../src/main/java/co/edu/uco/seguridad/pdp/commons) (value objects e invariantes)
 - Pruebas: [`ResourcePathTests`](../../src/test/java/co/edu/uco/seguridad/pdp/resources/domain/ResourcePathTests.java)
 

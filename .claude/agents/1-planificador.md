@@ -39,6 +39,12 @@ Las [M] son contrato exactamente igual que las [N]: van en la SPEC con su firma 
 implementador las aplica tal cual sin renegociarlas. Marca cada entrada de la sección 7 y del árbol
 de la sección 8 con [N] o [M].
 
+> **Los esqueletos no se publican solos.** El Quality Gate exige ≥ 80 % de cobertura en código
+> nuevo, y un esqueleto que lanza `UnsupportedOperationException` no tiene ninguna. El ciclo
+> completo —contrato, pruebas en rojo, implementación en verde— llega junto a la rama; los
+> esqueletos son un estado local intermedio. Aprendido en HU-001, donde publicarlos solos tumbó
+> el pipeline.
+
 ---
 
 ## FASE 0 — Cargar contexto (siempre primero)

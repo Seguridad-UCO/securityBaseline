@@ -2,11 +2,6 @@
 
 [← Clean Architecture](01-clean-architecture.md) · [Siguiente: interacción →](11-layer-interaction.md)
 
-> **Estado — 2026-08-31.** Lo que este documento describe sobre la **búsqueda con criterios y
-> paginación** (`ProtectedApplicationCriteria`, `SearchProtectedApplicationsUseCase` y sus mappers y
-> pruebas) es el **diseño acordado, no código existente**. `PageWindow`, `ResultPage` y `PageResponse`
-> existen y están probados, pero ningún caso de uso los usa todavía. Pendiente de la historia
-> **HU-001**; ver [el harness](../ai-harness/README.md).
 
 ## Decisión arquitectónica
 
@@ -34,7 +29,7 @@ interfaz de usuario eluda reglas y transacciones.
 ## Implementación
 
 `RegisterApplicationUseCase` recibe un comando completamente tipado y devuelve
-`Mono<ProtectedApplicationCatalogEntry>`. `SearchProtectedApplicationsUseCase` recibe criterios y
+`Mono<ProtectedApplicationCatalogEntry>`. `ListApplicationsUseCase` recibe criterios y
 ventana y devuelve `Mono<ResultPage<...>>`. Los puertos de salida expresan colaboración:
 repositorio, auditoría, transacción, reloj y generador de identificadores, cada uno con su propia
 interfaz pequeña.
@@ -42,7 +37,7 @@ interfaz pequeña.
 ## Ubicación verificable
 
 - [`RegisterApplicationUseCase.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/application/usecase/RegisterApplicationUseCase.java)
-- `SearchProtectedApplicationsUseCase.java` *(no implementado)*
+- `ListApplicationsUseCase.java`
 - Contratos de regla: [`shared/rule`](../../src/main/java/co/edu/uco/seguridad/shared/contract)
 - Puertos transversales: [`shared/port`](../../src/main/java/co/edu/uco/seguridad/shared/port)
 - Implementaciones: [`resources/application`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/application)

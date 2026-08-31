@@ -127,6 +127,18 @@ responde el estado esperado. Adaptador de persistencia: solo con Testcontainers.
 
 ---
 
+## Al cambiar la firma de un puerto
+
+Los fakes son clases anónimas que implementan el puerto **completo**, así que **añadir o quitar un
+método rompe la compilación de todos los tests que lo doblan**. Es intencional: el compilador te
+obliga a mirarlos en vez de dejar un doble que miente.
+
+Cuando eso pase, el método nuevo se implementa en cada fake con
+`throw new UnsupportedOperationException();` salvo en la prueba que sí lo ejercita. En HU-001,
+retirar `findAllByTenant` del puerto tocó cuatro clases de prueba de tres slices distintos.
+
+**Es trabajo del implementador, no del planificador**, que tiene prohibido tocar `src/test`.
+
 ## Presupuesto orientativo
 
 Para una historia con un caso de uso de escritura, un endpoint y dos reglas:

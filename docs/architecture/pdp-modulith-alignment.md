@@ -69,6 +69,6 @@ pero **no está cableada a ningún flujo** — ver el criterio 10 en la
 
 - Arranque: [`PdpApplication.java`](../../src/main/java/co/edu/uco/seguridad/pdp/PdpApplication.java)
 - Gate: [`ModulithStructureTests.java`](../../src/test/java/co/edu/uco/seguridad/ModulithStructureTests.java)
-- Flujo HTTP: `ProtectedApplicationHttpTests.java` *(no implementado)*
+- Flujo HTTP: `ApplicationHttpTests.java`
 
 `./mvnw verify` comprueba compilación, contexto Spring, dependencias Modulith, tests y cobertura.
