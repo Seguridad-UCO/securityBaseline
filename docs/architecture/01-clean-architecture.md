@@ -54,11 +54,11 @@ no un objetivo pendiente.
 
 ## Ubicación verificable
 
-- Dominio puro: [`recursos/domain`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/domain) y
+- Dominio puro: [`resources/domain`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/domain) y
   [`commons`](../../src/main/java/co/edu/uco/seguridad/pdp/commons).
-- Casos de uso: [`RegisterProtectedApplicationUseCase.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/usecase/RegisterProtectedApplicationUseCase.java).
-- Puertos secundarios: [`recursos/application/port/secondary`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/port/secondary).
-- Adaptadores: [`recursos/infrastructure`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure).
+- Casos de uso: [`RegisterApplicationUseCase.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/application/usecase/RegisterApplicationUseCase.java).
+- Puertos secundarios: [`resources/application/port/secondary`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/application/port/secondary).
+- Adaptadores: [`resources/infrastructure`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure).
 - Prueba de estructura: [`ModulithStructureTests.java`](../../src/test/java/co/edu/uco/seguridad/ModulithStructureTests.java).
 
 ## Evidencia y límite

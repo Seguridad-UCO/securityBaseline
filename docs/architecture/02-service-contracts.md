@@ -2,6 +2,7 @@
 
 [← Clean Architecture](01-clean-architecture.md) · [Siguiente: interacción →](11-layer-interaction.md)
 
+
 ## Decisión arquitectónica
 
 Los contratos de negocio se declaran como puertos de entrada, no como controladores ni como
@@ -27,22 +28,22 @@ interfaz de usuario eluda reglas y transacciones.
 
 ## Implementación
 
-`RegisterProtectedApplicationUseCase` recibe un comando completamente tipado y devuelve
-`Mono<ProtectedApplicationCatalogEntry>`. `SearchProtectedApplicationsUseCase` recibe criterios y
+`RegisterApplicationUseCase` recibe un comando completamente tipado y devuelve
+`Mono<ProtectedApplicationCatalogEntry>`. `ListApplicationsUseCase` recibe criterios y
 ventana y devuelve `Mono<ResultPage<...>>`. Los puertos de salida expresan colaboración:
 repositorio, auditoría, transacción, reloj y generador de identificadores, cada uno con su propia
 interfaz pequeña.
 
 ## Ubicación verificable
 
-- [`RegisterProtectedApplicationUseCase.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/usecase/RegisterProtectedApplicationUseCase.java)
-- [`SearchProtectedApplicationsUseCase.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/usecase/SearchProtectedApplicationsUseCase.java)
-- Contratos de regla: [`shared/rule`](../../src/main/java/co/edu/uco/seguridad/shared/rule)
+- [`RegisterApplicationUseCase.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/application/usecase/RegisterApplicationUseCase.java)
+- `ListApplicationsUseCase.java`
+- Contratos de regla: [`shared/rule`](../../src/main/java/co/edu/uco/seguridad/shared/contract)
 - Puertos transversales: [`shared/port`](../../src/main/java/co/edu/uco/seguridad/shared/port)
-- Implementaciones: [`recursos/application`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application)
+- Implementaciones: [`resources/application`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/application)
 
 ## Evidencia y límite
 
-[`RegisterProtectedApplicationUseCaseImplTests`](../../src/test/java/co/edu/uco/seguridad/pdp/recursos/application/usecase/impl/RegisterProtectedApplicationUseCaseImplTests.java)
+[`RegisterApplicationUseCaseImplTests`](../../src/test/java/co/edu/uco/seguridad/pdp/applications/application/usecase/impl/RegisterApplicationUseCaseImplTests.java)
 instancia el caso de uso con dummies y sin Spring. Los contratos futuros de PEP/PDP se agregarán
 como nuevos puertos, no como métodos dentro de estos.

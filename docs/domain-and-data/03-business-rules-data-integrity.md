@@ -26,7 +26,7 @@ firma, su costo y el orden en que conviene ejecutarlas:
 | Regla | Repositorio | Excepción |
 |---|---|---|
 | `ApplicationNameMustNotBeReservedRule` | no | `ReservedApplicationNameException` |
-| `ProtectedResourceMustBelongToApplicationTenantRule` | no | `ResourceTenantMismatchException` |
+| *(la pertenencia del recurso al tenant de la aplicación se comprueba hoy dentro del propio caso de uso, con `ApplicationRepository.findByTenantAndId`, no como una `Rule` propia)* | sí | `ApplicationNotFoundException` |
 | `TenantMustBeActiveRule` | sí | `TenantNotFoundException` / `TenantNotActiveException` |
 | `ApplicationNameMustBeUniqueForTenantRule` | sí | `DuplicateApplicationException` |
 | `ProtectedResourceMustBeUniqueRule` | sí | `DuplicateProtectedResourceException` |
@@ -34,21 +34,21 @@ firma, su costo y el orden en que conviene ejecutarlas:
 Cada validator ejecuta primero las reglas sin repositorio: una petición inválida se rechaza sin
 tocar el almacenamiento.
 
-`TenantMustBeActiveRule` la publica el módulo `tenants` y la consumen `aplicaciones` y `recursos`.
+`TenantMustBeActiveRule` la publica el módulo `tenants` y la consumen `applications` y `resources`.
 Es una única implementación inyectada, no una comprobación copiada, de modo que la decisión no puede
 divergir entre módulos.
 
-`recursos` **no** vuelve a validar el tenant al registrar: `aplicaciones` ya lo hace con esa misma
+`resources` **no** vuelve a validar el tenant al registrar: `applications` ya lo hace con esa misma
 regla durante el registro de la aplicación. Repetirla sería una segunda decisión sobre lo mismo y
 una consulta de más.
 
 ## Ubicación verificable
 
-- [`aplicaciones/application/rule`](../../src/main/java/co/edu/uco/seguridad/pdp/aplicaciones/application/rule)
-- [`recursos/application/rule`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/rule)
-- [`TenantMustBeActiveRule.java`](../../src/main/java/co/edu/uco/seguridad/pdp/tenants/TenantMustBeActiveRule.java)
-- Pruebas: [`ApplicationRegistrationRuleTests`](../../src/test/java/co/edu/uco/seguridad/pdp/aplicaciones/application/rule/ApplicationRegistrationRuleTests.java),
-  [`ProtectedResourceRuleTests`](../../src/test/java/co/edu/uco/seguridad/pdp/recursos/application/rule/ProtectedResourceRuleTests.java),
+- [`applications/application/rule`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/application/rule)
+- [`resources/application/rule`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/application/rule)
+- [`TenantMustBeActiveRule.java`](../../src/main/java/co/edu/uco/seguridad/pdp/tenants/application/rule/TenantMustBeActiveRule.java)
+- Pruebas: [`ApplicationRegistrationRuleTests`](../../src/test/java/co/edu/uco/seguridad/pdp/applications/application/rule/ApplicationRegistrationRuleTests.java),
+  [`ProtectedResourceMustBeUniqueRuleImplTests`](../../src/test/java/co/edu/uco/seguridad/pdp/resources/application/rule/impl/ProtectedResourceMustBeUniqueRuleImplTests.java),
   [`TenantMustBeActiveRuleImplTests`](../../src/test/java/co/edu/uco/seguridad/pdp/tenants/application/rule/TenantMustBeActiveRuleImplTests.java)
 
 ## Evidencia y límite

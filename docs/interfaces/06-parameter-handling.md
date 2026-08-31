@@ -2,6 +2,7 @@
 
 [← Mensajes](05-message-handling.md) · [Siguiente: DTOs →](13-input-strategy-dtos.md)
 
+
 ## Decisión arquitectónica
 
 Body, query y headers tienen cada uno una estrategia explícita: DTO en dos niveles para el body,
@@ -40,10 +41,10 @@ Context y los devuelve en la respuesta, incluidas las de error.
 
 ## Ubicación verificable
 
-- [`ProtectedApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/controller/ProtectedApplicationController.java)
-- [`SearchProtectedApplicationsRequest.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/dto/SearchProtectedApplicationsRequest.java)
+- [`ApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/infrastructure/adapter/primary/web/controller/ApplicationController.java)
+- `SearchProtectedApplicationsRequest.java`
 - [`CorrelationWebFilter.java`](../../src/main/java/co/edu/uco/seguridad/shared/web/CorrelationWebFilter.java)
-- Pruebas: [`SearchProtectedApplicationsRequestMapperTests`](../../src/test/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/mapper/SearchProtectedApplicationsRequestMapperTests.java)
+- Pruebas: `ListApplicationsRequestMapperTests`
 
 ## Evidencia y límite
 

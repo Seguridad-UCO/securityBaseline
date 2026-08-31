@@ -2,6 +2,7 @@
 
 [← SOLID](12-solid.md) · [Siguiente: modelo →](21-refined-model.md)
 
+
 ## Decisión arquitectónica
 
 Los adaptadores conectan protocolos o tecnologías; no contienen decisiones de registro, unicidad,
@@ -27,15 +28,15 @@ Las decisiones que podrían haberse filtrado al adaptador y no lo hicieron:
 |---|---|
 | Formato de un código de recurso | `ResourceCode` |
 | Comparación de nombres sin distinguir mayúsculas | `ApplicationName.sameAs` |
-| Qué significa que un filtro esté ausente | `ProtectedApplicationCriteria` |
+| Qué significa que un filtro esté ausente | `ApplicationCriteria` |
 | Límite máximo de una ventana | `PageWindow` |
 | Unicidad de una concesión | `ProtectedResourceMustBeUniqueRule` |
 
 ## Ubicación verificable
 
-- Web: [`recursos/infrastructure/adapter/primary/web`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web)
-- Persistencia real: [`SurrealProtectedResourceRepository.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/secondary/persistence/repository/SurrealProtectedResourceRepository.java)
-- Auditoría dummy: [`InMemoryAuditAdapter.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/secondary/audit/InMemoryAuditAdapter.java)
+- Web: [`resources/infrastructure/adapter/primary/web`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure/adapter/primary/web)
+- Persistencia real: [`SurrealProtectedResourceRepository.java`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure/adapter/secondary/persistence/repository/SurrealProtectedResourceRepository.java)
+- Auditoría dummy: [`InMemoryAuditAdapter.java`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure/adapter/secondary/audit/InMemoryAuditAdapter.java)
 
 ## Evidencia y límite
 

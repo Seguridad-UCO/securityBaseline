@@ -2,10 +2,11 @@
 
 [← Repositorios](16-repository-strategy.md) · [Siguiente: paginación →](18-pagination.md)
 
+
 ## Decisión arquitectónica
 
 La consulta se construye en tiempo de ejecución desde parámetros opcionales convertidos en
-`ProtectedApplicationCriteria`.
+`ApplicationCriteria`.
 
 ## Justificación
 
@@ -20,7 +21,7 @@ Authorization: Bearer <jwt>          →  interactor: SecurityContext.currentPri
 ?nameContains=&resourceContains=
         ↓  controller: los recibe como String, sin interpretarlos
         ↓  mapper: normaliza a Optional, construye los value objects y añade el tenant del principal
-ProtectedApplicationCriteria(tenantId obligatorio, nameContains, resourceContains)
+ApplicationCriteria(tenantId obligatorio, nameContains, resourceContains)
         ↓  use case: la entrega sin inspeccionarla
 repositorio: decide cómo ejecutarla
 ```
@@ -35,9 +36,9 @@ cuenta como ausente.
 
 ## Ubicación verificable
 
-- [`SearchProtectedApplicationsRequestMapper.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/mapper/SearchProtectedApplicationsRequestMapper.java)
-- [`ProtectedApplicationCriteria.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/domain/ProtectedApplicationCriteria.java)
-- [`SearchProtectedApplicationsUseCaseImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/usecase/impl/SearchProtectedApplicationsUseCaseImpl.java)
+- `ListApplicationsRequestMapper.java`
+- `ApplicationCriteria.java`
+- `ListApplicationsUseCaseImpl.java`
 
 ## Evidencia y límite
 

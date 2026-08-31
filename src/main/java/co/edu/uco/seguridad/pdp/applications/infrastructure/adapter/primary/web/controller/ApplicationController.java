@@ -1,10 +1,12 @@
 package co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.controller;
 
+import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.request.raw.ListApplicationsRawRequest;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.request.raw.RegisterApplicationRawRequest;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.response.ApplicationWebResponse;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.ListApplicationsInteractor;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.RegisterApplicationInteractor;
 import co.edu.uco.seguridad.shared.web.ApiResponse;
+import co.edu.uco.seguridad.shared.web.PageResponse;
 import co.edu.uco.seguridad.shared.web.CorrelationWebFilter;
 import co.edu.uco.seguridad.shared.web.RequestContext;
 import co.edu.uco.seguridad.shared.web.message.WebContractMessages;
@@ -14,11 +16,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -49,9 +51,15 @@ final class ApplicationController {
     }
 
     @GetMapping
-    Mono<ResponseEntity<ApiResponse<List<ApplicationWebResponse>>>> list(ServerWebExchange exchange) {
+    Mono<ResponseEntity<ApiResponse<PageResponse<ApplicationWebResponse>>>> list(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String page,
+            @RequestParam(required = false) String size,
+            @RequestParam(required = false) String offset,
+            @RequestParam(required = false) String limit,
+            ServerWebExchange exchange) {
         RequestContext context = CorrelationWebFilter.context(exchange);
-        return listInteractor.execute()
+        return listInteractor.execute(new ListApplicationsRawRequest(name, page, size, offset, limit))
                 .map(response -> ResponseEntity.ok(ApiResponse.success("APPLICATIONS_LISTED",
                         WebContractMessages.successCatalogQueried(), response, context)));
     }

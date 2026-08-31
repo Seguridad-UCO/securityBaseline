@@ -2,6 +2,8 @@
 
 [← Paginación](18-pagination.md) · [↑ Dominio y datos](README.md)
 
+
+
 ## Decisión arquitectónica
 
 Además de página y tamaño, se admite el rango explícito `offset` + `limit`. Ambas formas convergen
@@ -34,10 +36,10 @@ cliente pueda continuar en el estilo que prefiera.
 
 ## Ubicación verificable
 
-- [`SearchProtectedApplicationsRequest.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/dto/SearchProtectedApplicationsRequest.java)
+- `SearchProtectedApplicationsRequest.java`
 - [`PageWindow.java`](../../src/main/java/co/edu/uco/seguridad/pdp/commons/PageWindow.java)
-- Pruebas: [`SearchProtectedApplicationsRequestMapperTests`](../../src/test/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/mapper/SearchProtectedApplicationsRequestMapperTests.java)
-  y [`ProtectedApplicationHttpTests`](../../src/test/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/ProtectedApplicationHttpTests.java)
+- Pruebas: `ListApplicationsRequestMapperTests`
+  y `ApplicationHttpTests`
 
 ## Evidencia y límite
 

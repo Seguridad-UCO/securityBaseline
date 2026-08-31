@@ -2,6 +2,9 @@ package co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.p
 
 import co.edu.uco.seguridad.pdp.applications.application.port.secondary.repository.ApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
+import co.edu.uco.seguridad.pdp.applications.domain.ApplicationCriteria;
+import co.edu.uco.seguridad.pdp.commons.PageWindow;
+import co.edu.uco.seguridad.pdp.commons.ResultPage;
 import co.edu.uco.seguridad.pdp.applications.domain.ApplicationBaseUrl;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.schema.ApplicationSchema;
 import co.edu.uco.seguridad.pdp.commons.ApplicationId;
@@ -10,12 +13,14 @@ import co.edu.uco.seguridad.pdp.commons.TenantId;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealRecordId;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import tools.jackson.databind.JsonNode;
 
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -51,14 +56,47 @@ public final class SurrealApplicationRepository implements ApplicationRepository
                 .flatMap(rows -> rows.isEmpty() ? Mono.empty() : Mono.just(toDomain(rows.get(0))));
     }
 
+    /**
+     * Traduce la specification a una consulta: el filtro opcional se añade al {@code WHERE} solo si
+     * el criterio lo trae, y el recorte va en la propia consulta, no en memoria — si el puerto
+     * trajese el catálogo entero, la paginación sería cosmética.
+     *
+     * <p>Dos sentencias en una sola llamada: la página y el total del filtro completo. El total es
+     * el del criterio, no el de la página, que es lo que el cliente necesita para navegar.
+     */
     @Override
-    public Flux<Application> findAllByTenant(TenantId tenantId) {
-        return client.execute(
-                        "SELECT * FROM %s WHERE tenantId = $tenantId ORDER BY registeredAt DESC;"
-                                .formatted(ApplicationSchema.TABLE),
-                        Map.of("tenantId", tenantId.value()))
-                .flatMapMany(results -> Flux.fromIterable(results.get(0).valueStream().toList()))
-                .map(SurrealApplicationRepository::toDomain);
+    public Mono<ResultPage<Application>> findBy(ApplicationCriteria criteria, PageWindow window) {
+        String filter = criteria.nameContains()
+                .map(fragment -> " AND string::contains(string::lowercase(name), $name)")
+                .orElse("");
+
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("tenantId", criteria.tenantId().value());
+        criteria.nameContains().ifPresent(fragment -> parameters.put("name", fragment.toLowerCase(Locale.ROOT)));
+
+        // El cliente solo acepta parámetros de texto, y LIMIT/START exigen números. Interpolarlos es
+        // seguro aquí y solo aquí: no son texto del usuario, son dos int que PageWindow ya validó
+        // (offset >= 0, 1 <= limit <= 100). El filtro de nombre, que sí viene del usuario, va como
+        // parámetro ligado.
+        String query = """
+                SELECT * FROM %s WHERE tenantId = $tenantId%s                 ORDER BY registeredAt DESC LIMIT %d START %d;
+                SELECT count() FROM %s WHERE tenantId = $tenantId%s GROUP ALL;                """.formatted(ApplicationSchema.TABLE, filter, window.limit(), window.offset(),
+                        ApplicationSchema.TABLE, filter);
+
+        return client.execute(query, parameters)
+                .map(results -> {
+                    List<Application> content = results.get(0).valueStream()
+                            .map(SurrealApplicationRepository::toDomain)
+                            .toList();
+                    return ResultPage.of(content, totalOf(results.get(1)), window);
+                });
+    }
+
+    private static long totalOf(JsonNode countResult) {
+        if (countResult.isEmpty()) {
+            return 0L;
+        }
+        return countResult.get(0).path("count").asLong(0L);
     }
 
     @Override

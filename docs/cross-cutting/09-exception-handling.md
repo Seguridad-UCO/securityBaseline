@@ -48,8 +48,8 @@ responder de forma distinta a “tu petición está mal formada” y a “tu pet
 prohibida”.
 
 Los textos orientados al usuario viven en catálogos del módulo OPEN
-[`crosscutting/messages`](../../src/main/java/co/edu/uco/seguridad/crosscutting/messages)
-(`ValueObjectMessages`, `ApplicationsMessages`, `RecursosMessages`, `TenantsMessages`,
+[`crosscutting/messages`](../../src/main/java/co/edu/uco/seguridad/pdp/commons/message)
+(`ValueObjectMessages`, `ApplicationsMessages`, `ResourcesMessages`, `TenantsMessages`,
 `WebContractMessages`). Las excepciones no contienen literales en español.
 
 `ApiErrorHandler` traduce `ConflictBusinessRuleException` a 409 mediante `instanceof`, sin importar
@@ -72,7 +72,7 @@ casos que antes compartían tipo y ahora no:
   [`ConflictBusinessRuleException.java`](../../src/main/java/co/edu/uco/seguridad/pdp/commons/exception/ConflictBusinessRuleException.java)
 - Frontera: [`RequestContractException.java`](../../src/main/java/co/edu/uco/seguridad/shared/web/exception/RequestContractException.java)
 - Traducción: [`ApiErrorHandler.java`](../../src/main/java/co/edu/uco/seguridad/shared/web/exceptionhandler/ApiErrorHandler.java)
-- Mensajes: [`crosscutting/messages`](../../src/main/java/co/edu/uco/seguridad/crosscutting/messages)
+- Mensajes: [`crosscutting/messages`](../../src/main/java/co/edu/uco/seguridad/pdp/commons/message)
 
 ## Evidencia y límite
 

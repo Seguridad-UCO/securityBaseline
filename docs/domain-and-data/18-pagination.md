@@ -2,6 +2,7 @@
 
 [← Consultas dinámicas](17-dynamic-queries.md) · [Siguiente: rangos →](19-result-ranges.md)
 
+
 ## Decisión arquitectónica
 
 Toda búsqueda está acotada por `PageWindow`. La API ofrece `page` y `size`, con un máximo de 100.

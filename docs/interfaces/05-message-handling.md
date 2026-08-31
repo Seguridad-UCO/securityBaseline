@@ -2,6 +2,7 @@
 
 [← Interfaces](README.md) · [Siguiente: parámetros →](06-parameter-handling.md)
 
+
 ## Decisión arquitectónica
 
 Los éxitos usan un envelope común con código estable; los fallos usan RFC 9457 `ProblemDetail` con
@@ -39,8 +40,8 @@ El 500 devuelve un detalle genérico; la causa real va al log. Nunca se envía u
 ## Ubicación verificable
 
 - [`ApiResponse.java`](../../src/main/java/co/edu/uco/seguridad/shared/web/ApiResponse.java)
-- [`ApiErrorHandler.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/exceptionhandler/ApiErrorHandler.java)
-- Prueba: [`ProtectedApplicationHttpTests`](../../src/test/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/ProtectedApplicationHttpTests.java)
+- [`ApiErrorHandler.java`](../../src/main/java/co/edu/uco/seguridad/shared/web/exceptionhandler/ApiErrorHandler.java)
+- Prueba: `ApplicationHttpTests`
 
 ## Evidencia y límite
 

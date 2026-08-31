@@ -17,20 +17,45 @@ El POM exige Java 25.
 | Prueba | Criterios | Evidencia |
 |---|---|---|
 | `ValueObjectTests` | 3, 14, 15, 21 | Invariantes de `TenantId`, `ApplicationName` e identificadores |
-| `PageWindowTests` | 18, 19 | Límites de ventana, equivalencia página/rango, inmutabilidad de `ResultPage` |
-| `ProtectedResourceDomainTests` | 3, 15, 17, 21 | Formatos kebab-case, partes obligatorias, specification |
+| `TenantNameTests` · `EmailTests` · `ApplicationBaseUrlTests` | 15, 21 | Normalización y rechazo por formato y longitud |
+| `ResourcePathTests` · `HttpVerbTests` | 3, 15, 21 | Formato de la ruta y verbos admitidos |
+| `PageWindowTests` · `ResultPageTests` | 18, 19 | Límites de ventana, equivalencia página/rango, inmutabilidad. **Ver la nota de abajo: es la única evidencia de 18 y 19** |
 | `TenantMustBeActiveRuleImplTests` | 3, 9 | Tenant inexistente frente a suspendido |
 | `ApplicationRegistrationRuleTests` | 3, 9, 12 | Regla sin repositorio y regla con repositorio, aisladas |
-| `ProtectedResourceRuleTests` | 3, 9, 12 | Consistencia de tenant y unicidad de concesión |
-| `RegisterProtectedApplicationUseCaseImplTests` | 2, 7, 10, 11 | Orquestación, rollback y compensación entre módulos |
-| `SearchProtectedApplicationsUseCaseImplTests` | 16, 17, 18, 19 | Consulta dinámica, total, páginas estables |
-| `RegisterProtectedApplicationRequestMapperTests` | 6, 13, 14 | Raw → validado: válido, ausente, mal formado, fuera de rango |
-| `SearchProtectedApplicationsRequestMapperTests` | 6, 17, 18, 19 | Combinaciones de ventana y sus rechazos |
-| `ProtectedApplicationControllerMappingTests` | 11, 13 | El interactor mapea y no decide; el tenant viene del principal |
+| `ProtectedResourceMustBeUniqueRuleImplTests` | 3, 9, 12 | Unicidad de la concesión |
+| `CreateTenantUseCaseImplTests` | 2, 3, 11 | Orquestación de regla y puerto; rechazo por duplicado |
+| `RegisterApplicationUseCaseImplTests` | 2, 7, 11 | Orquestación de reglas, identificadores y reloj |
+| `RemoveApplicationUseCaseImplTests` | 2, 7 | Borrado idempotente. **No hay saga que la invoque — ver nota** |
+| `RegisterProtectedResourceUseCaseImplTests` | 2, 4, 7, 11 | Orquestación entre módulos y publicación del evento |
+| `ProvisionIdentityUseCaseImplTests` · `AssignTenantUseCaseImplTests` | 2, 3, 11 | Provisión de identidad y asignación de inquilino |
+| `RegisterApplicationRequestMapperTests` · `CreateTenantRequestMapperTests` · `RegisterProtectedResourceRequestMapperTests` · `AssignTenantRequestMapperTests` | 6, 13, 14 | Raw → validado: válido, ausente, mal formado |
+| `ApplicationResponseMapperTests` · `TenantResponseMapperTests` · `ProtectedResourceResponseMapperTests` · `UserResponseMapperTests` | 13, 14, 20 | La respuesta sale plana, sin value objects |
+| `ApplicationControllerTests` · `TenantControllerTests` · `ProtectedResourceControllerTests` · `UserControllerTests` | 11, 13, 20 | El controller delega al interactor y no decide |
+| `ApiErrorHandlerTests` | 5, 9 | Excepción → `ProblemDetail` con código estable y 500 sin datos técnicos |
+| `WebContractMessagesTests` · `CorrelationWebFilterTests` | 4, 5 | Catálogo de mensajes e identificadores de correlación |
 | `SecurityWebFilterChainTests` | 9 (ADR-0003) | 401 sin token/firma inválida/expirado/malformado; rutas públicas |
-| `ProtectedApplicationHttpTests` | 5, 6, 9, 22 | Flujo completo autenticado sobre Netty; aislamiento entre tenants |
-| `ProtectedResourceAuditListenerTests` | 4, 8 (ADR-0002) | Publicación/consumo del evento de registro |
+| `PdpPrincipalSecurityContextTests` · `JwtSecurityPropertiesTests` · `CorsPropertiesTests` | 6, 14 | El tenant sale del principal; configuración de seguridad |
+| `InMemoryAuditAdapterTests` | 4, 8 (ADR-0002) | Publicación y consumo del evento de registro |
+| `SurrealRepositoryIntegrationTests` | 7, 16 | Los repositorios contra una SurrealDB real (Testcontainers) |
+| `SurrealDbClientTests` · `SurrealRecordIdTests` | 7 | Cliente HTTP y forma del identificador de registro |
+| `LayeredArchitectureTests` | 1, 11, 12 | `application` ⊁ `infrastructure`; `domain` ⊁ `infrastructure`; `domain` ⊁ `application` |
 | `ModulithStructureTests` | 1, 11, 12 | Dependencias de módulo permitidas |
+| `PdpApplicationTests` | 23 | El contexto arranca completo |
+
+> **Nota de estado — 2026-08-31.** Esta tabla se reconstruyó contra las pruebas que existen de verdad:
+> la versión anterior citaba quince pruebas, de las cuales nueve no existían. Dos criterios quedan sin
+> evidencia de integración honesta y están declarados así en la
+> [matriz de cumplimiento](../criteria-compliance-matrix.md):
+>
+> - **10 (transacciones).** No hay saga: `RemoveApplicationUseCase` existe como operación
+>   compensatoria pero **ningún caso de uso la invoca**.
+> - **16-19 (repositorios y consultas dinámicas, paginación, rangos).** `PageWindow`, `ResultPage` y
+>   `PageResponse` están probados en aislamiento, pero **ningún caso de uso, puerto ni endpoint los
+>   usa**: no existe una consulta por criterio y ventana.
+>
+> Tampoco existe la prueba HTTP end-to-end sobre Netty que la versión anterior citaba como evidencia
+> de 5, 6, 9 y 22; hoy esa área la cubren las pruebas unitarias listadas arriba.
+> Ambos pendientes son el alcance de la historia **HU-001**.
 
 ## Demostración manual
 

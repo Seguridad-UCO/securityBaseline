@@ -3,10 +3,13 @@ package co.edu.uco.seguridad.pdp.resources.application.usecase.impl;
 import co.edu.uco.seguridad.pdp.applications.application.exception.ApplicationNotFoundException;
 import co.edu.uco.seguridad.pdp.applications.application.port.secondary.repository.ApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
+import co.edu.uco.seguridad.pdp.applications.domain.ApplicationCriteria;
 import co.edu.uco.seguridad.pdp.applications.domain.ApplicationBaseUrl;
 import co.edu.uco.seguridad.pdp.commons.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.ApplicationName;
 import co.edu.uco.seguridad.pdp.commons.ResourceId;
+import co.edu.uco.seguridad.pdp.commons.PageWindow;
+import co.edu.uco.seguridad.pdp.commons.ResultPage;
 import co.edu.uco.seguridad.pdp.commons.TenantId;
 import co.edu.uco.seguridad.pdp.resources.application.port.primary.dto.request.RegisterProtectedResourceRequest;
 import co.edu.uco.seguridad.pdp.resources.application.port.secondary.repository.ProtectedResourceRepository;
@@ -114,7 +117,7 @@ class RegisterProtectedResourceUseCaseImplTests {
             }
 
             @Override
-            public Flux<Application> findAllByTenant(TenantId tenantId) {
+            public Mono<ResultPage<Application>> findBy(ApplicationCriteria criteria, PageWindow window) {
                 throw new UnsupportedOperationException();
             }
 

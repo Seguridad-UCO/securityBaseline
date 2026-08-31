@@ -45,7 +45,7 @@ explícitamente (ADR-0002): quién audita qué es una decisión de infraestructu
 
 ## Evidencia y límite
 
-`RegisterProtectedApplicationUseCaseImplTests` fija el instante con un `TimeProvider` de prueba y
+`RegisterApplicationUseCaseImplTests` fija el instante con un `TimeProvider` de prueba y
 verifica que el `registeredAt` resultante es exactamente ese; sin el puerto esa aserción sería
 imposible. La política de retención y el backend OTLP se definirán al habilitar auditoría
 productiva.

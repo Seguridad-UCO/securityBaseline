@@ -2,6 +2,7 @@
 
 [← Parámetros](06-parameter-handling.md) · [Siguiente: DTOs seguros →](14-secure-dtos.md)
 
+
 ## Decisión arquitectónica
 
 Toda entrada empieza como un **Raw Request** (`record`, todos los campos `String`, sin anotaciones de
@@ -59,7 +60,7 @@ eliminó: el mapper de registro ahora construye el App Request directamente, cam
 conserva la misma precisión de error por campo porque sigue usando `RequestFieldParser.parse` para
 cada uno. La búsqueda sí necesita el paso intermedio, porque `nameContains`/`resourceContains` y la
 ventana de paginación se **consolidan**, junto con el tenant del principal, en un objeto
-`ProtectedApplicationCriteria` (una Specification) — eso es una transformación real, no una copia.
+`ApplicationCriteria` (una Specification) — eso es una transformación real, no una copia.
 
 ## Implementación
 
@@ -67,7 +68,7 @@ ventana de paginación se **consolidan**, junto con el tenant del principal, en 
 
 ```java
 public static RegisterProtectedApplicationRequest toRequest(
-        RegisterProtectedApplicationRawRequest raw, TenantId tenantId) {
+        RegisterApplicationRawRequest raw, TenantId tenantId) {
     return new RegisterProtectedApplicationRequest(
             tenantId,
             RequestFieldParser.parse("applicationName", raw.applicationName(), ApplicationName::new),
@@ -80,7 +81,7 @@ El interactor es quien llama a este mapper, y es quien resuelve `tenantId` antes
 
 ```java
 SecurityContext.currentPrincipal()
-        .map(principal -> RegisterProtectedApplicationRequestMapper.toRequest(raw, principal.tenantId()))
+        .map(principal -> RegisterApplicationRequestMapper.toRequest(raw, principal.tenantId()))
         .flatMap(useCase::execute)
         // ...
 ```
@@ -107,26 +108,26 @@ necesita los valores ya construidos (los filtros opcionales y la ventana) antes 
 combinarlos con el tenant que trae el interactor.
 
 Pasado el mapper de búsqueda, el adaptador proyecta al **App Request** ensamblando
-`ProtectedApplicationCriteria` a partir de los campos ya tipados. El App Request y el Web Request
+`ApplicationCriteria` a partir de los campos ya tipados. El App Request y el Web Request
 pueden compartir nombre simple; viven en paquetes distintos y los mappers usan nombres completamente
 cualificados cuando hace falta.
 
 ## Ubicación verificable
 
-- Crudo: [`RegisterProtectedApplicationRawRequest.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/dto/request/raw/RegisterProtectedApplicationRawRequest.java),
-  [`SearchProtectedApplicationsRawRequest.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/dto/request/raw/SearchProtectedApplicationsRawRequest.java)
-- Web Request (solo búsqueda): [`SearchProtectedApplicationsRequest.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/dto/request/SearchProtectedApplicationsRequest.java)
+- Crudo: [`RegisterApplicationRawRequest.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/infrastructure/adapter/primary/web/dto/request/raw/RegisterApplicationRawRequest.java),
+  `SearchProtectedApplicationsRawRequest.java`
+- Web Request (solo búsqueda): `SearchProtectedApplicationsRequest.java`
 - [`RequestFieldParser.java`](../../src/main/java/co/edu/uco/seguridad/shared/web/RequestFieldParser.java)
   — utilidad compartida del adaptador web; el interactor invoca los mappers que la usan
 - Tenant: [`PdpPrincipal.java`](../../src/main/java/co/edu/uco/seguridad/shared/security/PdpPrincipal.java),
   [`SecurityContext.java`](../../src/main/java/co/edu/uco/seguridad/shared/security/SecurityContext.java)
-- App Request: [`application/port/primary/dto/request`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/port/primary/dto/request)
-- Mappers: [`RegisterProtectedApplicationRequestMapper.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/mapper/RegisterProtectedApplicationRequestMapper.java),
-  [`SearchProtectedApplicationsRequestMapper.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/mapper/SearchProtectedApplicationsRequestMapper.java)
-- Interactores: [`RegisterProtectedApplicationInteractorImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/port/primary/interactor/impl/RegisterProtectedApplicationInteractorImpl.java),
-  [`SearchProtectedApplicationsInteractorImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/port/primary/interactor/impl/SearchProtectedApplicationsInteractorImpl.java)
-- Pruebas: [`RegisterProtectedApplicationRequestMapperTests`](../../src/test/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/mapper/RegisterProtectedApplicationRequestMapperTests.java),
-  [`SearchProtectedApplicationsRequestMapperTests`](../../src/test/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/mapper/SearchProtectedApplicationsRequestMapperTests.java)
+- App Request: [`application/port/primary/dto/request`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/application/port/primary/dto/request)
+- Mappers: [`RegisterApplicationRequestMapper.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/infrastructure/adapter/primary/web/mapper/RegisterApplicationRequestMapper.java),
+  `ListApplicationsRequestMapper.java`
+- Interactores: `RegisterProtectedApplicationInteractorImpl.java`,
+  `SearchProtectedApplicationsInteractorImpl.java`
+- Pruebas: [`RegisterApplicationRequestMapperTests`](../../src/test/java/co/edu/uco/seguridad/pdp/applications/infrastructure/adapter/primary/web/mapper/RegisterApplicationRequestMapperTests.java),
+  `ListApplicationsRequestMapperTests`
 
 ## Evidencia y límite
 

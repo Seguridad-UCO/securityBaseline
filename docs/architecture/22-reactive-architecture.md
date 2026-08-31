@@ -2,6 +2,7 @@
 
 [← Modelo](21-refined-model.md) · [↑ Arquitectura](README.md)
 
+
 ## Decisión arquitectónica
 
 La línea base es reactiva: Spring WebFlux, Netty y `Mono` en aplicación e infraestructura. Java 25 y
@@ -27,7 +28,7 @@ hilo de test existe para esperar — con una excepción intencional: los inicial
 antes de que Netty acepte tráfico, no dentro de una petición.
 
 Detalle que importa en la saga de registro
-([`RegisterProtectedApplicationUseCaseImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/usecase/impl/RegisterProtectedApplicationUseCaseImpl.java)):
+([`RegisterApplicationUseCaseImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/application/usecase/impl/RegisterApplicationUseCaseImpl.java)):
 cada compensación se encadena con `onErrorResume(error -> compensar().then(Mono.error(error)))`, no
 con un `try/catch` imperativo — la compensación es ella misma un `Mono` reactivo, y solo se suscribe
 si la cadena anterior emitió error, preservando el error original tras compensar.
@@ -35,10 +36,10 @@ si la cadena anterior emitió error, preservando el error original tras compensa
 ## Ubicación verificable
 
 - Dependencias: [`pom.xml`](../../pom.xml)
-- Controlador: [`ProtectedApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/controller/ProtectedApplicationController.java)
-- Flujo: [`RegisterProtectedApplicationUseCaseImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/usecase/impl/RegisterProtectedApplicationUseCaseImpl.java)
+- Controlador: [`ApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/infrastructure/adapter/primary/web/controller/ApplicationController.java)
+- Flujo: [`RegisterApplicationUseCaseImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/application/usecase/impl/RegisterApplicationUseCaseImpl.java)
 - Cliente HTTP reactivo: [`SurrealDbClient.java`](../../src/main/java/co/edu/uco/seguridad/shared/persistence/surrealdb/SurrealDbClient.java)
-- Prueba real sobre Netty: [`ProtectedApplicationHttpTests`](../../src/test/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/ProtectedApplicationHttpTests.java)
+- Prueba real sobre Netty: `ApplicationHttpTests`
 
 ## Evidencia y límite
 
