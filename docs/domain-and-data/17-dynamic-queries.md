@@ -2,6 +2,12 @@
 
 [← Repositorios](16-repository-strategy.md) · [Siguiente: paginación →](18-pagination.md)
 
+> **Estado — 2026-08-31.** Lo que este documento describe sobre la **búsqueda con criterios y
+> paginación** (`ProtectedApplicationCriteria`, `SearchProtectedApplicationsUseCase` y sus mappers y
+> pruebas) es el **diseño acordado, no código existente**. `PageWindow`, `ResultPage` y `PageResponse`
+> existen y están probados, pero ningún caso de uso los usa todavía. Pendiente de la historia
+> **HU-001**; ver [el harness](../ai-harness/README.md).
+
 ## Decisión arquitectónica
 
 La consulta se construye en tiempo de ejecución desde parámetros opcionales convertidos en
@@ -35,9 +41,9 @@ cuenta como ausente.
 
 ## Ubicación verificable
 
-- [`SearchProtectedApplicationsRequestMapper.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/mapper/SearchProtectedApplicationsRequestMapper.java)
-- [`ProtectedApplicationCriteria.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/domain/ProtectedApplicationCriteria.java)
-- [`SearchProtectedApplicationsUseCaseImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/usecase/impl/SearchProtectedApplicationsUseCaseImpl.java)
+- `SearchProtectedApplicationsRequestMapper.java` *(no implementado)*
+- `ProtectedApplicationCriteria.java` *(no implementado)*
+- `SearchProtectedApplicationsUseCaseImpl.java` *(no implementado)*
 
 ## Evidencia y límite
 

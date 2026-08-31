@@ -2,6 +2,11 @@
 
 [← Infraestructura](README.md)
 
+> **Estado — 2026-08-31.** La prueba HTTP end-to-end `ProtectedApplicationHttpTests` que este
+> documento cita como evidencia **no existe**. Lo que hoy cubre esta área son pruebas unitarias
+> (`ApiErrorHandlerTests`, `SecurityWebFilterChainTests`, los tests de controller y de mapper).
+> Reponerla es parte de la historia **HU-001**; ver [el harness](../ai-harness/README.md).
+
 ## Estado actual
 
 Desde el Stage 4 ([ADR-019](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-019-surrealdb-implementation.md)) los tres
@@ -16,14 +21,14 @@ más abajo para lo que había antes.
 | Adaptador | Puerto | Qué hace de verdad |
 |---|---|---|
 | [`SurrealTenantRepository`](../../src/main/java/co/edu/uco/seguridad/pdp/tenants/infrastructure/adapter/secondary/persistence/repository/SurrealTenantRepository.java) | `TenantRepository` | Busca un tenant por id vía `SELECT` parametrizado contra SurrealDB |
-| [`SurrealApplicationRepository`](../../src/main/java/co/edu/uco/seguridad/pdp/aplicaciones/infrastructure/adapter/secondary/persistence/repository/SurrealApplicationRepository.java) | `ApplicationRepository` | Unicidad por tenant, alta y baja vía `CREATE`/`DELETE` |
-| [`SurrealProtectedResourceRepository`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/secondary/persistence/repository/SurrealProtectedResourceRepository.java) | `ProtectedResourceRepository` | Ejecuta la specification como `WHERE` dinámico, ordena y pagina con `ORDER BY ... LIMIT ... START` |
+| [`SurrealApplicationRepository`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/infrastructure/adapter/secondary/persistence/repository/SurrealApplicationRepository.java) | `ApplicationRepository` | Unicidad por tenant, alta y baja vía `CREATE`/`DELETE` |
+| [`SurrealProtectedResourceRepository`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure/adapter/secondary/persistence/repository/SurrealProtectedResourceRepository.java) | `ProtectedResourceRepository` | Ejecuta la specification como `WHERE` dinámico, ordena y pagina con `ORDER BY ... LIMIT ... START` |
 
 Cada módulo con datos también registra un inicializador de esquema (`ApplicationRunner`) que define
 su tabla e índices de forma idempotente en el arranque:
 [`SurrealTenantSchemaInitializer`](../../src/main/java/co/edu/uco/seguridad/pdp/tenants/infrastructure/adapter/secondary/persistence/schema/SurrealTenantSchemaInitializer.java),
-[`SurrealApplicationSchemaInitializer`](../../src/main/java/co/edu/uco/seguridad/pdp/aplicaciones/infrastructure/adapter/secondary/persistence/schema/SurrealApplicationSchemaInitializer.java),
-[`SurrealProtectedResourceSchemaInitializer`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/secondary/persistence/schema/SurrealProtectedResourceSchemaInitializer.java).
+[`SurrealApplicationSchemaInitializer`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/infrastructure/adapter/secondary/persistence/schema/SurrealApplicationSchemaInitializer.java),
+[`SurrealProtectedResourceSchemaInitializer`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure/adapter/secondary/persistence/schema/SurrealProtectedResourceSchemaInitializer.java).
 
 No hay driver Java de SurrealDB en el classpath: los tres adaptadores hablan HTTP crudo a través del
 cliente compartido
@@ -45,17 +50,17 @@ igual que antes — sustituir el almacén no cambió esa disciplina.
 
 ## Ubicación verificable
 
-- [`recursos/infrastructure/adapter/secondary/persistence`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/secondary/persistence)
-- [`recursos/infrastructure/adapter/secondary/audit`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/secondary/audit)
-- [`aplicaciones/infrastructure/adapter/secondary/persistence`](../../src/main/java/co/edu/uco/seguridad/pdp/aplicaciones/infrastructure/adapter/secondary/persistence)
+- [`resources/infrastructure/adapter/secondary/persistence`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure/adapter/secondary/persistence)
+- [`resources/infrastructure/adapter/secondary/audit`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure/adapter/secondary/audit)
+- [`applications/infrastructure/adapter/secondary/persistence`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/infrastructure/adapter/secondary/persistence)
 - [`tenants/infrastructure/adapter/secondary/persistence`](../../src/main/java/co/edu/uco/seguridad/pdp/tenants/infrastructure/adapter/secondary/persistence)
 - [`shared/persistence/surrealdb`](../../src/main/java/co/edu/uco/seguridad/shared/persistence/surrealdb) (cliente HTTP compartido)
-- Configuración: [`ResourcesConfiguration.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/config/ResourcesConfiguration.java), [`ApplicationsConfiguration.java`](../../src/main/java/co/edu/uco/seguridad/pdp/aplicaciones/infrastructure/config/ApplicationsConfiguration.java), [`TenantConfiguration.java`](../../src/main/java/co/edu/uco/seguridad/pdp/tenants/infrastructure/config/TenantConfiguration.java)
+- Configuración: [`ResourcesConfiguration.java`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure/config/ResourcesConfiguration.java), [`ApplicationsConfiguration.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/infrastructure/config/ApplicationsConfiguration.java), [`TenantsConfiguration.java`](../../src/main/java/co/edu/uco/seguridad/pdp/tenants/infrastructure/config/TenantsConfiguration.java)
 
 ## Evidencia y límite
 
 Las pruebas de integración con contexto de Spring completo (`ProtectedApplicationHttpTests`,
-`SecurityWebFilterChainTests`, `SeguridadApplicationTests`, `ProtectedResourceAuditListenerTests`)
+`SecurityWebFilterChainTests`, `PdpApplicationTests`, `InMemoryAuditAdapterTests`)
 corren contra una SurrealDB real provista por Testcontainers — ver
 [`AbstractSurrealDbIntegrationTest`](../../src/test/java/co/edu/uco/seguridad/AbstractSurrealDbIntegrationTest.java).
 `SurrealRepositoryIntegrationTests` ejercita los tres repositorios directamente (sin levantar el
@@ -80,6 +85,6 @@ de transacción necesitaba la capacidad de snapshot que el puerto de repositorio
 declaraba— se resolvió en el Stage 1 con un puerto dedicado, `SnapshotCapable`. Ambos,
 `SnapshotCapable` y `ReactiveTransactionPort`, se **retiraron por completo** en el Stage 4 en vez de
 implementarse sobre SurrealDB: el modelo de transacción HTTP de SurrealDB no puede envolver trabajo
-que cruza módulos Java, así que `RegisterProtectedApplicationUseCaseImpl` pasó a una saga con
+que cruza módulos Java, así que `RegisterApplicationUseCaseImpl` pasó a una saga con
 compensación explícita por paso — ver la
 [Nota de implementación de ADR-019](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-019-surrealdb-implementation.md#nota-de-implementación).

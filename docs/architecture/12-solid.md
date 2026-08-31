@@ -2,6 +2,12 @@
 
 [← Interacción](11-layer-interaction.md) · [Siguiente: adaptadores →](20-clean-adapters.md)
 
+> **Estado — 2026-08-31.** Lo que este documento describe sobre la **búsqueda con criterios y
+> paginación** (`ProtectedApplicationCriteria`, `SearchProtectedApplicationsUseCase` y sus mappers y
+> pruebas) es el **diseño acordado, no código existente**. `PageWindow`, `ResultPage` y `PageResponse`
+> existen y están probados, pero ningún caso de uso los usa todavía. Pendiente de la historia
+> **HU-001**; ver [el harness](../ai-harness/README.md).
+
 ## Decisión arquitectónica
 
 SOLID se aplica mediante tipos y dependencias concretas, no como una declaración general.
@@ -22,22 +28,22 @@ infraestructura.
 - **LSP:** `SurrealProtectedResourceRepository`, `SurrealApplicationRepository` y
   `SurrealTenantRepository` sustituyen a sus dummies en memoria implementando exactamente el mismo
   puerto (ADR-0004); ningún caso de uso cambió al hacer el reemplazo.
-- **ISP:** los contratos son mínimos y separados — `BusinessRule` (sin I/O), `ReactiveBusinessRule`
-  (sin retorno), `ReactiveBusinessRuleWithResult` (con retorno), `DomainEventPublisher`, `TimeProvider`,
+- **ISP:** los contratos son mínimos y separados — `Operation` (sin I/O), `ReactiveOperation`
+  (sin retorno), `ReactiveOperationWithResult` (con retorno), `DomainEventPublisher`, `TimeProvider`,
   `IdentifierGenerator`. Ningún implementador recibe métodos que no usa.
 - **DIP:** los servicios reciben interfaces por constructor; `ConcurrentHashMap` y las clases de
   Spring solo aparecen en `infrastructure`.
 
 ## Ubicación verificable
 
-- [`shared/rule`](../../src/main/java/co/edu/uco/seguridad/shared/rule) y [`shared/port`](../../src/main/java/co/edu/uco/seguridad/shared/port)
-- [`recursos/application/rule`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/rule)
-- [`ProtectedApplicationCriteria.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/domain/ProtectedApplicationCriteria.java)
-- [`ResourcesConfiguration.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/config/ResourcesConfiguration.java)
+- [`shared/rule`](../../src/main/java/co/edu/uco/seguridad/shared/contract) y [`shared/port`](../../src/main/java/co/edu/uco/seguridad/shared/port)
+- [`resources/application/rule`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/application/rule)
+- `ProtectedApplicationCriteria.java` *(no implementado)*
+- [`ResourcesConfiguration.java`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure/config/ResourcesConfiguration.java)
 
 ## Evidencia y límite
 
-[`ProtectedResourceRuleTests`](../../src/test/java/co/edu/uco/seguridad/pdp/recursos/application/rule/ProtectedResourceRuleTests.java)
+[`ProtectedResourceMustBeUniqueRuleImplTests`](../../src/test/java/co/edu/uco/seguridad/pdp/resources/application/rule/impl/ProtectedResourceMustBeUniqueRuleImplTests.java)
 prueba cada regla por separado, con un stub distinto por escenario: eso solo es posible porque cada
 contrato es pequeño. SOLID no se “certifica” con una prueba; se preserva con límites, tests y
 revisión.

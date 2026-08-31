@@ -2,6 +2,12 @@
 
 [← Validación](15-domain-validation.md) · [Siguiente: consultas dinámicas →](17-dynamic-queries.md)
 
+> **Estado — 2026-08-31.** Lo que este documento describe sobre la **búsqueda con criterios y
+> paginación** (`ProtectedApplicationCriteria`, `SearchProtectedApplicationsUseCase` y sus mappers y
+> pruebas) es el **diseño acordado, no código existente**. `PageWindow`, `ResultPage` y `PageResponse`
+> existen y están probados, pero ningún caso de uso los usa todavía. Pendiente de la historia
+> **HU-001**; ver [el harness](../ai-harness/README.md).
+
 ## Decisión arquitectónica
 
 El repositorio expone búsqueda por objeto criterio y ventana, no métodos específicos como
@@ -34,15 +40,15 @@ estable, dos páginas consecutivas podrían repetir u omitir filas según el ord
 
 ## Ubicación verificable
 
-- [`ProtectedResourceRepository.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/port/secondary/repository/ProtectedResourceRepository.java)
-- [`SurrealProtectedResourceRepository.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/secondary/persistence/repository/SurrealProtectedResourceRepository.java)
+- [`ProtectedResourceRepository.java`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/application/port/secondary/repository/ProtectedResourceRepository.java)
+- [`SurrealProtectedResourceRepository.java`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure/adapter/secondary/persistence/repository/SurrealProtectedResourceRepository.java)
   — construye el `WHERE` a partir del criterio y ejecuta en el mismo lote HTTP la página y el conteo
   total (`SELECT ... GROUP ALL`), para que ambos vean el mismo estado.
-- Mapper: [`ProtectedResourcePersistenceMapper.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/secondary/persistence/mapper/ProtectedResourcePersistenceMapper.java)
+- Mapper: [`ProtectedResourcePersistenceMapper.java`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure/adapter/secondary/persistence/mapper/ProtectedResourcePersistenceMapper.java)
 
 ## Evidencia y límite
 
-[`SearchProtectedApplicationsUseCaseImplTests`](../../src/test/java/co/edu/uco/seguridad/pdp/recursos/application/usecase/impl/SearchProtectedApplicationsUseCaseImplTests.java)
+`SearchProtectedApplicationsUseCaseImplTests` *(no implementado)*
 comprueba, con un doble en memoria, que las páginas son estables y no se solapan.
 [`SurrealRepositoryIntegrationTests`](../../src/test/java/co/edu/uco/seguridad/shared/persistence/surrealdb/SurrealRepositoryIntegrationTests.java)
 ejercita el mismo contrato contra una SurrealDB real (Testcontainers), incluyendo el conteo total

@@ -31,9 +31,9 @@ Un fragmento en blanco se normaliza a ausente, para que `?nameContains=` no se i
 
 ## Ubicación verificable
 
-- [`ProtectedApplicationCriteria.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/domain/ProtectedApplicationCriteria.java)
+- `ProtectedApplicationCriteria.java` *(no implementado)*
 - [`commons`](../../src/main/java/co/edu/uco/seguridad/pdp/commons) (value objects e invariantes)
-- Pruebas: [`ProtectedResourceDomainTests`](../../src/test/java/co/edu/uco/seguridad/pdp/recursos/domain/ProtectedResourceDomainTests.java)
+- Pruebas: [`ResourcePathTests`](../../src/test/java/co/edu/uco/seguridad/pdp/resources/domain/ResourcePathTests.java)
 
 ## Evidencia y límite
 

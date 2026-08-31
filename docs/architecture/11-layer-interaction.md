@@ -2,6 +2,11 @@
 
 [← Contratos](02-service-contracts.md) · [Siguiente: SOLID →](12-solid.md)
 
+> **Estado — 2026-08-31.** La prueba HTTP end-to-end `ProtectedApplicationHttpTests` que este
+> documento cita como evidencia **no existe**. Lo que hoy cubre esta área son pruebas unitarias
+> (`ApiErrorHandlerTests`, `SecurityWebFilterChainTests`, los tests de controller y de mapper).
+> Reponerla es parte de la historia **HU-001**; ver [el harness](../ai-harness/README.md).
+
 ## Decisión arquitectónica
 
 Solo se permite el flujo adaptador de entrada → interactor → caso de uso → rules validator → rules →
@@ -35,15 +40,15 @@ orquesta; el rules validator compone reglas; cada regla decide una cosa. Ver
 
 ## Ubicación verificable
 
-- Entrada: [`ProtectedApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/controller/ProtectedApplicationController.java)
-- Interactores: [`application/port/primary/interactor`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/port/primary/interactor)
-- Orquestación: [`RegisterProtectedApplicationUseCaseImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/usecase/impl/RegisterProtectedApplicationUseCaseImpl.java)
-- Reglas: [`recursos/application/rule`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/rule)
-- Salidas: [`recursos/application/port/secondary`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/port/secondary)
+- Entrada: [`ApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/infrastructure/adapter/primary/web/controller/ApplicationController.java)
+- Interactores: [`application/port/primary/interactor`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure/adapter/primary/web/interactor)
+- Orquestación: [`RegisterApplicationUseCaseImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/application/usecase/impl/RegisterApplicationUseCaseImpl.java)
+- Reglas: [`resources/application/rule`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/application/rule)
+- Salidas: [`resources/application/port/secondary`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/application/port/secondary)
 
 ## Evidencia y límite
 
-[`ProtectedApplicationHttpTests`](../../src/test/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/ProtectedApplicationHttpTests.java)
+`ProtectedApplicationHttpTests` *(no implementado)*
 recorre el flujo completo y `ModulithStructureTests` detecta dependencias de módulo ilegales. Los
 límites internos de cada capa se sostienen con revisión y pruebas; añadir ArchUnit por capa es el
 siguiente refuerzo posible.

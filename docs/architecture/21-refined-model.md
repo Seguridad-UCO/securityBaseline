@@ -19,7 +19,7 @@ El modelo se reparte entre los módulos del mapa PDP en lugar de vivir en un ún
 
 El primer sujeto de prueba debe conservar integridad desde su creación. Un modelo anémico permitiría
 registros sin tenant, con nombre vacío o con un código de recurso que el PDP no podría resolver. La
-separación en módulos evita además que `recursos` alcance el almacenamiento de `aplicaciones`.
+separación en módulos evita además que `resources` alcance el almacenamiento de `applications`.
 
 ## Implementación
 
@@ -42,11 +42,11 @@ estrategia elegida en la frontera).
 ## Ubicación verificable
 
 - [`commons`](../../src/main/java/co/edu/uco/seguridad/pdp/commons)
-- [`ProtectedResource.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/domain/ProtectedResource.java)
-- [`Application.java`](../../src/main/java/co/edu/uco/seguridad/pdp/aplicaciones/domain/Application.java)
+- [`ProtectedResource.java`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/domain/ProtectedResource.java)
+- [`Application.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/domain/Application.java)
 - [`Tenant.java`](../../src/main/java/co/edu/uco/seguridad/pdp/tenants/domain/Tenant.java)
 - Pruebas: [`ValueObjectTests`](../../src/test/java/co/edu/uco/seguridad/pdp/commons/ValueObjectTests.java) y
-  [`ProtectedResourceDomainTests`](../../src/test/java/co/edu/uco/seguridad/pdp/recursos/domain/ProtectedResourceDomainTests.java)
+  [`ResourcePathTests`](../../src/test/java/co/edu/uco/seguridad/pdp/resources/domain/ResourcePathTests.java)
 
 ## Evidencia y límite
 

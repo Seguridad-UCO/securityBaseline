@@ -2,6 +2,12 @@
 
 [← Mensajes](05-message-handling.md) · [Siguiente: DTOs →](13-input-strategy-dtos.md)
 
+> **Estado — 2026-08-31.** Lo que este documento describe sobre la **búsqueda con criterios y
+> paginación** (`ProtectedApplicationCriteria`, `SearchProtectedApplicationsUseCase` y sus mappers y
+> pruebas) es el **diseño acordado, no código existente**. `PageWindow`, `ResultPage` y `PageResponse`
+> existen y están probados, pero ningún caso de uso los usa todavía. Pendiente de la historia
+> **HU-001**; ver [el harness](../ai-harness/README.md).
+
 ## Decisión arquitectónica
 
 Body, query y headers tienen cada uno una estrategia explícita: DTO en dos niveles para el body,
@@ -40,10 +46,10 @@ Context y los devuelve en la respuesta, incluidas las de error.
 
 ## Ubicación verificable
 
-- [`ProtectedApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/controller/ProtectedApplicationController.java)
-- [`SearchProtectedApplicationsRequest.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/dto/SearchProtectedApplicationsRequest.java)
+- [`ApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/infrastructure/adapter/primary/web/controller/ApplicationController.java)
+- `SearchProtectedApplicationsRequest.java` *(no implementado)*
 - [`CorrelationWebFilter.java`](../../src/main/java/co/edu/uco/seguridad/shared/web/CorrelationWebFilter.java)
-- Pruebas: [`SearchProtectedApplicationsRequestMapperTests`](../../src/test/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/mapper/SearchProtectedApplicationsRequestMapperTests.java)
+- Pruebas: `SearchProtectedApplicationsRequestMapperTests` *(no implementado)*
 
 ## Evidencia y límite
 

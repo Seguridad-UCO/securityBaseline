@@ -2,6 +2,17 @@
 
 [← Paginación](18-pagination.md) · [↑ Dominio y datos](README.md)
 
+> **Estado — 2026-08-31.** Lo que este documento describe sobre la **búsqueda con criterios y
+> paginación** (`ProtectedApplicationCriteria`, `SearchProtectedApplicationsUseCase` y sus mappers y
+> pruebas) es el **diseño acordado, no código existente**. `PageWindow`, `ResultPage` y `PageResponse`
+> existen y están probados, pero ningún caso de uso los usa todavía. Pendiente de la historia
+> **HU-001**; ver [el harness](../ai-harness/README.md).
+
+> **Estado — 2026-08-31.** La prueba HTTP end-to-end `ProtectedApplicationHttpTests` que este
+> documento cita como evidencia **no existe**. Lo que hoy cubre esta área son pruebas unitarias
+> (`ApiErrorHandlerTests`, `SecurityWebFilterChainTests`, los tests de controller y de mapper).
+> Reponerla es parte de la historia **HU-001**; ver [el harness](../ai-harness/README.md).
+
 ## Decisión arquitectónica
 
 Además de página y tamaño, se admite el rango explícito `offset` + `limit`. Ambas formas convergen
@@ -34,10 +45,10 @@ cliente pueda continuar en el estilo que prefiera.
 
 ## Ubicación verificable
 
-- [`SearchProtectedApplicationsRequest.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/dto/SearchProtectedApplicationsRequest.java)
+- `SearchProtectedApplicationsRequest.java` *(no implementado)*
 - [`PageWindow.java`](../../src/main/java/co/edu/uco/seguridad/pdp/commons/PageWindow.java)
-- Pruebas: [`SearchProtectedApplicationsRequestMapperTests`](../../src/test/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/mapper/SearchProtectedApplicationsRequestMapperTests.java)
-  y [`ProtectedApplicationHttpTests`](../../src/test/java/co/edu/uco/seguridad/pdp/recursos/infrastructure/adapter/primary/web/ProtectedApplicationHttpTests.java)
+- Pruebas: `SearchProtectedApplicationsRequestMapperTests` *(no implementado)*
+  y `ProtectedApplicationHttpTests` *(no implementado)*
 
 ## Evidencia y límite
 

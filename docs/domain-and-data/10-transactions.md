@@ -5,7 +5,7 @@
 ## Decisión arquitectónica
 
 No hay un puerto genérico de transacción. El registro de una aplicación protegida orquesta dos
-módulos (`aplicaciones` y `recursos`) y publica un evento de dominio entre medio; cada paso que puede
+módulos (`applications` y `resources`) y publica un evento de dominio entre medio; cada paso que puede
 fallar tiene su **compensación explícita** en vez de estar envuelto en una abstracción transaccional
 que prometería una atomicidad que ningún motor involucrado puede dar.
 
@@ -22,10 +22,10 @@ nombrar el patrón que ya estaba ahí — una saga — en vez de disfrazarlo de 
 
 ## Implementación
 
-`RegisterProtectedApplicationUseCaseImpl` encadena dos pasos, cada uno con su propia compensación:
+`RegisterApplicationUseCaseImpl` encadena dos pasos, cada uno con su propia compensación:
 
-1. **Registrar la aplicación** (módulo `aplicaciones`, vía `RegisterApplicationInteractor`).
-2. **Registrar el recurso protegido** (módulo `recursos`, guardado + publicación del evento de
+1. **Registrar la aplicación** (módulo `applications`, vía `RegisterApplicationInteractor`).
+2. **Registrar el recurso protegido** (módulo `resources`, guardado + publicación del evento de
    dominio). Si este paso falla *después* de guardar el recurso, se compensa borrándolo
    (`resources.deleteById(...)`) antes de propagar el error. Si el paso completo falla después de
    registrar la aplicación, se compensa eliminándola (`removeApplicationInteractor.execute(...)`),
@@ -36,9 +36,9 @@ o interactor que hizo el efecto original, encadenada con `onErrorResume`.
 
 ## Ubicación verificable
 
-- Flujo y compensación: [`RegisterProtectedApplicationUseCaseImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/recursos/application/usecase/impl/RegisterProtectedApplicationUseCaseImpl.java)
+- Flujo y compensación: [`RegisterApplicationUseCaseImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/application/usecase/impl/RegisterApplicationUseCaseImpl.java)
 - Prueba: `rolls_back_the_saved_resource_and_removes_the_application_when_event_publication_fails` en
-  [`RegisterProtectedApplicationUseCaseImplTests`](../../src/test/java/co/edu/uco/seguridad/pdp/recursos/application/usecase/impl/RegisterProtectedApplicationUseCaseImplTests.java)
+  [`RegisterApplicationUseCaseImplTests`](../../src/test/java/co/edu/uco/seguridad/pdp/applications/application/usecase/impl/RegisterApplicationUseCaseImplTests.java)
 - Nota de implementación con el razonamiento completo: [ADR-019, sección de retiro de `ReactiveTransactionPort`](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-019-surrealdb-implementation.md#nota-de-implementación)
 
 ## Evidencia y límite
