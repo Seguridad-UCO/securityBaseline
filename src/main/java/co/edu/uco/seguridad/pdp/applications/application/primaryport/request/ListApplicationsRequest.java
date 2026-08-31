@@ -1,7 +1,7 @@
 package co.edu.uco.seguridad.pdp.applications.application.primaryport.request;
 
 import co.edu.uco.seguridad.pdp.applications.domain.ApplicationCriteria;
-import co.edu.uco.seguridad.pdp.commons.PageWindow;
+import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;

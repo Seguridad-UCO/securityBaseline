@@ -1,17 +1,17 @@
 package co.edu.uco.seguridad.pdp.resources.application.usecase.impl;
 
-import co.edu.uco.seguridad.pdp.applications.application.exception.ApplicationNotFoundException;
+import co.edu.uco.seguridad.pdp.applications.domain.exception.ApplicationNotFoundException;
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
-import co.edu.uco.seguridad.pdp.applications.domain.ApplicationBaseUrl;
-import co.edu.uco.seguridad.pdp.commons.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.ApplicationName;
-import co.edu.uco.seguridad.pdp.commons.ResourceId;
-import co.edu.uco.seguridad.pdp.commons.TenantId;
+import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
+import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
+import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
+import co.edu.uco.seguridad.pdp.commons.model.ResourceId;
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.resources.application.primaryport.request.RegisterProtectedResourceRequest;
 import co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository.ProtectedResourceRepository;
-import co.edu.uco.seguridad.pdp.resources.domain.HttpVerb;
+import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.ProtectedResource;
-import co.edu.uco.seguridad.pdp.resources.domain.ResourcePath;
+import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
 import co.edu.uco.seguridad.shared.event.DomainEvent;
 import co.edu.uco.seguridad.shared.event.DomainEventPublisher;
 import org.junit.jupiter.api.Test;
@@ -78,7 +78,7 @@ class RegisterProtectedResourceUseCaseImplTests {
         List<DomainEvent> published = new ArrayList<>();
         UUID fixedId = UUID.randomUUID();
         RegisterProtectedResourceUseCaseImpl useCase = new RegisterProtectedResourceUseCaseImpl(
-                query -> Mono.just(application), dto -> Mono.empty(), resources, event -> {
+                query -> Mono.empty(), dto -> Mono.empty(), resources, event -> {
                     published.add(event);
                     return Mono.empty();
                 }, () -> fixedId, () -> NOW);

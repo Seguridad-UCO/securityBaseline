@@ -6,7 +6,7 @@ import co.edu.uco.seguridad.pdp.applications.application.secondaryport.repositor
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.RegisterApplicationRulesValidator;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RegisterApplicationUseCase;
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
-import co.edu.uco.seguridad.pdp.commons.ApplicationId;
+import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.observability.ReactiveLogContext;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;

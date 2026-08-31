@@ -1,11 +1,11 @@
 package co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.repository;
 
-import co.edu.uco.seguridad.pdp.commons.TenantId;
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.SecurityUserRepository;
-import co.edu.uco.seguridad.pdp.identity.domain.Email;
-import co.edu.uco.seguridad.pdp.identity.domain.ExternalIdentity;
+import co.edu.uco.seguridad.pdp.identity.domain.model.Email;
+import co.edu.uco.seguridad.pdp.identity.domain.model.ExternalIdentity;
 import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;
-import co.edu.uco.seguridad.pdp.identity.domain.UserId;
+import co.edu.uco.seguridad.pdp.identity.domain.model.UserId;
 import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.entity.ExternalIdentityEntity;
 import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.entity.SecurityUserEntity;
 import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.mapper.SecurityUserPersistenceMapper;

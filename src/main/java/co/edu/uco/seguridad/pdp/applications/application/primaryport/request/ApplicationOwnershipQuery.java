@@ -1,7 +1,7 @@
 package co.edu.uco.seguridad.pdp.applications.application.primaryport.request;
 
-import co.edu.uco.seguridad.pdp.commons.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.TenantId;
+import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;

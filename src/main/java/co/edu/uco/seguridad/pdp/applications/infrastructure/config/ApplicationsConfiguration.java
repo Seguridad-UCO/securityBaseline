@@ -1,12 +1,14 @@
 package co.edu.uco.seguridad.pdp.applications.infrastructure.config;
 
 import co.edu.uco.seguridad.pdp.applications.application.secondaryport.repository.ApplicationRepository;
-import co.edu.uco.seguridad.pdp.applications.application.rule.ApplicationMustExistForTenantRule;
-import co.edu.uco.seguridad.pdp.applications.application.rule.ApplicationNameMustBeUniqueForTenantRule;
-import co.edu.uco.seguridad.pdp.applications.application.rule.ApplicationNameMustNotBeReservedRule;
-import co.edu.uco.seguridad.pdp.applications.application.rule.impl.ApplicationMustExistForTenantRuleImpl;
-import co.edu.uco.seguridad.pdp.applications.application.rule.impl.ApplicationNameMustBeUniqueForTenantRuleImpl;
-import co.edu.uco.seguridad.pdp.applications.application.rule.impl.ApplicationNameMustNotBeReservedRuleImpl;
+import co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationMustExistForTenantRule;
+import co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationNameMustBeUniqueForTenantRule;
+import co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationNameMustNotBeReservedRule;
+import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationMustExistForTenantRuleImpl;
+import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationNameMustBeUniqueForTenantRuleImpl;
+import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationNameMustNotBeReservedRuleImpl;
+import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationMustExistForTenantValidator;
+import co.edu.uco.seguridad.pdp.applications.application.rule.validator.impl.ApplicationMustExistForTenantValidatorImpl;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.RegisterApplicationRulesValidator;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.impl.RegisterApplicationRulesValidatorImpl;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.ListApplicationsUseCase;
@@ -22,7 +24,7 @@ import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.repository.SurrealApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.schema.SurrealApplicationSchemaInitializer;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.properties.ApplicationCatalogProperties;
-import co.edu.uco.seguridad.pdp.tenants.application.rule.TenantMustBeActiveRule;
+import co.edu.uco.seguridad.pdp.tenants.application.rule.validator.TenantMustBeActiveValidator;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
@@ -55,16 +57,18 @@ public class ApplicationsConfiguration {
     }
 
     @Bean
-    ApplicationNameMustBeUniqueForTenantRule applicationNameMustBeUniqueForTenantRule(ApplicationRepository repository) {
-        return new ApplicationNameMustBeUniqueForTenantRuleImpl(repository);
+    ApplicationNameMustBeUniqueForTenantRule applicationNameMustBeUniqueForTenantRule() {
+        return new ApplicationNameMustBeUniqueForTenantRuleImpl();
     }
 
     @Bean
     RegisterApplicationRulesValidator registerApplicationRulesValidator(
             ApplicationNameMustNotBeReservedRule nameMustNotBeReserved,
-            TenantMustBeActiveRule tenantMustBeActive,
-            ApplicationNameMustBeUniqueForTenantRule nameMustBeUnique) {
-        return new RegisterApplicationRulesValidatorImpl(nameMustNotBeReserved, tenantMustBeActive, nameMustBeUnique);
+            TenantMustBeActiveValidator tenantMustBeActive,
+            ApplicationNameMustBeUniqueForTenantRule nameMustBeUnique,
+            ApplicationRepository repository) {
+        return new RegisterApplicationRulesValidatorImpl(nameMustNotBeReserved, tenantMustBeActive, nameMustBeUnique,
+                repository);
     }
 
     @Bean
@@ -96,7 +100,13 @@ public class ApplicationsConfiguration {
     }
 
     @Bean
-    ApplicationMustExistForTenantRule applicationMustExistForTenantRule(ApplicationRepository repository) {
-        return new ApplicationMustExistForTenantRuleImpl(repository);
+    ApplicationMustExistForTenantRule applicationMustExistForTenantRule() {
+        return new ApplicationMustExistForTenantRuleImpl();
+    }
+
+    @Bean
+    ApplicationMustExistForTenantValidator applicationMustExistForTenantValidator(ApplicationRepository repository,
+                                                                                 ApplicationMustExistForTenantRule mustExist) {
+        return new ApplicationMustExistForTenantValidatorImpl(repository, mustExist);
     }
 }

@@ -67,12 +67,35 @@ Rutas relativas a `src/main/java/co/edu/uco/seguridad/pdp/tenants/`.
 
 ### domain — Java puro, sin frameworks
 
-| Ruta | Qué es |
-|---|---|
-| `domain/Tenant.java` | Entidad como `record` con factoría con nombre (`register`) y comportamiento (`isActive`) |
-| `domain/TenantName.java` | Value object: `record` con validación en el constructor compacto |
-| `domain/TenantStatus.java` | Enum con comportamiento (`allowsRegistration()`), no un enum anémico |
-| `domain/exception/InvalidTenantNameException.java` | Excepción de VO, extiende `InvalidValueException` |
+**Cinco categorías, cada una en su carpeta.** No hay archivos sueltos en la raíz de `domain/`
+salvo el agregado — todo lo demás se diferencia por lo que ES, no por dónde quedó cómodo:
+
+| Ruta | Qué es | Categoría |
+|---|---|---|
+| `domain/Tenant.java` | Entidad como `record` con factoría con nombre (`register`) y comportamiento (`isActive`) | **el agregado** — único archivo que queda en la raíz |
+| `domain/model/TenantName.java` | Value object: `record` con validación en el constructor compacto | **VO** — un atributo validado |
+| `domain/model/TenantStatus.java` | Enum con comportamiento (`allowsRegistration()`), no un enum anémico | **VO** |
+| `domain/rule/model/TenantExistence.java` | Entrada ya resuelta de una regla: el dato que la consulta devolvió (`record(tenantId, registered)`) | **hecho de regla** — vive junto a la regla que alimenta, no junto a los VOs |
+| `domain/rule/TenantMustExistRule.java` | Interfaz vacía que extiende `OperationWithoutResult<T>` | **contrato de regla** |
+| `domain/rule/impl/TenantMustExistRuleImpl.java` | La regla real: **pura, síncrona, sin puertos** | **decisión** |
+| `domain/exception/InvalidTenantNameException.java` | Excepción de VO, extiende `InvalidValueException` | **lo que se dice cuando algo falla** |
+| `domain/exception/TenantNotFoundException.java` | Excepción de regla de negocio, junto a la regla que la lanza | **lo que se dice cuando algo falla** |
+| `domain/message/TenantsMessages.java` | Catálogo de mensajes del slice, en español | **las palabras exactas** |
+
+**La historia que cuenta cada regla, en una carpeta:** abre `rule/TenantMustExistRule.java` (el
+contrato), su `rule/model/TenantExistence.java` (lo que recibe, ya resuelto) y su
+`rule/impl/TenantMustExistRuleImpl.java` (la decisión, que lanza `exception/TenantNotFoundException`,
+cuyo texto sale de `message/TenantsMessages.java`). Las cuatro piezas de una misma regla están a un
+`Read` de distancia entre sí — no hay que saltar a otro slice ni adivinar en qué carpeta general
+quedó el `record` de entrada.
+
+**No hay "objetos de acción" en este proyecto — y no se inventa una carpeta para ellos.** El
+proyecto de referencia (`arquisoft-backend`) tiene `{Action}{Entity}Domain`: un objeto que agrupa
+lo que una escritura necesita cuando no coincide 1:1 con el agregado. Aquí ningún caso de uso
+necesita más que el agregado y lo que su regla resuelve — si algún día una escritura sí necesita
+agrupar varias cosas, ese objeto va en la raíz de `domain/{slice}/`, junto al agregado (mismo
+nivel, nunca dentro de `model/`), porque no es un atributo: es el bulto que una acción concreta
+necesita. Hoy esa carpeta no existe porque no hay nada que meter en ella — no se crea vacía.
 
 ### application — Reactor sí, Spring no
 
@@ -80,13 +103,11 @@ Rutas relativas a `src/main/java/co/edu/uco/seguridad/pdp/tenants/`.
 |---|---|
 | `application/usecase/CreateTenantUseCase.java` | **Interfaz vacía** que extiende un contrato base. Ese es todo su cuerpo |
 | `application/usecase/impl/CreateTenantUseCaseImpl.java` | `final class`, constructor con `Objects.requireNonNull`, orquesta reglas y puertos |
-| `application/rule/TenantCodeMustBeUniqueRule.java` | Interfaz vacía que extiende un contrato base |
-| `application/rule/impl/TenantCodeMustBeUniqueRuleImpl.java` | La regla real |
+| `application/rule/validator/TenantMustBeActiveValidator.java` | Interfaz vacía: el validador que **sí** hace E/S |
+| `application/rule/validator/impl/TenantMustBeActiveValidatorImpl.java` | Consulta el puerto, arma el `record`, invoca la regla pura |
 | `application/secondaryport/repository/TenantRepository.java` | Puerto de salida: firmas `Mono`/`Flux`, habla en tipos de **dominio** |
 | `application/primaryport/request/CreateTenantRequest.java` | DTO de entrada: `record` con **value objects**, no Strings |
 | `application/primaryport/response/TenantResponse.java` | DTO de salida del núcleo: `record` con value objects |
-| `application/exception/TenantNotFoundException.java` | Excepción de regla de negocio |
-| `application/message/TenantsMessages.java` | Catálogo de mensajes del slice, en español |
 
 ### infrastructure — aquí sí vive Spring
 
@@ -121,10 +142,13 @@ extienden uno de estos seis. Eso hace que sean funcionales y que un test pueda p
 | `Operation<I, O>` | `O execute(I)` | **Síncrono, deliberado**: regla sin I/O |
 | `OperationWithoutResult<I>` | `void execute(I)` | Síncrono: regla pura que solo lanza |
 
-> **Una regla sin entrada/salida es síncrona a propósito.** Ver
-> `tenants/application/rule/TenantStatusMustBeActiveRule.java` (síncrona, solo mira el estado en
-> memoria) frente a `TenantMustBeActiveRule.java` (reactiva, consulta el repositorio).
-> Envolver en `Mono` una regla que no hace I/O es ruido.
+> **Toda regla es síncrona.** Una regla no consulta nada: recibe el dato ya resuelto y decide.
+> Por eso todas extienden `OperationWithoutResult<T>` y viven en `domain/{slice}/rule/`. Quien
+> hace la E/S es el validador (`application/{slice}/rule/validator/`), que sí es reactivo.
+>
+> Si una regla necesita `Mono`, es que hace dos cosas: pártela. Ver
+> `TenantMustBeActiveValidatorImpl` (consulta) frente a `TenantMustExistRuleImpl` y
+> `TenantStatusMustBeActiveRuleImpl` (deciden).
 
 ---
 
@@ -152,7 +176,7 @@ HTTP  →  Controller            (package-private, obtiene RequestContext, deleg
       →  UseCase               (orquesta reglas + puertos; sin lógica de formato)
       →  Rule(s)               (una restricción cada una; lanzan su excepción)
       →  Repository (puerto)   (habla en tipos de dominio)
-      →  SurrealRepository     (adaptador: consulta + Entity + PersistenceMapper)
+      →  SurrealRepository     (adaptador: consulta + Entity + su mapper)
 ```
 
 Dos reglas que este flujo impone:
@@ -167,17 +191,21 @@ Dos reglas que este flujo impone:
 
 | Voy a crear… | Va en |
 |---|---|
-| Entidad o value object | `{slice}/domain/` |
-| Enum de negocio | `{slice}/domain/` |
+| **El agregado** (la entidad raíz del slice) | `{slice}/domain/{Entidad}.java` — único archivo que queda en la raíz |
+| **Value object** (un atributo validado) | `{slice}/domain/model/` |
+| **Enum de negocio** (VO cerrado a valores fijos) | `{slice}/domain/model/` |
+| **Specification de consulta** (`{X}Criteria`, con `matches()`) | `{slice}/domain/` — junto al agregado, no en `model/`: no es un atributo, es cómo se busca |
 | Excepción de value object | `{slice}/domain/exception/` |
+| **Restricción de negocio** (pura, síncrona) | `{slice}/domain/rule/` + `/impl/` |
+| **Entrada ya resuelta de una regla** (`{X}Existence`, `{X}Availability`…) | `{slice}/domain/rule/model/` — junto a la regla que la consume, no junto a los VOs |
+| **Objeto de acción** (bulto que una escritura necesita, sin mapear 1:1 al agregado) | `{slice}/domain/` junto al agregado — **hoy no existe ninguno**; no se crea la carpeta sin un caso real |
 | Caso de uso (interfaz + impl) | `{slice}/application/usecase/` + `/impl/` |
-| Restricción de negocio | `{slice}/application/rule/` + `/impl/` |
-| Coordinador de varias reglas | `{slice}/application/rulesvalidator/` |
+| **Validador**: consulta el puerto y aplica las reglas | `{slice}/application/rule/validator/` + `/impl/` |
 | Puerto de salida | `{slice}/application/secondaryport/repository/` |
 | DTO que entra al núcleo | `{slice}/application/primaryport/request/` |
 | DTO que sale del núcleo | `{slice}/application/primaryport/response/` |
-| Excepción de regla de negocio | `{slice}/application/exception/` |
-| Mensaje de usuario del slice | `{slice}/application/message/{Slice}Messages.java` |
+| Excepción de regla de negocio | `{slice}/domain/exception/` |
+| Mensaje de usuario del slice | `{slice}/domain/message/{Slice}Messages.java` |
 | Endpoint | `{slice}/infrastructure/adapter/primary/web/controller/` |
 | DTO crudo de HTTP | `…/web/dto/request/raw/` |
 | DTO de respuesta HTTP | `…/web/dto/response/` |
@@ -187,7 +215,7 @@ Dos reglas que este flujo impone:
 | Fila de base de datos | `…/secondary/persistence/entity/` |
 | Nombre de tabla | `…/secondary/persistence/schema/{X}Schema.java` |
 | Cableado de beans | `{slice}/infrastructure/config/{Slice}Configuration.java` |
-| Value object usado por **2+ slices** | `pdp/commons/` |
+| Value object usado por **2+ slices** | `pdp/commons/model/` |
 | Capacidad técnica sin negocio | `shared/…` |
 
 ---
@@ -219,14 +247,14 @@ obligue a reaprender nada. `.claude/tools/consistencia.ps1` lo verifica.
 |---|---|
 | adaptador de persistencia | `persistence/entity`, `persistence/mapper`, `persistence/repository`, `persistence/schema` |
 | controller | `dto/request/raw`, `dto/response`, `interactor` + `impl`, `mapper` |
-| un contrato (`UseCase`, `Rule`, `Interactor`, `RulesValidator`) | su `Impl` en el subpaquete `impl/` |
-| excepciones propias | su `{Slice}Messages` en `application/message` |
+| un contrato (`UseCase`, `Rule`, `Interactor`, `Validator`) | su `Impl` en el subpaquete `impl/` |
+| excepciones propias | su `{Slice}Messages` en `domain/message` |
 | cualquier cosa | su `{Slice}Configuration` |
 
 Dos consecuencias que se incumplían hasta el 2026-08-31 y ahora no:
 
 - **El adaptador nunca construye el agregado desde el JSON.** Lee la fila en una `{X}Entity` y
-  delega en `{X}PersistenceMapper.toDomain(entity)`. Separar «leer la fila» de «reconstruir el
+  delega en su `{Slice}PersistenceMapper` (`TenantPersistenceMapper.toDomain(entity)`). Separar «leer la fila» de «reconstruir el
   agregado» deja el mapeo y su validación en un solo sitio.
 - **El método que convierte fila → dominio se llama `toDomain`**, o `to{Tipo}` si el adaptador
   maneja más de un agregado. Nunca `toUser`, `toRow` ni un nombre inventado.
@@ -234,13 +262,16 @@ Dos consecuencias que se incumplían hasta el 2026-08-31 y ahora no:
 ### Una regla que dos módulos necesitan la publica su dueño
 
 Cuando un slice necesita decidir algo sobre otro —«esta aplicación existe y es de este inquilino»—
-**no consulta el repositorio ajeno**: consume una `Rule` que el dueño publica como interfaz nombrada
-de Modulith. Una sola implementación inyectada, no una comprobación copiada, para que la decisión no
-pueda divergir.
+**no consulta el repositorio ajeno**: consume un `Validator` que el dueño publica como interfaz
+nombrada de Modulith. Una sola implementación inyectada, no una comprobación copiada, para que la
+decisión no pueda divergir.
 
-Ejemplos vivos: `tenants` publica `TenantMustBeActiveRule`; `applications` publica
-`ApplicationMustExistForTenantRule`. Ambas con `@NamedInterface("rule")` en el `package-info` de
-`application/rule`, y declaradas en el `allowedDependencies` del consumidor.
+Es el **validador** y no la regla lo que se publica, porque el consumidor no puede resolver el dato:
+no tiene el repositorio ajeno, que es justamente el motivo por el que pide la decisión prestada.
+
+Ejemplos vivos: `tenants` publica `TenantMustBeActiveValidator`; `applications` publica
+`ApplicationMustExistForTenantValidator`. Ambos con `@NamedInterface("rule")` en el `package-info`
+de `application/rule/validator`, y declarados en el `allowedDependencies` del consumidor.
 
 ---
 
@@ -255,6 +286,8 @@ Ejemplos vivos: `tenants` publica `TenantMustBeActiveRule`; `applications` publi
 7. La respuesta web nunca expone value objects: sale plana.
 8. Un nombre de tabla vive en su `{X}Schema`, nunca como literal en la consulta.
 9. Si dudas de dónde va algo, mira `tenants` — y si `tenants` no lo tiene, mira `applications`.
-10. El adaptador de persistencia pasa por `Entity` + `PersistenceMapper`, siempre.
-11. Una decisión sobre otro módulo se consume como `Rule` publicada, nunca consultando su repositorio.
+10. El adaptador de persistencia pasa por `Entity` + `TenantPersistenceMapper` o su equivalente, siempre.
+11. Una decisión sobre otro módulo se consume como `Validator` publicado, nunca consultando su repositorio.
+13. Una `Rule` **no consulta nada y no devuelve `Mono`**: recibe el dato resuelto y decide. Si necesita
+    consultar, lo que falta es un validador que lo haga por ella.
 12. Antes de cerrar, `consistencia.ps1` sale limpio.

@@ -3,27 +3,27 @@ package co.edu.uco.seguridad.shared.persistence.surrealdb;
 import co.edu.uco.seguridad.AbstractSurrealDbIntegrationTest;
 import co.edu.uco.seguridad.pdp.applications.application.secondaryport.repository.ApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
-import co.edu.uco.seguridad.pdp.applications.domain.ApplicationBaseUrl;
+import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.repository.SurrealApplicationRepository;
-import co.edu.uco.seguridad.pdp.commons.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.ApplicationName;
-import co.edu.uco.seguridad.pdp.commons.ResourceId;
-import co.edu.uco.seguridad.pdp.commons.TenantId;
+import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
+import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
+import co.edu.uco.seguridad.pdp.commons.model.ResourceId;
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.SecurityUserRepository;
-import co.edu.uco.seguridad.pdp.identity.domain.Email;
-import co.edu.uco.seguridad.pdp.identity.domain.ExternalIdentity;
+import co.edu.uco.seguridad.pdp.identity.domain.model.Email;
+import co.edu.uco.seguridad.pdp.identity.domain.model.ExternalIdentity;
 import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;
-import co.edu.uco.seguridad.pdp.identity.domain.UserId;
+import co.edu.uco.seguridad.pdp.identity.domain.model.UserId;
 import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.repository.SurrealSecurityUserRepository;
 import co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository.ProtectedResourceRepository;
-import co.edu.uco.seguridad.pdp.resources.domain.HttpVerb;
+import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.ProtectedResource;
-import co.edu.uco.seguridad.pdp.resources.domain.ResourcePath;
+import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.persistence.repository.SurrealProtectedResourceRepository;
 import co.edu.uco.seguridad.pdp.tenants.application.secondaryport.repository.TenantRepository;
 import co.edu.uco.seguridad.pdp.tenants.domain.Tenant;
-import co.edu.uco.seguridad.pdp.tenants.domain.TenantName;
-import co.edu.uco.seguridad.pdp.tenants.domain.TenantStatus;
+import co.edu.uco.seguridad.pdp.tenants.domain.model.TenantName;
+import co.edu.uco.seguridad.pdp.tenants.domain.model.TenantStatus;
 import co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.secondary.persistence.repository.SurrealTenantRepository;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -72,14 +72,11 @@ class SurrealRepositoryIntegrationTests extends AbstractSurrealDbIntegrationTest
 
         TenantRepository repository = new SurrealTenantRepository(client);
 
-        StepVerifier.create(repository.findById(new TenantId("surreal-it-tenant")))
-                .assertNext(tenant -> {
-                    assertThat(tenant.id()).isEqualTo(new TenantId("surreal-it-tenant"));
-                    assertThat(tenant.status()).isEqualTo(TenantStatus.ACTIVE);
-                })
+        StepVerifier.create(repository.findStatusById(new TenantId("surreal-it-tenant")))
+                .expectNext(TenantStatus.ACTIVE)
                 .verifyComplete();
 
-        StepVerifier.create(repository.findById(new TenantId("no-such-tenant")))
+        StepVerifier.create(repository.findStatusById(new TenantId("no-such-tenant")))
                 .verifyComplete();
     }
 
@@ -128,8 +125,8 @@ class SurrealRepositoryIntegrationTests extends AbstractSurrealDbIntegrationTest
                 .expectNext(true)
                 .verifyComplete();
 
-        StepVerifier.create(repository.findByTenantAndId(tenant, application.id()))
-                .expectNext(application)
+        StepVerifier.create(repository.existsByTenantAndId(tenant, application.id()))
+                .expectNext(true)
                 .verifyComplete();
 
         StepVerifier.create(repository.deleteById(application.id())).verifyComplete();

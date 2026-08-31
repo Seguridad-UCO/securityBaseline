@@ -1,10 +1,10 @@
 package co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository;
 
-import co.edu.uco.seguridad.pdp.commons.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.ResourceId;
-import co.edu.uco.seguridad.pdp.resources.domain.HttpVerb;
+import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
+import co.edu.uco.seguridad.pdp.commons.model.ResourceId;
+import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.ProtectedResource;
-import co.edu.uco.seguridad.pdp.resources.domain.ResourcePath;
+import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

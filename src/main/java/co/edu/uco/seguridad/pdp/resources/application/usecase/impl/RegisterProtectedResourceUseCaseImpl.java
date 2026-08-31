@@ -1,8 +1,8 @@
 package co.edu.uco.seguridad.pdp.resources.application.usecase.impl;
 
 import co.edu.uco.seguridad.pdp.applications.application.primaryport.request.ApplicationOwnershipQuery;
-import co.edu.uco.seguridad.pdp.applications.application.rule.ApplicationMustExistForTenantRule;
-import co.edu.uco.seguridad.pdp.commons.ResourceId;
+import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationMustExistForTenantValidator;
+import co.edu.uco.seguridad.pdp.commons.model.ResourceId;
 import co.edu.uco.seguridad.pdp.resources.application.primaryport.request.RegisterProtectedResourceRequest;
 import co.edu.uco.seguridad.pdp.resources.application.primaryport.response.RegisteredProtectedResourceResponse;
 import co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository.ProtectedResourceRepository;
@@ -33,17 +33,17 @@ public final class RegisterProtectedResourceUseCaseImpl implements RegisterProte
 
     private static final Logger LOG = LoggerFactory.getLogger(RegisterProtectedResourceUseCaseImpl.class);
 
-    private final ApplicationMustExistForTenantRule applicationMustExist;
+    private final ApplicationMustExistForTenantValidator applicationMustExist;
     private final RegisterProtectedResourceRulesValidator rules;
     private final ProtectedResourceRepository resources;
     private final DomainEventPublisher events;
     private final IdentifierGenerator identifiers;
     private final TimeProvider time;
 
-    public RegisterProtectedResourceUseCaseImpl(ApplicationMustExistForTenantRule applicationMustExist,
+    public RegisterProtectedResourceUseCaseImpl(ApplicationMustExistForTenantValidator applicationMustExist,
             RegisterProtectedResourceRulesValidator rules, ProtectedResourceRepository resources,
             DomainEventPublisher events, IdentifierGenerator identifiers, TimeProvider time) {
-        this.applicationMustExist = Objects.requireNonNull(applicationMustExist, RequiredArgumentMessages.APPLICATION_RULE);
+        this.applicationMustExist = Objects.requireNonNull(applicationMustExist, RequiredArgumentMessages.APPLICATION_EXISTS_VALIDATOR);
         this.rules = Objects.requireNonNull(rules, RequiredArgumentMessages.RULES_VALIDATOR);
         this.resources = Objects.requireNonNull(resources, RequiredArgumentMessages.PROTECTED_RESOURCE_REPOSITORY);
         this.events = Objects.requireNonNull(events, RequiredArgumentMessages.DOMAIN_EVENT_PUBLISHER);

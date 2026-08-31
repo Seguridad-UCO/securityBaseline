@@ -2,11 +2,11 @@ package co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.audi
 
 import co.edu.uco.seguridad.AbstractSurrealDbIntegrationTest;
 import co.edu.uco.seguridad.pdp.PdpApplication;
-import co.edu.uco.seguridad.pdp.commons.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.ResourceId;
-import co.edu.uco.seguridad.pdp.commons.TenantId;
-import co.edu.uco.seguridad.pdp.resources.domain.HttpVerb;
-import co.edu.uco.seguridad.pdp.resources.domain.ResourcePath;
+import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
+import co.edu.uco.seguridad.pdp.commons.model.ResourceId;
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
+import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
+import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
 import co.edu.uco.seguridad.pdp.resources.domain.event.ProtectedResourceRegistered;
 import co.edu.uco.seguridad.shared.event.DomainEventPublisher;
 import org.junit.jupiter.api.Test;

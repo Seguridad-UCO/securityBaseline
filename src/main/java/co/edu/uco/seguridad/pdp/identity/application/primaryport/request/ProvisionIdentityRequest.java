@@ -1,6 +1,6 @@
 package co.edu.uco.seguridad.pdp.identity.application.primaryport.request;
 
-import co.edu.uco.seguridad.pdp.identity.domain.Email;
+import co.edu.uco.seguridad.pdp.identity.domain.model.Email;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;

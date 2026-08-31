@@ -1,7 +1,7 @@
 package co.edu.uco.seguridad.pdp.identity.application.primaryport.response;
 
-import co.edu.uco.seguridad.pdp.commons.TenantId;
-import co.edu.uco.seguridad.pdp.identity.domain.UserId;
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
+import co.edu.uco.seguridad.pdp.identity.domain.model.UserId;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.time.Instant;

@@ -37,7 +37,7 @@ cliente pueda continuar en el estilo que prefiera.
 ## Ubicación verificable
 
 - `SearchProtectedApplicationsRequest.java`
-- [`PageWindow.java`](../../src/main/java/co/edu/uco/seguridad/pdp/commons/PageWindow.java)
+- [`PageWindow.java`](../../src/main/java/co/edu/uco/seguridad/pdp/commons/model/PageWindow.java)
 - Pruebas: `ListApplicationsRequestMapperTests`
   y `ApplicationHttpTests`
 

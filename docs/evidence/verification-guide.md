@@ -20,9 +20,11 @@ El POM exige Java 25.
 | `TenantNameTests` · `EmailTests` · `ApplicationBaseUrlTests` | 15, 21 | Normalización y rechazo por formato y longitud |
 | `ResourcePathTests` · `HttpVerbTests` | 3, 15, 21 | Formato de la ruta y verbos admitidos |
 | `PageWindowTests` · `ResultPageTests` | 18, 19 | Límites de ventana, equivalencia página/rango, inmutabilidad. **Ver la nota de abajo: es la única evidencia de 18 y 19** |
-| `TenantMustBeActiveRuleImplTests` | 3, 9 | Tenant inexistente frente a suspendido |
-| `ApplicationRegistrationRuleTests` | 3, 9, 12 | Regla sin repositorio y regla con repositorio, aisladas |
-| `ProtectedResourceMustBeUniqueRuleImplTests` | 3, 9, 12 | Unicidad de la concesión |
+| `TenantRuleTests` | 3, 9 | Las tres reglas del slice, puras: sin Reactor y sin dobles |
+| `TenantMustBeActiveValidatorTests` | 3, 9 | Tenant inexistente frente a suspendido |
+| `ApplicationRuleTests` | 3, 9, 12 | Cada regla del slice por separado, como decisión pura |
+| `RegisterApplicationRulesValidatorTests` | 3, 9, 12 | Orden de ejecución: lo barato rechaza antes de consultar |
+| `ProtectedResourceMustBeUniqueRuleTests` | 3, 9, 12 | Unicidad de la concesión |
 | `CreateTenantUseCaseImplTests` | 2, 3, 11 | Orquestación de regla y puerto; rechazo por duplicado |
 | `RegisterApplicationUseCaseImplTests` | 2, 7, 11 | Orquestación de reglas, identificadores y reloj |
 | `RemoveApplicationUseCaseImplTests` | 2, 7 | Borrado idempotente. **No hay saga que la invoque — ver nota** |

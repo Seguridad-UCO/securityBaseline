@@ -1,6 +1,6 @@
 package co.edu.uco.seguridad.pdp.resources.application.usecase.impl;
 
-import co.edu.uco.seguridad.pdp.commons.ApplicationId;
+import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.resources.application.primaryport.response.RegisteredProtectedResourceResponse;
 import co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository.ProtectedResourceRepository;
 import co.edu.uco.seguridad.pdp.resources.application.usecase.ListProtectedResourcesUseCase;

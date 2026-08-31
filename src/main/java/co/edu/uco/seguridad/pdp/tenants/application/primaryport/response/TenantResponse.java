@@ -1,8 +1,8 @@
 package co.edu.uco.seguridad.pdp.tenants.application.primaryport.response;
 
-import co.edu.uco.seguridad.pdp.commons.TenantId;
-import co.edu.uco.seguridad.pdp.tenants.domain.TenantName;
-import co.edu.uco.seguridad.pdp.tenants.domain.TenantStatus;
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
+import co.edu.uco.seguridad.pdp.tenants.domain.model.TenantName;
+import co.edu.uco.seguridad.pdp.tenants.domain.model.TenantStatus;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;

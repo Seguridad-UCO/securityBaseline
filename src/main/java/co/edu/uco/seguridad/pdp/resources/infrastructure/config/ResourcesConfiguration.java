@@ -1,9 +1,9 @@
 package co.edu.uco.seguridad.pdp.resources.infrastructure.config;
 
-import co.edu.uco.seguridad.pdp.applications.application.rule.ApplicationMustExistForTenantRule;
+import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationMustExistForTenantValidator;
 import co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository.ProtectedResourceRepository;
-import co.edu.uco.seguridad.pdp.resources.application.rule.ProtectedResourceMustBeUniqueRule;
-import co.edu.uco.seguridad.pdp.resources.application.rule.impl.ProtectedResourceMustBeUniqueRuleImpl;
+import co.edu.uco.seguridad.pdp.resources.domain.rule.ProtectedResourceMustBeUniqueRule;
+import co.edu.uco.seguridad.pdp.resources.domain.rule.impl.ProtectedResourceMustBeUniqueRuleImpl;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.RegisterProtectedResourceRulesValidator;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.RegisterProtectedResourceRulesValidatorImpl;
 import co.edu.uco.seguridad.pdp.resources.application.usecase.ListProtectedResourcesUseCase;
@@ -48,18 +48,18 @@ public class ResourcesConfiguration {
     }
 
     @Bean
-    ProtectedResourceMustBeUniqueRule protectedResourceMustBeUniqueRule(ProtectedResourceRepository repository) {
-        return new ProtectedResourceMustBeUniqueRuleImpl(repository);
+    ProtectedResourceMustBeUniqueRule protectedResourceMustBeUniqueRule() {
+        return new ProtectedResourceMustBeUniqueRuleImpl();
     }
 
     @Bean
     RegisterProtectedResourceRulesValidator registerProtectedResourceRulesValidator(
-            ProtectedResourceMustBeUniqueRule mustBeUnique) {
-        return new RegisterProtectedResourceRulesValidatorImpl(mustBeUnique);
+            ProtectedResourceMustBeUniqueRule mustBeUnique, ProtectedResourceRepository repository) {
+        return new RegisterProtectedResourceRulesValidatorImpl(mustBeUnique, repository);
     }
 
     @Bean
-    RegisterProtectedResourceUseCase registerProtectedResourceUseCase(ApplicationMustExistForTenantRule applicationMustExist,
+    RegisterProtectedResourceUseCase registerProtectedResourceUseCase(ApplicationMustExistForTenantValidator applicationMustExist,
             RegisterProtectedResourceRulesValidator rules, ProtectedResourceRepository resources,
             DomainEventPublisher events, IdentifierGenerator identifiers, TimeProvider time) {
         return new RegisterProtectedResourceUseCaseImpl(applicationMustExist, rules, resources, events, identifiers, time);

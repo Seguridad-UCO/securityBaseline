@@ -28,10 +28,10 @@ criterio, no el número devuelto.
 
 ## Ubicación verificable
 
-- [`PageWindow.java`](../../src/main/java/co/edu/uco/seguridad/pdp/commons/PageWindow.java)
-- [`ResultPage.java`](../../src/main/java/co/edu/uco/seguridad/pdp/commons/ResultPage.java)
+- [`PageWindow.java`](../../src/main/java/co/edu/uco/seguridad/pdp/commons/model/PageWindow.java)
+- [`ResultPage.java`](../../src/main/java/co/edu/uco/seguridad/pdp/commons/model/ResultPage.java)
 - [`PageResponse.java`](../../src/main/java/co/edu/uco/seguridad/shared/web/PageResponse.java)
-- Pruebas: [`PageWindowTests`](../../src/test/java/co/edu/uco/seguridad/pdp/commons/PageWindowTests.java)
+- Pruebas: [`PageWindowTests`](../../src/test/java/co/edu/uco/seguridad/pdp/commons/model/PageWindowTests.java)
 
 ## Evidencia y límite
 

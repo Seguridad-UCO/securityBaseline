@@ -1,8 +1,8 @@
 package co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.primary.web.mapper;
 
-import co.edu.uco.seguridad.pdp.commons.TenantId;
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.tenants.application.primaryport.request.CreateTenantRequest;
-import co.edu.uco.seguridad.pdp.tenants.domain.TenantName;
+import co.edu.uco.seguridad.pdp.tenants.domain.model.TenantName;
 import co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.primary.web.dto.request.raw.CreateTenantRawRequest;
 import co.edu.uco.seguridad.shared.web.RequestFieldParser;
 

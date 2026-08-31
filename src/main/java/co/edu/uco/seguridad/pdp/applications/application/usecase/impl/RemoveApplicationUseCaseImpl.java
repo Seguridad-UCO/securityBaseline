@@ -2,7 +2,7 @@ package co.edu.uco.seguridad.pdp.applications.application.usecase.impl;
 
 import co.edu.uco.seguridad.pdp.applications.application.secondaryport.repository.ApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RemoveApplicationUseCase;
-import co.edu.uco.seguridad.pdp.commons.ApplicationId;
+import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.observability.ReactiveLogContext;
 import org.slf4j.Logger;

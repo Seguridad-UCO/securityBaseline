@@ -172,12 +172,12 @@ entrar en un módulo no se pareciera a entrar en el de al lado.
 | `applications`, `identity` | El adaptador construía el agregado directamente desde el JSON, mientras `tenants` y `resources` pasaban por `Entity` + `Mapper` | `ApplicationEntity`, `SecurityUserEntity`, `ExternalIdentityEntity` y sus mappers |
 | `identity` | Sin `application/message`: el texto vivía como literal dentro de la excepción | `IdentityMessages` |
 | `identity` | `AssignTenantUseCaseImpl` hacía «busca o lanza» inline; en `tenants` eso es una `Rule` | `UserMustExistRule` |
-| `resources` | Consultaba el repositorio de `applications` y lanzaba su excepción inline | `applications` publica `ApplicationMustExistForTenantRule` y `resources` la consume |
+| `resources` | Consultaba el repositorio de `applications` y lanzaba su excepción inline | `applications` publica `ApplicationMustExistForTenantValidator` y `resources` lo consume |
 | `identity` | `toUser` / `toIdentity` frente a `toDomain` en el resto | `toSecurityUser` / `toExternalIdentity` |
 
 El caso de `resources` **estrecha** la frontera de Modulith en vez de ampliarla: pasa de necesitar
 `applications :: repository` a `applications :: rule`. Es el mismo patrón con el que `tenants`
-publica `TenantMustBeActiveRule` — una implementación inyectada, no una comprobación copiada.
+publica `TenantMustBeActiveValidator` — una implementación inyectada, no una comprobación copiada.
 
 Evidencia tomada del proyecto de referencia, como se pidió: en `arquisoft-backend@develop` **todos**
 los contextos usan `entity` + `mapper` + `repository` juntos, sin excepción. Y los ADRs 008, 009 y

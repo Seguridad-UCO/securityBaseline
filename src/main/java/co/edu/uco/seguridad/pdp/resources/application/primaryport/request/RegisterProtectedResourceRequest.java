@@ -1,9 +1,9 @@
 package co.edu.uco.seguridad.pdp.resources.application.primaryport.request;
 
-import co.edu.uco.seguridad.pdp.commons.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.TenantId;
-import co.edu.uco.seguridad.pdp.resources.domain.HttpVerb;
-import co.edu.uco.seguridad.pdp.resources.domain.ResourcePath;
+import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
+import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
+import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;

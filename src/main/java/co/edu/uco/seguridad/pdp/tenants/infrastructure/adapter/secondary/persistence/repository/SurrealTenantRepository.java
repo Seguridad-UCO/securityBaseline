@@ -1,8 +1,9 @@
 package co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.secondary.persistence.repository;
 
-import co.edu.uco.seguridad.pdp.commons.TenantId;
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.tenants.application.secondaryport.repository.TenantRepository;
 import co.edu.uco.seguridad.pdp.tenants.domain.Tenant;
+import co.edu.uco.seguridad.pdp.tenants.domain.model.TenantStatus;
 import co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.secondary.persistence.entity.TenantEntity;
 import co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.secondary.persistence.mapper.TenantPersistenceMapper;
 import co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.secondary.persistence.schema.TenantSchema;
@@ -30,12 +31,14 @@ public final class SurrealTenantRepository implements TenantRepository {
     }
 
     @Override
-    public Mono<Tenant> findById(TenantId tenantId) {
+    public Mono<TenantStatus> findStatusById(TenantId tenantId) {
         return client.execute(
-                        "SELECT * FROM type::record('%s', $id);".formatted(TenantSchema.TABLE),
+                        "SELECT status FROM type::record('%s', $id);".formatted(TenantSchema.TABLE),
                         Map.of("id", tenantId.value()))
                 .map(results -> results.get(0))
-                .flatMap(rows -> rows.isEmpty() ? Mono.empty() : Mono.just(toDomain(rows.get(0))));
+                .flatMap(rows -> rows.isEmpty()
+                        ? Mono.empty()
+                        : Mono.just(TenantPersistenceMapper.toStatus(rows.get(0).path("status").asString())));
     }
 
     @Override

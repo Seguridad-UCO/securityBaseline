@@ -1,6 +1,6 @@
 package co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.mapper;
 
-import co.edu.uco.seguridad.pdp.identity.domain.ExternalIdentity;
+import co.edu.uco.seguridad.pdp.identity.domain.model.ExternalIdentity;
 import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;
 import co.edu.uco.seguridad.pdp.identity.domain.exception.InvalidEmailException;
 import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.entity.ExternalIdentityEntity;

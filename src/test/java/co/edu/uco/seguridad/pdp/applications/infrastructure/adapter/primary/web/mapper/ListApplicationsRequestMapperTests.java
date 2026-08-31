@@ -2,8 +2,8 @@ package co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web
 
 import co.edu.uco.seguridad.pdp.applications.application.primaryport.request.ListApplicationsRequest;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.request.raw.ListApplicationsRawRequest;
-import co.edu.uco.seguridad.pdp.commons.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.TenantId;
+import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.shared.web.exception.ConflictingRequestParametersException;
 import co.edu.uco.seguridad.shared.web.exception.MalformedRequestFieldException;
 import org.junit.jupiter.api.Test;

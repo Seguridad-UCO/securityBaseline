@@ -69,8 +69,8 @@ foreach ($slice in $slices) {
     # --- 2. Todo contrato tiene su implementacion ----------------------------
     foreach ($par in @(
         @{ C = 'application/usecase';                                R = 'application/usecase/impl';                                Que = 'caso de uso' },
-        @{ C = 'application/rule';                                   R = 'application/rule/impl';                                   Que = 'regla' },
-        @{ C = 'application/rule/validator';                        R = 'application/rule/validator/impl';                        Que = 'coordinador de reglas' },
+        @{ C = 'domain/rule';                                        R = 'domain/rule/impl';                                        Que = 'regla' },
+        @{ C = 'application/rule/validator';                        R = 'application/rule/validator/impl';                        Que = 'validador de reglas' },
         @{ C = 'infrastructure/adapter/primary/web/interactor';      R = 'infrastructure/adapter/primary/web/interactor/impl';      Que = 'interactor' }
     )) {
         $contratos = Names $par.C
@@ -117,7 +117,7 @@ foreach ($slice in $slices) {
     # acaban como literales dentro de las excepciones.
     $excepciones = (Names 'application/exception').Count + (Names 'domain/exception').Count
     if ($excepciones -gt 0) {
-        $mensajes = Names 'application/message'
+        $mensajes = Names 'domain/message'
         $esperado = (Get-Culture).TextInfo.ToTitleCase($n) + 'Messages'
         if ($mensajes -notcontains $esperado) {
             Add-Hallazgo $n 'catalogo-faltante' "tiene $excepciones excepcion(es) pero no '$esperado'"
@@ -139,6 +139,19 @@ foreach ($slice in $slices) {
         foreach ($m in [regex]::Matches($texto, 'Mono\.error\(\(\)\s*->\s*new (\w+Exception)')) {
             Add-Hallazgo $n 'regla-en-usecase' `
                 ("$($f.BaseName) lanza $($m.Groups[1].Value) directamente; en otros slices eso es una Rule")
+        }
+    }
+
+    # --- 8. La regla decide, no consulta -------------------------------------
+    # Una regla que inyecta un puerto o devuelve un Mono es dos cosas a la vez, y por eso deja de
+    # caber en el dominio. Quien resuelve el dato es el validador; aqui solo llega la respuesta.
+    foreach ($f in (Files 'domain/rule/impl')) {
+        $texto = Get-Content -Path $f.FullName -Raw
+        if ($texto -match 'reactor\.core\.publisher') {
+            Add-Hallazgo $n 'regla-reactiva' "$($f.BaseName) usa Reactor; una regla de dominio es sincrona"
+        }
+        if ($texto -match 'secondaryport') {
+            Add-Hallazgo $n 'regla-con-puerto' "$($f.BaseName) conoce un puerto; la consulta va en el validador"
         }
     }
 }
