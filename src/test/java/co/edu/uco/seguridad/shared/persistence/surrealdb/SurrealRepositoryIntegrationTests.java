@@ -95,6 +95,10 @@ class SurrealRepositoryIntegrationTests extends AbstractSurrealDbIntegrationTest
         StepVerifier.create(repository.save(tenant)).expectNext(tenant).verifyComplete();
 
         StepVerifier.create(repository.existsById(id)).expectNext(true).verifyComplete();
+
+        StepVerifier.create(repository.findAll().collectList())
+                .assertNext(found -> assertThat(found).extracting(Tenant::id).contains(id))
+                .verifyComplete();
     }
 
     @Test

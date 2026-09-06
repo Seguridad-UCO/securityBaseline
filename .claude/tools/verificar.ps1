@@ -81,21 +81,37 @@ if ($Compilar)   { $goal = 'test-compile' }
 elseif ($Rapido) { $goal = 'test' }
 else             { $goal = 'verify' }
 
-$args = "-B $goal"
+# `verify` es el gate que se corre antes de subir, y jacoco-check depende de target/jacoco.exec.
+# El agente jacoco por defecto ANEXA a ese archivo en vez de sobrescribirlo, asi que repetir `verify`
+# sin `clean` acumula datos de ejecucion de corridas anteriores (incluso de sesiones de dias
+# distintos) y puede reportar VERDE con una cobertura que un checkout limpio no sostiene. Pasó
+# exactamente eso: un paquete con 0% de cobertura real paso en local y fallo en CI. `-Rapido` y
+# `-Compilar` no corren jacoco-check, asi que no necesitan pagar el costo de una recompilacion total.
+$mvnGoal = if ($goal -eq 'verify') { 'clean verify' } else { $goal }
+
+$args = "-B $mvnGoal"
 if ($Prueba -ne '') { $args = "$args -Dtest=$Prueba -DfailIfNoTests=false" }
 
 $logDir = Join-Path $repo 'target'
-if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Path $logDir -Force | Out-Null }
 $logFile = Join-Path $logDir 'verificar-ultimo.log'
+
+# `clean` borra target/ completo, y en Windows eso falla si el log vive ahi dentro mientras el
+# redirect lo tiene abierto (el propio proceso se bloquea el archivo a si mismo). Se escribe a un
+# temporal fuera de target/ y se copia a su sitio de siempre una vez que el build termino de borrar
+# y reconstruir esa carpeta.
+$logTemp = Join-Path ([System.IO.Path]::GetTempPath()) ('verificar-' + [guid]::NewGuid().ToString('N') + '.log')
 
 $started = Get-Date
 Push-Location $repo
 try {
-    & cmd /c "`"$mvnw`" $args > `"$logFile`" 2>&1"
+    & cmd /c "`"$mvnw`" $args > `"$logTemp`" 2>&1"
     $exit = $LASTEXITCODE
 } finally {
     Pop-Location
 }
+
+if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Path $logDir -Force | Out-Null }
+Move-Item -Path $logTemp -Destination $logFile -Force
 $elapsed = [math]::Round(((Get-Date) - $started).TotalSeconds, 1)
 
 if (-not (Test-Path $logFile)) {
@@ -106,7 +122,7 @@ $log = Get-Content -Path $logFile
 
 # --- Estado -----------------------------------------------------------------
 if ($exit -eq 0) { $estado = 'VERDE' } else { $estado = 'ROJO' }
-Write-Output ('ESTADO: {0}  (mvnw {1}, {2}s, exit {3})' -f $estado, $goal, $elapsed, $exit)
+Write-Output ('ESTADO: {0}  (mvnw {1}, {2}s, exit {3})' -f $estado, $mvnGoal, $elapsed, $exit)
 if ($jdkUsado -ne '') { Write-Output ('JDK: Java {0} en {1}' -f $requerida, $jdkUsado) }
 
 # --- Errores de compilacion -------------------------------------------------
