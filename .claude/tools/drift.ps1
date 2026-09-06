@@ -62,6 +62,14 @@ if (Test-Path $claudeDir) {
     $docs += @(Get-ChildItem -Path $claudeDir -Recurse -Filter *.md)
 }
 
+# CLAUDE.md y AGENTS.md son los archivos que MAS lee un agente y los unicos que ninguna carpeta
+# vigilada contenia: quedaban fuera del detector por estar en la raiz. Un dato caduco ahi se
+# multiplica por cada sesion. CLAUDE.md llego a afirmar 18/23 criterios cuando ya eran 22/23.
+foreach ($contrato in @('CLAUDE.md', 'AGENTS.md')) {
+    $ruta = Join-Path $repo $contrato
+    if (Test-Path $ruta) { $docs += @(Get-Item -Path $ruta) }
+}
+
 # --- 1. Enlaces relativos rotos ---------------------------------------------
 $enlacesRotos = @()
 foreach ($doc in $docs) {
@@ -98,7 +106,10 @@ foreach ($doc in $docs) {
         $clasesAusentes += [pscustomobject]@{ Doc = $rel; Clase = $nombre }
     }
 }
-$clasesAusentes = $clasesAusentes | Sort-Object Clase, Doc -Unique
+# El @() es obligatorio: con UN solo hallazgo el pipeline devuelve un escalar, no un array, y
+# .Count sobre un PSCustomObject suelto es $null en PowerShell 5.1 — el total daba 0 y el detector
+# reportaba "SIN DERIVA" teniendo una clase ausente. Fallaba solo en el caso de exactamente uno.
+$clasesAusentes = @($clasesAusentes | Sort-Object Clase, Doc -Unique)
 
 # --- Reporte ----------------------------------------------------------------
 $total = $enlacesRotos.Count + $clasesAusentes.Count
