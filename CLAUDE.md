@@ -6,6 +6,10 @@ con Spring Modulith.
 
 > **Para trabajar una historia, usa el flujo de agentes** — ver [`.claude/README.md`](.claude/README.md).
 > El diseño del harness y su porqué están en [`docs/ai-harness/README.md`](docs/ai-harness/README.md).
+>
+> **Cómo debe trabajar un agente** —qué no toca sin permiso, cómo consultar el grafo sin quemar
+> contexto, qué validar antes de cerrar— está en [`AGENTS.md`](AGENTS.md), común a Claude Code y
+> Codex. No se repite aquí para que no puedan divergir.
 
 ---
 
@@ -130,12 +134,13 @@ parece raro:
 
 ## Estado de la línea base
 
-**18 de los 23 criterios se cumplen.** Los criterios 10, 16 y 17 no se cumplen; 18 y 19 son
-parciales — ver [`docs/criteria-compliance-matrix.md`](docs/criteria-compliance-matrix.md).
-Cerrarlos es el alcance de [`HU-001`](docs/ai-harness/workspace/HU-001.md).
+**22 de los 23 criterios se cumplen.** HU-001 cerró los criterios 16 a 19 (consulta por
+specification, puerto dinámico y ventana de paginación). Queda abierto **solo el criterio 10**:
+`RemoveApplicationUseCase` existe como compensación y ningún caso de uso la invoca — no hay saga
+cableada. Ver [`docs/criteria-compliance-matrix.md`](docs/criteria-compliance-matrix.md).
 
 No des por cumplido un criterio porque una tabla lo diga: `drift.ps1` verifica que la
-documentación no afirme lo que el código no sostiene.
+documentación no afirme lo que el código no sostiene — y desde ahora también vigila este archivo.
 
 ## Documentación
 

@@ -144,7 +144,7 @@ public record ApplicationCriteria(TenantId tenantId, Optional<String> nameContai
 ### [N] DTO de entrada al núcleo
 
 ```java
-// pdp/applications/application/port/primary/dto/request/ListApplicationsRequest.java
+// pdp/applications/application/primaryport/request/ListApplicationsRequest.java
 public record ListApplicationsRequest(ApplicationCriteria criteria, PageWindow window) {
     public ListApplicationsRequest { }                              // requireNonNull de ambos
 }
@@ -173,7 +173,7 @@ Usa `RequestFieldParser.optional` y `RequestFieldParser.parseInt`; **no construy
 ### [M] Puerto de salida
 
 ```java
-// pdp/applications/application/port/secondary/repository/ApplicationRepository.java
+// pdp/applications/application/secondaryport/repository/ApplicationRepository.java
 Mono<ResultPage<Application>> findBy(ApplicationCriteria criteria, PageWindow window);   // añadir
 Flux<Application> findAllByTenant(TenantId tenantId);                                    // retirar
 ```
@@ -231,8 +231,8 @@ src/main/java/co/edu/uco/seguridad/
     ├── domain/
     │   └── ApplicationCriteria.java                                            [N]
     ├── application/
-    │   ├── port/primary/dto/request/ListApplicationsRequest.java               [N]
-    │   ├── port/secondary/repository/ApplicationRepository.java                [M]
+    │   ├── primaryport/request/ListApplicationsRequest.java               [N]
+    │   ├── secondaryport/repository/ApplicationRepository.java                [M]
     │   ├── usecase/ListApplicationsUseCase.java                                [M]
     │   └── usecase/impl/ListApplicationsUseCaseImpl.java                       [M]
     └── infrastructure/

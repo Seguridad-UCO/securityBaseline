@@ -1,11 +1,11 @@
 package co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.mapper;
 
-import co.edu.uco.seguridad.pdp.applications.application.port.primary.dto.response.RegisteredApplicationResponse;
-import co.edu.uco.seguridad.pdp.applications.domain.ApplicationBaseUrl;
+import co.edu.uco.seguridad.pdp.applications.application.primaryport.response.RegisteredApplicationResponse;
+import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.response.ApplicationWebResponse;
-import co.edu.uco.seguridad.pdp.commons.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.ApplicationName;
-import co.edu.uco.seguridad.pdp.commons.TenantId;
+import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
+import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;

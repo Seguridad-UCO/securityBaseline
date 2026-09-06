@@ -13,9 +13,8 @@ servicios Spring. La convención de firmas es explícita y uniforme:
 | Con retorno | `Mono<T>` | La operación produce un valor que el llamador necesita |
 | Sin retorno | `Mono<Void>` | La operación solo debe completarse |
 | Colección acotada | `Mono<ResultPage<T>>` | La consulta devuelve filas más total y ventana |
-| Regla sin repositorio | `void verify(I)` | No hace I/O; síncrona |
-| Regla con repositorio | `Mono<Void> verify(I)` | Hace I/O y solo acepta o rechaza |
-| Regla con repositorio y valor | `Mono<O> verify(I)` | Hace I/O y devuelve lo que tuvo que cargar |
+| Regla de negocio | `void execute(I)` | **Siempre síncrona**: recibe el dato ya resuelto y decide |
+| Validador de reglas | `Mono<Void> execute(I)` | Hace la E/S que las reglas necesitan y las aplica |
 
 No se usa `Flux` en los puertos de consulta: un flujo de filas perdería el total y la ventana, que
 son parte de la respuesta.

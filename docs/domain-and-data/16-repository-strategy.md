@@ -35,7 +35,7 @@ estable, dos páginas consecutivas podrían repetir u omitir filas según el ord
 
 ## Ubicación verificable
 
-- [`ProtectedResourceRepository.java`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/application/port/secondary/repository/ProtectedResourceRepository.java)
+- [`ProtectedResourceRepository.java`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/application/secondaryport/repository/ProtectedResourceRepository.java)
 - [`SurrealProtectedResourceRepository.java`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure/adapter/secondary/persistence/repository/SurrealProtectedResourceRepository.java)
   — construye el `WHERE` a partir del criterio y ejecuta en el mismo lote HTTP la página y el conteo
   total (`SELECT ... GROUP ALL`), para que ambos vean el mismo estado.

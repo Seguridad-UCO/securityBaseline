@@ -1,12 +1,12 @@
 package co.edu.uco.seguridad.pdp.applications.application.usecase.impl;
 
-import co.edu.uco.seguridad.pdp.applications.application.port.primary.dto.request.RegisterApplicationRequest;
-import co.edu.uco.seguridad.pdp.applications.application.port.primary.dto.response.RegisteredApplicationResponse;
-import co.edu.uco.seguridad.pdp.applications.application.port.secondary.repository.ApplicationRepository;
-import co.edu.uco.seguridad.pdp.applications.application.rulesvalidator.RegisterApplicationRulesValidator;
+import co.edu.uco.seguridad.pdp.applications.application.primaryport.request.RegisterApplicationRequest;
+import co.edu.uco.seguridad.pdp.applications.application.primaryport.response.RegisteredApplicationResponse;
+import co.edu.uco.seguridad.pdp.applications.application.secondaryport.repository.ApplicationRepository;
+import co.edu.uco.seguridad.pdp.applications.application.rule.validator.RegisterApplicationRulesValidator;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RegisterApplicationUseCase;
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
-import co.edu.uco.seguridad.pdp.commons.ApplicationId;
+import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.observability.ReactiveLogContext;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;

@@ -29,6 +29,7 @@ public final class RequiredArgumentMessages {
     public static final String ACTION_CODE = "se requiere código de acción";
     public static final String REGISTERED_AT = "se requiere instante de registro";
     public static final String EVENT_OCCURRED_ON = "se requiere instante del evento";
+    public static final String USER_REPOSITORY = "se requiere el repositorio de usuarios";
     public static final String NAME_FILTER = "se requiere el filtro de nombre";
     public static final String APPLICATION_CRITERIA = "se requiere el criterio de consulta";
     public static final String PAGE_WINDOW = "se requiere la ventana de paginación";
@@ -48,8 +49,17 @@ public final class RequiredArgumentMessages {
     public static final String SPRING_EVENT_PUBLISHER = "se requiere el publicador de eventos de Spring";
     public static final String TIME_PROVIDER = "se requiere proveedor de tiempo";
     public static final String IDENTIFIER_GENERATOR = "se requiere generador de identificadores";
-    public static final String TENANT_RULE = "se requiere regla de inquilino";
+    // Reglas puras de dominio, inyectadas en los validadores y casos de uso que resuelven su entrada.
     public static final String ACTIVE_STATUS_RULE = "se requiere regla de estado activo";
+    public static final String TENANT_EXISTS_RULE = "se requiere la regla de existencia de inquilino";
+    public static final String APPLICATION_EXISTS_RULE = "se requiere la regla de existencia de aplicación";
+    public static final String USER_RULE = "se requiere la regla de usuario";
+    public static final String UNIQUE_RULE = "se requiere la regla de unicidad";
+    public static final String RESERVED_NAME_RULE = "se requiere la regla de nombre reservado";
+
+    // Validadores reactivos publicados entre módulos.
+    public static final String TENANT_ACTIVE_VALIDATOR = "se requiere el validador de inquilino activo";
+    public static final String APPLICATION_EXISTS_VALIDATOR = "se requiere el validador de existencia de aplicación";
     public static final String REGISTER_USE_CASE = "se requiere caso de uso de registro";
     public static final String SEARCH_USE_CASE = "se requiere caso de uso de búsqueda";
     public static final String REMOVE_USE_CASE = "se requiere caso de uso de eliminación";

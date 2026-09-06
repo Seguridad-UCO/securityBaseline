@@ -1,9 +1,9 @@
 package co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.primary.web.mapper;
 
-import co.edu.uco.seguridad.pdp.commons.TenantId;
-import co.edu.uco.seguridad.pdp.tenants.application.port.primary.dto.response.TenantResponse;
-import co.edu.uco.seguridad.pdp.tenants.domain.TenantName;
-import co.edu.uco.seguridad.pdp.tenants.domain.TenantStatus;
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
+import co.edu.uco.seguridad.pdp.tenants.application.primaryport.response.TenantResponse;
+import co.edu.uco.seguridad.pdp.tenants.domain.model.TenantName;
+import co.edu.uco.seguridad.pdp.tenants.domain.model.TenantStatus;
 import co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.primary.web.dto.response.TenantWebResponse;
 import org.junit.jupiter.api.Test;
 

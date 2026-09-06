@@ -1,15 +1,15 @@
 package co.edu.uco.seguridad.pdp.applications.application.usecase.impl;
 
-import co.edu.uco.seguridad.pdp.applications.application.port.primary.dto.request.ListApplicationsRequest;
-import co.edu.uco.seguridad.pdp.applications.application.port.secondary.repository.ApplicationRepository;
+import co.edu.uco.seguridad.pdp.applications.application.primaryport.request.ListApplicationsRequest;
+import co.edu.uco.seguridad.pdp.applications.application.secondaryport.repository.ApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
-import co.edu.uco.seguridad.pdp.applications.domain.ApplicationBaseUrl;
+import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
 import co.edu.uco.seguridad.pdp.applications.domain.ApplicationCriteria;
-import co.edu.uco.seguridad.pdp.commons.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.ApplicationName;
-import co.edu.uco.seguridad.pdp.commons.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.ResultPage;
-import co.edu.uco.seguridad.pdp.commons.TenantId;
+import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
+import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
+import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
+import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -105,7 +105,7 @@ class ListApplicationsUseCaseImplTests {
             }
 
             @Override
-            public Mono<Application> findByTenantAndId(TenantId tenantId, ApplicationId applicationId) {
+            public Mono<Boolean> existsByTenantAndId(TenantId tenantId, ApplicationId applicationId) {
                 throw new UnsupportedOperationException();
             }
 

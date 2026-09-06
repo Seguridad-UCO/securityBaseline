@@ -32,13 +32,13 @@ infraestructura.
 ## Ubicación verificable
 
 - [`shared/rule`](../../src/main/java/co/edu/uco/seguridad/shared/contract) y [`shared/port`](../../src/main/java/co/edu/uco/seguridad/shared/port)
-- [`resources/application/rule`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/application/rule)
+- [`resources/domain/rule`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/domain/rule)
 - `ApplicationCriteria.java`
 - [`ResourcesConfiguration.java`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure/config/ResourcesConfiguration.java)
 
 ## Evidencia y límite
 
-[`ProtectedResourceMustBeUniqueRuleImplTests`](../../src/test/java/co/edu/uco/seguridad/pdp/resources/application/rule/impl/ProtectedResourceMustBeUniqueRuleImplTests.java)
+[`ProtectedResourceMustBeUniqueRuleTests`](../../src/test/java/co/edu/uco/seguridad/pdp/resources/domain/rule/ProtectedResourceMustBeUniqueRuleTests.java)
 prueba cada regla por separado, con un stub distinto por escenario: eso solo es posible porque cada
 contrato es pequeño. SOLID no se “certifica” con una prueba; se preserva con límites, tests y
 revisión.

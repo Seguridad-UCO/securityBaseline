@@ -1,13 +1,13 @@
 package co.edu.uco.seguridad.pdp.tenants.application.usecase.impl;
 
-import co.edu.uco.seguridad.pdp.commons.TenantId;
-import co.edu.uco.seguridad.pdp.tenants.application.exception.DuplicateTenantException;
-import co.edu.uco.seguridad.pdp.tenants.application.port.primary.dto.request.CreateTenantRequest;
-import co.edu.uco.seguridad.pdp.tenants.application.port.secondary.repository.TenantRepository;
-import co.edu.uco.seguridad.pdp.tenants.application.rule.impl.TenantCodeMustBeUniqueRuleImpl;
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
+import co.edu.uco.seguridad.pdp.tenants.domain.exception.DuplicateTenantException;
+import co.edu.uco.seguridad.pdp.tenants.application.primaryport.request.CreateTenantRequest;
+import co.edu.uco.seguridad.pdp.tenants.application.secondaryport.repository.TenantRepository;
+import co.edu.uco.seguridad.pdp.tenants.domain.rule.impl.TenantCodeMustBeUniqueRuleImpl;
 import co.edu.uco.seguridad.pdp.tenants.domain.Tenant;
-import co.edu.uco.seguridad.pdp.tenants.domain.TenantName;
-import co.edu.uco.seguridad.pdp.tenants.domain.TenantStatus;
+import co.edu.uco.seguridad.pdp.tenants.domain.model.TenantName;
+import co.edu.uco.seguridad.pdp.tenants.domain.model.TenantStatus;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -28,7 +28,7 @@ class CreateTenantUseCaseImplTests {
         List<Tenant> saved = new ArrayList<>();
         TenantRepository repository = fakeRepository(false, saved);
         CreateTenantUseCaseImpl useCase = new CreateTenantUseCaseImpl(
-                new TenantCodeMustBeUniqueRuleImpl(repository), repository);
+                new TenantCodeMustBeUniqueRuleImpl(), repository);
 
         StepVerifier.create(useCase.execute(new CreateTenantRequest(ID, NAME)))
                 .assertNext(response -> {
@@ -44,7 +44,7 @@ class CreateTenantUseCaseImplTests {
     void refuses_a_tenant_id_that_already_exists() {
         TenantRepository repository = fakeRepository(true, new ArrayList<>());
         CreateTenantUseCaseImpl useCase = new CreateTenantUseCaseImpl(
-                new TenantCodeMustBeUniqueRuleImpl(repository), repository);
+                new TenantCodeMustBeUniqueRuleImpl(), repository);
 
         StepVerifier.create(useCase.execute(new CreateTenantRequest(ID, NAME)))
                 .expectError(DuplicateTenantException.class)
@@ -54,7 +54,7 @@ class CreateTenantUseCaseImplTests {
     private static TenantRepository fakeRepository(boolean exists, List<Tenant> saved) {
         return new TenantRepository() {
             @Override
-            public Mono<Tenant> findById(TenantId tenantId) {
+            public Mono<TenantStatus> findStatusById(TenantId tenantId) {
                 throw new UnsupportedOperationException();
             }
 

@@ -51,8 +51,8 @@ por cumplido. Los criterios marcados 🤖 los verifica una prueba automatizada: 
 | # | Criterio | Punto de control |
 |---:|---|---|
 | 1 | Clean Architecture | 🤖 `LayeredArchitectureTests` + `ModulithStructureTests`. Además: ninguna anotación de Spring en `domain`/`application` |
-| 2 | Contratos de servicios | Todo `UseCase`/`Rule`/`Interactor` es una interfaz **vacía** que extiende un contrato de `shared/contract`. Puertos de salida explícitos en `application/port/secondary/` |
-| 3 | Reglas e integridad | Una clase `Rule` por restricción, con interfaz e impl separadas. Regla con repositorio ⇒ reactiva; sin I/O ⇒ síncrona. **Cero `if/throw` de negocio en el use case** |
+| 2 | Contratos de servicios | Todo `UseCase`/`Rule`/`Interactor` es una interfaz **vacía** que extiende un contrato de `shared/contract`. Puertos de salida explícitos en `application/secondaryport/` |
+| 3 | Reglas e integridad | Una clase `Rule` por restricción, con interfaz e impl separadas, en `domain/{slice}/rule/`. **Toda regla es pura y síncrona**: no conoce puertos ni Reactor. Quien consulta es el validador de `application/{slice}/rule/validator/`. **Cero `if/throw` de negocio en el use case** |
 | 4 | Capacidades transversales | Sin `Instant.now()` ni `UUID.randomUUID()` en línea: `TimeProvider` e `IdentifierGenerator` de `shared/port`. Correlación por `CorrelationWebFilter` |
 | 5 | Manejo de mensajes | Éxito envuelto en `ApiResponse.success(code, message, data, context)` con código estable. Error como `ProblemDetail` desde `ApiErrorHandler` |
 | 6 | Manejo de parámetros | Todo parámetro entra como `String` y se convierte en el mapper con `RequestFieldParser`. Nunca un tipo rico en la firma del controller |

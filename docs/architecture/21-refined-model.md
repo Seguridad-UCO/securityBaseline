@@ -45,8 +45,8 @@ estrategia elegida en la frontera).
 - [`ProtectedResource.java`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/domain/ProtectedResource.java)
 - [`Application.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/domain/Application.java)
 - [`Tenant.java`](../../src/main/java/co/edu/uco/seguridad/pdp/tenants/domain/Tenant.java)
-- Pruebas: [`ValueObjectTests`](../../src/test/java/co/edu/uco/seguridad/pdp/commons/ValueObjectTests.java) y
-  [`ResourcePathTests`](../../src/test/java/co/edu/uco/seguridad/pdp/resources/domain/ResourcePathTests.java)
+- Pruebas: [`ValueObjectTests`](../../src/test/java/co/edu/uco/seguridad/pdp/commons/model/ValueObjectTests.java) y
+  [`ResourcePathTests`](../../src/test/java/co/edu/uco/seguridad/pdp/resources/domain/model/ResourcePathTests.java)
 
 ## Evidencia y límite
 

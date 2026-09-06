@@ -1,9 +1,9 @@
 package co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.secondary.persistence.mapper;
 
-import co.edu.uco.seguridad.pdp.commons.TenantId;
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.tenants.domain.Tenant;
-import co.edu.uco.seguridad.pdp.tenants.domain.TenantName;
-import co.edu.uco.seguridad.pdp.tenants.domain.TenantStatus;
+import co.edu.uco.seguridad.pdp.tenants.domain.model.TenantName;
+import co.edu.uco.seguridad.pdp.tenants.domain.model.TenantStatus;
 import co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.secondary.persistence.entity.TenantEntity;
 
 /**
@@ -16,6 +16,11 @@ public final class TenantPersistenceMapper {
     }
 
     public static Tenant toDomain(TenantEntity entity) {
-        return new Tenant(new TenantId(entity.id()), new TenantName(entity.name()), TenantStatus.valueOf(entity.status()));
+        return new Tenant(new TenantId(entity.id()), new TenantName(entity.name()), toStatus(entity.status()));
+    }
+
+    /** Para la proyección de estado, que lee la columna sin reconstruir el agregado. */
+    public static TenantStatus toStatus(String status) {
+        return TenantStatus.valueOf(status);
     }
 }

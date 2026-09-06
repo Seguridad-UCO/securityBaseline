@@ -1,9 +1,9 @@
 package co.edu.uco.seguridad.shared.web.exceptionhandler;
 
-import co.edu.uco.seguridad.pdp.applications.application.exception.DuplicateApplicationException;
-import co.edu.uco.seguridad.pdp.applications.application.exception.ReservedApplicationNameException;
-import co.edu.uco.seguridad.pdp.commons.ApplicationName;
-import co.edu.uco.seguridad.pdp.commons.TenantId;
+import co.edu.uco.seguridad.pdp.applications.domain.exception.DuplicateApplicationException;
+import co.edu.uco.seguridad.pdp.applications.domain.exception.ReservedApplicationNameException;
+import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.commons.exception.InvalidApplicationNameException;
 import co.edu.uco.seguridad.shared.web.exception.MissingRequestFieldException;
 import org.junit.jupiter.api.Test;

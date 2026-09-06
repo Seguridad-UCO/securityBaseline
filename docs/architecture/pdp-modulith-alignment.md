@@ -19,7 +19,7 @@ co.edu.uco.seguridad
 └── pdp/
     ├── commons/       shared kernel: TenantId, ApplicationId, ResourceId, ApplicationName,
     │                  PageWindow, ResultPage, AggregateRoot y excepciones base
-    ├── tenants/       CreateTenantInteractor · ListTenantsInteractor · TenantMustBeActiveRule
+    ├── tenants/       CreateTenantInteractor · ListTenantsInteractor · TenantMustBeActiveValidator
     ├── applications/  RegisterApplicationInteractor · ListApplicationsInteractor
     └── resources/     RegisterProtectedResourceInteractor · ListProtectedResourcesInteractor
 ```
@@ -46,11 +46,11 @@ los tres repositorios secundarios hablan con SurrealDB por HTTP en vez de guarda
 
 | Módulo | Publica | No publica |
 |---|---|---|
-| `tenants` | `CreateTenantInteractor`, `ListTenantsInteractor`, `TenantMustBeActiveRule`, DTOs, excepciones | `Tenant`, repositorio, adaptadores |
+| `tenants` | `CreateTenantInteractor`, `ListTenantsInteractor`, `TenantMustBeActiveValidator`, DTOs, excepciones | `Tenant`, repositorio, adaptadores |
 | `applications` | `RegisterApplicationInteractor`, `ListApplicationsInteractor`, DTOs, excepciones | `Application`, repositorio, reglas internas |
 | `resources` | Interactores HTTP, DTOs de catálogo | dominio, reglas, puertos secundarios, adaptadores |
 
-`ListTenantsInteractor` responde *qué* es un tenant; `TenantMustBeActiveRule` decide *si* puede
+`ListTenantsInteractor` responde *qué* es un tenant; `TenantMustBeActiveValidator` decide *si* puede
 operar (carga + `TenantStatusMustBeActiveRule`). No se mezclan consulta y decisión en un solo método.
 
 ## Flujo E-1

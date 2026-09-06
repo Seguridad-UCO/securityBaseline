@@ -1,28 +1,27 @@
 package co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.repository;
 
-import co.edu.uco.seguridad.pdp.applications.application.port.secondary.repository.ApplicationRepository;
+import co.edu.uco.seguridad.pdp.applications.application.secondaryport.repository.ApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
 import co.edu.uco.seguridad.pdp.applications.domain.ApplicationCriteria;
-import co.edu.uco.seguridad.pdp.commons.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.ResultPage;
-import co.edu.uco.seguridad.pdp.applications.domain.ApplicationBaseUrl;
+import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
+import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
+import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.entity.ApplicationEntity;
+import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.mapper.ApplicationPersistenceMapper;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.schema.ApplicationSchema;
-import co.edu.uco.seguridad.pdp.commons.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.ApplicationName;
-import co.edu.uco.seguridad.pdp.commons.TenantId;
+import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
+import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealRecordId;
 import reactor.core.publisher.Mono;
 import tools.jackson.databind.JsonNode;
 
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.UUID;
 
 /**
  * Adaptador real sobre SurrealDB (ADR-019). {@code existsByTenantAndName} es la puerta principal
@@ -47,13 +46,12 @@ public final class SurrealApplicationRepository implements ApplicationRepository
     }
 
     @Override
-    public Mono<Application> findByTenantAndId(TenantId tenantId, ApplicationId applicationId) {
+    public Mono<Boolean> existsByTenantAndId(TenantId tenantId, ApplicationId applicationId) {
         return client.execute(
-                        "SELECT * FROM type::record('%s', $id) WHERE tenantId = $tenantId;"
+                        "SELECT id FROM type::record('%s', $id) WHERE tenantId = $tenantId;"
                                 .formatted(ApplicationSchema.TABLE),
                         Map.of("id", applicationId.value().toString(), "tenantId", tenantId.value()))
-                .map(results -> results.get(0))
-                .flatMap(rows -> rows.isEmpty() ? Mono.empty() : Mono.just(toDomain(rows.get(0))));
+                .map(results -> !results.get(0).isEmpty());
     }
 
     /**
@@ -126,12 +124,13 @@ public final class SurrealApplicationRepository implements ApplicationRepository
     }
 
     private static Application toDomain(JsonNode row) {
-        return new Application(
-                new ApplicationId(UUID.fromString(SurrealRecordId.idPart(row.path("id").asString()))),
-                new TenantId(row.path("tenantId").asString()),
-                new ApplicationName(row.path("name").asString()),
+        ApplicationEntity entity = new ApplicationEntity(
+                SurrealRecordId.idPart(row.path("id").asString()),
+                row.path("tenantId").asString(),
+                row.path("name").asString(),
                 row.path("description").asString(""),
-                new ApplicationBaseUrl(row.path("baseUrl").asString()),
-                Instant.parse(row.path("registeredAt").asString()));
+                row.path("baseUrl").asString(),
+                row.path("registeredAt").asString());
+        return ApplicationPersistenceMapper.toDomain(entity);
     }
 }

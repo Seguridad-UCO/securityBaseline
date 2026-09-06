@@ -1,2 +1,0 @@
-@org.springframework.modulith.NamedInterface("exception")
-package co.edu.uco.seguridad.pdp.applications.application.exception;

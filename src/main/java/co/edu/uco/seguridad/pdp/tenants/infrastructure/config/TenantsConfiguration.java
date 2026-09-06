@@ -1,12 +1,14 @@
 package co.edu.uco.seguridad.pdp.tenants.infrastructure.config;
 
-import co.edu.uco.seguridad.pdp.tenants.application.port.secondary.repository.TenantRepository;
-import co.edu.uco.seguridad.pdp.tenants.application.rule.TenantCodeMustBeUniqueRule;
-import co.edu.uco.seguridad.pdp.tenants.application.rule.TenantMustBeActiveRule;
-import co.edu.uco.seguridad.pdp.tenants.application.rule.TenantStatusMustBeActiveRule;
-import co.edu.uco.seguridad.pdp.tenants.application.rule.impl.TenantCodeMustBeUniqueRuleImpl;
-import co.edu.uco.seguridad.pdp.tenants.application.rule.impl.TenantMustBeActiveRuleImpl;
-import co.edu.uco.seguridad.pdp.tenants.application.rule.impl.TenantStatusMustBeActiveRuleImpl;
+import co.edu.uco.seguridad.pdp.tenants.application.secondaryport.repository.TenantRepository;
+import co.edu.uco.seguridad.pdp.tenants.application.rule.validator.TenantMustBeActiveValidator;
+import co.edu.uco.seguridad.pdp.tenants.application.rule.validator.impl.TenantMustBeActiveValidatorImpl;
+import co.edu.uco.seguridad.pdp.tenants.domain.rule.TenantCodeMustBeUniqueRule;
+import co.edu.uco.seguridad.pdp.tenants.domain.rule.TenantMustExistRule;
+import co.edu.uco.seguridad.pdp.tenants.domain.rule.TenantStatusMustBeActiveRule;
+import co.edu.uco.seguridad.pdp.tenants.domain.rule.impl.TenantCodeMustBeUniqueRuleImpl;
+import co.edu.uco.seguridad.pdp.tenants.domain.rule.impl.TenantMustExistRuleImpl;
+import co.edu.uco.seguridad.pdp.tenants.domain.rule.impl.TenantStatusMustBeActiveRuleImpl;
 import co.edu.uco.seguridad.pdp.tenants.application.usecase.CreateTenantUseCase;
 import co.edu.uco.seguridad.pdp.tenants.application.usecase.ListTenantsUseCase;
 import co.edu.uco.seguridad.pdp.tenants.application.usecase.impl.CreateTenantUseCaseImpl;
@@ -43,19 +45,25 @@ public class TenantsConfiguration {
     }
 
     @Bean
+    TenantMustExistRule tenantMustExistRule() {
+        return new TenantMustExistRuleImpl();
+    }
+
+    @Bean
     TenantStatusMustBeActiveRule tenantStatusMustBeActiveRule() {
         return new TenantStatusMustBeActiveRuleImpl();
     }
 
     @Bean
-    TenantMustBeActiveRule tenantMustBeActiveRule(TenantRepository repository,
-                                                  TenantStatusMustBeActiveRule statusMustBeActive) {
-        return new TenantMustBeActiveRuleImpl(repository, statusMustBeActive);
+    TenantCodeMustBeUniqueRule tenantCodeMustBeUniqueRule() {
+        return new TenantCodeMustBeUniqueRuleImpl();
     }
 
     @Bean
-    TenantCodeMustBeUniqueRule tenantCodeMustBeUniqueRule(TenantRepository repository) {
-        return new TenantCodeMustBeUniqueRuleImpl(repository);
+    TenantMustBeActiveValidator tenantMustBeActiveValidator(TenantRepository repository,
+                                                            TenantMustExistRule mustExist,
+                                                            TenantStatusMustBeActiveRule statusMustBeActive) {
+        return new TenantMustBeActiveValidatorImpl(repository, mustExist, statusMustBeActive);
     }
 
     @Bean

@@ -1,6 +1,6 @@
 package co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.primary.web.mapper;
 
-import co.edu.uco.seguridad.pdp.tenants.application.port.primary.dto.response.TenantResponse;
+import co.edu.uco.seguridad.pdp.tenants.application.primaryport.response.TenantResponse;
 import co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.primary.web.dto.response.TenantWebResponse;
 
 import java.util.List;

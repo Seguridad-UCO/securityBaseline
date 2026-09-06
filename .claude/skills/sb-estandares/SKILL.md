@@ -1,6 +1,6 @@
 ---
 name: sb-estandares
-description: Estándares de código de securityBaseline — idioma, value objects, jerarquía de excepciones y su mapeo HTTP, catálogos de mensajes, DTOs en dos niveles, reglas reactivas, cableado e inmutabilidad. Cargar junto con sb-arquitectura antes de implementar, testear o validar.
+description: Estándares de código de securityBaseline — idioma, value objects, jerarquía de excepciones y su mapeo HTTP, catálogos de mensajes, DTOs en dos niveles, reglas puras y validadores reactivos, cableado e inmutabilidad. Cargar junto con sb-arquitectura antes de implementar, testear o validar.
 ---
 
 # Skill: sb-estandares
@@ -30,7 +30,7 @@ juicios del validador.
 ## Value objects
 
 Todo VO es un `record` con validación en el **constructor compacto**, que normaliza y luego rechaza.
-Ver `pdp/commons/TenantId.java` — el patrón exacto:
+Ver `pdp/commons/model/TenantId.java` — el patrón exacto:
 
 1. `null` → lanza con `ValueObjectMessages.VALUE_REQUIRED`
 2. `value = value.trim()` (reasignación en el constructor compacto)
@@ -41,8 +41,8 @@ Reglas:
 - **Un VO nunca acepta un valor inválido.** No hay estado intermedio ni `isValid()`.
 - Cada VO tiene **su propia excepción**, que extiende `InvalidValueException`.
 - El mensaje sale del catálogo, nunca de un literal en línea.
-- Un VO usado por dos o más slices vive en `pdp/commons/`; con un solo consumidor, en su slice
-  (`tenants/domain/TenantName.java`).
+- Un VO usado por dos o más slices vive en `pdp/commons/model/`; con un solo consumidor, en
+  `{slice}/domain/model/` (`tenants/domain/model/TenantName.java`).
 
 ---
 
@@ -75,7 +75,7 @@ Concretas de `shared/web/exception/`: `MissingRequestFieldException`,
 Reglas:
 - **Nunca `throw new RuntimeException(...)`** ni `IllegalArgumentException` en código de negocio.
 - El `code` es una constante en mayúsculas con guion bajo: `TENANT_NOT_FOUND`, `INVALID_TENANT_ID`.
-- Una excepción de VO va en `{slice}/domain/exception/`; una de regla, en `{slice}/application/exception/`.
+- Toda excepción de negocio va en `{slice}/domain/exception/`, junto a la regla que la lanza.
 - **Un slice nunca declara su propio `@RestControllerAdvice`.** El único handler es
   `shared/web/exceptionhandler/ApiErrorHandler.java`, que responde `ProblemDetail` y engancha por
   jerarquía base, no por clase concreta. Añadir una excepción nueva bajo una base existente **no**
@@ -90,7 +90,7 @@ Reglas:
 |---|---|---|
 | `RequiredArgumentMessages` | `shared/message/` | Mensajes de `Objects.requireNonNull` — argumentos obligatorios |
 | `ValueObjectMessages` | `pdp/commons/message/` | Razones de invalidez de VOs. Clases anidadas por VO: `ValueObjectMessages.TenantName.LENGTH` |
-| `{Slice}Messages` | `{slice}/application/message/` | Mensajes de reglas de negocio del slice. Métodos estáticos que interpolan |
+| `{Slice}Messages` | `{slice}/domain/message/` | Mensajes de reglas de negocio del slice. Métodos estáticos que interpolan |
 | `WebContractMessages` | `shared/web/message/` | Mensajes del contrato HTTP |
 
 Todos son `final class` con constructor privado. **Cero literales de mensaje fuera de estos cuatro.**
@@ -130,16 +130,19 @@ Reglas:
 ## Reglas de negocio (`Rule`)
 
 - **Una regla, una restricción.** Si el nombre lleva "y", son dos reglas.
-- Nombre en indicativo: `TenantCodeMustBeUniqueRule`, `TenantMustBeActiveRule`.
-- Interfaz vacía en `rule/` extendiendo un contrato de `shared/contract`; implementación en `rule/impl/`.
-- **Con I/O → reactiva. Sin I/O → síncrona.** Ver `TenantStatusMustBeActiveRule` (síncrona,
-  `OperationWithoutResult<Tenant>`) frente a `TenantMustBeActiveRule` (reactiva, consulta el repo).
-- Una regla que solo rechaza devuelve `Mono<Void>` y usa
-  `.filter(...).flatMap(x -> Mono.error(new XException(...)))`. Ver `TenantCodeMustBeUniqueRuleImpl`.
-- Una regla que además trae el dato devuelve el DTO y usa
-  `.switchIfEmpty(Mono.error(() -> new XNotFoundException(...)))`. Ver `TenantMustBeActiveRuleImpl`.
+- Nombre en indicativo: `TenantCodeMustBeUniqueRule`, `ApplicationMustExistForTenantRule`.
+- Interfaz vacía en `domain/{slice}/rule/` extendiendo `OperationWithoutResult<T>`; impl en `rule/impl/`.
+- **Toda regla es pura y síncrona.** No inyecta puertos, no devuelve `Mono`, no consulta nada:
+  recibe un `record` con el dato ya resuelto (`TenantExistence`, `ApplicationNameAvailability`) y
+  o no dice nada, o lanza. Probarla es `assertThatThrownBy(() -> rule.execute(...))`.
+- **Quien consulta es el validador**, en `application/{slice}/rule/validator/`: resuelve contra el
+  puerto, arma el `record` y lo pasa a la regla:
+  `repository.existsBy(...).doOnNext(x -> rule.execute(new XAvailability(..., x))).then()`.
+- El puerto responde **lo mínimo** que la regla necesita —`existsByTenantAndId`,
+  `findStatusById`—, nunca el agregado entero para contestar «¿existe?».
+- Con una sola regla y ningún otro consumidor, el propio use case hace de validador y no se crea
+  uno (`CreateTenantUseCaseImpl`).
 - **Nunca `if/throw` suelto dentro del use case.** Si hay una condición de negocio, es una regla.
-- Cuando un caso de uso necesita coordinar varias reglas, va un `rulesvalidator/` (ver `applications`).
 
 ---
 
@@ -151,7 +154,11 @@ Reglas:
 - `Mono.fromSupplier(...)` para diferir la construcción de la entidad hasta que las reglas pasaron.
 - **No hay `block()` en `src/main`**, salvo en un `ApplicationRunner` de arranque
   (`SurrealTenantSchemaInitializer`), donde es correcto porque no está en el camino de una petición.
-- Las reglas sin I/O son síncronas a propósito: envolverlas en `Mono` es ruido.
+- Las reglas son síncronas a propósito: envolver en `Mono` una decisión pura es ruido, y obliga a
+  `StepVerifier` y a un repositorio falso donde bastaba una llamada a método.
+- Para una ausencia que debe rechazar una regla pura:
+  `.switchIfEmpty(Mono.fromRunnable(() -> rule.execute(new XExistence(id, false))))` — la rama
+  nunca completa porque la regla siempre lanza con `false`.
 
 ---
 
@@ -211,7 +218,7 @@ Reglas:
 5. Cero literales de mensaje fuera de los cuatro catálogos.
 6. El raw request es Strings desnudos; el mapper usa `RequestFieldParser`.
 7. La respuesta web sale plana.
-8. Una regla = una restricción. Sin I/O ⇒ síncrona.
+8. Una regla = una restricción, y es **pura**: vive en `domain`, no conoce puertos y no usa Reactor.
 9. Nunca `if/throw` de negocio dentro del use case.
 10. Cero Spring en `domain` y `application`; el cableado es explícito en `{Slice}Configuration`.
 11. Nada de `block()` en el camino de una petición.

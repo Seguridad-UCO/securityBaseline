@@ -37,3 +37,15 @@ SnapshotReactiveTransactionAdapter
 # --- Tipos de libreria que el filtro de sufijos captura por casualidad -------
 # No son clases del proyecto y nunca estaran en src/: el sufijo coincide, el origen no.
 ObjectMapper
+
+# --- Clases del proyecto de referencia -----------------------------------------
+# ESTUDIO-ARQUITECTURA.md compara con arquisoft-backend y cita sus clases por su nombre.
+# No estaran nunca en este src/: son de otro repositorio.
+DomainRule
+
+# --- El estado anterior a la Fase A --------------------------------------------
+# Las secciones 1 y 2 de ESTUDIO-ARQUITECTURA.md describen la forma que el codigo tenia el
+# 2026-08-31 ANTES de mover las reglas al dominio, y la seccion 6 registra el antes y el despues.
+# Nombrar la clase que se partio, diciendo que se partio, no es deriva. Hoy la decision vive en
+# TenantMustExistRule + TenantStatusMustBeActiveRule y la consulta en TenantMustBeActiveValidator.
+TenantMustBeActiveRule

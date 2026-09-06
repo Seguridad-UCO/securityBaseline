@@ -1,6 +1,6 @@
 package co.edu.uco.seguridad.pdp.applications.application.usecase;
 
-import co.edu.uco.seguridad.pdp.commons.ApplicationId;
+import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.shared.contract.ReactiveOperationWithoutResult;
 
 /**

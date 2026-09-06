@@ -1,8 +1,8 @@
 package co.edu.uco.seguridad.shared.auth.service;
 
-import co.edu.uco.seguridad.pdp.identity.application.port.primary.dto.request.ProvisionIdentityRequest;
+import co.edu.uco.seguridad.pdp.identity.application.primaryport.request.ProvisionIdentityRequest;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.ProvisionIdentityUseCase;
-import co.edu.uco.seguridad.pdp.identity.domain.Email;
+import co.edu.uco.seguridad.pdp.identity.domain.model.Email;
 import co.edu.uco.seguridad.shared.auth.model.OidcFlowIntent;
 import co.edu.uco.seguridad.shared.security.LocalUserPrincipal;
 import co.edu.uco.seguridad.shared.web.session.KeycloakLogoutController;

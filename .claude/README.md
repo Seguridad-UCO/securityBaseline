@@ -7,9 +7,9 @@ Flujo de desarrollo asistido por agentes. El diseño y su justificación están 
 
 | Fase | Contenido | Estado |
 |---|---|---|
-| 1 | Skills, herramientas (`mapa`, `verificar`, `drift`), `1-planificador`, `4-validador`, plantillas | ✅ Listo |
+| 1 | Skills, herramientas (`mapa`, `verificar`, `drift`, `consistencia`), agentes 1-4, plantillas | ✅ Listo |
 | 1b | Deriva doc↔código corregida y verificable · criterios realineados a 18/23 | ✅ Listo |
-| 2 | `2-tester-spec`, `3-implementador`, slash commands, mutation testing, `5-entrega` | ⏳ Pendiente |
+| 2 | `2-tester-spec` y `3-implementador` ✅ · slash commands, mutation testing y `5-entrega` ⏳ | 🟡 Parcial |
 | 3 | Grafo nivel 1 y 2 | ⏳ Pendiente |
 
 **Próximo paso:** ejecutar **HU-001** (búsqueda con criterios y paginación + prueba HTTP end-to-end)
@@ -77,7 +77,19 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .claude/tools/verificar.ps1
 
 El log completo queda en `target/verificar-ultimo.log` (ignorado por git).
 
-**Deriva doc↔código** — comprueba que todo enlace de `docs/` resuelva y que toda clase citada exista.
+**Consistencia arquitectónica** — comprueba que todos los slices tengan la misma forma. ArchUnit
+verifica la *dirección* de las dependencias y Modulith el mapa entre módulos; ninguno comprueba que
+un slice se parezca al de al lado, y ahí es donde uno se pierde.
+
+```bash
+powershell -NoProfile -ExecutionPolicy Bypass -File .claude/tools/consistencia.ps1
+```
+
+`-Estricto` sale con código 1 si hay hallazgos. Una divergencia legítima —una capacidad que ese
+slice no necesita— se declara en `docs/ai-harness/consistencia-ignore.txt` con su razón.
+
+**Deriva doc↔código** — comprueba que todo enlace de `docs/` y de `.claude/` resuelva y que toda
+clase citada exista.
 Es la prueba de regresión del fallo histórico del proyecto: documentación que afirma lo que el código
 no sostiene.
 

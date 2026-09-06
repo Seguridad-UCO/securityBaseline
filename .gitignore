@@ -34,3 +34,11 @@ build/
 
 ### macOS ###
 .DS_Store
+
+### Graphify (grafo derivado del codigo, se reconstruye con el hook) ###
+graphify-out/
+.graphifyignore
+
+### macOS en equipo mixto ###
+__MACOSX/
+._*

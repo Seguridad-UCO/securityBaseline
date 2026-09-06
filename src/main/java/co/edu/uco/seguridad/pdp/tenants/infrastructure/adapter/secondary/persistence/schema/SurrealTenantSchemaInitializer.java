@@ -3,9 +3,9 @@ package co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.secondary.persis
 import co.edu.uco.seguridad.pdp.tenants.infrastructure.properties.TenantCatalogProperties;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
-import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.ApplicationRunner;
+import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealSchemaInitializer;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.Map;
 import java.util.Objects;
@@ -22,7 +22,7 @@ import java.util.Objects;
  * <p>Corre en el hilo principal de arranque, antes de que Netty acepte tráfico, así que bloquear
  * aquí es seguro: no es el hilo de un event loop reactivo atendiendo una petición real.</p>
  */
-public final class SurrealTenantSchemaInitializer implements ApplicationRunner {
+public final class SurrealTenantSchemaInitializer extends SurrealSchemaInitializer {
 
     private final SurrealDbClient client;
     private final TenantCatalogProperties properties;
@@ -33,16 +33,20 @@ public final class SurrealTenantSchemaInitializer implements ApplicationRunner {
     }
 
     @Override
-    public void run(ApplicationArguments args) {
-        client.ensureNamespaceAndDatabase()
+    protected String module() {
+        return "tenants";
+    }
+
+    @Override
+    protected Mono<Void> defineSchema() {
+        return client.ensureNamespaceAndDatabase()
                 .then(client.execute(
                         "DEFINE TABLE IF NOT EXISTS %s SCHEMALESS;".formatted(TenantSchema.TABLE), Map.of()))
                 .thenMany(Flux.fromIterable(properties.seed().entrySet()))
                 .concatMap(entry -> client.execute(
                         "UPSERT type::record('%s', $id) SET status = $status, name = $name;".formatted(TenantSchema.TABLE),
                         Map.of("id", entry.getKey(), "status", entry.getValue(), "name", displayName(entry.getKey()))))
-                .then()
-                .block();
+                .then();
     }
 
     private static String displayName(String code) {

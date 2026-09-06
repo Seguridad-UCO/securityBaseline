@@ -1,6 +1,8 @@
 package co.edu.uco.seguridad.pdp.identity.infrastructure.config;
 
-import co.edu.uco.seguridad.pdp.identity.application.port.secondary.repository.SecurityUserRepository;
+import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.SecurityUserRepository;
+import co.edu.uco.seguridad.pdp.identity.domain.rule.UserMustExistRule;
+import co.edu.uco.seguridad.pdp.identity.domain.rule.impl.UserMustExistRuleImpl;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.AssignTenantUseCase;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.ListUsersUseCase;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.ProvisionIdentityUseCase;
@@ -13,9 +15,9 @@ import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.inte
 import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.interactor.impl.ListUsersInteractorImpl;
 import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.repository.SurrealSecurityUserRepository;
 import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.schema.SurrealIdentitySchemaInitializer;
-import co.edu.uco.seguridad.pdp.commons.TenantId;
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.identity.infrastructure.properties.IdentityProvisioningProperties;
-import co.edu.uco.seguridad.pdp.tenants.application.rule.TenantMustBeActiveRule;
+import co.edu.uco.seguridad.pdp.tenants.application.rule.validator.TenantMustBeActiveValidator;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
@@ -52,9 +54,9 @@ public class IdentityConfiguration {
     }
 
     @Bean
-    AssignTenantUseCase assignTenantUseCase(TenantMustBeActiveRule tenantMustBeActive,
-            SecurityUserRepository repository) {
-        return new AssignTenantUseCaseImpl(tenantMustBeActive, repository);
+    AssignTenantUseCase assignTenantUseCase(TenantMustBeActiveValidator tenantMustBeActive,
+            SecurityUserRepository repository, UserMustExistRule userMustExist) {
+        return new AssignTenantUseCaseImpl(tenantMustBeActive, userMustExist, repository);
     }
 
     @Bean
@@ -65,5 +67,10 @@ public class IdentityConfiguration {
     @Bean
     AssignTenantInteractor assignTenantInteractor(AssignTenantUseCase useCase) {
         return new AssignTenantInteractorImpl(useCase);
+    }
+
+    @Bean
+    UserMustExistRule userMustExistRule() {
+        return new UserMustExistRuleImpl();
     }
 }

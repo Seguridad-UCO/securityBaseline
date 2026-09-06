@@ -121,7 +121,7 @@ cualificados cuando hace falta.
   — utilidad compartida del adaptador web; el interactor invoca los mappers que la usan
 - Tenant: [`PdpPrincipal.java`](../../src/main/java/co/edu/uco/seguridad/shared/security/PdpPrincipal.java),
   [`SecurityContext.java`](../../src/main/java/co/edu/uco/seguridad/shared/security/SecurityContext.java)
-- App Request: [`application/port/primary/dto/request`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/application/port/primary/dto/request)
+- App Request: [`application/primaryport/request`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/application/primaryport/request)
 - Mappers: [`RegisterApplicationRequestMapper.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/infrastructure/adapter/primary/web/mapper/RegisterApplicationRequestMapper.java),
   `ListApplicationsRequestMapper.java`
 - Interactores: `RegisterProtectedApplicationInteractorImpl.java`,
