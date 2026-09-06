@@ -54,6 +54,29 @@ resumen sea insuficiente para explicar un fallo concreto.
 | `ARQUITECTURA` | Bloqueante. Cita la regla violada |
 | `ESTADO: VERDE` | Sigue |
 
+**`verificar.ps1` sin flags corre `clean verify`, y esa es la única corrida que vale como juicio.**
+`-Rapido` no ejecuta `jacoco-check`: un VERDE suyo **no** dice nada sobre cobertura. Nunca aceptes
+`-Rapido` como evidencia de que el cambio pasa el gate.
+
+> **Trampa comprobada el 2026-09-06.** Un refactor que adelgaza un puerto puede dejar una clase
+> huérfana: `TenantRepository.findById` construía `TenantEntity`, se sustituyó por `findStatusById`
+> —que no lo construye— y ninguna prueba volvió a tocar esa clase. El paquete cayó a 0 % y el
+> pipeline lo cazó, no la máquina local. **Cuando el plan retire o cambie la firma de un método de
+> puerto, comprueba qué clases dejaron de tener quien las construya.**
+
+Corre también las otras dos comprobaciones ejecutables. No son opcionales ni las sustituye tu
+lectura:
+
+```
+powershell -NoProfile -ExecutionPolicy Bypass -File .claude/tools/consistencia.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .claude/tools/drift.ps1
+```
+
+| Salida | Qué haces |
+|---|---|
+| `consistencia.ps1` con hallazgos | Bloqueante. El slice no se parece a los demás: cítalo |
+| `drift.ps1` con hallazgos | Bloqueante si el cambio los introdujo. Cita el documento y la clase |
+
 Refresca el mapa antes de la fase 2, para comparar contra el estado real:
 
 ```

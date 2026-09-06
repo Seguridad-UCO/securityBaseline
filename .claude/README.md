@@ -8,42 +8,70 @@ Flujo de desarrollo asistido por agentes. El diseño y su justificación están 
 | Fase | Contenido | Estado |
 |---|---|---|
 | 1 | Skills, herramientas (`mapa`, `verificar`, `drift`, `consistencia`), agentes 1-4, plantillas | ✅ Listo |
-| 1b | Deriva doc↔código corregida y verificable · criterios realineados a 18/23 | ✅ Listo |
-| 2 | `2-tester-spec` y `3-implementador` ✅ · slash commands, mutation testing y `5-entrega` ⏳ | 🟡 Parcial |
-| 3 | Grafo nivel 1 y 2 | ⏳ Pendiente |
+| 1b | Deriva doc↔código corregida y verificable · criterios en 22/23 | ✅ Listo |
+| 2 | Los cuatro agentes existen. **`1-planificador` y `4-validador` probados en HU-001; `2-tester-spec` y `3-implementador` nunca se han ejecutado** | 🟡 Parcial |
+| 3 | Grafo del repositorio adoptado — ver [`docs/ai-harness/GRAFO.md`](../docs/ai-harness/GRAFO.md) | ✅ Listo |
+| 4 | Slash commands, mutation testing y `5-entrega` | ⏳ Pendiente |
 
-**Próximo paso:** ejecutar **HU-001** (búsqueda con criterios y paginación + prueba HTTP end-to-end)
-por el flujo agéntico. Cierra los criterios 10 y 16-19, y es la primera prueba real del harness.
+**Próximo paso:** ejecutar **HU-002** (endpoint de decisión con el contrato completo) por el ciclo
+de cuatro agentes. Es el estreno real de `2-tester-spec` y `3-implementador`, y lo que desbloquea
+al PEP y a OPA — ver [`workspace/ROADMAP-PDP.md`](../docs/ai-harness/workspace/ROADMAP-PDP.md).
 
 ---
 
 ## El ciclo, hoy
 
 ```
-  Historia
+  workspace/HU-{ID}.md          la historia, escrita por un humano
      │
      ▼
   @1-planificador  →  PLAN-{ID}.md  +  esqueletos de la SPEC (compilan, sin lógica)
      │
      ▼
-  [ GATE 1 — humano: ¿el contrato es correcto? ]
+  [ GATE 1 — humano: ¿el contrato es correcto? ]     ← el gate que más ahorra
      │
      ▼
-  (fase 2: @2-tester-spec en rojo → @3-implementador en verde)
-     │           mientras tanto, este tramo lo haces tú
+  @2-tester-spec   →  pruebas que fallan (rojo)      No toca src/main
+     │
      ▼
-  @4-validador  →  REPORTE-{ID}.md
+  @3-implementador →  las hace pasar (verde)         No toca src/test. Nunca
+     │
+     ▼
+  @4-validador     →  REPORTE-{ID}.md
      │
      ▼
   [ GATE 2 — humano: antes de que salga del repositorio ]
 ```
 
+**Por qué los dos gates.** El primero es donde el humano corrige barato: cambiar un contrato en el
+plan cuesta una frase; cambiarlo con veinte archivos escritos cuesta una tarde. El segundo existe
+porque ningún agente aprueba su propio trabajo.
+
 ## Invocar los agentes
 
+Uno por mensaje, en orden, esperando a que termine cada uno:
+
 ```
-@1-planificador planifica HU-012: registrar un recurso protegido
-@4-validador valida HU-012
+@1-planificador planifica HU-002
+@2-tester-spec  escribe las pruebas de HU-002
+@3-implementador implementa HU-002
+@4-validador    valida HU-002
 ```
+
+El agente lee `docs/ai-harness/workspace/HU-{ID}.md` por su cuenta: no hace falta pegar la historia
+en el mensaje. Si la historia no existe todavía, escríbela antes — el planificador no la inventa.
+
+### La separación que hace que esto funcione
+
+| Agente | Puede tocar | Nunca toca |
+|---|---|---|
+| `1-planificador` | El plan y esqueletos que compilan sin lógica | Lógica real |
+| `2-tester-spec` | `src/test` | `src/main` |
+| `3-implementador` | `src/main` | `src/test` — **ni una línea** |
+| `4-validador` | Nada: solo lee y ejecuta | Todo |
+
+Que el implementador no pueda tocar las pruebas es lo que impide el fallo clásico del TDD agéntico:
+ablandar la prueba hasta que pase. Si cree que una prueba está mal, lo reporta y para.
 
 ---
 
