@@ -61,13 +61,13 @@ class WebContractMessagesTests {
     @Test
     void has_a_fixed_success_message_for_application_registration() {
         assertThat(WebContractMessages.successApplicationRegistered())
-                .isEqualTo("Protected application and initial resource registered");
+                .isEqualTo("Aplicación protegida y recurso inicial registrados");
     }
 
     @Test
     void has_a_fixed_success_message_for_catalog_queries() {
         assertThat(WebContractMessages.successCatalogQueried())
-                .isEqualTo("Protected application catalog queried");
+                .isEqualTo("Catálogo de aplicaciones protegidas consultado");
     }
 
     @Test

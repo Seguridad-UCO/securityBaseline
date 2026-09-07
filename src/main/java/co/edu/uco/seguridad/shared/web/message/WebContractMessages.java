@@ -38,11 +38,15 @@ public final class WebContractMessages {
     }
 
     public static String successApplicationRegistered() {
-        return "Protected application and initial resource registered";
+        return "Aplicación protegida y recurso inicial registrados";
     }
 
     public static String successCatalogQueried() {
-        return "Protected application catalog queried";
+        return "Catálogo de aplicaciones protegidas consultado";
+    }
+
+    public static String successAccessEvaluated() {
+        return "Solicitud de acceso evaluada";
     }
 
     public static String mustBeInteger() {

@@ -60,6 +60,20 @@ public final class RequiredArgumentMessages {
     // Validadores reactivos publicados entre módulos.
     public static final String TENANT_ACTIVE_VALIDATOR = "se requiere el validador de inquilino activo";
     public static final String APPLICATION_EXISTS_VALIDATOR = "se requiere el validador de existencia de aplicación";
+    public static final String PROTECTED_RESOURCE_EXISTS_RULE = "se requiere la regla de existencia de recurso protegido";
+    public static final String PROTECTED_RESOURCE_EXISTS_VALIDATOR = "se requiere el validador de existencia de recurso protegido";
+    public static final String POLICY_DECISION_PORT = "se requiere el puerto de decisión de políticas";
+    public static final String AUTHORIZE_USE_CASE = "se requiere el caso de uso de autorización";
+
+    // Componentes de AccessRequest / AccessDecision (autorizacion).
+    public static final String CORRELATION_ID = "se requiere el identificador de correlación";
+    public static final String DECISION_ID = "se requiere el identificador de la decisión";
+    public static final String DECISION_STATE = "se requiere el estado de la decisión";
+    public static final String REASON_CODE = "se requiere el código de motivo";
+    public static final String POLICY_REFERENCES = "se requiere la lista de referencias de política";
+    public static final String DECIDED_AT = "se requiere el instante de la decisión";
+    public static final String POLICY_ID = "se requiere el identificador de la política";
+    public static final String POLICY_VERSION = "se requiere la versión de la política";
     public static final String REGISTER_USE_CASE = "se requiere caso de uso de registro";
     public static final String SEARCH_USE_CASE = "se requiere caso de uso de búsqueda";
     public static final String REMOVE_USE_CASE = "se requiere caso de uso de eliminación";

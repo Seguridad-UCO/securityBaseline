@@ -3,9 +3,9 @@
 > Generado por `.claude/tools/mapa.ps1`. **No editar a mano** - se regenera desde el codigo.
 > Es el nivel 0 del grafo de conocimiento: responde "que existe y donde va lo nuevo".
 
-- Clases de produccion: **239**
-- Clases de prueba: **71**
-- Slices de negocio: **5** (applications, commons, identity, resources, tenants)
+- Clases de produccion: **264**
+- Clases de prueba: **80**
+- Slices de negocio: **6** (applications, authorization, commons, identity, resources, tenants)
 
 ---
 
@@ -33,6 +33,22 @@
 | Cableado (@Bean) | `ApplicationsConfiguration` |
 | Propiedades | `ApplicationCatalogProperties` |
 | Otro | `ApplicationOwnershipQuery`, `ApplicationRepository`, `ListApplicationsRequest`, `RegisterApplicationRequest`, `RegisteredApplicationResponse` |
+
+### `authorization` - 18 clases
+
+| Rol | Clases |
+|---|---|
+| Dominio (entidad / VO / enum) | `DecisionState`, `PolicyReference`, `ReasonCode` |
+| Caso de uso (impl) | `AuthorizeUseCaseImpl` |
+| Caso de uso (contrato) | `AuthorizeUseCase` |
+| Controller | `AuthorizationController` |
+| DTO crudo HTTP | `AuthorizeRawRequest` |
+| DTO de respuesta HTTP | `AccessDecisionWebResponse`, `PolicyReferenceWebResponse` |
+| Interactor (impl) | `AuthorizeInteractorImpl` |
+| Interactor (contrato) | `AuthorizeInteractor` |
+| Mapper web | `AccessDecisionResponseMapper`, `AuthorizeRequestMapper` |
+| Cableado (@Bean) | `AuthorizationConfiguration` |
+| Otro | `AccessDecision`, `AccessRequest`, `DenyByDefaultPolicyDecisionAdapter`, `PolicyDecisionPort` |
 
 ### `commons` - 16 clases
 
@@ -62,16 +78,16 @@
 | Propiedades | `IdentityProvisioningProperties` |
 | Otro | `AssignTenantRequest`, `ProvisionIdentityRequest`, `SecurityUserRepository`, `UserResponse` |
 
-### `resources` - 37 clases
+### `resources` - 44 clases
 
 | Rol | Clases |
 |---|---|
-| Excepcion de dominio | `DuplicateProtectedResourceException`, `InvalidResourcePathException`, `UnsupportedHttpMethodException` |
+| Excepcion de dominio | `DuplicateProtectedResourceException`, `InvalidResourcePathException`, `ProtectedResourceNotFoundException`, `UnsupportedHttpMethodException` |
 | Evento de dominio | `ProtectedResourceRegistered` |
-| Dominio (entidad / VO / enum) | `HttpVerb`, `ProtectedResource`, `ProtectedResourceAvailability`, `ProtectedResourceMustBeUniqueRule`, `ProtectedResourceMustBeUniqueRuleImpl`, `ResourcePath`, `ResourcesMessages` |
+| Dominio (entidad / VO / enum) | `HttpVerb`, `ProtectedResource`, `ProtectedResourceAvailability`, `ProtectedResourceExistence`, `ProtectedResourceMustBeUniqueRule`, `ProtectedResourceMustBeUniqueRuleImpl`, `ProtectedResourceMustExistRule`, `ProtectedResourceMustExistRuleImpl`, `ResourcePath`, `ResourcesMessages` |
 | Caso de uso (impl) | `ListProtectedResourcesUseCaseImpl`, `RegisterProtectedResourceUseCaseImpl` |
 | Caso de uso (contrato) | `ListProtectedResourcesUseCase`, `RegisterProtectedResourceUseCase` |
-| Regla (contrato) | `RegisterProtectedResourceRulesValidator`, `RegisterProtectedResourceRulesValidatorImpl` |
+| Regla (contrato) | `ProtectedResourceMustExistValidator`, `ProtectedResourceMustExistValidatorImpl`, `RegisterProtectedResourceRulesValidator`, `RegisterProtectedResourceRulesValidatorImpl` |
 | Controller | `ProtectedResourceController` |
 | DTO crudo HTTP | `RegisterProtectedResourceBodyRequest`, `RegisterProtectedResourceRawRequest` |
 | DTO de respuesta HTTP | `ProtectedResourceWebResponse` |
@@ -84,7 +100,7 @@
 | Esquema de tabla | `ProtectedResourceSchema`, `SurrealProtectedResourceSchemaInitializer` |
 | Adaptador de auditoria | `InMemoryAuditAdapter` |
 | Cableado (@Bean) | `ResourcesConfiguration` |
-| Otro | `ProtectedResourceRepository`, `RegisteredProtectedResourceResponse`, `RegisterProtectedResourceRequest` |
+| Otro | `ProtectedResourceLookup`, `ProtectedResourceRepository`, `RegisteredProtectedResourceResponse`, `RegisterProtectedResourceRequest` |
 
 ### `tenants` - 42 clases
 
@@ -149,6 +165,7 @@
 | POST | `/api/v1/applications` | `ApplicationController` |
 | GET | `/api/v1/applications/{applicationId}/resources` | `ProtectedResourceController` |
 | POST | `/api/v1/applications/{applicationId}/resources` | `ProtectedResourceController` |
+| POST | `/api/v1/authorize` | `AuthorizationController` |
 | GET | `/api/v1/session` | `SessionController` |
 | GET | `/api/v1/session/logout` | `KeycloakLogoutController` |
 | GET | `/api/v1/tenants` | `TenantController` |
@@ -165,10 +182,11 @@
 | Area | Clases de prueba |
 |---|---|
 | `pdp/applications` | `ApplicationBaseUrlTests`, `ApplicationCatalogPropertiesTests`, `ApplicationControllerTests`, `ApplicationCriteriaTests`, `ApplicationHttpTests`, `ApplicationMustExistForTenantValidatorTests`, `ApplicationPersistenceMapperTests`, `ApplicationResponseMapperTests`, `ApplicationRuleTests`, `ListApplicationsRequestMapperTests`, `ListApplicationsUseCaseImplTests`, `RegisterApplicationRequestMapperTests`, `RegisterApplicationRulesValidatorTests`, `RegisterApplicationUseCaseImplTests`, `RemoveApplicationUseCaseImplTests` |
+| `pdp/authorization` | `AccessDecisionResponseMapperTests`, `AuthorizationControllerTests`, `AuthorizationHttpTests`, `AuthorizeRequestMapperTests`, `AuthorizeUseCaseImplTests`, `DecisionStateTests` |
 | `pdp/commons` | `PageWindowTests`, `ResultPageTests`, `ValueObjectTests` |
 | `pdp/identity` | `AssignTenantRequestMapperTests`, `AssignTenantUseCaseImplTests`, `EmailTests`, `ProvisionIdentityUseCaseImplTests`, `SecurityUserPersistenceMapperTests`, `UserControllerTests`, `UserMustExistRuleTests`, `UserResponseMapperTests` |
-| `pdp/resources` | `HttpVerbTests`, `InMemoryAuditAdapterTests`, `ProtectedResourceControllerTests`, `ProtectedResourceMustBeUniqueRuleTests`, `ProtectedResourceResponseMapperTests`, `RegisterProtectedResourceRequestMapperTests`, `RegisterProtectedResourceRulesValidatorTests`, `RegisterProtectedResourceUseCaseImplTests`, `ResourcePathTests` |
-| `pdp/tenants` | `CreateTenantRequestMapperTests`, `CreateTenantUseCaseImplTests`, `TenantCatalogPropertiesTests`, `TenantControllerTests`, `TenantMustBeActiveValidatorTests`, `TenantNameTests`, `TenantResponseMapperTests`, `TenantRuleTests` |
+| `pdp/resources` | `HttpVerbTests`, `InMemoryAuditAdapterTests`, `ProtectedResourceControllerTests`, `ProtectedResourceMustBeUniqueRuleTests`, `ProtectedResourceMustExistRuleTests`, `ProtectedResourceMustExistValidatorTests`, `ProtectedResourceResponseMapperTests`, `RegisterProtectedResourceRequestMapperTests`, `RegisterProtectedResourceRulesValidatorTests`, `RegisterProtectedResourceUseCaseImplTests`, `ResourcePathTests` |
+| `pdp/tenants` | `CreateTenantRequestMapperTests`, `CreateTenantUseCaseImplTests`, `ListTenantsUseCaseImplTests`, `TenantCatalogPropertiesTests`, `TenantControllerTests`, `TenantMustBeActiveValidatorTests`, `TenantNameTests`, `TenantResponseMapperTests`, `TenantRuleTests` |
 | `raiz` | `AbstractSurrealDbIntegrationTest`, `LayeredArchitectureTests`, `ModulithStructureTests`, `PdpApplicationTests` |
 | `shared/auth` | `KeycloakLoginControllerTests`, `KeycloakOidcSessionServiceTests`, `KeycloakRegistrationControllerTests`, `OidcAuthenticationFailureHandlerTests`, `OidcAuthenticationSuccessHandlerTests`, `OidcAuthorizationFlowServiceTests` |
 | `shared/config` | `CorsConfigurationTests`, `KeycloakSecurityConfigurationTests`, `SecurityConfigurationTests` |
