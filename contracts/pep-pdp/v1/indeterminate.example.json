@@ -1,0 +1,10 @@
+{
+  "decision": "INDETERMINATE",
+  "decisionId": "example-decision",
+  "reasonCode": "POLICY_ENGINE_UNAVAILABLE",
+  "policyReferences": [],
+  "requestId": "0ad71c86-a203-4d99-b9b7-2a6c54c0bcaf",
+  "correlationId": "example-correlation",
+  "obligations": []
+}
+

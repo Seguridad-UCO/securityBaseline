@@ -1,0 +1,23 @@
+# Copy to an external configuration location; replace origins and IDs with registered values.
+pep.ingress.issuer=https://identity.example.org/realms/security
+pep.ingress.jwks-uri=https://identity.example.org/realms/security/protocol/openid-connect/certs
+pep.ingress.allowed-origins[0]=https://application.example.org
+pep.ingress.routes[0].prefix=/apps/academic
+pep.ingress.routes[0].application-id=REGISTERED_APPLICATION_ID
+pep.ingress.routes[0].environment=prod
+pep.ingress.routes[0].target=https://academic.internal
+pep.ingress.routes[0].audiences[0]=academic-api
+pep.pdp.base-url=https://pdp.internal
+pep.pdp.ca-certificate=/run/secrets/pdp-ca.pem
+pep.pdp.client-certificate=/run/secrets/pep-cert.pem
+pep.pdp.client-key=/run/secrets/pep-key.pem
+# Application self-registration (one PEP replica and a durable private volume in v1).
+pep.integration.enabled=true
+pep.integration.registry-file=/var/lib/security-pep/integrations.json
+pep.integration.public-base-url=https://security.example.org
+# Hash each opaque token with BCrypt; never place the plaintext token in this file.
+# pep.integration.credentials[0].application-id=academic
+# pep.integration.credentials[0].environment=prod
+# pep.integration.credentials[0].token-hash=$2a$...
+# TLS termination at an ingress is permitted only on a private PEP listener with appropriate network policy.
+# For direct TLS configure server.ssl.* with your deployment's keystore/bundle.

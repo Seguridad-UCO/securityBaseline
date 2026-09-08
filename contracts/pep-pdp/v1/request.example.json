@@ -1,0 +1,19 @@
+{
+  "version": "1",
+  "requestId": "0ad71c86-a203-4d99-b9b7-2a6c54c0bcaf",
+  "correlationId": "example-correlation",
+  "timestamp": "2026-09-06T10:00:00Z",
+  "application": {
+    "id": "demo-app",
+    "environment": "local"
+  },
+  "resource": {
+    "path": "/notes/77",
+    "action": "PATCH"
+  },
+  "context": {
+    "method": "PATCH",
+    "channel": "HTTP"
+  }
+}
+
