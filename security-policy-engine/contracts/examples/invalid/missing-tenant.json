@@ -1,0 +1,8 @@
+{
+  "schemaVersion": "1.0",
+  "request": {"id": "req-invalid"},
+  "subject": {"id": "user-001", "type": "USER", "tenantId": "tenant-a"},
+  "application": {"id": "catalog"},
+  "resource": {"type": "document"},
+  "action": "document:read"
+}

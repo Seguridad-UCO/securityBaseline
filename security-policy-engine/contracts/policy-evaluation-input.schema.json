@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://security-baseline.local/schemas/policy-evaluation-input.schema.json",
+  "title": "PolicyEvaluationInput",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "request", "subject", "tenant", "application", "resource", "action"],
+  "properties": {
+    "schemaVersion": {"const": "1.0"},
+    "request": {"$ref": "#/$defs/request"},
+    "subject": {"$ref": "#/$defs/subject"},
+    "tenant": {"$ref": "#/$defs/tenant"},
+    "application": {"$ref": "#/$defs/application"},
+    "resource": {"$ref": "#/$defs/resource"},
+    "action": {"type": "string", "minLength": 1},
+    "relationships": {"type": "array", "items": {"type": "object"}},
+    "context": {"$ref": "#/$defs/context"},
+    "security": {"$ref": "#/$defs/security"}
+  },
+  "$defs": {
+    "attributes": {"type": "object"},
+    "request": {"type": "object", "additionalProperties": false, "required": ["id"], "properties": {"id": {"type": "string", "minLength": 1}, "correlationId": {"type": "string", "minLength": 1}}},
+    "subject": {"type": "object", "additionalProperties": false, "required": ["id", "type", "tenantId"], "properties": {"id": {"type": "string", "minLength": 1}, "type": {"type": "string", "minLength": 1}, "tenantId": {"type": "string", "minLength": 1}, "roles": {"type": "array", "items": {"type": "string"}}, "profiles": {"type": "array", "items": {"type": "string"}}, "entitlements": {"type": "array", "items": {"type": "string"}}, "groups": {"type": "array", "items": {"type": "string"}}, "attributes": {"$ref": "#/$defs/attributes"}}},
+    "tenant": {"type": "object", "additionalProperties": false, "required": ["id"], "properties": {"id": {"type": "string", "minLength": 1}, "attributes": {"$ref": "#/$defs/attributes"}}},
+    "application": {"type": "object", "additionalProperties": false, "required": ["id"], "properties": {"id": {"type": "string", "minLength": 1}, "attributes": {"$ref": "#/$defs/attributes"}}},
+    "resource": {"type": "object", "additionalProperties": false, "required": ["type"], "properties": {"type": {"type": "string", "minLength": 1}, "id": {"type": "string", "minLength": 1}, "attributes": {"$ref": "#/$defs/attributes"}}},
+    "context": {"type": "object", "additionalProperties": false, "properties": {"environment": {"type": "string"}, "network": {"type": "object"}, "risk": {"type": "object"}, "attributes": {"$ref": "#/$defs/attributes"}}},
+    "security": {"type": "object", "additionalProperties": false, "properties": {"authenticationLevel": {"type": "string"}, "sessionAgeSeconds": {"type": "integer", "minimum": 0}, "attributes": {"$ref": "#/$defs/attributes"}}}
+  }
+}
