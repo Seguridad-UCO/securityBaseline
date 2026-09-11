@@ -95,7 +95,7 @@ El grafo **describe**; las herramientas **verifican**. Un grafo nunca falla un b
 ## 6. La razón estratégica: un solo estándar para dos herramientas
 
 El equipo es heterogéneo — Claude Code y Codex — y hasta ahora cada uno leía instrucciones
-distintas. [`AGENTS.md`](../../AGENTS.md) es el contrato común: Codex lo lee como sus instrucciones
+distintas. [`AGENTS.md`](../../../AGENTS.md) es el contrato común: Codex lo lee como sus instrucciones
 de proyecto, y `CLAUDE.md` apunta a él en vez de repetirlo, para que no puedan divergir.
 
 Esa es la aportación más valiosa del paquete `SecurityBaseline-AI-Compartible`, por encima del
@@ -116,7 +116,7 @@ grafo en sí.
 ## 8. Cómo se usa a diario
 
 Las reglas operativas —presupuesto, número de consultas, qué no reconstruir— viven en
-[`AGENTS.md`](../../AGENTS.md), sección 4, para no duplicarlas aquí.
+[`AGENTS.md`](../../../AGENTS.md), sección 4, para no duplicarlas aquí.
 
 En una frase: **dos consultas por sesión como máximo, `--budget 500`, y lo que el grafo diga se
 confirma abriendo el archivo.**

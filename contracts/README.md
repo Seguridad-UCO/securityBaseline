@@ -3,7 +3,7 @@
 Aquí viven los contratos **entre componentes**. Un contrato está aquí, y no dentro del componente
 que lo produce, por una razón concreta: cuando el contrato vive del lado del productor, se escribe
 solo desde su punto de vista y el consumidor se entera al integrar. Eso ya pasó una vez — ver
-[`INTEGRACION-PDP-PEP-OPA.md`](../docs/ai-harness/workspace/INTEGRACION-PDP-PEP-OPA.md).
+[`INTEGRACION-PDP-PEP-OPA.md`](../pdp/docs/ai-harness/workspace/INTEGRACION-PDP-PEP-OPA.md).
 
 | Contrato | Dirección | Consumidor | Productor |
 |---|---|---|---|

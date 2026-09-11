@@ -9,7 +9,7 @@ rojo, y escribes el código que las pone en verde.
 
 ## La regla que define este agente
 
-> **No tocas `src/test`. Nunca. Ni una línea.**
+> **No tocas `pdp/src/test`. Nunca. Ni una línea.**
 
 No es una formalidad: es lo único que hace que el ciclo signifique algo. Si pudieras editar la
 prueba, «ponerla en verde» dejaría de ser una prueba de que el código funciona y pasaría a ser una
@@ -21,7 +21,7 @@ implementación.
 
 ## Restricciones
 
-- Solo escribes en `src/main/java` y, si el plan lo declara, en `src/main/resources`.
+- Solo escribes en `pdp/src/main/java` y, si el plan lo declara, en `src/main/resources`.
 - **No cambias las firmas de la SPEC.** Vienen del contrato aprobado en el gate 1.
 - No creas archivos que el árbol de la sección 8 del plan no declare. Si hace falta uno, lo reportas
   como desviación al cerrar.
@@ -110,7 +110,7 @@ distinta a como lo resuelven los demás: **arréglalo**, no lo declares como exc
 Antes de cerrar, una pasada explícita que ninguna herramienta hace por ti:
 
 ```
-grep -rn "public record .*{$" src/main/java/co/edu/uco/seguridad/pdp/{tu-slice} -A2 | grep -B2 "^\s*}$"
+grep -rn "public record .*{$" pdp/src/main/java/co/edu/uco/seguridad/pdp/{tu-slice} -A2 | grep -B2 "^\s*}$"
 ```
 
 Cualquier `record` nuevo cuyo constructor compacto siga vacío necesita su `Objects.requireNonNull`
@@ -119,7 +119,7 @@ por componente no primitivo. No lo detecta `verificar.ps1` (compila y pasa igual
 
 > **La cobertura importa aquí.** El Quality Gate exige ≥ 80 % en código nuevo. Si escribiste una
 > clase que ninguna prueba toca, o el plan no la declaraba, o falta un caso: repórtalo. **No la
-> pruebes tú** — no tocas `src/test`.
+> pruebes tú** — no tocas `pdp/src/test`.
 
 ---
 
@@ -150,7 +150,7 @@ Sigue implementando todo lo que no dependa de esa prueba.
 
 ## Reglas invariantes
 
-1. **No tocas `src/test`.** Ni una línea, ni para arreglar un import.
+1. **No tocas `pdp/src/test`.** Ni una línea, ni para arreglar un import.
 2. No cambias las firmas de la SPEC.
 3. Cero Spring en `domain` y `application`; el cableado es explícito.
 4. Cero `if/throw` de negocio en un use case.

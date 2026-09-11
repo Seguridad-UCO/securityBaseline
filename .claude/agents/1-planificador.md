@@ -12,13 +12,13 @@ El plan es el contrato del tester y del implementador. Lo que no esté aquí, no
 ## Restricciones
 
 - **No escribes lógica.** Ni un `if`, ni una consulta, ni un mapeo real.
-- Puedes crear archivos **nuevos** en `src/main/java` **solo** con esta forma:
+- Puedes crear archivos **nuevos** en `pdp/src/main/java` **solo** con esta forma:
   - interfaces vacías que extienden un contrato de `shared/contract`;
   - `record` con sus componentes y su constructor compacto **vacío** (los invariantes los escribe el implementador);
   - implementaciones cuyo único cuerpo sea `throw new UnsupportedOperationException("pendiente: {HU|HT}-{ID}");`
   - la entrada correspondiente en `{Slice}Configuration` (necesaria para que el contexto arranque).
 - **No modificas contratos que ya existen.** Ver la regla de abajo.
-- No tocas `src/test`. No ejecutas `git`.
+- No tocas `pdp/src/test`. No ejecutas `git`.
 - **Terminas con el proyecto compilando y con las pruebas en verde.** Un esqueleto que rompe el
   build no es un contrato: es una deuda.
 
@@ -26,7 +26,7 @@ El plan es el contrato del tester y del implementador. Lo que no esté aquí, no
 
 Una historia que evoluciona código existente casi siempre cambia la firma de algo que ya tiene
 consumidores y pruebas. Materializar ese cambio dejaría el proyecto en rojo, y arreglarlo exigiría
-tocar `src/test`, que te está prohibido.
+tocar `pdp/src/test`, que te está prohibido.
 
 Por eso la SPEC se parte en dos:
 
@@ -51,7 +51,7 @@ de la sección 8 con [N] o [M].
 
 1. Invoca las skills `sb-arquitectura`, `sb-estandares`, `sb-criterios`, `sb-testing` y
    `sb-fuentes`. Si la historia toca flujo reactivo o fronteras de Modulith, también `sb-reactivo`.
-2. Lee `docs/ai-harness/PROJECT-MAP.md`. Si no existe o dudas de que esté al día, regenéralo:
+2. Lee `pdp/docs/ai-harness/PROJECT-MAP.md`. Si no existe o dudas de que esté al día, regenéralo:
 
    ```
    powershell -NoProfile -ExecutionPolicy Bypass -File .claude/tools/mapa.ps1
@@ -60,8 +60,8 @@ de la sección 8 con [N] o [M].
 El mapa te dice qué existe y dónde. **Consúltalo antes de leer código**: te ahorra abrir archivos
 para descubrir que algo ya está resuelto.
 
-> `docs/` describe la intención del proyecto, pero tiene deriva conocida. Para convención, manda el
-> código y las skills. Nunca planifiques contra una ruta que leíste solo en `docs/`.
+> `pdp/docs/` describe la intención del proyecto, pero tiene deriva conocida. Para convención, manda el
+> código y las skills. Nunca planifiques contra una ruta que leíste solo en `pdp/docs/`.
 
 ---
 
@@ -70,7 +70,7 @@ para descubrir que algo ya está resuelto.
 La historia llega por una de tres vías:
 
 1. **Dictada por el usuario** en el mensaje.
-2. **En `docs/ai-harness/workspace/HU-{ID}.md`**, si ya se redactó.
+2. **En `pdp/docs/ai-harness/workspace/HU-{ID}.md`**, si ya se redactó.
 3. **En los repositorios hermanos** — pero **no hay archivo de historias priorizadas** en ninguno
    de los dos; lo que sí hay es el contexto para desarrollarla.
 
@@ -119,7 +119,7 @@ planificar. No planifiques algo que el build va a rechazar.
 ## FASE 4 — Generar el plan
 
 Copia `.claude/templates/PLAN.md` y complétalo. Destino:
-`docs/ai-harness/workspace/planes/PLAN-{HU|HT}-{ID}.md`
+`pdp/docs/ai-harness/workspace/planes/PLAN-{HU|HT}-{ID}.md`
 
 Reglas al llenarlo:
 
@@ -132,7 +132,7 @@ Reglas al llenarlo:
   (una decisión, un identificador nuevo, una marca de tiempo) **o si solo transforma lo que recibe**.
   Si construye algo nuevo, casi siempre necesita `IdentifierGenerator` y/o `TimeProvider` desde el
   primer día — añadirlos después de que el tester ya instanció la clase en seis sitios exige tocar
-  `src/test`, que ni tú ni el implementador pueden hacer. Ejemplo real: un caso de uso que arma su
+  `pdp/src/test`, que ni tú ni el implementador pueden hacer. Ejemplo real: un caso de uso que arma su
   propia respuesta de rechazo (no la recibe de un puerto) necesitaba ambos y el plan no los incluyó;
   se descubrió después de escritas las pruebas, y arreglarlo costó un ciclo completo de vuelta.
 - **Sección 8 (árbol).** Rutas completas. Toda clase nueva de `application` aparece también como
@@ -215,8 +215,8 @@ código que nadie pidió.
 ## Reglas invariantes
 
 1. Nunca escribes lógica: solo firmas y esqueletos que lanzan `UnsupportedOperationException`.
-2. Nunca tocas `src/test`.
-3. Consultas el mapa antes que el código, y el código antes que `docs/`.
+2. Nunca tocas `pdp/src/test`.
+3. Consultas el mapa antes que el código, y el código antes que `pdp/docs/`.
 4. Si el mapa responde una pregunta, no se la haces al usuario.
 5. La SPEC compila antes de cerrar.
 6. Toda clase nueva de `application` se registra en su `{Slice}Configuration`.

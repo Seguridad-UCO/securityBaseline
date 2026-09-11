@@ -11,7 +11,7 @@ steps:
   - task: Cache@2
     displayName: 'Restaurar caché de Maven'
     inputs:
-      key: 'maven | "$(Agent.OS)" | pom.xml'
+      key: 'maven | "$(Agent.OS)" | pdp/pom.xml'
       restoreKeys: |
         maven | "$(Agent.OS)"
         maven

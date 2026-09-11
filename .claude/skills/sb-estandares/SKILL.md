@@ -6,7 +6,7 @@ description: Estándares de código de securityBaseline — idioma, value object
 # Skill: sb-estandares
 
 Complementa a `sb-arquitectura` (esa cubre capas y ubicación; esta cubre reglas de código
-transversales). **Derivada del código real**, no de `docs/`. Cada regla apunta a un archivo abierto
+transversales). **Derivada del código real**, no de `pdp/docs/`. Cada regla apunta a un archivo abierto
 con `Read` en vez de a un snippet: un snippet envejece en silencio, una ruta rota falla ruidosamente.
 
 ---
@@ -19,7 +19,7 @@ con `Read` en vez de a un snippet: un snippet envejece en silencio, una ruta rot
 | Nombres de test | **inglés**, snake_case descriptivo (`rejects_a_null_value`) |
 | Javadoc y comentarios | **español** — explican el porqué |
 | Mensajes que ve el usuario (`*Messages`) | **español** |
-| Documentación en `docs/` | **español** |
+| Documentación en `pdp/docs/` | **español** |
 
 Ningún paquete nuevo se nombra en español. Los existentes (`pdp`, `commons`) se conservan.
 **Ninguna prueba verifica esto** — es responsabilidad de la revisión, y por eso es uno de los cuatro
@@ -152,7 +152,7 @@ Reglas:
 - `Mono.error(() -> new X(...))` con **supplier** dentro de `switchIfEmpty`: sin el supplier la
   excepción se construye siempre, incluso en el camino feliz.
 - `Mono.fromSupplier(...)` para diferir la construcción de la entidad hasta que las reglas pasaron.
-- **No hay `block()` en `src/main`**, salvo en un `ApplicationRunner` de arranque
+- **No hay `block()` en `pdp/src/main`**, salvo en un `ApplicationRunner` de arranque
   (`SurrealTenantSchemaInitializer`), donde es correcto porque no está en el camino de una petición.
 - Las reglas son síncronas a propósito: envolver en `Mono` una decisión pura es ruido, y obliga a
   `StepVerifier` y a un repositorio falso donde bastaba una llamada a método.

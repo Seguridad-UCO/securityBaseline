@@ -17,6 +17,7 @@ Estado del trabajo para retomarlo en cualquier máquina. Se actualiza al cerrar 
 | Fase A | Reglas de negocio movidas a `domain/{slice}/rule/`, puras y síncronas · `domain/` reorganizado por categoría | ✅ |
 | 2 | `2-tester-spec` y `3-implementador` ✅ · slash commands, mutation testing, `5-entrega` ⏳ | 🟡 |
 | 3 | Grafo nivel 1 y 2 | ⏳ |
+| Fase B | El PDP se muda a `pdp/`, sibling de `pep/` y `security-policy-engine/` — ver abajo | ✅ |
 
 **Lo siguiente:** estrenar `2-tester-spec` y `3-implementador` con la historia que cierre el
 criterio 10 (cablear la saga de compensación), que es la única deuda de la línea base.
@@ -280,6 +281,42 @@ la tabla **«Puertos de salida y sus implementaciones» salía vacía**, y las r
 `application/primaryport/{request,response}/`, `application/rule/validator/`) y se añadieron
 patrones para `commons/{exception,message,model}/`, que antes caían enteros en «Otro». Regenerado:
 `mapa.ps1 -Check` en verde, `drift.ps1` y `consistencia.ps1` sin novedad.
+
+---
+
+## El PDP se muda a `pdp/` — Fase B (2026-09-11)
+
+Desde que `feature/pep` y `feature/OPA` entraron al repositorio, el árbol tenía una asimetría: el
+PDP vivía disuelto en la raíz (`src/`, `pom.xml`, `docs/`, `keycloak/`, `infra/`) mientras `pep/` y
+`security-policy-engine/` eran carpetas propias. Un repositorio con tres componentes y solo dos de
+ellos con nombre es inconsistente por construcción — entrar al repo no decía «hay tres cosas aquí»,
+decía «hay una cosa, y dos anexos».
+
+**Lo que se movió**, todo con `git mv` para conservar el historial: `src/`, `pom.xml`, `Dockerfile`,
+`docker-compose.yml`, `keycloak/`, `infra/` y `docs/` (excepto `PLATAFORMA.md`, que es el panorama
+de los tres componentes y se queda en la raíz) pasan a `pdp/`. El wrapper de Maven (`mvnw`, `.mvn/`)
+se queda en la raíz, compartido con `pep/`, invocado con `-f pdp/pom.xml` — exactamente el patrón
+que `pep/` ya usaba (`-f pep/pom.xml`); no se inventó uno nuevo.
+
+**Lo que se reescribió**, porque apuntaba a rutas que dejaron de existir:
+
+| Pieza | Cambio |
+|---|---|
+| `pdp/Dockerfile` | Copiaba todo el repo (`COPY . .`) y corría `mvn` instalado aparte. Reescrito con el mismo patrón que `pep/Dockerfile`: contexto de build = raíz, copia solo `mvnw`+`.mvn`+`pdp/pom.xml`+`pdp/src`, y usa el wrapper (`./mvnw -f pdp/pom.xml`) |
+| `.claude/tools/{mapa,verificar,drift,consistencia}.ps1` | Sus constantes de ruta (`src/main/java/...`, `docs/ai-harness/...`, `pom.xml`) apuntan ahora a `pdp/`. `drift.ps1` además vigila la raíz `docs/` (hoy solo `PLATAFORMA.md`) además de `pdp/docs/` |
+| `.claude/agents/*.md`, `.claude/skills/*/SKILL.md` | Las instrucciones que decían «no tocas `src/test`» ahora dicen `pdp/src/test` — si un agente las sigue al pie de la letra, tiene que apuntar al lugar real |
+| `azure-pipelines.yml` (vía `ci/templates/*.yml`) | `mavenPomFile`, `pathToSources`, la caché de Maven, el empaquetado y `docker build` pasan a `pdp/pom.xml` / `pdp/Dockerfile` / `pdp/target/*.jar`. **Probado**: `docker build -f pdp/Dockerfile .` local reproduce exactamente el comando que corre el pipeline, construye y el contenedor arranca Spring Boot correctamente |
+| `pdp/docs/ai-harness/drift-ignore.txt` | Sus excepciones `doc:docs/...` pasan a `doc:pdp/docs/...` — si no, dejaban de aplicar y el detector volvía a reportar sus propios hallazgos ya resueltos |
+
+**Lo que NO se movió, a propósito:** `.claude/` (agentes, skills, herramientas) se queda en la
+raíz. Sigue siendo una herramienta específica del PDP —ninguna skill conoce `pep/` ni
+`security-policy-engine/`—, pero moverla a `pdp/.claude/` habría cambiado dónde hay que abrir
+Claude Code para que el harness se registre, y eso es una convención de equipo, no una limpieza de
+carpetas. Se documenta la asimetría en vez de forzar una simetría que cuesta más de lo que ordena.
+
+**Verificado antes de comitear:** `mvnw -f pdp/pom.xml verify` (277 pruebas), `docker build -f
+pdp/Dockerfile -t pdp:local .` + arranque del contenedor, `mapa.ps1`, `drift.ps1` y `consistencia.ps1`
+en verde.
 
 ---
 

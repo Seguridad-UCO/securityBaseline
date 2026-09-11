@@ -155,10 +155,10 @@ solamente compilar código.
 
 ## 6. Referencias
 
-- [Contrato y guía PEP↔PDP](../../contracts/pep-pdp/v1/PDP-INTEGRATION-GUIDE.md)
-- [Estado y pruebas del PEP](../../pep/README.md)
+- [Contrato y guía PEP↔PDP](../../../contracts/pep-pdp/v1/PDP-INTEGRATION-GUIDE.md)
+- [Estado y pruebas del PEP](../../../pep/README.md)
 - [ADR PEP v1](../architecture/adr-pep-v1.md)
-- [Flujo de enforcement](../../pep/docs/GUIA-PEP-ARQUITECTURA-Y-FLUJO.md)
+- [Flujo de enforcement](../../../pep/docs/GUIA-PEP-ARQUITECTURA-Y-FLUJO.md)
 
 ## 7. Principio de avance
 

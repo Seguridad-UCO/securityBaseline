@@ -1,13 +1,13 @@
 # La Plataforma Central de Seguridad — mapa completo
 
 > Este documento es el único que describe **los tres componentes juntos** (PDP, PEP, OPA). Cada uno
-> tiene su propia documentación profunda —[`docs/README.md`](README.md) para el PDP,
+> tiene su propia documentación profunda —[`pdp/docs/README.md`](../pdp/docs/README.md) para el PDP,
 > [`../pep/README.md`](../pep/README.md) para el PEP,
 > [`../security-policy-engine/README.md`](../security-policy-engine/README.md) para OPA— pero
 > ninguno de los tres, por sí solo, explica cómo encajan. Este sí.
 >
 > **Estado: 2026-09-11.** Marca explícitamente qué corre hoy y qué es plan, porque confundir las dos
-> cosas fue el fallo histórico de este proyecto (ver `docs/criteria-compliance-matrix.md`, hallazgo
+> cosas fue el fallo histórico de este proyecto (ver `pdp/docs/criteria-compliance-matrix.md`, hallazgo
 > transversal). Cuando algo cambie de estado, este documento se actualiza en el mismo commit.
 
 ---
@@ -16,14 +16,15 @@
 
 | Componente | Qué es | Dónde vive | Quién lo lleva | Estado |
 |---|---|---|---|---|
-| **PDP** — Policy Decision Point | El servicio que decide: dado un sujeto, una aplicación, un recurso y una acción, ¿se permite? | Raíz del repo (`src/`) | Sebastián | 🟢 En producción de desarrollo. Decide con **denegación por defecto** — todavía no consulta una política real |
+| **PDP** — Policy Decision Point | El servicio que decide: dado un sujeto, una aplicación, un recurso y una acción, ¿se permite? | [`pdp/`](../pdp/) | Sebastián | 🟢 En producción de desarrollo. Decide con **denegación por defecto** — todavía no consulta una política real |
 | **PEP** — Policy Enforcement Point | El proxy que se pone delante de cada aplicación protegida: valida el JWT del usuario, pregunta al PDP y solo deja pasar la petición si la respuesta es `ALLOW` | [`pep/`](../pep/) | David | 🟡 Implementado y probado contra un PDP **simulado** (fixtures). Su cliente real apunta a un endpoint del PDP que **todavía no existe** (HU-003) |
 | **OPA** — Open Policy Agent / motor de políticas | El que de verdad evalúa la política: recibe hechos del PDP y devuelve una decisión lógica en Rego | [`security-policy-engine/`](../security-policy-engine/) | Laura | 🟡 El motor y sus políticas core están implementados y probados. **Nada lo llama todavía** — el PDP no tiene un adaptador que lo consuma (HU-005) |
 
 Los tres viven en **un solo repositorio** (`securityBaseline`), cada uno en su propio árbol de
-primer nivel, con su propio build (`pom.xml` de PEP es independiente del de la raíz; OPA no usa
-Maven en absoluto). No se pisan y no comparten código — se pisan solo en los **contratos**, que
-viven en [`contracts/`](../contracts/README.md) desde la unificación del 2026-09-10.
+primer nivel, con su propio build (`pdp/pom.xml` y `pep/pom.xml` son independientes entre sí — el
+`mvnw` de la raíz se invoca con `-f` hacia cada uno; OPA no usa Maven en absoluto). No se pisan y
+no comparten código — se pisan solo en los **contratos**, que viven en
+[`contracts/`](../contracts/README.md) desde la unificación del 2026-09-10.
 
 ---
 
@@ -98,8 +99,8 @@ todo en SurrealDB por HTTP, sin ORM.
 
 ```bash
 # 1. Levantar la infraestructura del PDP
-docker compose up -d surrealdb keycloak
-SPRING_PROFILES_ACTIVE=keycloak ./mvnw spring-boot:run
+docker compose -f pdp/docker-compose.yml up -d surrealdb keycloak
+SPRING_PROFILES_ACTIVE=keycloak ./mvnw -f pdp/pom.xml spring-boot:run
 
 # 2. Con una sesión ya autenticada (cookie JSESSIONID de Keycloak), registrar una aplicación
 curl -i -b cookies.txt -c cookies.txt -X POST http://localhost:8080/api/v1/tenants \
@@ -118,8 +119,8 @@ curl -i -b cookies.txt -X POST http://localhost:8080/api/v1/authorize \
 
 La última llamada **siempre responde `DENY / NO_APPLICABLE_POLICY`** hoy — es correcto, no un bug:
 `DenyByDefaultPolicyDecisionAdapter` es el único adaptador de `PolicyDecisionPort` que existe
-(`src/main/java/co/edu/uco/seguridad/pdp/authorization/infrastructure/adapter/secondary/policy/DenyByDefaultPolicyDecisionAdapter.java`).
-Ver [`docs/ai-harness/workspace/ROADMAP-PDP.md`](ai-harness/workspace/ROADMAP-PDP.md#por-qué-hu-002-deniega-a-propósito).
+(`pdp/src/main/java/co/edu/uco/seguridad/pdp/authorization/infrastructure/adapter/secondary/policy/DenyByDefaultPolicyDecisionAdapter.java`).
+Ver [`pdp/docs/ai-harness/workspace/ROADMAP-PDP.md`](../pdp/docs/ai-harness/workspace/ROADMAP-PDP.md#por-qué-hu-002-deniega-a-propósito).
 
 ### PEP (puerto 8081)
 
@@ -182,7 +183,7 @@ política de negocio, y sin una la respuesta es una denegación explícita, no u
 
 ### Keycloak (puerto 9090→8080) y SurrealDB (puerto 8000)
 
-Infraestructura de soporte del PDP, ya wireada en el `docker-compose.yml` de la raíz. Keycloak es el
+Infraestructura de soporte del PDP, ya wireada en [`pdp/docker-compose.yml`](../pdp/docker-compose.yml). Keycloak es el
 IdP real del panel (login OIDC, patrón BFF con cookie HttpOnly); SurrealDB es donde vive el catálogo
 (`tenants`, `applications`, `resources`, `identity`). Ninguno de los dos lo usa el PEP ni OPA
 directamente.
@@ -251,7 +252,7 @@ verificada** en [`contracts/`](../contracts/README.md); lo que falta es el códi
 ## 6. Prioridades — qué hacer primero y por qué
 
 > Fuente completa, con el detalle de cada decisión pendiente:
-> [`ROADMAP-PDP.md`](ai-harness/workspace/ROADMAP-PDP.md). Esta tabla es el resumen ejecutable.
+> [`ROADMAP-PDP.md`](../pdp/docs/ai-harness/workspace/ROADMAP-PDP.md). Esta tabla es el resumen ejecutable.
 
 | # | Qué | Por qué va antes que las demás | Sin esto, no se puede… |
 |---|---|---|---|
@@ -290,9 +291,9 @@ correctas; las enlaza:
 **No existe hoy un `docker compose up` único que levante los cinco contenedores juntos**, porque
 levantarlos juntos no demostraría nada todavía: el PEP hablaría con su simulador (no con el PDP) y
 OPA no recibiría tráfico de nadie. Ese compose unificado tiene sentido **después** de HU-003 y
-HU-005 — antes, sería un `docker-compose.yml` que aparenta una integración que no existe, que es
+HU-005 — antes, sería un compose unico que aparenta una integración que no existe, que es
 justo el tipo de deriva que este proyecto existe para evitar (ver hallazgo transversal en
-`docs/criteria-compliance-matrix.md`).
+`pdp/docs/criteria-compliance-matrix.md`).
 
 ---
 
@@ -301,9 +302,9 @@ justo el tipo de deriva que este proyecto existe para evitar (ver hallazgo trans
 | Qué necesitas | Dónde |
 |---|---|
 | Cómo trabajar una historia con el harness de agentes | [`../.claude/README.md`](../.claude/README.md) |
-| El estado detallado, historia por historia | [`ai-harness/CHECKPOINT.md`](ai-harness/CHECKPOINT.md) |
-| Las decisiones de diseño de HU-003, con lo descartado y por qué | [`ai-harness/workspace/HANDOFF-INTEGRACION-PEP-OPA.md`](ai-harness/workspace/HANDOFF-INTEGRACION-PEP-OPA.md) |
+| El estado detallado, historia por historia | [`ai-harness/CHECKPOINT.md`](../pdp/docs/ai-harness/CHECKPOINT.md) |
+| Las decisiones de diseño de HU-003, con lo descartado y por qué | [`ai-harness/workspace/HANDOFF-INTEGRACION-PEP-OPA.md`](../pdp/docs/ai-harness/workspace/HANDOFF-INTEGRACION-PEP-OPA.md) |
 | Las cuatro decisiones que unificaron los contratos de PDP, PEP y OPA | [`../contracts/README.md`](../contracts/README.md) |
 | El vocabulario único de `reasonCode` | [`../contracts/reason-codes.md`](../contracts/reason-codes.md) |
-| El diagnóstico completo de las desalineaciones (antes de resolverlas) | [`ai-harness/workspace/INTEGRACION-PDP-PEP-OPA.md`](ai-harness/workspace/INTEGRACION-PDP-PEP-OPA.md) |
-| Los 23 criterios de la línea base y su evidencia | [`README.md`](README.md) |
+| El diagnóstico completo de las desalineaciones (antes de resolverlas) | [`ai-harness/workspace/INTEGRACION-PDP-PEP-OPA.md`](../pdp/docs/ai-harness/workspace/INTEGRACION-PDP-PEP-OPA.md) |
+| Los 23 criterios de la línea base y su evidencia | [`pdp/docs/README.md`](../pdp/docs/README.md) |

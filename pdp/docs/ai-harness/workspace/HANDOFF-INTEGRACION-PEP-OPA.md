@@ -11,7 +11,7 @@
 
 ## 1. Cómo usar este documento
 
-1. Lee [`AGENTS.md`](../../../AGENTS.md) y [`CLAUDE.md`](../../../CLAUDE.md) — convenciones del proyecto.
+1. Lee [`AGENTS.md`](../../../../AGENTS.md) y [`CLAUDE.md`](../../../../CLAUDE.md) — convenciones del proyecto.
 2. Lee este documento entero.
 3. Lee [`ROADMAP-PDP.md`](ROADMAP-PDP.md) — la tabla de historias renumerada.
 4. Arranca con `@1-planificador` sobre **HU-003** (sección 8 de abajo tiene el comando y el encargo).
@@ -358,5 +358,5 @@ Después, el ciclo normal: `@2-tester-spec` → `@3-implementador` → `@4-valid
 | ADR del PEP | `docs/architecture/adr-pep-v1.md` (rama `feature/pep`) |
 | Estado y pruebas del PEP | `pep/README.md` (rama `feature/pep`) |
 | Roadmap del PDP, renumerado | [`ROADMAP-PDP.md`](ROADMAP-PDP.md) |
-| Contrato de trabajo de los agentes | [`AGENTS.md`](../../../AGENTS.md) |
+| Contrato de trabajo de los agentes | [`AGENTS.md`](../../../../AGENTS.md) |
 | Reporte de validación de HU-002 | [`reportes/REPORTE-HU-002.md`](reportes/REPORTE-HU-002.md) |

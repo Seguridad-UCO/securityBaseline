@@ -8,7 +8,7 @@
 >
 > **Estado: las cuatro desalineaciones de §3 están resueltas.** En cada una se adoptó el estándar
 > del componente que la tenía mejor resuelta y se adaptaron los otros dos; las decisiones, con su
-> porqué y lo que cambió cada uno, están en [`contracts/README.md`](../../../contracts/README.md).
+> porqué y lo que cambió cada uno, están en [`contracts/README.md`](../../../../contracts/README.md).
 > Este documento conserva el diagnóstico porque es la evidencia de por qué se decidió así — la
 > sección 7 resume cómo quedó.
 
@@ -180,7 +180,7 @@ copia, no un duplicado— y `scripts/validate` los valida desde ahí en cada bui
 
 Las cuatro desalineaciones fueron consecuencia de que el contrato PDP↔OPA vivía **solo del lado de
 OPA**, escrito por quien produce y no acordado con quien consume; no de que alguien se equivocara.
-Por eso la regla 1 de [`contracts/README.md`](../../../contracts/README.md) es que un contrato se
+Por eso la regla 1 de [`contracts/README.md`](../../../../contracts/README.md) es que un contrato se
 acuerda antes de implementarse.
 
 ---
@@ -208,7 +208,7 @@ acuerda antes de implementarse.
 ## 7. Cómo quedó
 
 Las decisiones completas, con los candidatos que perdieron y por qué, están en
-[`contracts/README.md`](../../../contracts/README.md) (D-U1 a D-U4). Resumen:
+[`contracts/README.md`](../../../../contracts/README.md) (D-U1 a D-U4). Resumen:
 
 | Choque | Gana | Se adaptan |
 |---|---|---|

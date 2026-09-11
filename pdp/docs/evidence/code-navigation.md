@@ -22,6 +22,6 @@ apuntan a archivos o paquetes que existen.
 | [`adapter/secondary/persistence`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure/adapter/secondary/persistence) · [`adapter/secondary/audit`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure/adapter/secondary/audit) | [07](../infrastructure/07-dummy-adapters.md), [10](../domain-and-data/10-transactions.md), [16](../domain-and-data/16-repository-strategy.md) |
 | [`shared`](../../src/main/java/co/edu/uco/seguridad/shared) | [04](../cross-cutting/04-cross-cutting-capabilities.md), [08](../cross-cutting/08-logging-instrumentation.md), [09](../cross-cutting/09-exception-handling.md), [12](../architecture/12-solid.md) |
 | [`pom.xml`](../../pom.xml) · [`application.properties`](../../src/main/resources/application.properties) | [08](../cross-cutting/08-logging-instrumentation.md), [14](../interfaces/14-secure-dtos.md), [22](../architecture/22-reactive-architecture.md) |
-| [`azure-pipelines.yml`](../../azure-pipelines.yml) · [`ci/`](../../ci) | [23](../cross-cutting/23-architecture-first.md), [pipelines](../delivery/pipelines.md) |
+| [`azure-pipelines.yml`](../../../azure-pipelines.yml) · [`ci/`](../../../ci) | [23](../cross-cutting/23-architecture-first.md), [pipelines](../delivery/pipelines.md) |
 | [`infra/keyvault`](../../infra/keyvault) | [04](../cross-cutting/04-cross-cutting-capabilities.md), [secretos](../../infra/README.md) |
 | [`src/test`](../../src/test) | [23](../cross-cutting/23-architecture-first.md) y evidencia de cada criterio enlazado arriba |

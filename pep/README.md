@@ -6,7 +6,7 @@
 Proxy inverso independiente: valida Bearer JWT, construye SolicitudAcceso, consulta el PDP y reenvía
 únicamente ante un ALLOW válido. El PEP no evalúa roles, políticas Rego ni catálogos.
 
-El PDP existente permanece en la raíz del repositorio. Este proyecto tiene su propio POM, JAR,
+El PDP existente vive en [`../pdp/`](../pdp/). Este proyecto tiene su propio POM, JAR,
 proceso, configuración, imagen y pipeline. No depende del artefacto ni de shared/security del PDP.
 
 **Estado de integración:** el cliente HTTP y el enforcement están implementados; el PDP actual todavía
@@ -66,7 +66,7 @@ Alternativa Docker:
 docker compose -f pep/compose.integration.yml up --build
 ```
 
-Esta composición es independiente de docker-compose.yml del PDP. Publica PEP 8081 y control de fixtures
+Esta composición es independiente de [`pdp/docker-compose.yml`](../pdp/docker-compose.yml). Publica PEP 8081 y control de fixtures
 18080 solo en loopback; la aplicación 18081 queda únicamente en la red interna.
 Detener con docker compose -f pep/compose.integration.yml down; no requiere borrar volúmenes del PDP.
 
@@ -158,7 +158,7 @@ esas capacidades y aplicar ALLOW continuando una cadena de filtros local. Cada l
 adaptador. Importar una librería no registra recursos, configura el IdP ni elimina la necesidad de
 proteger rutas y validar datos de negocio.
 
-Ver [ADR del PEP](../docs/architecture/adr-pep-v1.md) para el mapa de dependencias y decisiones.
+Ver [ADR del PEP](../pdp/docs/architecture/adr-pep-v1.md) para el mapa de dependencias y decisiones.
 La [evidencia de validación](VERIFICATION.md) registra resultados y límites de la comprobación local.
 
 ## Alta automática de aplicaciones WebFlux

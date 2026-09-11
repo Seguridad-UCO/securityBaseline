@@ -12,19 +12,19 @@
 # Un reporte fechado o un plan cerrado describe el estado de OTRO momento. Sus referencias a
 # clases que ya no existen son correctas: son el registro de lo que habia entonces. Corregirlas
 # falsearia el historial.
-doc:docs/delivery/refactor-report-2026-08-07.md
-doc:docs/plans/*
+doc:pdp/docs/delivery/refactor-report-2026-08-07.md
+doc:pdp/docs/plans/*
 
 # --- Documentacion del propio harness ----------------------------------------
 # Cita los nombres ausentes precisamente para documentar que faltan.
-doc:docs/ai-harness/README.md
+doc:pdp/docs/ai-harness/README.md
 
 # --- Planes -------------------------------------------------------------------
 # Un plan es la especificacion de lo que VA a existir: nombrar clases que aun no estan es su
 # naturaleza, no deriva. Lo que el plan promete lo verifica el validador contra el codigo, no
 # este detector.
-doc:docs/ai-harness/workspace/planes/*
-doc:docs/ai-harness/workspace/HU-*.md
+doc:pdp/docs/ai-harness/workspace/planes/*
+doc:pdp/docs/ai-harness/workspace/HU-*.md
 
 # --- Adaptadores retirados en el Stage 4 -------------------------------------
 # La seccion "Historia: los dummies de los Stages 0-3" de 07-dummy-adapters.md los lista como
