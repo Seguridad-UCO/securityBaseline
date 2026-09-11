@@ -49,3 +49,15 @@ DomainRule
 # Nombrar la clase que se partio, diciendo que se partio, no es deriva. Hoy la decision vive en
 # TenantMustExistRule + TenantStatusMustBeActiveRule y la consulta en TenantMustBeActiveValidator.
 TenantMustBeActiveRule
+
+# --- Clases de Spring, no del proyecto -----------------------------------------
+# ROADMAP-PDP.md nombra la pieza de Spring Security que el canal interno NO va a usar (el PEP no
+# manda cookie, asi que no hay contexto de sesion que reponer). Mismo caso que ObjectMapper.
+WebSessionServerSecurityContextRepository
+
+# --- Pendiente a proposito: HU-005 (OPA) ---------------------------------------
+# La decision D9 del HANDOFF nombra el adaptador que reemplazara a
+# DenyByDefaultPolicyDecisionAdapter cuando se cablee OPA. Es el nombre de un contrato acordado,
+# no una afirmacion sobre el codigo de hoy: el propio documento lo marca como alcance de HU-005.
+# Retirar esta excepcion cuando HU-005 cree la clase.
+OpaPolicyDecisionAdapter
