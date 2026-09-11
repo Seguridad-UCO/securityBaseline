@@ -17,12 +17,13 @@ class AccessDecisionResponseMapperTests {
     @Test
     void flattens_state_and_reason_code_to_strings() {
         AccessDecision decision = new AccessDecision(UUID.randomUUID(), DecisionState.DENY,
-                ReasonCode.NO_APPLICABLE_POLICY, List.of(), "corr-1", Instant.parse("2026-09-06T00:00:00Z"));
+                ReasonCode.NO_APPLICABLE_POLICY, List.of(), "req-1", "corr-1", Instant.parse("2026-09-06T00:00:00Z"));
 
         AccessDecisionWebResponse response = AccessDecisionResponseMapper.toResponse(decision);
 
         assertThat(response.state()).isEqualTo("DENY");
         assertThat(response.reasonCode()).isEqualTo("NO_APPLICABLE_POLICY");
+        assertThat(response.requestId()).isEqualTo("req-1");
         assertThat(response.correlationId()).isEqualTo("corr-1");
         assertThat(response.decisionId()).isEqualTo(decision.decisionId().toString());
     }
@@ -30,7 +31,7 @@ class AccessDecisionResponseMapperTests {
     @Test
     void flattens_an_empty_policy_reference_list() {
         AccessDecision decision = new AccessDecision(UUID.randomUUID(), DecisionState.DENY,
-                ReasonCode.NO_APPLICABLE_POLICY, List.of(), "corr-1", Instant.parse("2026-09-06T00:00:00Z"));
+                ReasonCode.NO_APPLICABLE_POLICY, List.of(), "req-1", "corr-1", Instant.parse("2026-09-06T00:00:00Z"));
 
         AccessDecisionWebResponse response = AccessDecisionResponseMapper.toResponse(decision);
 

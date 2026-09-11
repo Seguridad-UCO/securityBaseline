@@ -11,7 +11,7 @@ POST /v1/data/security/authorization/decision
 ```
 
 El core no incluye una política de una aplicación ficticia. Por diseño, una entrada válida
-sin una política de aplicación registrada devuelve `DENY / NO_POLICY_MATCH`.
+sin una política de aplicación registrada devuelve `DENY / NO_APPLICABLE_POLICY`.
 
 ## Inicio local
 

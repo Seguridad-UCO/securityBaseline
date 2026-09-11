@@ -31,6 +31,7 @@ public final class DenyByDefaultPolicyDecisionAdapter implements PolicyDecisionP
     @Override
     public Mono<AccessDecision> execute(AccessRequest input) {
         return Mono.fromSupplier(() -> new AccessDecision(identifiers.next(), DecisionState.DENY,
-                ReasonCode.NO_APPLICABLE_POLICY, List.of(), input.correlationId(), time.now()));
+                ReasonCode.NO_APPLICABLE_POLICY, List.of(), input.requestId(), input.correlationId(),
+                time.now()));
     }
 }

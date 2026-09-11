@@ -5,6 +5,12 @@
 > verdad las tres ramas en un solo árbol y comparar los tres contratos entre sí.
 >
 > **Fecha:** 2026-09-10 · **Rama:** `integration/pdp-pep-opa`
+>
+> **Estado: las cuatro desalineaciones de §3 están resueltas.** En cada una se adoptó el estándar
+> del componente que la tenía mejor resuelta y se adaptaron los otros dos; las decisiones, con su
+> porqué y lo que cambió cada uno, están en [`contracts/README.md`](../../../contracts/README.md).
+> Este documento conserva el diagnóstico porque es la evidencia de por qué se decidió así — la
+> sección 7 resume cómo quedó.
 
 ---
 
@@ -51,16 +57,19 @@ ambos archivos; `security-policy-engine/` entró intacto.
 
 ## 3. El triángulo de contratos
 
-Hoy existen **tres** definiciones de contrato, cada una con su dueño:
+Al momento del diagnóstico existían **tres** definiciones de contrato, cada una con su dueño:
 
-| Contrato | Ruta | Dueño | Estado |
+| Contrato | Ruta entonces | Dueño | Estado |
 |---|---|---|---|
 | PEP → PDP | `contracts/pep-pdp/v1/` | PEP | Versionado, con schemas y ejemplos |
-| PDP → OPA | `security-policy-engine/contracts/` | OPA | Versionado, con schemas y ejemplos |
+| PDP → OPA | `security-policy-engine/contracts/` — dentro del productor | OPA | Versionado, con schemas y ejemplos |
 | El modelo del PDP | `pdp/authorization/` | PDP | Código: `AccessRequest`, `AccessDecision`, `ReasonCode` |
 
 Los extremos están bien documentados cada uno por su lado. **Lo que nadie había comparado es si
 encajan** — y hay cuatro puntos donde no.
+
+> El contrato PDP↔OPA vive ahora en `contracts/pdp-opa/v1/`, en el árbol compartido. La ruta de la
+> tabla es la que tenía cuando se hizo este diagnóstico.
 
 ### 3.1 La entrada de OPA exige dos hechos que el PDP no tiene
 
@@ -165,11 +174,14 @@ auditoría es una decisión, no un detalle de mapeo.
 | **HU-003** | Sigue válida tal como la dejó el handoff. **Añadir `requestId` al modelo** (§3.1): el PEP ya lo manda, OPA lo va a exigir, y meterlo después obliga a tocar el contrato de HU-002 |
 | **HU-005** | Deja de ser «escribir un adaptador». Es **cerrar cuatro contratos** (§3.1–3.4), y tres de ellos son acuerdos entre dos personas, no decisiones de implementación |
 
-**Recomendación:** que `contracts/pdp-opa/v1/` exista en este repositorio con el mismo estatus que
-`contracts/pep-pdp/v1/` — versionado, con schemas y ejemplos, acordado antes de escribir el
-adaptador. Hoy el contrato PDP↔OPA existe pero vive **solo del lado de OPA**, escrito por quien
-produce, no acordado con quien consume. Las cuatro desalineaciones de §3 son consecuencia directa de
-eso, no de que alguien se equivocara.
+**Aplicado:** `contracts/pdp-opa/v1/` ya existe con el mismo estatus que `contracts/pep-pdp/v1/`.
+Los schemas se movieron desde `security-policy-engine/contracts/` al árbol compartido —una sola
+copia, no un duplicado— y `scripts/validate` los valida desde ahí en cada build.
+
+Las cuatro desalineaciones fueron consecuencia de que el contrato PDP↔OPA vivía **solo del lado de
+OPA**, escrito por quien produce y no acordado con quien consume; no de que alguien se equivocara.
+Por eso la regla 1 de [`contracts/README.md`](../../../contracts/README.md) es que un contrato se
+acuerda antes de implementarse.
 
 ---
 
@@ -190,3 +202,39 @@ eso, no de que alguien se equivocara.
 | `consistencia.ps1` | ✅ los 5 slices con la misma forma, incluido `authorization` |
 | `drift.ps1` | ✅ sin deriva (14 excepciones declaradas) |
 | `mapa.ps1` | ✅ 264 clases, 6 slices, 5 puertos con su implementación |
+
+---
+
+## 7. Cómo quedó
+
+Las decisiones completas, con los candidatos que perdieron y por qué, están en
+[`contracts/README.md`](../../../contracts/README.md) (D-U1 a D-U4). Resumen:
+
+| Choque | Gana | Se adaptan |
+|---|---|---|
+| Forma de los hechos | **OPA** — categorías de atributos, versionadas, con doctrina de evidencia | PDP: `AccessRequest` y `AccessDecision` ganan `requestId`; `subject.type`/`resource.type` quedan como constantes escritas en el contrato |
+| Vocabulario de `reasonCode` | **Mecanismo del PDP** (enum cerrado) + **nombres del más preciso** caso por caso | OPA renombra 2 y gana `INDETERMINATE`; el PDP añade 5 códigos |
+| Obligaciones | **OPA** — objetos `{type, parameters}` y fallo cerrado ante tipo desconocido | PEP: pendiente v1.1. PDP: regla de transición escrita |
+| `policyReferences` | **PEP** — `[{id, version}]`: sin versión la traza no reproduce la decisión | OPA emite la referencia versionada; los candidatos declaran `policyVersion` |
+
+**Verificado:** `mvnw verify` 277 pruebas ✅ · `opa test` 12 pruebas, 87,9 % de cobertura ✅ ·
+`opa check --strict` ✅ · `opa fmt --fail` ✅.
+
+### Lo que sigue abierto, y de quién es
+
+| Qué | De quién |
+|---|---|
+| `pep-pdp/v1.1`: `obligations` como objetos y fallo cerrado ante **tipo** desconocido, no ante lista no vacía | David — es su componente; el contrato ya dice qué tiene que hacer |
+| Implementar la regla de transición de obligaciones en el adaptador de OPA | HU-005, cuando existan obligaciones que transportar |
+| `ANALYSIS.md` y `comparison_report.md` en la raíz | Decidir si se retiran (§5) |
+
+### Un hallazgo aparte: la validación de OPA estaba rota en Windows
+
+`opa fmt --fail`, que corre dentro de `scripts/validate`, rechazaba **siete** archivos `.rego` sin
+que nadie los hubiera tocado. En git están en LF, pero con `core.autocrlf=true` —el default de
+Windows— salen en CRLF al hacer checkout. Los scripts `sh` tenían el mismo problema, y ahí es peor:
+un `` en el shebang hace fallar el intérprete dentro del contenedor.
+
+En un equipo mixto Mac/Windows eso significa que la validación pasaba para unos y fallaba para
+otros, sin que el archivo cambiara. Resuelto fijando `*.rego` y `security-policy-engine/scripts/**`
+a `eol=lf` en `.gitattributes`, y normalizando el árbol.

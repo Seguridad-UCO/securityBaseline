@@ -32,7 +32,8 @@ public final class AuthorizeInteractorImpl implements AuthorizeInteractor {
     public Mono<AccessDecisionWebResponse> execute(AuthorizeRawRequest input) {
         return Mono.deferContextual(context -> SecurityContext.currentPrincipal()
                         .map(principal -> AuthorizeRequestMapper.toRequest(input, principal.tenantId(),
-                                principal.subject(), context.getOrDefault("correlationId", ""))))
+                                principal.subject(), context.getOrDefault("requestId", ""),
+                                context.getOrDefault("correlationId", ""))))
                 .flatMap(useCase::execute)
                 .map(AccessDecisionResponseMapper::toResponse);
     }

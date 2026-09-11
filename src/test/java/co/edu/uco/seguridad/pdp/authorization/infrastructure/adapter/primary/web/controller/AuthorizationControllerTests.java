@@ -20,7 +20,7 @@ class AuthorizationControllerTests {
     @Test
     void authorize_delegates_to_the_interactor_and_replies_with_200() {
         AccessDecisionWebResponse expected = new AccessDecisionWebResponse(UUID.randomUUID().toString(), "DENY",
-                "NO_APPLICABLE_POLICY", List.of(), "corr-1", "2026-09-06T00:00:00Z");
+                "NO_APPLICABLE_POLICY", List.of(), "req-1", "corr-1", "2026-09-06T00:00:00Z");
         AuthorizationController controller = new AuthorizationController(raw -> Mono.just(expected));
         MockServerWebExchange exchange =
                 MockServerWebExchange.from(MockServerHttpRequest.post("/api/v1/authorize").build());

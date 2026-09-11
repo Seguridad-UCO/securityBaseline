@@ -27,5 +27,5 @@ positiva. El PDP resuelve y protege esos hechos antes de enviarlos a OPA.
 Los únicos tipos admitidos son `AUDIT`, `MASK_FIELDS`, `REQUIRE_MFA`, `READ_ONLY` y
 `LOG_SECURITY_EVENT`, con parámetros objeto. OPA solamente las declara; el PEP las
 ejecuta. Un consumidor que reciba una obligación desconocida con un `ALLOW` debe cerrar
-la solicitud. El contrato completo está en `contracts/obligation.schema.json`.
+la solicitud. El contrato completo está en `contracts/pdp-opa/v1/obligation.schema.json`.
 

@@ -66,6 +66,7 @@ public final class RequiredArgumentMessages {
     public static final String AUTHORIZE_USE_CASE = "se requiere el caso de uso de autorización";
 
     // Componentes de AccessRequest / AccessDecision (autorizacion).
+    public static final String REQUEST_ID = "se requiere el identificador de la solicitud";
     public static final String CORRELATION_ID = "se requiere el identificador de correlación";
     public static final String DECISION_ID = "se requiere el identificador de la decisión";
     public static final String DECISION_STATE = "se requiere el estado de la decisión";

@@ -15,13 +15,14 @@ public final class AuthorizeRequestMapper {
     }
 
     public static AccessRequest toRequest(AuthorizeRawRequest raw, TenantId tenantId, String subject,
-            String correlationId) {
+            String requestId, String correlationId) {
         return new AccessRequest(
                 tenantId,
                 subject,
                 RequestFieldParser.parse("applicationId", raw.applicationId(), ApplicationId::of),
                 RequestFieldParser.parse("resourcePath", raw.resourcePath(), ResourcePath::new),
                 RequestFieldParser.parse("action", raw.action(), HttpVerb::parse),
+                requestId,
                 correlationId);
     }
 }

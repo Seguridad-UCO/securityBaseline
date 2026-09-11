@@ -5,15 +5,15 @@ import rego.v1
 
 deny_from(candidate) := {
 	"effect": "DENY",
-	"reasonCode": object.get(candidate, "reasonCode", "EXPLICIT_DENY"),
-	"policyId": object.get(candidate, "policyId", "application.policy-principal"),
+	"reasonCode": object.get(candidate, "reasonCode", "POLICY_DENY"),
+	"policyReferences": candidate_references(candidate),
 	"obligations": [],
 }
 
 allow_from(candidate) := {
 	"effect": "ALLOW",
 	"reasonCode": object.get(candidate, "reasonCode", "POLICY_ALLOWED"),
-	"policyId": candidate.policyId,
+	"policyReferences": candidate_references(candidate),
 	"obligations": with_audit(candidate),
 }
 

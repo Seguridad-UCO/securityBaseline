@@ -12,12 +12,17 @@ allow_candidates contains {
   "effect": "ALLOW",
   "applicationId": "real-system",
   "policyId": "application.real-system",
+  "policyVersion": "1.0",
   "tenantScope": "SAME_TENANT",
   "obligations": []
 } if {
   # combine roles, profiles, entitlements, relationships and relevant context here
 }
 ```
+
+`policyVersion` is required on an allow candidate: an auditable decision has to say which
+version decided (see `contracts/README.md`, D-U4). An allow candidate without it is reported as
+`INDETERMINATE / POLICY_OUTPUT_INVALID`, not silently dropped.
 
 `applicationId` must exactly match `input.application.id`; a candidate for one consumer
 cannot influence another consumer. `tenantScope: "CROSS_TENANT"` additionally requires PDP-resolved cross-access evidence.

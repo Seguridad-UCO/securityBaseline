@@ -22,7 +22,7 @@ except ImportError as exc:
     raise SystemExit("python package 'jsonschema' is required for contract validation") from exc
 
 root = Path(sys.argv[1])
-contracts = root / "contracts"
+contracts = root.parent / "contracts" / "pdp-opa" / "v1"
 schemas = [json.loads(path.read_text()) for path in contracts.glob("*.schema.json")]
 schema = next(item for item in schemas if item["title"] == "PolicyEvaluationInput")
 resolver = RefResolver((contracts / "").as_uri() + "/", schema,

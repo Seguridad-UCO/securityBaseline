@@ -17,6 +17,7 @@ public final class AccessDecisionResponseMapper {
                 decision.state().name(),
                 decision.reasonCode().name(),
                 decision.policyReferences().stream().map(AccessDecisionResponseMapper::toReferenceResponse).toList(),
+                decision.requestId(),
                 decision.correlationId(),
                 decision.decidedAt().toString());
     }

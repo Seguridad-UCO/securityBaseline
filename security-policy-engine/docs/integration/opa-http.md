@@ -12,7 +12,7 @@ técnica en un allow.
 
 ```sh
 curl --fail --silent http://localhost:8181/health
-jq -n --slurpfile input contracts/examples/valid/minimal-same-tenant.json '{input: $input[0]}' | \
+jq -n --slurpfile input ../contracts/pdp-opa/v1/examples/valid/minimal-same-tenant.json '{input: $input[0]}' | \
   curl --fail --silent -X POST \
   http://localhost:8181/v1/data/security/authorization/decision \
   -H 'content-type: application/json' \
@@ -22,7 +22,7 @@ jq -n --slurpfile input contracts/examples/valid/minimal-same-tenant.json '{inpu
 La segunda llamada entrega el envelope nativo y, sin una política de aplicación, niega:
 
 ```json
-{"result":{"effect":"DENY","reasonCode":"NO_POLICY_MATCH","policyId":"core.composition","obligations":[]},"decision_id":"..."}
+{"result":{"effect":"DENY","reasonCode":"NO_APPLICABLE_POLICY","policyReferences":[{"id":"core.composition","version":"1.0"}],"obligations":[]},"decision_id":"..."}
 ```
 
 `decision_id` y una revisión de bundle son metadatos operativos, no hechos de negocio.

@@ -6,7 +6,7 @@ PolicyEvaluationInput
   ├─ explicit deny de aplicación ──────────→ DENY
   ├─ tenant distinto sin candidato + prueba → DENY / TENANT_ISOLATION_FAILED
   ├─ candidato ALLOW válido ───────────────→ ALLOW
-  └─ sin coincidencia ─────────────────────→ DENY / NO_POLICY_MATCH
+  └─ sin coincidencia ─────────────────────→ DENY / NO_APPLICABLE_POLICY
 ```
 
 El `explicit deny` vence a cualquier allow. El guard de tenant exige igualdad por

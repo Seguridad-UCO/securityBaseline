@@ -65,11 +65,11 @@ public final class AuthorizeUseCaseImpl implements AuthorizeUseCase {
 
     private AccessDecision deny(AccessRequest input, ReasonCode reasonCode) {
         return new AccessDecision(identifiers.next(), DecisionState.DENY, reasonCode, List.of(),
-                input.correlationId(), time.now());
+                input.requestId(), input.correlationId(), time.now());
     }
 
     private AccessDecision indeterminate(AccessRequest input) {
         return new AccessDecision(identifiers.next(), DecisionState.INDETERMINATE, ReasonCode.CONTEXT_UNAVAILABLE,
-                List.of(), input.correlationId(), time.now());
+                List.of(), input.requestId(), input.correlationId(), time.now());
     }
 }

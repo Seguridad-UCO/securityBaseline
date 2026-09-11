@@ -5,30 +5,60 @@ import data.security.authorization.application.guards
 import data.security.authorization.application.validation
 import rego.v1
 
-decision := {"effect": "DENY", "reasonCode": "INVALID_INPUT", "policyId": "core.input-validation", "obligations": []} if {
+# Los reasonCode y los effect salen del vocabulario unico acordado entre PDP, PEP y OPA:
+# contracts/reason-codes.md. INDETERMINATE marca lo que es un defecto -- de la entrada o del
+# conjunto de politicas -- y no una denegacion de negocio: el consumidor falla cerrado igual, pero
+# el motivo es honesto y se puede alertar sobre el.
+
+decision := {
+	"effect": "INDETERMINATE",
+	"reasonCode": "INVALID_INPUT",
+	"policyReferences": application.core_references("core.input-validation"),
+	"obligations": [],
+} if {
 	not validation.valid
 }
 
-decision := {"effect": "DENY", "reasonCode": "EXPLICIT_DENY", "policyId": "core.composition", "obligations": []} if {
+decision := {
+	"effect": "DENY",
+	"reasonCode": "POLICY_DENY",
+	"policyReferences": application.core_references("core.composition"),
+	"obligations": [],
+} if {
 	validation.valid
 	count(application.explicit_denies) > 0
 }
 
-decision := {"effect": "DENY", "reasonCode": "POLICY_OUTPUT_INVALID", "policyId": candidate.policyId, "obligations": []} if {
+decision := {
+	"effect": "INDETERMINATE",
+	"reasonCode": "POLICY_OUTPUT_INVALID",
+	"policyReferences": application.candidate_references(candidate),
+	"obligations": [],
+} if {
 	validation.valid
 	count(application.explicit_denies) == 0
 	count(application.invalid_allow_candidates) > 0
 	candidate := application.invalid_allow_candidates[_]
 }
 
-decision := {"effect": "DENY", "reasonCode": "POLICY_AMBIGUITY", "policyId": "core.composition", "obligations": []} if {
+decision := {
+	"effect": "INDETERMINATE",
+	"reasonCode": "POLICY_AMBIGUITY",
+	"policyReferences": application.core_references("core.composition"),
+	"obligations": [],
+} if {
 	validation.valid
 	count(application.explicit_denies) == 0
 	count(application.invalid_allow_candidates) == 0
 	count(application.valid_allow_candidates) > 1
 }
 
-decision := {"effect": "DENY", "reasonCode": "TENANT_ISOLATION_FAILED", "policyId": "core.tenant-guard", "obligations": []} if {
+decision := {
+	"effect": "DENY",
+	"reasonCode": "TENANT_ISOLATION_FAILED",
+	"policyReferences": application.core_references("core.tenant-guard"),
+	"obligations": [],
+} if {
 	validation.valid
 	count(application.explicit_denies) == 0
 	count(application.invalid_allow_candidates) == 0
@@ -53,7 +83,12 @@ decision := application.allow_from(candidate) if {
 	guards.tenant_guard(candidate)
 }
 
-decision := {"effect": "DENY", "reasonCode": "NO_POLICY_MATCH", "policyId": "core.composition", "obligations": []} if {
+decision := {
+	"effect": "DENY",
+	"reasonCode": "NO_APPLICABLE_POLICY",
+	"policyReferences": application.core_references("core.composition"),
+	"obligations": [],
+} if {
 	validation.valid
 	count(application.explicit_denies) == 0
 	count(application.invalid_allow_candidates) == 0

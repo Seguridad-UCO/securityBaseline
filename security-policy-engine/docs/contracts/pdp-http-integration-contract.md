@@ -31,19 +31,19 @@ El cuerpo es siempre un envelope OPA:
 ```
 
 `PolicyEvaluationInput` se define formalmente en
-`contracts/policy-evaluation-input.schema.json`. Antes de hacer la llamada, el adapter
+`contracts/pdp-opa/v1/policy-evaluation-input.schema.json`. Antes de hacer la llamada, el adapter
 debe validar ese schema y rechazar localmente datos malformados. Solo el PDP puede
 proveer hechos: el cliente final nunca debe poder enviar directamente este objeto.
 
 Respuesta HTTP exitosa de OPA:
 
 ```json
-{"result":{"effect":"DENY","reasonCode":"NO_POLICY_MATCH","policyId":"core.composition","obligations":[]},"decision_id":"opa-generated-id"}
+{"result":{"effect":"DENY","reasonCode":"NO_APPLICABLE_POLICY","policyReferences":[{"id":"core.composition","version":"1.0"}],"obligations":[]},"decision_id":"opa-generated-id"}
 ```
 
 Un `200` representa que OPA evaluó correctamente; no representa autorización. La decisión
 está en `result.effect`. El adapter valida `result` con
-`contracts/policy-decision.schema.json`, conserva `decision_id` solo como trazabilidad y
+`contracts/pdp-opa/v1/policy-decision.schema.json`, conserva `decision_id` solo como trazabilidad y
 no lo usa como hecho de autorización.
 
 ## Algoritmo obligatorio del adapter

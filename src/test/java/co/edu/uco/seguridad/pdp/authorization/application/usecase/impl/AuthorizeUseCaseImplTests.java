@@ -32,7 +32,7 @@ class AuthorizeUseCaseImplTests {
     private static final ApplicationId APPLICATION = new ApplicationId(UUID.randomUUID());
     private static final ResourcePath PATH = new ResourcePath("/estudiantes");
     private static final AccessRequest REQUEST =
-            new AccessRequest(TENANT, "test-subject", APPLICATION, PATH, HttpVerb.GET, "corr-1");
+            new AccessRequest(TENANT, "test-subject", APPLICATION, PATH, HttpVerb.GET, "req-1", "corr-1");
     private static final UUID DECISION_ID = UUID.randomUUID();
     private static final Instant DECIDED_AT = Instant.parse("2026-09-06T00:00:00Z");
 
@@ -105,7 +105,7 @@ class AuthorizeUseCaseImplTests {
     @Test
     void delegates_to_the_policy_port_when_application_and_resource_exist() {
         AccessDecision expected = new AccessDecision(UUID.randomUUID(), DecisionState.DENY,
-                ReasonCode.NO_APPLICABLE_POLICY, List.of(), "corr-1", Instant.parse("2026-09-06T00:00:00Z"));
+                ReasonCode.NO_APPLICABLE_POLICY, List.of(), "req-1", "corr-1", Instant.parse("2026-09-06T00:00:00Z"));
         AuthorizeUseCaseImpl useCase = new AuthorizeUseCaseImpl(
                 query -> Mono.empty(), lookup -> Mono.empty(), request -> Mono.just(expected),
                 () -> { throw new AssertionError("must not generate an id: the port already returned a decision"); },
