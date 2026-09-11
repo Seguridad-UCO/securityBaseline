@@ -1,0 +1,43 @@
+#!/usr/bin/env sh
+set -eu
+
+root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+
+if ! command -v opa >/dev/null 2>&1; then
+  echo "opa is required for validation (install OPA or run this in the container)." >&2
+  exit 127
+fi
+
+opa fmt --fail "$root/policies"
+opa check --strict "$root/policies"
+
+python3 - "$root" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+try:
+    from jsonschema import Draft202012Validator, RefResolver
+except ImportError as exc:
+    raise SystemExit("python package 'jsonschema' is required for contract validation") from exc
+
+root = Path(sys.argv[1])
+contracts = root / "contracts"
+schemas = [json.loads(path.read_text()) for path in contracts.glob("*.schema.json")]
+schema = next(item for item in schemas if item["title"] == "PolicyEvaluationInput")
+resolver = RefResolver((contracts / "").as_uri() + "/", schema,
+                       store={item["$id"]: item for item in schemas})
+validator = Draft202012Validator(schema, resolver=resolver)
+
+valid = sorted((contracts / "examples" / "valid").glob("*.json"))
+invalid = sorted((contracts / "examples" / "invalid").glob("*.json"))
+for path in valid:
+    errors = sorted(validator.iter_errors(json.loads(path.read_text())), key=str)
+    if errors:
+        raise SystemExit(f"valid example rejected: {path}: {errors[0].message}")
+for path in invalid:
+    errors = list(validator.iter_errors(json.loads(path.read_text())) )
+    if not errors:
+        raise SystemExit(f"invalid example accepted: {path}")
+print(f"validated {len(valid)} valid and {len(invalid)} invalid contract examples")
+PY
