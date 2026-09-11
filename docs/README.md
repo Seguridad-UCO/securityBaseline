@@ -5,6 +5,10 @@ nombre y un recurso con su acción, y consultar el catálogo resultante. Cada cr
 el asesor tiene una página que responde qué se decidió, por qué, cómo se implementa y dónde se
 verifica.
 
+> **¿Buscas el panorama completo de la plataforma** (PDP + PEP + OPA, diagramas, qué corre hoy y qué
+> es plan)? Eso vive en [`PLATAFORMA.md`](PLATAFORMA.md), no aquí — esta página es evidencia de los
+> 23 criterios del PDP, un solo componente.
+
 ## Navegación por tema
 
 - [Enfoque general de los 23 criterios](baseline-criteria-overview.md): índice para sustentación con

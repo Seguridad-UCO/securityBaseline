@@ -1,3 +1,7 @@
+> **Archivado (2026-09-11).** Análisis puntual de alineación del PEP contra
+> `security-platform-architecture`, previo a la unificación de contratos. Se conserva como
+> registro. El estado actual está en [`docs/PLATAFORMA.md`](../../../docs/PLATAFORMA.md).
+
 # Análisis de alineación con Clean Architecture
 
 ## Resumen general

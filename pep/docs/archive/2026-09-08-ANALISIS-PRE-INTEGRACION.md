@@ -1,3 +1,9 @@
+> **Archivado (2026-09-11).** Escrito antes de que existieran HU-002 (`/api/v1/authorize`), el
+> contrato `pdp-opa` y la unificación de los tres contratos. Afirma cosas que ya no son ciertas —
+> p. ej. "el PDP aún no está completamente implementado". Se conserva como registro de en qué
+> estado estaba el análisis cuando se escribió, no como referencia vigente. El estado actual está en
+> [`docs/PLATAFORMA.md`](../../../docs/PLATAFORMA.md).
+
 # Análisis del proyecto de Seguridad
 
 ## Estado General del Proyecto

@@ -1,5 +1,8 @@
 # Security policy engine
 
+> Panorama de los tres componentes (PDP, PEP, OPA) y cómo encajan hoy:
+> [`../docs/PLATAFORMA.md`](../docs/PLATAFORMA.md).
+
 Motor de políticas OPA independiente del PDP actual. El PDP entrega hechos confiables,
 OPA toma una decisión lógica y el PEP aplica esa decisión y sus obligaciones.
 

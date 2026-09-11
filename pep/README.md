@@ -1,5 +1,8 @@
 # PEP de la Plataforma Central de Seguridad
 
+> Panorama de los tres componentes (PDP, PEP, OPA) y cómo encajan hoy:
+> [`../docs/PLATAFORMA.md`](../docs/PLATAFORMA.md).
+
 Proxy inverso independiente: valida Bearer JWT, construye SolicitudAcceso, consulta el PDP y reenvía
 únicamente ante un ALLOW válido. El PEP no evalúa roles, políticas Rego ni catálogos.
 

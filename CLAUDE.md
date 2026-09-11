@@ -2,7 +2,9 @@
 
 Servicio Spring Boot **reactivo** que implementa el contenedor **PDP** (Policy Decision Point) del
 mapa C4 aceptado. Autentica vía Keycloak (patrón BFF), persiste en SurrealDB y organiza el dominio
-con Spring Modulith.
+con Spring Modulith. Este repositorio también aloja al **PEP** ([`pep/`](pep/)) y a **OPA**
+([`security-policy-engine/`](security-policy-engine/)) — ver [`docs/PLATAFORMA.md`](docs/PLATAFORMA.md)
+para cómo encajan los tres.
 
 > **Para trabajar una historia, usa el flujo de agentes** — ver [`.claude/README.md`](.claude/README.md).
 > El diseño del harness y su porqué están en [`docs/ai-harness/README.md`](docs/ai-harness/README.md).
