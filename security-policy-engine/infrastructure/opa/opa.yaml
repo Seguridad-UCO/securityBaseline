@@ -1,0 +1,3 @@
+# The host controls remote bundle endpoints, credentials, and a redacting decision-log
+# sink. Local development intentionally emits no decision logs, because raw input can
+# contain identities and sensitive attributes.

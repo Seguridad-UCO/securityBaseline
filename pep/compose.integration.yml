@@ -1,0 +1,37 @@
+# Local contract demonstration only. Does not alter the existing PDP compose stack.
+services:
+  fixtures:
+    build:
+      context: ..
+      dockerfile: pep/Dockerfile
+      target: fixtures
+    ports:
+      - "127.0.0.1:18080:18080"
+    networks:
+      - protected
+  pep:
+    build:
+      context: ..
+      dockerfile: pep/Dockerfile
+      target: runtime
+    ports:
+      - "127.0.0.1:8081:8081"
+    environment:
+      PEP_INGRESS_ALLOWINSECUREHTTP: "true"
+      PEP_INGRESS_ISSUER: http://localhost:18080
+      PEP_INGRESS_JWKSURI: http://fixtures:18080/jwks
+      PEP_INGRESS_ROUTES_0_PREFIX: /apps/demo
+      PEP_INGRESS_ROUTES_0_APPLICATIONID: demo-app
+      PEP_INGRESS_ROUTES_0_ENVIRONMENT: local
+      PEP_INGRESS_ROUTES_0_TARGET: http://fixtures:18081
+      PEP_INGRESS_ROUTES_0_AUDIENCES_0: protected-api
+      PEP_PDP_ALLOWINSECUREHTTP: "true"
+      PEP_PDP_BASEURL: http://fixtures:18080
+    depends_on:
+      - fixtures
+    networks:
+      - protected
+networks:
+  protected:
+    internal: true
+

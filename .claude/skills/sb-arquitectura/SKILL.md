@@ -5,9 +5,9 @@ description: Arquitectura real de securityBaseline (PDP) — modulith de slices 
 
 # Skill: sb-arquitectura
 
-Fuente de verdad para agentes. **Derivada del código, no de `docs/`.** La documentación describe la
+Fuente de verdad para agentes. **Derivada del código, no de `pdp/docs/`.** La documentación describe la
 intención del proyecto y ya se saneó, pero envejece con cada refactorización: para convención manda
-el código. `.claude/tools/drift.ps1` verifica que ni `docs/` ni estas skills afirmen lo que el
+el código. `.claude/tools/drift.ps1` verifica que ni `pdp/docs/` ni estas skills afirmen lo que el
 código no sostiene — **córrelo cuando cambies una convención aquí**.
 
 **Regla de esta skill:** ningún ejemplo se pega como bloque de código. Cada fila apunta al archivo
@@ -26,7 +26,7 @@ Para nomenclatura, excepciones, mensajes, DTOs y estilo, ver `sb-estandares`. Pa
 | `co.edu.uco.seguridad.pdp` | El **negocio**: modulith de Spring Modulith con 4 slices + `commons` | Solo en `infrastructure` |
 
 `ModulithStructureTests` verifica el mapa de dependencias entre módulos de `pdp`.
-`LayeredArchitectureTests` verifica las tres reglas de capa. **Ambas corren en `./mvnw verify`.**
+`LayeredArchitectureTests` verifica las tres reglas de capa. **Ambas corren en `./mvnw -f pdp/pom.xml verify`.**
 
 ---
 
@@ -56,14 +56,14 @@ infrastructure  ──►  application  ──►  domain
 - `application` no depende de `infrastructure`. **Ni de Spring** (ver "Cableado explícito").
 - `commons` no depende de nada del proyecto salvo `shared.message`.
 
-Las tres primeras reglas están en `src/test/java/co/edu/uco/seguridad/LayeredArchitectureTests.java`.
+Las tres primeras reglas están en `pdp/src/test/java/co/edu/uco/seguridad/LayeredArchitectureTests.java`.
 Un `import` que las viole rompe el build, no la revisión de código.
 
 ---
 
 ## Árbol real de un slice — `tenants`
 
-Rutas relativas a `src/main/java/co/edu/uco/seguridad/pdp/tenants/`.
+Rutas relativas a `pdp/src/main/java/co/edu/uco/seguridad/pdp/tenants/`.
 
 ### domain — Java puro, sin frameworks
 

@@ -19,12 +19,12 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $repo     = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-$pdpRoot  = Join-Path $repo 'src/main/java/co/edu/uco/seguridad/pdp'
+$pdpRoot  = Join-Path $repo 'pdp/src/main/java/co/edu/uco/seguridad/pdp'
 
-if (-not (Test-Path $pdpRoot)) { Write-Error 'No se encontro src/main/java/co/edu/uco/seguridad/pdp.' }
+if (-not (Test-Path $pdpRoot)) { Write-Error 'No se encontro pdp/src/main/java/co/edu/uco/seguridad/pdp.' }
 
 # --- Excepciones declaradas -------------------------------------------------
-$ignorePath = Join-Path $repo 'docs/ai-harness/consistencia-ignore.txt'
+$ignorePath = Join-Path $repo 'pdp/docs/ai-harness/consistencia-ignore.txt'
 $ignore = @()
 if (Test-Path $ignorePath) {
     $ignore = Get-Content -Path $ignorePath |
@@ -192,7 +192,7 @@ if ($hallazgos.Count -eq 0) {
     }
     Write-Output ''
     Write-Output 'Una divergencia legitima (una capacidad que ese slice no necesita) se declara en'
-    Write-Output 'docs/ai-harness/consistencia-ignore.txt con su razon. Todo lo demas se corrige.'
+    Write-Output 'pdp/docs/ai-harness/consistencia-ignore.txt con su razon. Todo lo demas se corrige.'
 }
 
 Write-Output ''

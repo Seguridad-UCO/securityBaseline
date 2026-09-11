@@ -31,7 +31,7 @@ Tu trabajo son **cuatro juicios** y una comprobación de completitud. Nada más.
 Invoca `sb-arquitectura`, `sb-estandares`, `sb-criterios`, `sb-testing` y, si el cambio toca
 flujo reactivo o fronteras de Modulith, `sb-reactivo`.
 
-Lee el plan en `docs/ai-harness/workspace/planes/PLAN-{HU|HT}-{ID}.md`. **Si no existe, detente**:
+Lee el plan en `pdp/docs/ai-harness/workspace/planes/PLAN-{HU|HT}-{ID}.md`. **Si no existe, detente**:
 sin contrato no hay nada contra qué validar. Pídelo.
 
 ---
@@ -42,7 +42,7 @@ sin contrato no hay nada contra qué validar. Pídelo.
 powershell -NoProfile -ExecutionPolicy Bypass -File .claude/tools/verificar.ps1
 ```
 
-Pega el resumen en el reporte **tal cual**. No abras `target/verificar-ultimo.log` salvo que el
+Pega el resumen en el reporte **tal cual**. No abras `pdp/target/verificar-ultimo.log` salvo que el
 resumen sea insuficiente para explicar un fallo concreto.
 
 | Salida | Qué haces |
@@ -53,6 +53,29 @@ resumen sea insuficiente para explicar un fallo concreto.
 | `COBERTURA` bajo umbral | Bloqueante |
 | `ARQUITECTURA` | Bloqueante. Cita la regla violada |
 | `ESTADO: VERDE` | Sigue |
+
+**`verificar.ps1` sin flags corre `clean verify`, y esa es la única corrida que vale como juicio.**
+`-Rapido` no ejecuta `jacoco-check`: un VERDE suyo **no** dice nada sobre cobertura. Nunca aceptes
+`-Rapido` como evidencia de que el cambio pasa el gate.
+
+> **Trampa comprobada el 2026-09-06.** Un refactor que adelgaza un puerto puede dejar una clase
+> huérfana: `TenantRepository.findById` construía `TenantEntity`, se sustituyó por `findStatusById`
+> —que no lo construye— y ninguna prueba volvió a tocar esa clase. El paquete cayó a 0 % y el
+> pipeline lo cazó, no la máquina local. **Cuando el plan retire o cambie la firma de un método de
+> puerto, comprueba qué clases dejaron de tener quien las construya.**
+
+Corre también las otras dos comprobaciones ejecutables. No son opcionales ni las sustituye tu
+lectura:
+
+```
+powershell -NoProfile -ExecutionPolicy Bypass -File .claude/tools/consistencia.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .claude/tools/drift.ps1
+```
+
+| Salida | Qué haces |
+|---|---|
+| `consistencia.ps1` con hallazgos | Bloqueante. El slice no se parece a los demás: cítalo |
+| `drift.ps1` con hallazgos | Bloqueante si el cambio los introdujo. Cita el documento y la clase |
 
 Refresca el mapa antes de la fase 2, para comparar contra el estado real:
 
@@ -98,9 +121,9 @@ verifica esto. Mira especialmente los nombres de clases nuevas y los textos de `
 
 El fallo histórico de este proyecto. Comprueba:
 
-- ¿El cambio renombra o mueve algo que `docs/` referencia por ruta?
+- ¿El cambio renombra o mueve algo que `pdp/docs/` referencia por ruta?
 - ¿Añade un criterio de la línea base cuya evidencia documentada ya no resuelve?
-- ¿Deja `docs/` afirmando algo que ahora es falso?
+- ¿Deja `pdp/docs/` afirmando algo que ahora es falso?
 
 Comprobación ejecutable, antes de juzgar a ojo:
 
@@ -137,7 +160,7 @@ Los marcados 🤖 ya los resolvió la fase 1: no los releas.
 ## FASE 5 — Escribir el reporte
 
 Copia `.claude/templates/REPORTE.md`, complétalo y escríbelo en
-`docs/ai-harness/workspace/reportes/REPORTE-{HU|HT}-{ID}.md`.
+`pdp/docs/ai-harness/workspace/reportes/REPORTE-{HU|HT}-{ID}.md`.
 
 Actualiza la fila **Validación** de la tabla de trazabilidad del plan.
 
@@ -158,7 +181,7 @@ Cierra con un mensaje corto:
 | No hagas | Por qué |
 |---|---|
 | Releer a mano lo que `LayeredArchitectureTests` ya verifica | Redundante y menos fiable |
-| Marcar ⛔ porque el código no se parece a `docs/` | `docs/` tiene deriva conocida; manda el código |
+| Marcar ⛔ porque el código no se parece a `pdp/docs/` | `pdp/docs/` tiene deriva conocida; manda el código |
 | Aprobar con pruebas en rojo | Un solo fallo es bloqueante |
 | Sugerir refactors fuera del alcance del plan | No es una revisión de estilo general |
 | Abrir el log completo de Maven | Para eso existe el resumen de `verificar.ps1` |

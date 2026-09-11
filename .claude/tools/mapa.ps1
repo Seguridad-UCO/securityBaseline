@@ -1,6 +1,6 @@
 # mapa.ps1 - Nivel 0 del grafo de conocimiento.
 #
-# Regenera docs/ai-harness/PROJECT-MAP.md a partir del codigo real: inventario por slice y por rol,
+# Regenera pdp/docs/ai-harness/PROJECT-MAP.md a partir del codigo real: inventario por slice y por rol,
 # puertos con sus implementaciones, endpoints y cobertura de pruebas por slice.
 #
 # Determinista y sin dependencias: la salida solo cambia si cambia el codigo.
@@ -15,9 +15,9 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $repo    = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-$base    = 'src/main/java/co/edu/uco/seguridad'
+$base    = 'pdp/src/main/java/co/edu/uco/seguridad'
 $srcRoot = Join-Path $repo $base
-$outFile = Join-Path $repo 'docs/ai-harness/PROJECT-MAP.md'
+$outFile = Join-Path $repo 'pdp/docs/ai-harness/PROJECT-MAP.md'
 
 if (-not (Test-Path $srcRoot)) {
     Write-Error "No se encontro $base. Ejecuta el script desde el repositorio securityBaseline."
@@ -27,19 +27,24 @@ if (-not (Test-Path $srcRoot)) {
 # Cada fila es: patron de ruta (relativa al slice) -> rol legible. Primera coincidencia gana,
 # asi que las rutas mas especificas van antes que las generales.
 $roles = @(
+    @{ P = 'commons/exception/';                       R = 'Excepcion de dominio' },
+    @{ P = 'commons/message/';                         R = 'Catalogo de mensajes' },
+    @{ P = 'commons/model/';                            R = 'Value object' },
+    @{ P = 'domain/rule/impl/';                        R = 'Regla de dominio (impl)' },
+    @{ P = 'domain/rule/model/';                       R = 'Dato de regla (hecho resuelto)' },
+    @{ P = 'domain/rule/';                             R = 'Regla de dominio (contrato)' },
     @{ P = 'domain/exception/';                        R = 'Excepcion de dominio' },
     @{ P = 'domain/event/';                            R = 'Evento de dominio' },
-    @{ P = 'domain/';                                  R = 'Dominio (entidad / VO / enum)' },
+    @{ P = 'domain/message/';                          R = 'Catalogo de mensajes' },
+    @{ P = 'domain/model/';                            R = 'Value object' },
+    @{ P = 'domain/';                                  R = 'Dominio (agregado / criteria)' },
     @{ P = 'application/usecase/impl/';                R = 'Caso de uso (impl)' },
     @{ P = 'application/usecase/';                     R = 'Caso de uso (contrato)' },
-    @{ P = 'application/rule/impl/';                   R = 'Regla (impl)' },
-    @{ P = 'application/rule/';                        R = 'Regla (contrato)' },
-    @{ P = 'application/rulesvalidator/';              R = 'Coordinador de reglas' },
-    @{ P = 'application/port/secondary/';              R = 'Puerto de salida' },
-    @{ P = 'application/port/primary/dto/request/';    R = 'DTO de entrada al nucleo' },
-    @{ P = 'application/port/primary/dto/response/';   R = 'DTO de salida del nucleo' },
-    @{ P = 'application/exception/';                   R = 'Excepcion de aplicacion' },
-    @{ P = 'application/message/';                     R = 'Catalogo de mensajes' },
+    @{ P = 'application/rule/validator/impl/';         R = 'Validador de reglas (impl)' },
+    @{ P = 'application/rule/validator/';              R = 'Validador de reglas (contrato)' },
+    @{ P = 'application/secondaryport/';               R = 'Puerto de salida' },
+    @{ P = 'application/primaryport/request/';         R = 'DTO de entrada al nucleo' },
+    @{ P = 'application/primaryport/response/';        R = 'DTO de salida del nucleo' },
     @{ P = 'web/controller/';                          R = 'Controller' },
     @{ P = 'web/dto/request/raw/';                     R = 'DTO crudo HTTP' },
     @{ P = 'web/dto/response/';                        R = 'DTO de respuesta HTTP' },
@@ -78,12 +83,13 @@ if (Test-Path $pdpRoot) {
 }
 
 # --- Puertos e implementaciones --------------------------------------------
-# Un puerto es toda interfaz bajo application/port/secondary. Su implementacion es la clase que
-# la nombra en su clausula implements.
+# Un puerto es toda interfaz bajo application/secondaryport, en cualquier subpaquete: repository/
+# para los de persistencia, y sueltos los que hablan con un servicio externo (PolicyDecisionPort).
+# Su implementacion es la clase que la nombra en su clausula implements.
 $ports = @{}
 foreach ($f in $allFiles) {
     $rel = Get-Relative $f
-    if ($rel -like '*application/port/secondary/*') {
+    if ($rel -like '*application/secondaryport/*') {
         $ports[$f.BaseName] = @()
     }
 }
@@ -117,7 +123,7 @@ foreach ($f in $allFiles) {
 }
 
 # --- Pruebas por slice ------------------------------------------------------
-$testRoot  = Join-Path $repo 'src/test/java/co/edu/uco/seguridad'
+$testRoot  = Join-Path $repo 'pdp/src/test/java/co/edu/uco/seguridad'
 $testFiles = @()
 if (Test-Path $testRoot) {
     $testFiles = Get-ChildItem -Path $testRoot -Recurse -Filter *.java
@@ -267,4 +273,4 @@ if ($Check) {
 }
 
 [IO.File]::WriteAllText($outFile, $content, (New-Object System.Text.UTF8Encoding($false)))
-Write-Output ('Generado docs/ai-harness/PROJECT-MAP.md - {0} clases de produccion, {1} de prueba, {2} slices.' -f $mainCount, $testCount, $slices.Count)
+Write-Output ('Generado pdp/docs/ai-harness/PROJECT-MAP.md - {0} clases de produccion, {1} de prueba, {2} slices.' -f $mainCount, $testCount, $slices.Count)

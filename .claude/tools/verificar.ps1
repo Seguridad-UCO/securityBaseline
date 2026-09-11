@@ -10,7 +10,8 @@
 #   pwsh .claude/tools/verificar.ps1 -Prueba TenantNameTests
 #   pwsh .claude/tools/verificar.ps1 -Lineas 30      mas contexto por fallo (por defecto 12)
 #
-# Salida completa siempre en target/verificar-ultimo.log
+# Opera sobre pdp/pom.xml -f (el harness es especifico del PDP). Salida completa siempre en
+# pdp/target/verificar-ultimo.log
 
 param(
     [switch]$Rapido,
@@ -42,7 +43,7 @@ function Get-JdkVersion([string]$jdkPath) {
     return ($value -split '\.')[0]
 }
 
-$pom = Get-Content -Path (Join-Path $repo 'pom.xml') -Raw
+$pom = Get-Content -Path (Join-Path $repo 'pdp/pom.xml') -Raw
 $requerida = ''
 $m = [regex]::Match($pom, '<java\.version>(\d+)</java\.version>')
 if ($m.Success) { $requerida = $m.Groups[1].Value }
@@ -89,10 +90,10 @@ else             { $goal = 'verify' }
 # `-Compilar` no corren jacoco-check, asi que no necesitan pagar el costo de una recompilacion total.
 $mvnGoal = if ($goal -eq 'verify') { 'clean verify' } else { $goal }
 
-$args = "-B $mvnGoal"
+$args = "-B -f pdp/pom.xml $mvnGoal"
 if ($Prueba -ne '') { $args = "$args -Dtest=$Prueba -DfailIfNoTests=false" }
 
-$logDir = Join-Path $repo 'target'
+$logDir = Join-Path $repo 'pdp/target'
 $logFile = Join-Path $logDir 'verificar-ultimo.log'
 
 # `clean` borra target/ completo, y en Windows eso falla si el log vive ahi dentro mientras el
@@ -128,7 +129,7 @@ if ($jdkUsado -ne '') { Write-Output ('JDK: Java {0} en {1}' -f $requerida, $jdk
 # --- Errores de compilacion -------------------------------------------------
 # Forma: [ERROR] C:\...\Clase.java:[12,34] mensaje
 $compilacion = $log | Select-String -Pattern '^\[ERROR\].*\.java:\[\d+,\d+\]' | ForEach-Object {
-    ($_.Line -replace '^\[ERROR\]\s*', '') -replace '^.*[\\/]src[\\/]', 'src/'
+    ($_.Line -replace '^\[ERROR\]\s*', '') -replace '^.*[\\/]pdp[\\/]src[\\/]', 'pdp/src/'
 }
 if ($compilacion.Count -gt 0) {
     Write-Output ''
@@ -192,6 +193,6 @@ if ($exit -ne 0) {
 }
 
 Write-Output ''
-Write-Output ('Log completo: target/verificar-ultimo.log ({0} lineas)' -f $log.Count)
+Write-Output ('Log completo: pdp/target/verificar-ultimo.log ({0} lineas)' -f $log.Count)
 
 exit $exit

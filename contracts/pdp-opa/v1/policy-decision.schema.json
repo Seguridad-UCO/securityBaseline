@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://security-baseline.local/schemas/policy-decision.schema.json",
+  "title": "PolicyDecision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["effect", "reasonCode", "policyReferences", "obligations"],
+  "properties": {
+    "effect": {
+      "type": "string",
+      "enum": ["ALLOW", "DENY", "INDETERMINATE"],
+      "description": "INDETERMINATE es para los defectos del motor o de la entrada, que no son denegaciones de negocio. Ver contracts/reason-codes.md."
+    },
+    "reasonCode": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.:-]{1,128}$",
+      "description": "Vocabulario unico en contracts/reason-codes.md."
+    },
+    "policyReferences": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Que politica decidio, y en que version. OPA emite exactamente una: policyId identifica la politica, no la lista de predicados que participaron.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "version"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[A-Za-z0-9_.:-]{1,128}$"},
+          "version": {"type": "string", "pattern": "^[A-Za-z0-9_.:-]{1,128}$"}
+        }
+      }
+    },
+    "obligations": {"type": "array", "items": {"$ref": "obligation.schema.json"}}
+  }
+}

@@ -5,7 +5,7 @@ description: Convenciones de prueba de securityBaseline — JUnit 5 + AssertJ + 
 
 # Skill: sb-testing
 
-**Derivada del código real** de `src/test`. Umbral vigente: JaCoCo exige **50 % de líneas por
+**Derivada del código real** de `pdp/src/test`. Umbral vigente: JaCoCo exige **50 % de líneas por
 paquete** en `verify` (`jacoco-check`). Las clases `*Configuration`, `package-info` y
 `PdpApplication` están excluidas de cobertura: son cableado, no lógica.
 
@@ -23,7 +23,7 @@ son `@FunctionalInterface`, así que un doble de prueba es una **lambda** o una 
 | Verificar que algo se guardó | Una `List<T>` capturadora que el fake rellena, y luego `assertThat(saved).hasSize(1)` |
 
 Ver el patrón exacto en
-`src/test/java/co/edu/uco/seguridad/pdp/tenants/application/usecase/impl/CreateTenantUseCaseImplTests.java`
+`pdp/src/test/java/co/edu/uco/seguridad/pdp/tenants/application/usecase/impl/CreateTenantUseCaseImplTests.java`
 (método privado `fakeRepository(boolean, List<Tenant>)`).
 
 > `UnsupportedOperationException` en los métodos no usados **es intencional**: si el use case empieza
@@ -137,7 +137,7 @@ Cuando eso pase, el método nuevo se implementa en cada fake con
 `throw new UnsupportedOperationException();` salvo en la prueba que sí lo ejercita. En HU-001,
 retirar `findAllByTenant` del puerto tocó cuatro clases de prueba de tres slices distintos.
 
-**Es trabajo del implementador, no del planificador**, que tiene prohibido tocar `src/test`.
+**Es trabajo del implementador, no del planificador**, que tiene prohibido tocar `pdp/src/test`.
 
 ## Presupuesto orientativo
 
@@ -172,7 +172,7 @@ No dupliques estas comprobaciones en lenguaje natural: **ya son pruebas**.
 | `LayeredArchitectureTests` | `application` ⊁ `infrastructure`; `domain` ⊁ `infrastructure`; `domain` ⊁ `application` |
 | `ModulithStructureTests` | El mapa de dependencias entre módulos de `pdp` |
 
-Si una historia introduce una violación de capa, la descubre `./mvnw verify`, no el revisor.
+Si una historia introduce una violación de capa, la descubre `./mvnw -f pdp/pom.xml verify`, no el revisor.
 
 ---
 

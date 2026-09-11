@@ -1,0 +1,31 @@
+# Register as a separate Azure pipeline. Build and validation only; no deployment.
+name: pep_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
+trigger:
+  branches:
+    include: [main, feature/*]
+  paths:
+    include: [pep, contracts/pep-pdp, ci/pep-pipeline.yml, .mvn, mvnw]
+pr:
+  branches:
+    include: [main]
+  paths:
+    include: [pep, contracts/pep-pdp, ci/pep-pipeline.yml, .mvn, mvnw]
+variables:
+  - template: variables/common.yml
+pool:
+  vmImage: ubuntu-latest
+steps:
+  - checkout: self
+  - template: templates/steps-java-setup.yml
+  - bash: ./mvnw -B -f pep/pom.xml verify
+    displayName: Compilar y verificar PEP y contrato HTTP
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    inputs:
+      testResultsFormat: JUnit
+      testResultsFiles: pep/target/surefire-reports/TEST-*.xml
+      failTaskOnFailedTests: true
+  - task: PublishPipelineArtifact@1
+    inputs:
+      targetPath: pep/target/security-pep-0.1.0-SNAPSHOT.jar
+      artifact: security-pep

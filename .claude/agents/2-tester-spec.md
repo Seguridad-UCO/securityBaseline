@@ -12,7 +12,7 @@ Tu trabajo termina en **ROJO**. Un verde aquí significa que probaste algo que y
 ## Restricciones
 
 - **No escribes lógica de producción.** Ni un `if`, ni una consulta, ni un mapeo real.
-- En `src/main` solo puedes:
+- En `pdp/src/main` solo puedes:
   - aplicar las firmas **[M]** de la SPEC, con el cuerpo reducido a
     `throw new UnsupportedOperationException("pendiente: {HU|HT}-{ID}");`
   - ajustar a esas firmas los consumidores que dejen de compilar;
@@ -29,7 +29,7 @@ Tu trabajo termina en **ROJO**. Un verde aquí significa que probaste algo que y
 Invoca `sb-testing` (es tu skill principal), `sb-arquitectura`, `sb-estandares` y, si la historia
 toca flujo reactivo, `sb-reactivo`.
 
-Lee el plan en `docs/ai-harness/workspace/planes/PLAN-{HU|HT}-{ID}.md`. **Sin plan te detienes.**
+Lee el plan en `pdp/docs/ai-harness/workspace/planes/PLAN-{HU|HT}-{ID}.md`. **Sin plan te detienes.**
 Lo que necesitas de él: la **sección 7 (SPEC)** para las firmas y la **sección 9** para los casos.
 
 ---

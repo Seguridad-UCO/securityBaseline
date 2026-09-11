@@ -2,10 +2,12 @@
 
 Servicio Spring Boot **reactivo** que implementa el contenedor **PDP** (Policy Decision Point) del
 mapa C4 aceptado. Autentica vía Keycloak (patrón BFF), persiste en SurrealDB y organiza el dominio
-con Spring Modulith.
+con Spring Modulith. Este repositorio también aloja al **PEP** ([`pep/`](pep/)) y a **OPA**
+([`security-policy-engine/`](security-policy-engine/)) — ver [`docs/PLATAFORMA.md`](docs/PLATAFORMA.md)
+para cómo encajan los tres.
 
 > **Para trabajar una historia, usa el flujo de agentes** — ver [`.claude/README.md`](.claude/README.md).
-> El diseño del harness y su porqué están en [`docs/ai-harness/README.md`](docs/ai-harness/README.md).
+> El diseño del harness y su porqué están en [`pdp/docs/ai-harness/README.md`](pdp/docs/ai-harness/README.md).
 >
 > **Cómo debe trabajar un agente** —qué no toca sin permiso, cómo consultar el grafo sin quemar
 > contexto, qué validar antes de cerrar— está en [`AGENTS.md`](AGENTS.md), común a Claude Code y
@@ -15,24 +17,27 @@ con Spring Modulith.
 
 ## Arrancar en local
 
+El PDP vive en [`pdp/`](pdp/), con su propio `pom.xml` — invoca Maven desde la raíz con `-f`
+(el wrapper `mvnw` es compartido con `pep/`):
+
 ```bash
-docker compose up -d surrealdb keycloak
-SPRING_PROFILES_ACTIVE=keycloak ./mvnw spring-boot:run
+docker compose -f pdp/docker-compose.yml up -d surrealdb keycloak
+SPRING_PROFILES_ACTIVE=keycloak ./mvnw -f pdp/pom.xml spring-boot:run
 ```
 
 Sin Keycloak (JWT HMAC de desarrollo, útil para probar la API a mano):
 
 ```bash
-./mvnw spring-boot:run
+./mvnw -f pdp/pom.xml spring-boot:run
 ```
 
-El realm local es `security-baseline` — ver [`keycloak/README.md`](keycloak/README.md).
+El realm local es `security-baseline` — ver [`pdp/keycloak/README.md`](pdp/keycloak/README.md).
 Perfiles disponibles: `dev`, `keycloak`, `prod`.
 
 ## Comandos
 
 **Prefiere las herramientas del harness**: devuelven un resumen en vez de cientos de líneas de log,
-y resuelven solo el JDK que exige el POM.
+resuelven solo el JDK que exige el POM, y ya invocan `-f pdp/pom.xml` por ti.
 
 ```bash
 powershell -NoProfile -ExecutionPolicy Bypass -File .claude/tools/verificar.ps1            # verify
@@ -44,8 +49,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .claude/tools/drift.ps1     
 Maven directo, si hace falta:
 
 ```bash
-./mvnw compile · ./mvnw test · ./mvnw verify
-./mvnw test -Dtest=CreateTenantUseCaseImplTests
+./mvnw -f pdp/pom.xml compile · ./mvnw -f pdp/pom.xml test · ./mvnw -f pdp/pom.xml verify
+./mvnw -f pdp/pom.xml test -Dtest=CreateTenantUseCaseImplTests
 ```
 
 **Maven siempre (`./mvnw`), nunca Gradle. Java 25 requerido** — si `JAVA_HOME` apunta a otra
@@ -137,14 +142,15 @@ parece raro:
 **22 de los 23 criterios se cumplen.** HU-001 cerró los criterios 16 a 19 (consulta por
 specification, puerto dinámico y ventana de paginación). Queda abierto **solo el criterio 10**:
 `RemoveApplicationUseCase` existe como compensación y ningún caso de uso la invoca — no hay saga
-cableada. Ver [`docs/criteria-compliance-matrix.md`](docs/criteria-compliance-matrix.md).
+cableada. Ver [`pdp/docs/criteria-compliance-matrix.md`](pdp/docs/criteria-compliance-matrix.md).
 
 No des por cumplido un criterio porque una tabla lo diga: `drift.ps1` verifica que la
 documentación no afirme lo que el código no sostiene — y desde ahora también vigila este archivo.
 
 ## Documentación
 
-- Arquitectura y criterios de este repo: [`docs/`](docs/README.md)
+- Panorama de los tres componentes (PDP, PEP, OPA): [`docs/PLATAFORMA.md`](docs/PLATAFORMA.md)
+- Arquitectura y criterios del PDP: [`pdp/docs/`](pdp/docs/README.md)
 - ADRs, dominio y contratos: repositorio hermano `security-platform-architecture`
 - Event storming y modelos: repositorio hermano `artefactos-referencia`
 - Cómo consultarlos: skill `sb-fuentes`

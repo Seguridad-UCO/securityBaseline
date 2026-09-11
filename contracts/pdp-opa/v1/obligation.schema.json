@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://security-baseline.local/schemas/obligation.schema.json",
+  "title": "Policy obligation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["type", "parameters"],
+  "properties": {
+    "type": {"type": "string", "enum": ["AUDIT", "MASK_FIELDS", "REQUIRE_MFA", "READ_ONLY", "LOG_SECURITY_EVENT"]},
+    "parameters": {"type": "object"}
+  }
+}

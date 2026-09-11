@@ -13,7 +13,7 @@ una implementación cumple su criterio funcional pero rompe uno de estos, está 
 
 ## Estado real: 22 de 23 (verificado 2026-08-31)
 
-Un criterio **no está cumplido**, y está declarado así en `docs/criteria-compliance-matrix.md`:
+Un criterio **no está cumplido**, y está declarado así en `pdp/docs/criteria-compliance-matrix.md`:
 
 | # | Estado | Por qué |
 |---|---|---|
@@ -35,8 +35,8 @@ La deriva de la documentación ya está corregida y ahora es **verificable**:
 powershell -NoProfile -ExecutionPolicy Bypass -File .claude/tools/drift.ps1
 ```
 
-Comprueba que todo enlace de `docs/` resuelva y que toda clase citada exista. Las excepciones
-declaradas viven en `docs/ai-harness/drift-ignore.txt` y son solo para lo pendiente a propósito.
+Comprueba que todo enlace de `pdp/docs/` resuelva y que toda clase citada exista. Las excepciones
+declaradas viven en `pdp/docs/ai-harness/drift-ignore.txt` y son solo para lo pendiente a propósito.
 
 **Regla:** la evidencia de un criterio es el archivo que abres con `Read`, o la prueba que ejecutas.
 Nunca la fila de una tabla.
@@ -72,7 +72,7 @@ por cumplido. Los criterios marcados 🤖 los verifica una prueba automatizada: 
 | 20 | Adaptadores limpios | Controller, mappers y adaptadores sin reglas de negocio. El mapper delega el formato al VO |
 | 21 | Modelo refinado | `record` inmutables, Java puro, **sin Lombok**, con factorías con nombre y comportamiento. Nada de entidades anémicas |
 | 22 | Arquitectura reactiva | `Mono`/`Flux` en toda la cadena. **Sin `block()` en el camino de una petición** (solo en `ApplicationRunner` de arranque) |
-| 23 | Arquitectura antes del negocio | 🤖 `./mvnw verify` en verde, cobertura ≥ 50 % por paquete, pipeline y secretos fuera del repositorio |
+| 23 | Arquitectura antes del negocio | 🤖 `./mvnw -f pdp/pom.xml verify` en verde, cobertura ≥ 50 % por paquete, pipeline y secretos fuera del repositorio |
 
 ---
 
@@ -84,7 +84,7 @@ endpoint; 15 si hay value objects nuevos; 16–19 si hay consulta paginada; 7 si
 10 si hay más de una escritura que deba compensarse; 4 y 8 si hay tiempo, identificadores o logging.
 
 **Al validar.** Por cada criterio declarado, abre el archivo y comprueba el punto de control.
-Los marcados 🤖 se resuelven ejecutando `./mvnw verify`, no leyendo código.
+Los marcados 🤖 se resuelven ejecutando `./mvnw -f pdp/pom.xml verify`, no leyendo código.
 
 **Al detectar deriva.** Si la evidencia documentada de un criterio apunta a algo que no existe, es
 una observación del reporte — y el arreglo entra en el mismo cambio, no en un pendiente.
@@ -93,5 +93,5 @@ una observación del reporte — y el arreglo entra en el mismo cambio, no en un
 
 ## Regla invariante
 
-Un criterio no se da por cumplido porque una tabla de `docs/` lo diga. Se da por cumplido porque
+Un criterio no se da por cumplido porque una tabla de `pdp/docs/` lo diga. Se da por cumplido porque
 abriste el archivo, o porque una prueba lo verifica.
