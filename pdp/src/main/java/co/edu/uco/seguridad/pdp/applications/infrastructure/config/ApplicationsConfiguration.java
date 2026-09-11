@@ -8,7 +8,9 @@ import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationMustExi
 import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationNameMustBeUniqueForTenantRuleImpl;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationNameMustNotBeReservedRuleImpl;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationMustExistForTenantValidator;
+import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationOwnerLookupValidator;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.impl.ApplicationMustExistForTenantValidatorImpl;
+import co.edu.uco.seguridad.pdp.applications.application.rule.validator.impl.ApplicationOwnerLookupValidatorImpl;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.RegisterApplicationRulesValidator;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.impl.RegisterApplicationRulesValidatorImpl;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.ListApplicationsUseCase;
@@ -108,5 +110,11 @@ public class ApplicationsConfiguration {
     ApplicationMustExistForTenantValidator applicationMustExistForTenantValidator(ApplicationRepository repository,
                                                                                  ApplicationMustExistForTenantRule mustExist) {
         return new ApplicationMustExistForTenantValidatorImpl(repository, mustExist);
+    }
+
+    // HU-003 — canal interno para el PEP: resuelve el tenant dueño a partir solo del applicationId.
+    @Bean
+    ApplicationOwnerLookupValidator applicationOwnerLookupValidator(ApplicationRepository repository) {
+        return new ApplicationOwnerLookupValidatorImpl(repository);
     }
 }

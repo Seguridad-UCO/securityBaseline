@@ -64,6 +64,11 @@ public final class RequiredArgumentMessages {
     public static final String PROTECTED_RESOURCE_EXISTS_VALIDATOR = "se requiere el validador de existencia de recurso protegido";
     public static final String POLICY_DECISION_PORT = "se requiere el puerto de decisión de políticas";
     public static final String AUTHORIZE_USE_CASE = "se requiere el caso de uso de autorización";
+    // HU-003 — canal interno para el PEP.
+    public static final String APPLICATION_OWNER_LOOKUP_VALIDATOR = "se requiere el validador de dueño de aplicación";
+    public static final String EVALUATE_INTERNAL_ACCESS_USE_CASE = "se requiere el caso de uso de acceso interno";
+    public static final String INTERNAL_ACCESS_DECISION_INTERACTOR = "se requiere el interactor de decisión interna";
+    public static final String INTERNAL_MTLS_PROPERTIES = "se requiere la configuración mTLS del canal interno";
 
     // Componentes de AccessRequest / AccessDecision (autorizacion).
     public static final String REQUEST_ID = "se requiere el identificador de la solicitud";

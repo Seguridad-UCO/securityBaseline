@@ -3,7 +3,7 @@
 > Generado por `.claude/tools/mapa.ps1`. **No editar a mano** - se regenera desde el codigo.
 > Es el nivel 0 del grafo de conocimiento: responde "que existe y donde va lo nuevo".
 
-- Clases de produccion: **264**
+- Clases de produccion: **279**
 - Clases de prueba: **80**
 - Slices de negocio: **6** (applications, authorization, commons, identity, resources, tenants)
 
@@ -11,7 +11,7 @@
 
 ## Slices de negocio (`pdp`)
 
-### `applications` - 49 clases
+### `applications` - 51 clases
 
 | Rol | Clases |
 |---|---|
@@ -24,8 +24,8 @@
 | Dominio (agregado / criteria) | `Application`, `ApplicationCriteria` |
 | Caso de uso (impl) | `ListApplicationsUseCaseImpl`, `RegisterApplicationUseCaseImpl`, `RemoveApplicationUseCaseImpl` |
 | Caso de uso (contrato) | `ListApplicationsUseCase`, `RegisterApplicationUseCase`, `RemoveApplicationUseCase` |
-| Validador de reglas (impl) | `ApplicationMustExistForTenantValidatorImpl`, `RegisterApplicationRulesValidatorImpl` |
-| Validador de reglas (contrato) | `ApplicationMustExistForTenantValidator`, `RegisterApplicationRulesValidator` |
+| Validador de reglas (impl) | `ApplicationMustExistForTenantValidatorImpl`, `ApplicationOwnerLookupValidatorImpl`, `RegisterApplicationRulesValidatorImpl` |
+| Validador de reglas (contrato) | `ApplicationMustExistForTenantValidator`, `ApplicationOwnerLookupValidator`, `RegisterApplicationRulesValidator` |
 | Puerto de salida | `ApplicationRepository` |
 | DTO de entrada al nucleo | `ApplicationOwnershipQuery`, `ListApplicationsRequest`, `RegisterApplicationRequest` |
 | DTO de salida del nucleo | `RegisteredApplicationResponse` |
@@ -42,22 +42,22 @@
 | Cableado (@Bean) | `ApplicationsConfiguration` |
 | Propiedades | `ApplicationCatalogProperties` |
 
-### `authorization` - 18 clases
+### `authorization` - 28 clases
 
 | Rol | Clases |
 |---|---|
 | Value object | `DecisionState`, `PolicyReference`, `ReasonCode` |
-| Caso de uso (impl) | `AuthorizeUseCaseImpl` |
-| Caso de uso (contrato) | `AuthorizeUseCase` |
+| Caso de uso (impl) | `AuthorizeUseCaseImpl`, `EvaluateInternalAccessUseCaseImpl` |
+| Caso de uso (contrato) | `AuthorizeUseCase`, `EvaluateInternalAccessUseCase` |
 | Puerto de salida | `PolicyDecisionPort` |
-| DTO de entrada al nucleo | `AccessRequest` |
+| DTO de entrada al nucleo | `AccessRequest`, `InternalAccessRequest` |
 | DTO de salida del nucleo | `AccessDecision` |
-| Controller | `AuthorizationController` |
-| DTO crudo HTTP | `AuthorizeRawRequest` |
-| DTO de respuesta HTTP | `AccessDecisionWebResponse`, `PolicyReferenceWebResponse` |
-| Interactor (impl) | `AuthorizeInteractorImpl` |
-| Interactor (contrato) | `AuthorizeInteractor` |
-| Mapper web | `AccessDecisionResponseMapper`, `AuthorizeRequestMapper` |
+| Controller | `AuthorizationController`, `InternalAccessDecisionController` |
+| DTO crudo HTTP | `AccessDecisionRawRequest`, `AuthorizeRawRequest` |
+| DTO de respuesta HTTP | `AccessDecisionInternalWebResponse`, `AccessDecisionWebResponse`, `PolicyReferenceWebResponse` |
+| Interactor (impl) | `AuthorizeInteractorImpl`, `InternalAccessDecisionInteractorImpl` |
+| Interactor (contrato) | `AuthorizeInteractor`, `InternalAccessDecisionInteractor` |
+| Mapper web | `AccessDecisionInternalResponseMapper`, `AccessDecisionRawRequestMapper`, `AccessDecisionResponseMapper`, `AuthorizeRequestMapper` |
 | Cableado (@Bean) | `AuthorizationConfiguration` |
 | Otro | `DenyByDefaultPolicyDecisionAdapter` |
 
@@ -178,7 +178,7 @@
 | `observability` | `ReactiveLogContext` |
 | `persistence/surrealdb` | `SurrealDbClient`, `SurrealDbException`, `SurrealDbHealthIndicator`, `SurrealDbProperties`, `SurrealRecordId`, `SurrealSchemaInitializer` |
 | `port` | `IdentifierGenerator`, `TimeProvider` |
-| `security` | `ApiAccessDeniedHandler`, `ApiAuthenticationEntryPoint`, `CorsProperties`, `JwtSecurityProperties`, `KeycloakSessionProperties`, `LocalUserPrincipal`, `PdpPrincipal`, `SecurityContext` |
+| `security` | `ApiAccessDeniedHandler`, `ApiAuthenticationEntryPoint`, `CorsProperties`, `InternalEvidenceJwtProperties`, `InternalMtlsProperties`, `InternalMtlsWebFilter`, `JwtSecurityProperties`, `KeycloakSessionProperties`, `LocalUserPrincipal`, `PdpPrincipal`, `SecurityContext` |
 | `web` | `ApiResponse`, `CorrelationWebFilter`, `PageResponse`, `RequestContext`, `RequestFieldParser` |
 | `web/exception` | `ConflictingRequestParametersException`, `MalformedRequestFieldException`, `MissingRequestFieldException`, `RequestContractException` |
 | `web/exceptionhandler` | `ApiErrorHandler` |
@@ -214,6 +214,7 @@
 | POST | `/api/v1/tenants` | `TenantController` |
 | GET | `/api/v1/users` | `UserController` |
 | PUT | `/api/v1/users/{id}/tenant` | `UserController` |
+| POST | `/internal/v1/access-decisions` | `InternalAccessDecisionController` |
 | GET | `/oauth2/authorization/keycloak` | `KeycloakLoginController` |
 | GET | `/oauth2/authorization/keycloak/register` | `KeycloakRegistrationController` |
 
