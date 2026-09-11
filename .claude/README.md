@@ -8,12 +8,18 @@ Flujo de desarrollo asistido por agentes. El diseño y su justificación están 
 | Fase | Contenido | Estado |
 |---|---|---|
 | 1 | Skills, herramientas (`mapa`, `verificar`, `drift`, `consistencia`), agentes 1-4, plantillas | ✅ Listo |
-| 1b | Deriva doc↔código corregida y verificable · criterios realineados a 18/23 | ✅ Listo |
+| 1b | Deriva doc↔código corregida y verificable · criterios realineados | ✅ Listo |
+| 1c | Skills rescatadas de la PR #24 (`sb-reactivo`, `sb-fuentes`) · `CLAUDE.md` | ✅ Listo |
+| HU-001 | Búsqueda con criterios y paginación + prueba HTTP end-to-end. Cierra 16-19: **22/23 criterios** | ✅ Listo |
+| 1d | Consistencia arquitectónica: `consistencia.ps1` + 9 divergencias corregidas | ✅ Listo |
+| 1e | Capa `application` aplanada (`primaryport`/`secondaryport`) · resiliencia de arranque · DEV saludable | ✅ Listo |
+| Fase A | Reglas de negocio movidas a `domain/{slice}/rule/`, puras y síncronas · `domain/` reorganizado por categoría | ✅ Listo |
 | 2 | `2-tester-spec` y `3-implementador` ✅ · slash commands, mutation testing y `5-entrega` ⏳ | 🟡 Parcial |
 | 3 | Grafo nivel 1 y 2 | ⏳ Pendiente |
 
-**Próximo paso:** ejecutar **HU-001** (búsqueda con criterios y paginación + prueba HTTP end-to-end)
-por el flujo agéntico. Cierra los criterios 10 y 16-19, y es la primera prueba real del harness.
+**Próximo paso:** estrenar `2-tester-spec` y `3-implementador` con la historia que cierre el
+**criterio 10** (cablear la saga de compensación) — la única deuda de la línea base. Detalle completo
+del estado en [`docs/ai-harness/CHECKPOINT.md`](../docs/ai-harness/CHECKPOINT.md).
 
 ---
 

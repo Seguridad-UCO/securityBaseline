@@ -14,6 +14,7 @@ Estado del trabajo para retomarlo en cualquier máquina. Se actualiza al cerrar 
 | HU-001 | Implementada: 225 pruebas, criterios 16-19 cerrados, 22/23 | ✅ |
 | 1d | Consistencia arquitectónica: `consistencia.ps1` + 9 divergencias corregidas | ✅ |
 | 1e | Capa `application` aplanada · resiliencia de arranque · DEV saludable | ✅ |
+| Fase A | Reglas de negocio movidas a `domain/{slice}/rule/`, puras y síncronas · `domain/` reorganizado por categoría | ✅ |
 | 2 | `2-tester-spec` y `3-implementador` ✅ · slash commands, mutation testing, `5-entrega` ⏳ | 🟡 |
 | 3 | Grafo nivel 1 y 2 | ⏳ |
 
@@ -230,6 +231,55 @@ dentro de lo que coordina. Los nombres de las interfaces nombradas de Modulith (
 `rule`) **no cambian**, así que ningún `allowedDependencies` se toca.
 
 95 archivos con `package`/`import` reescritos, 234 pruebas en verde, Modulith y ArchUnit intactos.
+
+---
+
+## Las reglas de negocio, movidas al dominio — Fase A (2026-08-31)
+
+`docs/ai-harness/ESTUDIO-ARQUITECTURA.md` preguntaba si la arquitectura estaba «muy regada» tras
+compararla con `arquisoft-backend@develop`. Diagnóstico: no estaba mal, pero las 8 `Rule` hacían I/O
+(inyectaban el repositorio) y por eso no podían vivir en `domain`, que no conoce puertos ni Reactor.
+
+**Lo que se hizo:** cada regla se partió en dos piezas, una por capa —
+
+```
+domain/{slice}/rule/ + impl/          decisión pura y síncrona, sin puertos ni Reactor
+application/{slice}/rule/validator/   hace la E/S (el finder) y aplica la regla
+```
+
+Con eso, `domain/` se reorganizó por categoría: `exception/`, `message/`, `event/`, `model/` (value
+objects) y `rule/` + `rule/model/` (el hecho ya resuelto que cada regla recibe). El agregado y el
+`Criteria` se quedan en la raíz de `domain/`.
+
+**Resultado:** 8 reglas, todas en `domain`, ninguna conoce ya un repositorio. `./mvnw verify` en
+**247 pruebas** (antes 234), `consistencia.ps1` y `drift.ps1` en verde. Lo que se publica entre
+módulos sigue siendo el *validador* (`TenantMustBeActiveValidator`,
+`ApplicationMustExistForTenantValidator`), no la regla pura — un consumidor no tiene el repositorio
+ajeno para alimentarla. Ningún `allowedDependencies` de Modulith cambió.
+
+**Lo que quedó fuera del plan original, y por qué:** no se creó `Finder<I,O>` como contrato nuevo
+(los contratos reactivos existentes ya tienen esa forma) ni una capa `Finder` separada (aquí el
+validador puede consultar directamente porque es reactivo; en la referencia hace falta porque su
+validador es puro). El detalle completo, con las tres desviaciones razonadas, está en el §6
+(«Registro de ejecución») del ESTUDIO.
+
+**En el repo hermano:** `security-platform-architecture`, rama `docs/repository-structure`, ya tiene
+los dos commits que hacían falta — `f61df32` refleja el aplanado de `application` (1e) y `6a522cf`
+la Fase A (`domain/rule`, `domain/model`, `application/rule/validator`, y la regla 9: una `Rule` de
+`domain/rule/impl` no importa Reactor ni un `secondaryport`). Pendiente de PR: la PR #2 de esa rama
+ya se mergeó, así que estos dos commits necesitan una PR nueva.
+
+### `mapa.ps1`, corregido para el layout nuevo (2026-08-31)
+
+La tabla de roles de `.claude/tools/mapa.ps1` seguía las rutas de antes de 1e y de la Fase A
+(`application/port/secondary/`, `application/rulesvalidator/`, `application/rule/impl/` para las
+reglas). Como `mapa.ps1 -Check` solo compara el mapa contra sí mismo, el drift pasó desapercibido:
+la tabla **«Puertos de salida y sus implementaciones» salía vacía**, y las reglas nuevas de
+`domain/rule/` cayeron en «Otro» junto con los value objects. Reescrita para las rutas reales
+(`domain/rule/`, `domain/rule/model/`, `application/secondaryport/repository/`,
+`application/primaryport/{request,response}/`, `application/rule/validator/`) y se añadieron
+patrones para `commons/{exception,message,model}/`, que antes caían enteros en «Otro». Regenerado:
+`mapa.ps1 -Check` en verde, `drift.ps1` y `consistencia.ps1` sin novedad.
 
 ---
 

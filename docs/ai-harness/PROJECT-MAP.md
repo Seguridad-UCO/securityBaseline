@@ -4,7 +4,7 @@
 > Es el nivel 0 del grafo de conocimiento: responde "que existe y donde va lo nuevo".
 
 - Clases de produccion: **239**
-- Clases de prueba: **71**
+- Clases de prueba: **72**
 - Slices de negocio: **5** (applications, commons, identity, resources, tenants)
 
 ---
@@ -16,10 +16,19 @@
 | Rol | Clases |
 |---|---|
 | Excepcion de dominio | `ApplicationNotFoundException`, `DuplicateApplicationException`, `InvalidApplicationBaseUrlException`, `ReservedApplicationNameException` |
-| Dominio (entidad / VO / enum) | `Application`, `ApplicationBaseUrl`, `ApplicationCriteria`, `ApplicationExistence`, `ApplicationMustExistForTenantRule`, `ApplicationMustExistForTenantRuleImpl`, `ApplicationNameAvailability`, `ApplicationNameMustBeUniqueForTenantRule`, `ApplicationNameMustBeUniqueForTenantRuleImpl`, `ApplicationNameMustNotBeReservedRule`, `ApplicationNameMustNotBeReservedRuleImpl`, `ApplicationsMessages` |
+| Catalogo de mensajes | `ApplicationsMessages` |
+| Value object | `ApplicationBaseUrl` |
+| Regla de dominio (impl) | `ApplicationMustExistForTenantRuleImpl`, `ApplicationNameMustBeUniqueForTenantRuleImpl`, `ApplicationNameMustNotBeReservedRuleImpl` |
+| Dato de regla (hecho resuelto) | `ApplicationExistence`, `ApplicationNameAvailability` |
+| Regla de dominio (contrato) | `ApplicationMustExistForTenantRule`, `ApplicationNameMustBeUniqueForTenantRule`, `ApplicationNameMustNotBeReservedRule` |
+| Dominio (agregado / criteria) | `Application`, `ApplicationCriteria` |
 | Caso de uso (impl) | `ListApplicationsUseCaseImpl`, `RegisterApplicationUseCaseImpl`, `RemoveApplicationUseCaseImpl` |
 | Caso de uso (contrato) | `ListApplicationsUseCase`, `RegisterApplicationUseCase`, `RemoveApplicationUseCase` |
-| Regla (contrato) | `ApplicationMustExistForTenantValidator`, `ApplicationMustExistForTenantValidatorImpl`, `RegisterApplicationRulesValidator`, `RegisterApplicationRulesValidatorImpl` |
+| Validador de reglas (impl) | `ApplicationMustExistForTenantValidatorImpl`, `RegisterApplicationRulesValidatorImpl` |
+| Validador de reglas (contrato) | `ApplicationMustExistForTenantValidator`, `RegisterApplicationRulesValidator` |
+| Puerto de salida | `ApplicationRepository` |
+| DTO de entrada al nucleo | `ApplicationOwnershipQuery`, `ListApplicationsRequest`, `RegisterApplicationRequest` |
+| DTO de salida del nucleo | `RegisteredApplicationResponse` |
 | Controller | `ApplicationController` |
 | DTO crudo HTTP | `ListApplicationsRawRequest`, `RegisterApplicationRawRequest` |
 | DTO de respuesta HTTP | `ApplicationWebResponse` |
@@ -32,22 +41,32 @@
 | Esquema de tabla | `ApplicationSchema`, `SurrealApplicationSchemaInitializer` |
 | Cableado (@Bean) | `ApplicationsConfiguration` |
 | Propiedades | `ApplicationCatalogProperties` |
-| Otro | `ApplicationOwnershipQuery`, `ApplicationRepository`, `ListApplicationsRequest`, `RegisterApplicationRequest`, `RegisteredApplicationResponse` |
 
 ### `commons` - 16 clases
 
 | Rol | Clases |
 |---|---|
-| Otro | `AggregateRoot`, `ApplicationId`, `ApplicationName`, `BusinessRuleViolationException`, `ConflictBusinessRuleException`, `DomainException`, `InvalidApplicationNameException`, `InvalidIdentifierException`, `InvalidPageWindowException`, `InvalidTenantIdException`, `InvalidValueException`, `PageWindow`, `ResourceId`, `ResultPage`, `TenantId`, `ValueObjectMessages` |
+| Excepcion de dominio | `BusinessRuleViolationException`, `ConflictBusinessRuleException`, `DomainException`, `InvalidApplicationNameException`, `InvalidIdentifierException`, `InvalidPageWindowException`, `InvalidTenantIdException`, `InvalidValueException` |
+| Catalogo de mensajes | `ValueObjectMessages` |
+| Value object | `ApplicationId`, `ApplicationName`, `PageWindow`, `ResourceId`, `ResultPage`, `TenantId` |
+| Otro | `AggregateRoot` |
 
 ### `identity` - 38 clases
 
 | Rol | Clases |
 |---|---|
 | Excepcion de dominio | `InvalidEmailException`, `UserNotFoundException` |
-| Dominio (entidad / VO / enum) | `Email`, `ExternalIdentity`, `IdentityMessages`, `SecurityUser`, `UserExistence`, `UserId`, `UserMustExistRule`, `UserMustExistRuleImpl` |
+| Catalogo de mensajes | `IdentityMessages` |
+| Value object | `Email`, `ExternalIdentity`, `UserId` |
+| Regla de dominio (impl) | `UserMustExistRuleImpl` |
+| Dato de regla (hecho resuelto) | `UserExistence` |
+| Regla de dominio (contrato) | `UserMustExistRule` |
+| Dominio (agregado / criteria) | `SecurityUser` |
 | Caso de uso (impl) | `AssignTenantUseCaseImpl`, `ListUsersUseCaseImpl`, `ProvisionIdentityUseCaseImpl` |
 | Caso de uso (contrato) | `AssignTenantUseCase`, `ListUsersUseCase`, `ProvisionIdentityUseCase` |
+| Puerto de salida | `SecurityUserRepository` |
+| DTO de entrada al nucleo | `AssignTenantRequest`, `ProvisionIdentityRequest` |
+| DTO de salida del nucleo | `UserResponse` |
 | Controller | `UserController` |
 | DTO crudo HTTP | `AssignTenantBodyRequest`, `AssignTenantRawRequest` |
 | DTO de respuesta HTTP | `UserWebResponse` |
@@ -60,18 +79,26 @@
 | Esquema de tabla | `IdentitySchema`, `SurrealIdentitySchemaInitializer` |
 | Cableado (@Bean) | `IdentityConfiguration` |
 | Propiedades | `IdentityProvisioningProperties` |
-| Otro | `AssignTenantRequest`, `ProvisionIdentityRequest`, `SecurityUserRepository`, `UserResponse` |
 
 ### `resources` - 37 clases
 
 | Rol | Clases |
 |---|---|
 | Excepcion de dominio | `DuplicateProtectedResourceException`, `InvalidResourcePathException`, `UnsupportedHttpMethodException` |
+| Catalogo de mensajes | `ResourcesMessages` |
+| Value object | `HttpVerb`, `ResourcePath` |
+| Regla de dominio (impl) | `ProtectedResourceMustBeUniqueRuleImpl` |
+| Dato de regla (hecho resuelto) | `ProtectedResourceAvailability` |
+| Regla de dominio (contrato) | `ProtectedResourceMustBeUniqueRule` |
 | Evento de dominio | `ProtectedResourceRegistered` |
-| Dominio (entidad / VO / enum) | `HttpVerb`, `ProtectedResource`, `ProtectedResourceAvailability`, `ProtectedResourceMustBeUniqueRule`, `ProtectedResourceMustBeUniqueRuleImpl`, `ResourcePath`, `ResourcesMessages` |
+| Dominio (agregado / criteria) | `ProtectedResource` |
 | Caso de uso (impl) | `ListProtectedResourcesUseCaseImpl`, `RegisterProtectedResourceUseCaseImpl` |
 | Caso de uso (contrato) | `ListProtectedResourcesUseCase`, `RegisterProtectedResourceUseCase` |
-| Regla (contrato) | `RegisterProtectedResourceRulesValidator`, `RegisterProtectedResourceRulesValidatorImpl` |
+| Validador de reglas (impl) | `RegisterProtectedResourceRulesValidatorImpl` |
+| Validador de reglas (contrato) | `RegisterProtectedResourceRulesValidator` |
+| Puerto de salida | `ProtectedResourceRepository` |
+| DTO de entrada al nucleo | `RegisterProtectedResourceRequest` |
+| DTO de salida del nucleo | `RegisteredProtectedResourceResponse` |
 | Controller | `ProtectedResourceController` |
 | DTO crudo HTTP | `RegisterProtectedResourceBodyRequest`, `RegisterProtectedResourceRawRequest` |
 | DTO de respuesta HTTP | `ProtectedResourceWebResponse` |
@@ -84,17 +111,25 @@
 | Esquema de tabla | `ProtectedResourceSchema`, `SurrealProtectedResourceSchemaInitializer` |
 | Adaptador de auditoria | `InMemoryAuditAdapter` |
 | Cableado (@Bean) | `ResourcesConfiguration` |
-| Otro | `ProtectedResourceRepository`, `RegisteredProtectedResourceResponse`, `RegisterProtectedResourceRequest` |
 
 ### `tenants` - 42 clases
 
 | Rol | Clases |
 |---|---|
 | Excepcion de dominio | `DuplicateTenantException`, `InvalidTenantNameException`, `TenantNotActiveException`, `TenantNotFoundException` |
-| Dominio (entidad / VO / enum) | `Tenant`, `TenantActivation`, `TenantCodeAvailability`, `TenantCodeMustBeUniqueRule`, `TenantCodeMustBeUniqueRuleImpl`, `TenantExistence`, `TenantMustExistRule`, `TenantMustExistRuleImpl`, `TenantName`, `TenantsMessages`, `TenantStatus`, `TenantStatusMustBeActiveRule`, `TenantStatusMustBeActiveRuleImpl` |
+| Catalogo de mensajes | `TenantsMessages` |
+| Value object | `TenantName`, `TenantStatus` |
+| Regla de dominio (impl) | `TenantCodeMustBeUniqueRuleImpl`, `TenantMustExistRuleImpl`, `TenantStatusMustBeActiveRuleImpl` |
+| Dato de regla (hecho resuelto) | `TenantActivation`, `TenantCodeAvailability`, `TenantExistence` |
+| Regla de dominio (contrato) | `TenantCodeMustBeUniqueRule`, `TenantMustExistRule`, `TenantStatusMustBeActiveRule` |
+| Dominio (agregado / criteria) | `Tenant` |
 | Caso de uso (impl) | `CreateTenantUseCaseImpl`, `ListTenantsUseCaseImpl` |
 | Caso de uso (contrato) | `CreateTenantUseCase`, `ListTenantsUseCase` |
-| Regla (contrato) | `TenantMustBeActiveValidator`, `TenantMustBeActiveValidatorImpl` |
+| Validador de reglas (impl) | `TenantMustBeActiveValidatorImpl` |
+| Validador de reglas (contrato) | `TenantMustBeActiveValidator` |
+| Puerto de salida | `TenantRepository` |
+| DTO de entrada al nucleo | `CreateTenantRequest` |
+| DTO de salida del nucleo | `TenantResponse` |
 | Controller | `TenantController` |
 | DTO crudo HTTP | `CreateTenantRawRequest` |
 | DTO de respuesta HTTP | `TenantWebResponse` |
@@ -107,7 +142,6 @@
 | Esquema de tabla | `SurrealTenantSchemaInitializer`, `TenantSchema` |
 | Cableado (@Bean) | `TenantsConfiguration` |
 | Propiedades | `TenantCatalogProperties` |
-| Otro | `CreateTenantRequest`, `TenantRepository`, `TenantResponse` |
 
 ---
 
@@ -138,6 +172,10 @@
 
 | Puerto | Implementado por |
 |---|---|
+| `ApplicationRepository` | `SurrealApplicationRepository` |
+| `ProtectedResourceRepository` | `SurrealProtectedResourceRepository` |
+| `SecurityUserRepository` | `SurrealSecurityUserRepository` |
+| `TenantRepository` | `SurrealTenantRepository` |
 
 ---
 
@@ -168,7 +206,7 @@
 | `pdp/commons` | `PageWindowTests`, `ResultPageTests`, `ValueObjectTests` |
 | `pdp/identity` | `AssignTenantRequestMapperTests`, `AssignTenantUseCaseImplTests`, `EmailTests`, `ProvisionIdentityUseCaseImplTests`, `SecurityUserPersistenceMapperTests`, `UserControllerTests`, `UserMustExistRuleTests`, `UserResponseMapperTests` |
 | `pdp/resources` | `HttpVerbTests`, `InMemoryAuditAdapterTests`, `ProtectedResourceControllerTests`, `ProtectedResourceMustBeUniqueRuleTests`, `ProtectedResourceResponseMapperTests`, `RegisterProtectedResourceRequestMapperTests`, `RegisterProtectedResourceRulesValidatorTests`, `RegisterProtectedResourceUseCaseImplTests`, `ResourcePathTests` |
-| `pdp/tenants` | `CreateTenantRequestMapperTests`, `CreateTenantUseCaseImplTests`, `TenantCatalogPropertiesTests`, `TenantControllerTests`, `TenantMustBeActiveValidatorTests`, `TenantNameTests`, `TenantResponseMapperTests`, `TenantRuleTests` |
+| `pdp/tenants` | `CreateTenantRequestMapperTests`, `CreateTenantUseCaseImplTests`, `ListTenantsUseCaseImplTests`, `TenantCatalogPropertiesTests`, `TenantControllerTests`, `TenantMustBeActiveValidatorTests`, `TenantNameTests`, `TenantResponseMapperTests`, `TenantRuleTests` |
 | `raiz` | `AbstractSurrealDbIntegrationTest`, `LayeredArchitectureTests`, `ModulithStructureTests`, `PdpApplicationTests` |
 | `shared/auth` | `KeycloakLoginControllerTests`, `KeycloakOidcSessionServiceTests`, `KeycloakRegistrationControllerTests`, `OidcAuthenticationFailureHandlerTests`, `OidcAuthenticationSuccessHandlerTests`, `OidcAuthorizationFlowServiceTests` |
 | `shared/config` | `CorsConfigurationTests`, `KeycloakSecurityConfigurationTests`, `SecurityConfigurationTests` |
