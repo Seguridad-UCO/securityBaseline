@@ -49,6 +49,7 @@
 | Value object | `DecisionState`, `PolicyReference`, `ReasonCode` |
 | Caso de uso (impl) | `AuthorizeUseCaseImpl` |
 | Caso de uso (contrato) | `AuthorizeUseCase` |
+| Puerto de salida | `PolicyDecisionPort` |
 | DTO de entrada al nucleo | `AccessRequest` |
 | DTO de salida del nucleo | `AccessDecision` |
 | Controller | `AuthorizationController` |
@@ -58,7 +59,7 @@
 | Interactor (contrato) | `AuthorizeInteractor` |
 | Mapper web | `AccessDecisionResponseMapper`, `AuthorizeRequestMapper` |
 | Cableado (@Bean) | `AuthorizationConfiguration` |
-| Otro | `DenyByDefaultPolicyDecisionAdapter`, `PolicyDecisionPort` |
+| Otro | `DenyByDefaultPolicyDecisionAdapter` |
 
 ### `commons` - 16 clases
 
@@ -191,6 +192,7 @@
 | Puerto | Implementado por |
 |---|---|
 | `ApplicationRepository` | `SurrealApplicationRepository` |
+| `PolicyDecisionPort` | `DenyByDefaultPolicyDecisionAdapter` |
 | `ProtectedResourceRepository` | `SurrealProtectedResourceRepository` |
 | `SecurityUserRepository` | `SurrealSecurityUserRepository` |
 | `TenantRepository` | `SurrealTenantRepository` |

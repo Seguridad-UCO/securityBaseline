@@ -42,7 +42,7 @@ $roles = @(
     @{ P = 'application/usecase/';                     R = 'Caso de uso (contrato)' },
     @{ P = 'application/rule/validator/impl/';         R = 'Validador de reglas (impl)' },
     @{ P = 'application/rule/validator/';              R = 'Validador de reglas (contrato)' },
-    @{ P = 'application/secondaryport/repository/';    R = 'Puerto de salida' },
+    @{ P = 'application/secondaryport/';               R = 'Puerto de salida' },
     @{ P = 'application/primaryport/request/';         R = 'DTO de entrada al nucleo' },
     @{ P = 'application/primaryport/response/';        R = 'DTO de salida del nucleo' },
     @{ P = 'web/controller/';                          R = 'Controller' },
@@ -83,12 +83,13 @@ if (Test-Path $pdpRoot) {
 }
 
 # --- Puertos e implementaciones --------------------------------------------
-# Un puerto es toda interfaz bajo application/secondaryport/repository. Su implementacion es la
-# clase que la nombra en su clausula implements.
+# Un puerto es toda interfaz bajo application/secondaryport, en cualquier subpaquete: repository/
+# para los de persistencia, y sueltos los que hablan con un servicio externo (PolicyDecisionPort).
+# Su implementacion es la clase que la nombra en su clausula implements.
 $ports = @{}
 foreach ($f in $allFiles) {
     $rel = Get-Relative $f
-    if ($rel -like '*application/secondaryport/repository/*') {
+    if ($rel -like '*application/secondaryport/*') {
         $ports[$f.BaseName] = @()
     }
 }
