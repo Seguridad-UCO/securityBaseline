@@ -127,6 +127,14 @@ Reglas al llenarlo:
   reglas. Si una regla no consulta ningún puerto, va marcada como **síncrona**.
 - **Sección 7 (SPEC).** Es lo único que verá el tester. Firmas exactas y completas: si falta un
   parámetro, el tester escribirá pruebas contra un contrato equivocado.
+
+  **Antes de fijar el constructor de una clase, pregúntate si construye un resultado desde cero**
+  (una decisión, un identificador nuevo, una marca de tiempo) **o si solo transforma lo que recibe**.
+  Si construye algo nuevo, casi siempre necesita `IdentifierGenerator` y/o `TimeProvider` desde el
+  primer día — añadirlos después de que el tester ya instanció la clase en seis sitios exige tocar
+  `src/test`, que ni tú ni el implementador pueden hacer. Ejemplo real: un caso de uso que arma su
+  propia respuesta de rechazo (no la recibe de un puerto) necesitaba ambos y el plan no los incluyó;
+  se descubrió después de escritas las pruebas, y arreglarlo costó un ciclo completo de vuelta.
 - **Sección 8 (árbol).** Rutas completas. Toda clase nueva de `application` aparece también como
   modificación de `{Slice}Configuration` — si no la registras, no existe en runtime.
 - **Sección 9 (pruebas).** Casos por capa, siguiendo el presupuesto de `sb-testing`. No escribes las
@@ -150,7 +158,19 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .claude/tools/verificar.ps1 
 ```
 
 Si sale ROJO, corrige el esqueleto (no la lógica) y repite. No entregues un contrato que no compila,
-ni uno que deje pruebas existentes en rojo. Cierra regenerando el mapa:
+ni uno que deje pruebas existentes en rojo.
+
+> **Trampa de Modulith al cruzar un módulo por primera vez.** Si tu plan hace que un slice consuma
+> una clase de OTRO slice que hasta ahora nadie consumía desde fuera (un value object, una
+> excepción), y ese módulo destino **gana su primer `@NamedInterface` en esta misma historia**,
+> Modulith deja de exponer implícitamente el resto de sus paquetes — el `"nombreDelModulo"` plano en
+> `allowedDependencies` ya no basta, aunque antes bastara. La única forma de saberlo con certeza es
+> compilar; si `ModulithStructureTests` marca un paquete que "ya estaba permitido", exporta ese
+> paquete como interfaz nombrada explícita (`@NamedInterface("...")` en su `package-info.java`) y
+> añade `"modulo :: nombre"` al consumidor. Es declarar la frontera, no relajarla — documenta el
+> archivo nuevo en la sección 8 con esta misma razón, como ya hay un ejemplo hecho para copiar.
+
+Cierra regenerando el mapa:
 
 ```
 powershell -NoProfile -ExecutionPolicy Bypass -File .claude/tools/mapa.ps1

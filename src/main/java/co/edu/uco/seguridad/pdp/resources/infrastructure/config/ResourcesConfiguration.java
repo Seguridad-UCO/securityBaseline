@@ -3,7 +3,11 @@ package co.edu.uco.seguridad.pdp.resources.infrastructure.config;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationMustExistForTenantValidator;
 import co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository.ProtectedResourceRepository;
 import co.edu.uco.seguridad.pdp.resources.domain.rule.ProtectedResourceMustBeUniqueRule;
+import co.edu.uco.seguridad.pdp.resources.domain.rule.ProtectedResourceMustExistRule;
 import co.edu.uco.seguridad.pdp.resources.domain.rule.impl.ProtectedResourceMustBeUniqueRuleImpl;
+import co.edu.uco.seguridad.pdp.resources.domain.rule.impl.ProtectedResourceMustExistRuleImpl;
+import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceMustExistValidator;
+import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.ProtectedResourceMustExistValidatorImpl;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.RegisterProtectedResourceRulesValidator;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.RegisterProtectedResourceRulesValidatorImpl;
 import co.edu.uco.seguridad.pdp.resources.application.usecase.ListProtectedResourcesUseCase;
@@ -50,6 +54,17 @@ public class ResourcesConfiguration {
     @Bean
     ProtectedResourceMustBeUniqueRule protectedResourceMustBeUniqueRule() {
         return new ProtectedResourceMustBeUniqueRuleImpl();
+    }
+
+    @Bean
+    ProtectedResourceMustExistRule protectedResourceMustExistRule() {
+        return new ProtectedResourceMustExistRuleImpl();
+    }
+
+    @Bean
+    ProtectedResourceMustExistValidator protectedResourceMustExistValidator(ProtectedResourceRepository repository,
+            ProtectedResourceMustExistRule mustExist) {
+        return new ProtectedResourceMustExistValidatorImpl(repository, mustExist);
     }
 
     @Bean

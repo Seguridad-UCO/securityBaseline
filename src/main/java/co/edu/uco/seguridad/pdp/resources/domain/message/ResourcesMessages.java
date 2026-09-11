@@ -12,6 +12,10 @@ public final class ResourcesMessages {
         return "Ya existe un recurso registrado para " + method + " " + path + " en esta aplicación";
     }
 
+    public static String protectedResourceNotFound(String applicationId, String path, String method) {
+        return "No existe el recurso " + method + " " + path + " en la aplicación " + applicationId;
+    }
+
     private ResourcesMessages() {
     }
 }
