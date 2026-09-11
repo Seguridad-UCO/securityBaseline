@@ -14,6 +14,9 @@ verifica.
 - [Estructura PDP / Spring Modulith](architecture/pdp-modulith-alignment.md): módulos, contratos
   publicados y flujo E-1.
 - [Arquitectura y hoja de ruta](plans/2026-08-07-architecture-and-roadmap.md): objetivo y etapas.
+- [Próximos pasos de la Plataforma Central de Seguridad](plans/2026-09-06-security-platform-next-steps.md):
+  contraste entre el diagrama C4 objetivo, el PEP implementado y las etapas pendientes para PDP, OPA,
+  auditoría y adopción de aplicaciones.
 - Gobierno arquitectónico (ADR — interactor, eventos de dominio, seguridad real y persistencia
   real) y diagramas C4 (contexto y contenedor, estado actual y evolución prevista): viven en el
   [repositorio de arquitectura](https://github.com/Seguridad-UCO/security-platform-architecture)

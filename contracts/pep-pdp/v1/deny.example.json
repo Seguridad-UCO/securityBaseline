@@ -1,0 +1,15 @@
+{
+  "decision": "DENY",
+  "decisionId": "example-decision",
+  "reasonCode": "POLICY_DENY",
+  "policyReferences": [
+    {
+      "id": "example-policy",
+      "version": "1"
+    }
+  ],
+  "requestId": "0ad71c86-a203-4d99-b9b7-2a6c54c0bcaf",
+  "correlationId": "example-correlation",
+  "obligations": []
+}
+
