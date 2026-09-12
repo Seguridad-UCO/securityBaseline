@@ -1,0 +1,63 @@
+# Excepciones declaradas del detector de deriva (.claude/tools/drift.ps1).
+#
+# Solo se declara una excepcion para algo que esta pendiente A PROPOSITO y documentado como tal
+# en el documento que lo menciona. Nunca para silenciar un hallazgo real: eso es exactamente el
+# fallo que este detector existe para impedir.
+#
+# Formato:
+#   doc:<patron>   ignora el documento completo
+#   <patron>       ignora un destino de enlace o un nombre de clase (admite comodines)
+
+# --- Documentos historicos ---------------------------------------------------
+# Un reporte fechado o un plan cerrado describe el estado de OTRO momento. Sus referencias a
+# clases que ya no existen son correctas: son el registro de lo que habia entonces. Corregirlas
+# falsearia el historial.
+doc:pdp/docs/delivery/refactor-report-2026-08-07.md
+doc:pdp/docs/plans/*
+
+# --- Documentacion del propio harness ----------------------------------------
+# Cita los nombres ausentes precisamente para documentar que faltan.
+doc:pdp/docs/ai-harness/README.md
+
+# --- Planes -------------------------------------------------------------------
+# Un plan es la especificacion de lo que VA a existir: nombrar clases que aun no estan es su
+# naturaleza, no deriva. Lo que el plan promete lo verifica el validador contra el codigo, no
+# este detector.
+doc:pdp/docs/ai-harness/workspace/planes/*
+doc:pdp/docs/ai-harness/workspace/HU-*.md
+
+# --- Adaptadores retirados en el Stage 4 -------------------------------------
+# La seccion "Historia: los dummies de los Stages 0-3" de 07-dummy-adapters.md los lista como
+# retirados. Nombrar algo que ya no existe, diciendo que ya no existe, no es deriva.
+InMemoryTenantRepository
+InMemoryApplicationRepository
+InMemoryProtectedResourceRepository
+SnapshotReactiveTransactionAdapter
+
+# --- Tipos de libreria que el filtro de sufijos captura por casualidad -------
+# No son clases del proyecto y nunca estaran en src/: el sufijo coincide, el origen no.
+ObjectMapper
+
+# --- Clases del proyecto de referencia -----------------------------------------
+# ESTUDIO-ARQUITECTURA.md compara con arquisoft-backend y cita sus clases por su nombre.
+# No estaran nunca en este src/: son de otro repositorio.
+DomainRule
+
+# --- El estado anterior a la Fase A --------------------------------------------
+# Las secciones 1 y 2 de ESTUDIO-ARQUITECTURA.md describen la forma que el codigo tenia el
+# 2026-08-31 ANTES de mover las reglas al dominio, y la seccion 6 registra el antes y el despues.
+# Nombrar la clase que se partio, diciendo que se partio, no es deriva. Hoy la decision vive en
+# TenantMustExistRule + TenantStatusMustBeActiveRule y la consulta en TenantMustBeActiveValidator.
+TenantMustBeActiveRule
+
+# --- Clases de Spring, no del proyecto -----------------------------------------
+# ROADMAP-PDP.md nombra la pieza de Spring Security que el canal interno NO va a usar (el PEP no
+# manda cookie, asi que no hay contexto de sesion que reponer). Mismo caso que ObjectMapper.
+WebSessionServerSecurityContextRepository
+
+# --- Pendiente a proposito: HU-005 (OPA) ---------------------------------------
+# La decision D9 del HANDOFF nombra el adaptador que reemplazara a
+# DenyByDefaultPolicyDecisionAdapter cuando se cablee OPA. Es el nombre de un contrato acordado,
+# no una afirmacion sobre el codigo de hoy: el propio documento lo marca como alcance de HU-005.
+# Retirar esta excepcion cuando HU-005 cree la clase.
+OpaPolicyDecisionAdapter

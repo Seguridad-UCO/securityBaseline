@@ -36,7 +36,7 @@ stages:
             deploy:
               steps:
                 # Deployment jobs, unlike regular jobs, do not check out source by default —
-                # without this, `az acr build .` below has no Dockerfile to find.
+                # without this, `docker build -f pdp/Dockerfile` below has no Dockerfile to find.
                 - checkout: self
 
                 # Secrets become masked pipeline variables named like the Key Vault secret
@@ -70,7 +70,7 @@ stages:
                     inlineScript: |
                       set -euo pipefail
                       az acr login --name $(containerRegistryName)
-                      docker build -t "$(containerRegistryName).azurecr.io/pdp:$(Build.BuildId)" .
+                      docker build -f pdp/Dockerfile -t "$(containerRegistryName).azurecr.io/pdp:$(Build.BuildId)" .
                       docker push "$(containerRegistryName).azurecr.io/pdp:$(Build.BuildId)"
 
                 - task: AzureCLI@2

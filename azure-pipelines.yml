@@ -2,8 +2,8 @@
 #
 # Estrategia de ramas:
 #
-#   feature/*  → build + test + SonarQube            (sin despliegue)
-#   main       → build + test + SonarQube → DEV + PRODUCTION
+#   PR contra main → build + test + SonarQube (análisis de PR)   (sin despliegue)
+#   push a main     → build + test + SonarQube (análisis de rama) → DEV + PRODUCTION
 #
 # DEV y QA eran ambientes separados gateados por sus propias ramas (`develop`, `qa`), pero en la
 # práctica todo el trabajo fluye por PR contra `main` — esas ramas quedaban semanas sin un merge y
@@ -15,6 +15,11 @@
 # duplicar el YAML es precisamente cómo se logra que dejen de serlo. Lo único que cambia por
 # ambiente es el archivo de variables y el objeto `environment` de Azure DevOps.
 #
+# El trigger de push ya no incluye `feature/*`: el plan de SonarQube Cloud de esta organización no
+# analiza ramas distintas de main (solo main y pull requests), así que cada push a una feature branch
+# terminaba en un pipeline rojo por diseño, no por un error real. La validación de esas ramas sigue
+# ocurriendo — a través del bloque `pr:` de abajo, en cuanto se abre el pull request contra main.
+#
 # Ningún secreto aparece en este repositorio. Las credenciales llegan por service connection y por
 # Azure Key Vault, ambas resueltas en tiempo de ejecución.
 
@@ -24,10 +29,9 @@ trigger:
   branches:
     include:
       - main
-      - feature/*
 
 # Validación de pull request. Con GitHub como origen, esto es lo que publica el resultado del
-# build de vuelta en el PR.
+# build de vuelta en el PR — es la única validación de CI que corre sobre una feature branch.
 pr:
   branches:
     include:

@@ -1,0 +1,11 @@
+services:
+  opa:
+    build: .
+    ports:
+      - "${OPA_PORT:-8181}:8181"
+    healthcheck:
+      test: ["CMD", "/opa", "eval", "--format=json", "data.security.authorization.decision"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+

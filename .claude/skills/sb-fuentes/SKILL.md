@@ -10,7 +10,7 @@ clones locales — la versión anterior de este mapa describía una carpeta `doc
 no existe.
 
 Para el estado del **código**, no uses esta skill: para eso están `sb-arquitectura`,
-`sb-estandares` y `docs/ai-harness/PROJECT-MAP.md`.
+`sb-estandares` y `pdp/docs/ai-harness/PROJECT-MAP.md`.
 
 ---
 
@@ -84,14 +84,14 @@ tecnicos/
 ```
 
 > **No hay archivo de historias de usuario priorizadas.** Ni aquí ni en el repo de arquitectura.
-> Las historias las dicta el usuario o las deja en `docs/ai-harness/workspace/HU-XXX.md`.
+> Las historias las dicta el usuario o las deja en `pdp/docs/ai-harness/workspace/HU-XXX.md`.
 > Si no encuentras la historia, **pídesela**; no la inventes.
 
 ---
 
 ## Protocolo de consulta al planificar
 
-1. **La historia.** ¿La dictó el usuario? ¿Está en `docs/ai-harness/workspace/`? Si no, pídela.
+1. **La historia.** ¿La dictó el usuario? ¿Está en `pdp/docs/ai-harness/workspace/`? Si no, pídela.
 2. **El contexto.** `02-domain/03-bounded-contexts.md` → a qué BC pertenece y de qué **no** es
    responsable. Cruza con la tabla de módulos de `CLAUDE.md` para saber si ese BC ya tiene módulo.
 3. **El event storming** del contexto, en `artefactos-referencia/estrategicos/event-storming/`.

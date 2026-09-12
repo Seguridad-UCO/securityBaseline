@@ -1,2 +1,9 @@
 /mvnw text eol=lf
 *.cmd text eol=crlf
+
+# El motor de politicas corre en un contenedor Linux. Con core.autocrlf=true (el default de
+# Windows) estos archivos salen en CRLF al hacer checkout, y entonces `opa fmt --fail` rechaza
+# las politicas y el shebang de los scripts falla con "bad interpreter". El equipo es mixto
+# Mac/Windows, asi que fijarlo aqui es lo unico que lo mantiene reproducible en las dos.
+*.rego text eol=lf
+security-policy-engine/scripts/** text eol=lf

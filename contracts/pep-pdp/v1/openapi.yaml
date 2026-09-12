@@ -1,0 +1,64 @@
+openapi: 3.1.0
+info:
+  title: Security Platform — PEP/PDP
+  version: 1.0.0
+  description: |
+    Contract implemented by the PEP client. The current PDP does not yet expose this operation.
+    Identity evidence is the original user Bearer token. mTLS authenticates the PEP service;
+    a successful user authentication alone must not grant access to this internal operation.
+    PDP resolves trusted identity, local tenant, resource, roles and profiles and delegates policies to OPA.
+servers:
+  - url: https://pdp.internal
+security:
+  - userEvidence: []
+    pepIdentity: []
+paths:
+  /internal/v1/access-decisions:
+    post:
+      operationId: evaluateAccess
+      summary: Evaluate one canonical access request
+      parameters:
+        - in: header
+          name: X-Request-Id
+          required: true
+          schema: {type: string, format: uuid}
+        - in: header
+          name: X-Correlation-Id
+          required: true
+          schema: {type: string, pattern: '^[A-Za-z0-9_.:-]{1,128}$'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: './request.schema.json'}
+            examples:
+              request: {externalValue: './request.example.json'}
+      responses:
+        '200':
+          description: |
+            Completed evaluation; ALLOW, DENY or INDETERMINATE. IDs must match request body
+            and headers. Only a valid ALLOW with no obligations may reach the protected application.
+          content:
+            application/json:
+              schema: {$ref: './decision.schema.json'}
+              examples:
+                allow: {externalValue: './allow.example.json'}
+                deny: {externalValue: './deny.example.json'}
+                indeterminate: {externalValue: './indeterminate.example.json'}
+        '400':
+          description: Invalid request contract. PEP treats as integration failure (503 to caller).
+        '401':
+          description: User identity evidence invalid. PEP responds 401 without forwarding.
+        '403':
+          description: PEP service not admitted. Integration failure (503), not a user policy DENY.
+        '503':
+          description: Evaluation unavailable. PEP fails closed with 503.
+components:
+  securitySchemes:
+    userEvidence:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    pepIdentity:
+      type: mutualTLS
+

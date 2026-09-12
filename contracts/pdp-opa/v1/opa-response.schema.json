@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://security-baseline.local/schemas/opa-response.schema.json",
+  "title": "OPA HTTP response",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["result"],
+  "properties": {
+    "result": {"$ref": "policy-decision.schema.json"},
+    "decision_id": {"type": "string"}
+  }
+}

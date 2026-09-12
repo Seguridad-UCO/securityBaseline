@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "1.0",
+  "request": {"id": "req-001", "correlationId": "corr-001"},
+  "subject": {"id": "user-001", "type": "USER", "tenantId": "tenant-a", "roles": [], "profiles": [], "entitlements": [], "groups": [], "attributes": {}},
+  "tenant": {"id": "tenant-a", "attributes": {}},
+  "application": {"id": "catalog", "attributes": {}},
+  "resource": {"type": "document", "id": "doc-001", "attributes": {}},
+  "action": "document:read",
+  "relationships": [],
+  "context": {"environment": "development", "network": {}, "risk": {}, "attributes": {}},
+  "security": {"authenticationLevel": "MFA", "sessionAgeSeconds": 60, "attributes": {}}
+}

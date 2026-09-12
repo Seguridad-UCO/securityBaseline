@@ -102,7 +102,7 @@ stages:
           - task: Maven@4
             displayName: 'mvn verify + análisis SonarCloud'
             inputs:
-              mavenPomFile: 'pom.xml'
+              mavenPomFile: 'pdp/pom.xml'
               goals: 'verify'
               options: '$(mavenOptions)'
               publishJUnitResults: true
@@ -116,7 +116,7 @@ stages:
 
           - bash: |
               set -euo pipefail
-              REPORT="$(System.DefaultWorkingDirectory)/target/site/jacoco/jacoco.xml"
+              REPORT="$(System.DefaultWorkingDirectory)/pdp/target/site/jacoco/jacoco.xml"
               if [[ ! -f "$REPORT" ]]; then
                 echo "##vso[task.logissue type=error]No se encontró $REPORT. Sin este archivo SonarQube Cloud no muestra cobertura."
                 exit 1
@@ -135,12 +135,12 @@ stages:
             displayName: 'Publicar cobertura'
             condition: succeededOrFailed()
             inputs:
-              summaryFileLocation: '$(System.DefaultWorkingDirectory)/target/site/jacoco/jacoco.xml'
-              pathToSources: '$(System.DefaultWorkingDirectory)/src/main/java'
+              summaryFileLocation: '$(System.DefaultWorkingDirectory)/pdp/target/site/jacoco/jacoco.xml'
+              pathToSources: '$(System.DefaultWorkingDirectory)/pdp/src/main/java'
 
           - bash: |
               set -euo pipefail
-              ./mvnw $(mavenOptions) -DskipTests package
+              ./mvnw -f pdp/pom.xml $(mavenOptions) -DskipTests package
             displayName: 'Empaquetar artefacto'
             condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
 
@@ -148,7 +148,7 @@ stages:
             displayName: 'Recolectar jar ejecutable'
             condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
             inputs:
-              contents: 'target/*.jar'
+              contents: 'pdp/target/*.jar'
               targetFolder: '$(Build.ArtifactStagingDirectory)'
               flattenFolders: true
 

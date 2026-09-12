@@ -17,13 +17,14 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $repo    = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-$docsDir = Join-Path $repo 'docs'
-$srcDir  = Join-Path $repo 'src'
+$docsDir      = Join-Path $repo 'pdp/docs'
+$plataformaDir = Join-Path $repo 'docs'
+$srcDir       = Join-Path $repo 'pdp/src'
 
-if (-not (Test-Path $docsDir)) { Write-Error 'No se encontro docs/.' }
+if (-not (Test-Path $docsDir)) { Write-Error 'No se encontro pdp/docs/.' }
 
 # --- Excepciones declaradas -------------------------------------------------
-$ignorePath = Join-Path $repo 'docs/ai-harness/drift-ignore.txt'
+$ignorePath = Join-Path $repo 'pdp/docs/ai-harness/drift-ignore.txt'
 $ignore = @()
 if (Test-Path $ignorePath) {
     $ignore = Get-Content -Path $ignorePath |
@@ -56,7 +57,10 @@ if (Test-Path $srcDir) {
 # Las skills y los agentes de .claude/ afirman cosas sobre el codigo igual que docs/, y envejecen
 # igual de mal: una skill que describe una convencion retirada convierte a cada agente en un
 # multiplicador del error. Se verifican con la misma vara.
+# docs/ es la evidencia especifica del PDP (23 criterios); la raiz docs/ es el resumen de
+# plataforma (PLATAFORMA.md) que enlaza a los tres componentes -- ambas se vigilan igual.
 $docs = @(Get-ChildItem -Path $docsDir -Recurse -Filter *.md)
+if (Test-Path $plataformaDir) { $docs += @(Get-ChildItem -Path $plataformaDir -Filter *.md) }
 $claudeDir = Join-Path $repo '.claude'
 if (Test-Path $claudeDir) {
     $docs += @(Get-ChildItem -Path $claudeDir -Recurse -Filter *.md)

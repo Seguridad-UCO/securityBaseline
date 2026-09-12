@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+set -eu
+
+root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+"$root/scripts/test"
+rm -f "$root/bundle.tar.gz"
+opa build -o "$root/bundle.tar.gz" \
+  "$root/policies" "$root/data"
+echo "bundle created at $root/bundle.tar.gz"
