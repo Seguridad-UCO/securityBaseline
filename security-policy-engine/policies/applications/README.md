@@ -1,8 +1,13 @@
 # Application policies
 
-This directory intentionally has no example business policy. Add a module only when a
-real application supplies its facts and authorization semantics. The module emits a
-candidate into package `security.authorization.application`:
+`example_app.rego` in this directory is a **demonstration module only** — no real
+application named `example-app` is registered in the PDP catalog. It exists to show the
+pattern end-to-end (see `tests/unit/example_app_test.rego` and
+`tests/regression/example_app_isolation_test.rego`), not to be extended into a real
+policy. Add a module for a real application only when it supplies its own facts and
+authorization semantics — it can live alongside `example_app.rego`, keyed by its own
+`applicationId`, or replace it. The module emits a candidate into package
+`security.authorization.application`:
 
 ```rego
 package security.authorization.application
