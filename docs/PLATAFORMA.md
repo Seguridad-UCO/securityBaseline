@@ -308,3 +308,4 @@ justo el tipo de deriva que este proyecto existe para evitar (ver hallazgo trans
 | El vocabulario único de `reasonCode` | [`../contracts/reason-codes.md`](../contracts/reason-codes.md) |
 | El diagnóstico completo de las desalineaciones (antes de resolverlas) | [`ai-harness/workspace/INTEGRACION-PDP-PEP-OPA.md`](../pdp/docs/ai-harness/workspace/INTEGRACION-PDP-PEP-OPA.md) |
 | Los 23 criterios de la línea base y su evidencia | [`pdp/docs/README.md`](../pdp/docs/README.md) |
+| Mapa completo contra la lista de observabilidad/seguridad/microfrontend de la reunión con Farid, con evidencia por ítem | [`ai-harness/workspace/MAPA-PLATAFORMA-SEGURIDAD.md`](../pdp/docs/ai-harness/workspace/MAPA-PLATAFORMA-SEGURIDAD.md) |
