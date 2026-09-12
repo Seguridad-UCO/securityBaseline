@@ -41,6 +41,11 @@ class RemoveApplicationUseCaseImplTests {
             }
 
             @Override
+            public Mono<TenantId> findTenantIdById(ApplicationId applicationId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public Mono<ResultPage<Application>> findBy(ApplicationCriteria criteria, PageWindow window) {
                 throw new UnsupportedOperationException();
             }

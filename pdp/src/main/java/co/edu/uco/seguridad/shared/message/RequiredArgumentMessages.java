@@ -64,6 +64,40 @@ public final class RequiredArgumentMessages {
     public static final String PROTECTED_RESOURCE_EXISTS_VALIDATOR = "se requiere el validador de existencia de recurso protegido";
     public static final String POLICY_DECISION_PORT = "se requiere el puerto de decisión de políticas";
     public static final String AUTHORIZE_USE_CASE = "se requiere el caso de uso de autorización";
+    // HU-003 — canal interno para el PEP.
+    public static final String APPLICATION_OWNER_LOOKUP_VALIDATOR = "se requiere el validador de dueño de aplicación";
+    public static final String EVALUATE_INTERNAL_ACCESS_USE_CASE = "se requiere el caso de uso de acceso interno";
+    public static final String INTERNAL_ACCESS_DECISION_INTERACTOR = "se requiere el interactor de decisión interna";
+    public static final String AUTHORIZE_INTERACTOR = "se requiere el interactor de autorización";
+    // HU-004 — catálogo de roles.
+    public static final String ROLE_ID = "se requiere id de rol";
+    public static final String ROLE_NAME = "se requiere nombre de rol";
+    public static final String ROLE_SCOPE = "se requiere el alcance del rol";
+    public static final String ROLE_SCOPE_LEVEL = "se requiere el nivel de alcance del rol";
+    public static final String ROLE_SCOPE_TENANT = "se requiere el inquilino del alcance";
+    public static final String ROLE_SCOPE_APPLICATION = "se requiere la aplicación del alcance";
+    public static final String ROLE_RESOURCES = "se requiere el conjunto de recursos del rol";
+    public static final String ROLE = "se requiere el rol";
+    public static final String ROLE_CRITERIA = "se requiere el criterio de consulta de roles";
+    public static final String ROLE_REPOSITORY = "se requiere el repositorio de roles";
+    public static final String ROLE_NAME_UNIQUE_RULE = "se requiere la regla de nombre de rol único";
+    public static final String ROLE_EXISTS_RULE = "se requiere la regla de existencia de rol";
+    public static final String ROLE_SCOPE_COVERS_RULE = "se requiere la regla de cobertura del alcance";
+    public static final String DEFINE_ROLE_RULES_VALIDATOR = "se requiere el validador de definición de rol";
+    public static final String GRANT_RESOURCE_RULES_VALIDATOR = "se requiere el validador de concesión de recurso";
+    public static final String PROTECTED_RESOURCE_OWNER_LOOKUP_VALIDATOR = "se requiere el validador de dueño de recurso";
+    public static final String DEFINE_ROLE_USE_CASE = "se requiere el caso de uso de definición de rol";
+    public static final String GRANT_RESOURCE_TO_ROLE_USE_CASE = "se requiere el caso de uso de concesión de recurso";
+    public static final String LIST_ROLES_USE_CASE = "se requiere el caso de uso de consulta de roles";
+    public static final String DEFINE_ROLE_INTERACTOR = "se requiere el interactor de definición de rol";
+    public static final String GRANT_RESOURCE_TO_ROLE_INTERACTOR = "se requiere el interactor de concesión de recurso";
+    public static final String LIST_ROLES_INTERACTOR = "se requiere el interactor de consulta de roles";
+    public static final String INTERNAL_MTLS_PROPERTIES = "se requiere la configuración mTLS del canal interno";
+    public static final String INTERNAL_MTLS_TRUST_CERTIFICATE = "se requiere la ruta al certificado de confianza mTLS";
+    public static final String INTERNAL_MTLS_ALLOWED_SUBJECTS = "se requiere la lista de sujetos admitidos por mTLS";
+    public static final String INTERNAL_EVIDENCE_JWK_SET_URI = "se requiere la URL JWKS de la evidencia del canal interno";
+    public static final String INTERNAL_EVIDENCE_ISSUER = "se requiere el emisor esperado de la evidencia del canal interno";
+    public static final String INTERNAL_EVIDENCE_AUDIENCE = "se requiere la audiencia esperada de la evidencia del canal interno";
 
     // Componentes de AccessRequest / AccessDecision (autorizacion).
     public static final String REQUEST_ID = "se requiere el identificador de la solicitud";

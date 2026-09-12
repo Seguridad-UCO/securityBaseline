@@ -7,7 +7,9 @@ import co.edu.uco.seguridad.pdp.resources.domain.rule.ProtectedResourceMustExist
 import co.edu.uco.seguridad.pdp.resources.domain.rule.impl.ProtectedResourceMustBeUniqueRuleImpl;
 import co.edu.uco.seguridad.pdp.resources.domain.rule.impl.ProtectedResourceMustExistRuleImpl;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceMustExistValidator;
+import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceOwnerLookupValidator;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.ProtectedResourceMustExistValidatorImpl;
+import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.ProtectedResourceOwnerLookupValidatorImpl;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.RegisterProtectedResourceRulesValidator;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.RegisterProtectedResourceRulesValidatorImpl;
 import co.edu.uco.seguridad.pdp.resources.application.usecase.ListProtectedResourcesUseCase;
@@ -65,6 +67,12 @@ public class ResourcesConfiguration {
     ProtectedResourceMustExistValidator protectedResourceMustExistValidator(ProtectedResourceRepository repository,
             ProtectedResourceMustExistRule mustExist) {
         return new ProtectedResourceMustExistValidatorImpl(repository, mustExist);
+    }
+
+    // HU-004 — catálogo de roles: resuelve la aplicación dueña a partir solo del ResourceId.
+    @Bean
+    ProtectedResourceOwnerLookupValidator protectedResourceOwnerLookupValidator(ProtectedResourceRepository repository) {
+        return new ProtectedResourceOwnerLookupValidatorImpl(repository);
     }
 
     @Bean

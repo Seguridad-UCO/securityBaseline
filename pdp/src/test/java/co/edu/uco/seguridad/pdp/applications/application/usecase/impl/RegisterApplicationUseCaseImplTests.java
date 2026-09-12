@@ -47,6 +47,11 @@ class RegisterApplicationUseCaseImplTests {
             }
 
             @Override
+            public Mono<TenantId> findTenantIdById(ApplicationId applicationId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public Mono<ResultPage<Application>> findBy(ApplicationCriteria criteria, PageWindow window) {
                 throw new UnsupportedOperationException();
             }
@@ -94,6 +99,11 @@ class RegisterApplicationUseCaseImplTests {
 
             @Override
             public Mono<Boolean> existsByTenantAndId(TenantId tenantId, ApplicationId applicationId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<TenantId> findTenantIdById(ApplicationId applicationId) {
                 throw new UnsupportedOperationException();
             }
 

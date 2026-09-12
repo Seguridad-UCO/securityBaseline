@@ -54,6 +54,17 @@ public final class SurrealApplicationRepository implements ApplicationRepository
                 .map(results -> !results.get(0).isEmpty());
     }
 
+    @Override
+    public Mono<TenantId> findTenantIdById(ApplicationId applicationId) {
+        return client.execute(
+                        "SELECT tenantId FROM type::record('%s', $id);".formatted(ApplicationSchema.TABLE),
+                        Map.of("id", applicationId.value().toString()))
+                .flatMap(results -> {
+                    JsonNode rows = results.get(0);
+                    return rows.isEmpty() ? Mono.empty() : Mono.just(new TenantId(rows.get(0).path("tenantId").asString()));
+                });
+    }
+
     /**
      * Traduce la specification a una consulta: el filtro opcional se añade al {@code WHERE} solo si
      * el criterio lo trae, y el recorte va en la propia consulta, no en memoria — si el puerto

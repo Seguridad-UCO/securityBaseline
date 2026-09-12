@@ -65,6 +65,11 @@ class ProtectedResourceMustExistValidatorTests {
             public Mono<Void> deleteById(ResourceId resourceId) {
                 throw new UnsupportedOperationException();
             }
+
+            @Override
+            public Mono<ApplicationId> findApplicationIdById(ResourceId resourceId) {
+                throw new UnsupportedOperationException();
+            }
         };
     }
 }

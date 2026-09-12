@@ -74,6 +74,11 @@ class RegisterProtectedResourceUseCaseImplTests {
             public Mono<Void> deleteById(ResourceId resourceId) {
                 throw new UnsupportedOperationException();
             }
+
+            @Override
+            public Mono<ApplicationId> findApplicationIdById(ResourceId resourceId) {
+                throw new UnsupportedOperationException();
+            }
         };
         List<DomainEvent> published = new ArrayList<>();
         UUID fixedId = UUID.randomUUID();
@@ -120,6 +125,11 @@ class RegisterProtectedResourceUseCaseImplTests {
 
             @Override
             public Mono<Void> deleteById(ResourceId resourceId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<ApplicationId> findApplicationIdById(ResourceId resourceId) {
                 throw new UnsupportedOperationException();
             }
         };

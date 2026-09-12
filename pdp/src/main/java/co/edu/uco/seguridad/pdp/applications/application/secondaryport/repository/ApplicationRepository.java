@@ -23,6 +23,14 @@ public interface ApplicationRepository {
     Mono<Boolean> existsByTenantAndId(TenantId tenantId, ApplicationId applicationId);
 
     /**
+     * Resuelve qué inquilino es dueño de una aplicación, a partir solo de su identificador — a
+     * diferencia de {@link #existsByTenantAndId}, que verifica una pertenencia ya conocida. Vacío si
+     * la aplicación no existe (HU-003, canal interno del PEP). Responde solo el {@code TenantId},
+     * nunca la aplicación completa: es lo mínimo que {@code ApplicationOwnerLookupValidator} necesita.
+     */
+    Mono<TenantId> findTenantIdById(ApplicationId applicationId);
+
+    /**
      * Consulta por criterio y ventana. Sustituye a los métodos por combinación de filtros: añadir un
      * filtro nuevo es ampliar {@link ApplicationCriteria}, no añadir un método aquí.
      */

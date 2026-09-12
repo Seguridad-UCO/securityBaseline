@@ -45,6 +45,22 @@ public final class ValueObjectMessages {
         }
     }
 
+    public static final class RoleName {
+        public static final String LENGTH = "debe contener de 3 a 60 caracteres";
+
+        private RoleName() {
+        }
+    }
+
+    public static final class RoleScope {
+        public static final String UNSUPPORTED_LEVEL = "debe ser uno de GLOBAL, TENANT, APPLICATION";
+        public static final String INCOHERENT =
+                "el alcance debe llevar exactamente los identificadores que su nivel exige";
+
+        private RoleScope() {
+        }
+    }
+
     public static final class TenantId {
         public static final String FORMAT =
                 "debe tener de 2 a 64 caracteres alfanuméricos, guiones o guiones bajos";

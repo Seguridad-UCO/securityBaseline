@@ -18,7 +18,7 @@
 |---|---|---|---|---|
 | **PDP** — Policy Decision Point | El servicio que decide: dado un sujeto, una aplicación, un recurso y una acción, ¿se permite? | [`pdp/`](../pdp/) | Sebastián | 🟢 En producción de desarrollo. Decide con **denegación por defecto** — todavía no consulta una política real |
 | **PEP** — Policy Enforcement Point | El proxy que se pone delante de cada aplicación protegida: valida el JWT del usuario, pregunta al PDP y solo deja pasar la petición si la respuesta es `ALLOW` | [`pep/`](../pep/) | David | 🟡 Implementado y probado contra un PDP **simulado** (fixtures). Su cliente real apunta a un endpoint del PDP que **todavía no existe** (HU-003) |
-| **OPA** — Open Policy Agent / motor de políticas | El que de verdad evalúa la política: recibe hechos del PDP y devuelve una decisión lógica en Rego | [`security-policy-engine/`](../security-policy-engine/) | Laura | 🟡 El motor y sus políticas core están implementados y probados. **Nada lo llama todavía** — el PDP no tiene un adaptador que lo consuma (HU-005) |
+| **OPA** — Open Policy Agent / motor de políticas | El que de verdad evalúa la política: recibe hechos del PDP y devuelve una decisión lógica en Rego | [`security-policy-engine/`](../security-policy-engine/) | Laura | 🟡 El motor y sus políticas core están implementados y probados. **Nada lo llama todavía** — el PDP no tiene un adaptador que lo consuma (HU-006) |
 
 Los tres viven en **un solo repositorio** (`securityBaseline`), cada uno en su propio árbol de
 primer nivel, con su propio build (`pdp/pom.xml` y `pep/pom.xml` son independientes entre sí — el
@@ -72,7 +72,7 @@ flowchart TB
     ING --> NORM --> CLIENT
     CLIENT -.->|"HU-003: no existe"| AUTH
 
-    DENY -.->|"HU-005: no existe"| ENTRY
+    DENY -.->|"HU-006: no existe"| ENTRY
     ENTRY --> POLICIES
 
     style CLIENT stroke-dasharray: 5 5
@@ -219,7 +219,7 @@ placeholder (ver §3, PDP).
 
 ---
 
-## 5. Flujo de una petición — OBJETIVO (lo que HU-003 + HU-005 desbloquean)
+## 5. Flujo de una petición — OBJETIVO (lo que HU-003 + HU-006 desbloquean)
 
 ```mermaid
 sequenceDiagram
@@ -257,9 +257,11 @@ verificada** en [`contracts/`](../contracts/README.md); lo que falta es el códi
 | # | Qué | Por qué va antes que las demás | Sin esto, no se puede… |
 |---|---|---|---|
 | **1** | **HU-003** — endpoint interno `POST /internal/v1/access-decisions` con mTLS + Bearer, según `contracts/pep-pdp/v1/` | Es el **único** de los pendientes que desbloquea a otra persona del equipo. El PEP de David está terminado y probado; solo le falta un PDP real contra el cual hablar | Probar el PEP con tráfico real. Todo lo que hace el PEP hoy es contra un simulador |
-| **2** | **HU-004** — roles y asignaciones vigentes por tenant (BC-04 + BC-08) | Sin atributos que evaluar, conectar OPA no cambiaría nada: seguiría respondiendo `NO_APPLICABLE_POLICY` porque no hay hechos de negocio que darle. Es el trabajo más grande y 100 % del PDP | Que una política Rego tenga algo real que decidir |
-| **3** | **HU-005** — adaptador `OpaPolicyDecisionAdapter` sobre `PolicyDecisionPort` | Sustituye `DenyByDefaultPolicyDecisionAdapter` por una llamada real a OPA. Con esto se cierra el camino `ALLOW`, que hoy es matemáticamente imposible | Que el PDP alguna vez responda `ALLOW` |
-| **4** | **HU-006** — `EventoAcceso` correlacionado hacia auditoría | Sin evidencia durable no hay cumplimiento (INV-AUD-01) — pero no bloquea a nadie del equipo, a diferencia de 1-3 | Demostrar qué se decidió y por qué, después del hecho |
+| **2** | **HU-004** — catálogo de roles (BC-04): alcance tenant/aplicación/global y recursos que autoriza | Primera mitad del valor propio del PDP. Partida de la historia original de roles+asignaciones el 2026-09-11 porque, con esas decisiones, cada mitad es del tamaño de HU-003 | Que exista vocabulario de roles que asignar |
+| **3** | **HU-005** — asignaciones vigentes (BC-08): `UsuarioAplicacionRol` + `Vigencia` + `findActiveRolesFor` | Sin atributos que evaluar, conectar OPA no cambiaría nada: seguiría respondiendo `NO_APPLICABLE_POLICY` porque no hay hechos de negocio que darle | Que una política Rego tenga algo real que decidir |
+| **4** | **HU-006** — adaptador `OpaPolicyDecisionAdapter` sobre `PolicyDecisionPort` | Sustituye `DenyByDefaultPolicyDecisionAdapter` por una llamada real a OPA. Con esto se cierra el camino `ALLOW`, que hoy es matemáticamente imposible | Que el PDP alguna vez responda `ALLOW` |
+| **5** | **HU-007** — `EventoAcceso` correlacionado hacia auditoría | Sin evidencia durable no hay cumplimiento (INV-AUD-01) — pero no bloquea a nadie del equipo, a diferencia de 1-4 | Demostrar qué se decidió y por qué, después del hecho |
+| **6** | **HU-009** — administración de seguridad por aplicación (quién administra el catálogo) | Diferida desde HU-004/HU-005 a propósito. Desbloquea los roles globales por HTTP y es el modelo que el microfrontend necesita. Necesita ADR antes | El microfrontend de seguridad |
 | — | `pep-pdp/v1.1` — obligaciones como objetos, no strings | Es de David; el contrato en `contracts/obligations.md` ya dice qué tiene que hacer | Que un `ALLOW` con obligación `AUDIT` no se sirva sin auditar (hoy degrada a `INDETERMINATE`, correcto pero conservador) |
 | — | Registrar `ci/pep-pipeline.yml` en Azure | El módulo `pep/` no tiene CI propio corriendo todavía | Que un cambio en `pep/` se verifique solo, sin depender de que alguien corra `mvnw -f pep/pom.xml verify` a mano |
 
@@ -269,11 +271,14 @@ a ser atributos de entrada que evalúa OPA.
 
 ### Lo que NO hay que hacer todavía
 
-- Diseño de auditoría durable (Etapa 4 del plan del PEP) — después de HU-005.
+- Diseño de auditoría durable (Etapa 4 del plan del PEP) — después de HU-006.
 - Despliegue en red / TLS por ambiente / `X-ARR-ClientCert` de App Service — es un problema de
   infraestructura, no del PDP (ver `HANDOFF-INTEGRACION-PEP-OPA.md`, trampa T3).
-- Validación de issuer/audiencia **por aplicación** — aplazada a HU-004 a propósito (decisión D5 del
-  handoff); hoy se valida contra un conjunto de confianza configurado, y es deuda consciente.
+- Validación de issuer/audiencia **por aplicación** — aplazada a propósito (decisión D5 del
+  handoff); hoy se valida contra un conjunto de confianza configurado, y es deuda consciente. Al
+  partir roles/asignaciones el 2026-09-11 quedó **sin historia numerada**: es «credenciales por
+  aplicación», emparentada con HU-009 y con la librería v1 (los dos registros de aplicaciones que
+  no se hablan). Necesita su propia historia cuando se decida dónde vive la credencial.
 
 ---
 
@@ -291,7 +296,7 @@ correctas; las enlaza:
 **No existe hoy un `docker compose up` único que levante los cinco contenedores juntos**, porque
 levantarlos juntos no demostraría nada todavía: el PEP hablaría con su simulador (no con el PDP) y
 OPA no recibiría tráfico de nadie. Ese compose unificado tiene sentido **después** de HU-003 y
-HU-005 — antes, sería un compose unico que aparenta una integración que no existe, que es
+HU-006 — antes, sería un compose unico que aparenta una integración que no existe, que es
 justo el tipo de deriva que este proyecto existe para evitar (ver hallazgo transversal en
 `pdp/docs/criteria-compliance-matrix.md`).
 

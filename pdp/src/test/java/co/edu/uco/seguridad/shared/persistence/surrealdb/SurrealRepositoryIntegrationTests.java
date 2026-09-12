@@ -7,6 +7,7 @@ import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.repository.SurrealApplicationRepository;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
+import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
 import co.edu.uco.seguridad.pdp.commons.model.ResourceId;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.SecurityUserRepository;
@@ -20,6 +21,13 @@ import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.ProtectedResource;
 import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.persistence.repository.SurrealProtectedResourceRepository;
+import co.edu.uco.seguridad.pdp.roles.application.secondaryport.repository.RoleRepository;
+import co.edu.uco.seguridad.pdp.roles.domain.Role;
+import co.edu.uco.seguridad.pdp.roles.domain.RoleCriteria;
+import co.edu.uco.seguridad.pdp.roles.domain.model.RoleName;
+import co.edu.uco.seguridad.pdp.roles.domain.model.RoleScope;
+import co.edu.uco.seguridad.pdp.commons.model.RoleId;
+import co.edu.uco.seguridad.pdp.roles.infrastructure.adapter.secondary.persistence.repository.SurrealRoleRepository;
 import co.edu.uco.seguridad.pdp.tenants.application.secondaryport.repository.TenantRepository;
 import co.edu.uco.seguridad.pdp.tenants.domain.Tenant;
 import co.edu.uco.seguridad.pdp.tenants.domain.model.TenantName;
@@ -32,6 +40,7 @@ import reactor.test.StepVerifier;
 import tools.jackson.databind.ObjectMapper;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -133,10 +142,23 @@ class SurrealRepositoryIntegrationTests extends AbstractSurrealDbIntegrationTest
                 .expectNext(true)
                 .verifyComplete();
 
+        // HU-003: findTenantIdById resuelve el dueño solo con el id, sin conocer el tenant de antemano.
+        StepVerifier.create(repository.findTenantIdById(application.id()))
+                .expectNext(tenant)
+                .verifyComplete();
+
         StepVerifier.create(repository.deleteById(application.id())).verifyComplete();
 
         StepVerifier.create(repository.existsByTenantAndName(tenant, name))
                 .expectNext(false)
+                .verifyComplete();
+    }
+
+    @Test
+    void application_repository_finds_no_tenant_for_an_unknown_application_id() {
+        ApplicationRepository repository = new SurrealApplicationRepository(client);
+
+        StepVerifier.create(repository.findTenantIdById(new ApplicationId(UUID.randomUUID())))
                 .verifyComplete();
     }
 
@@ -182,6 +204,109 @@ class SurrealRepositoryIntegrationTests extends AbstractSurrealDbIntegrationTest
         StepVerifier.create(repository.deleteById(resource.id())).verifyComplete();
 
         StepVerifier.create(repository.findAllByApplication(applicationId)).verifyComplete();
+    }
+
+    @Test
+    void protected_resource_repository_resolves_the_owner_application_and_empty_for_an_unknown_resource() {
+        client.ensureNamespaceAndDatabase()
+                .then(client.execute(
+                        """
+                        DEFINE TABLE IF NOT EXISTS protected_resource SCHEMALESS;
+                        DEFINE INDEX IF NOT EXISTS protected_resource_endpoint ON protected_resource \
+                        COLUMNS applicationId, path, method UNIQUE;\
+                        """,
+                        Map.of()))
+                .block();
+
+        ProtectedResourceRepository repository = new SurrealProtectedResourceRepository(client);
+        ApplicationId applicationId = new ApplicationId(UUID.randomUUID());
+        ProtectedResource resource = ProtectedResource.register(new ResourceId(UUID.randomUUID()), applicationId,
+                new TenantId("surreal-it-owner-lookup"), new ResourcePath("/notas"), HttpVerb.GET, Instant.now());
+        StepVerifier.create(repository.save(resource)).expectNext(resource).verifyComplete();
+
+        StepVerifier.create(repository.findApplicationIdById(resource.id()))
+                .expectNext(applicationId)
+                .verifyComplete();
+
+        StepVerifier.create(repository.findApplicationIdById(new ResourceId(UUID.randomUUID())))
+                .verifyComplete();
+    }
+
+    @Test
+    void role_repository_saves_and_finds_a_role_with_its_granted_resources() {
+        client.ensureNamespaceAndDatabase()
+                .then(client.execute(
+                        """
+                        DEFINE TABLE IF NOT EXISTS role SCHEMALESS;
+                        DEFINE INDEX IF NOT EXISTS role_scope_name ON role \
+                        COLUMNS level, tenantId, applicationId, name UNIQUE;\
+                        """,
+                        Map.of()))
+                .block();
+
+        RoleRepository repository = new SurrealRoleRepository(client);
+        TenantId tenant = new TenantId("surreal-it-roles");
+        RoleName name = new RoleName("surreal-it-docente");
+        Role role = Role.define(new RoleId(UUID.randomUUID()), name, RoleScope.ofTenant(tenant), Instant.now())
+                .withResource(new ResourceId(UUID.randomUUID()));
+
+        StepVerifier.create(repository.existsByNameInScope(name, RoleScope.ofTenant(tenant)))
+                .expectNext(false)
+                .verifyComplete();
+
+        StepVerifier.create(repository.save(role)).expectNext(role).verifyComplete();
+
+        StepVerifier.create(repository.existsByNameInScope(name, RoleScope.ofTenant(tenant)))
+                .expectNext(true)
+                .verifyComplete();
+
+        StepVerifier.create(repository.findByIdForTenant(role.id(), tenant))
+                .assertNext(found -> assertThat(found.resources()).isEqualTo(role.resources()))
+                .verifyComplete();
+    }
+
+    @Test
+    void role_repository_finds_no_role_for_a_tenant_it_does_not_belong_to() {
+        client.ensureNamespaceAndDatabase()
+                .then(client.execute("DEFINE TABLE IF NOT EXISTS role SCHEMALESS;", Map.of()))
+                .block();
+
+        RoleRepository repository = new SurrealRoleRepository(client);
+        TenantId owner = new TenantId("surreal-it-role-owner");
+        TenantId stranger = new TenantId("surreal-it-role-stranger");
+        Role role = Role.define(new RoleId(UUID.randomUUID()), new RoleName("surreal-it-ajeno"),
+                RoleScope.ofTenant(owner), Instant.now());
+        StepVerifier.create(repository.save(role)).expectNext(role).verifyComplete();
+
+        StepVerifier.create(repository.findByIdForTenant(role.id(), stranger)).verifyComplete();
+    }
+
+    @Test
+    void role_repository_lists_the_tenant_catalog_including_globals_and_excluding_other_tenants() {
+        client.ensureNamespaceAndDatabase()
+                .then(client.execute("DEFINE TABLE IF NOT EXISTS role SCHEMALESS;", Map.of()))
+                .block();
+
+        RoleRepository repository = new SurrealRoleRepository(client);
+        TenantId tenant = new TenantId("surreal-it-catalog-" + UUID.randomUUID());
+        TenantId other = new TenantId("surreal-it-catalog-other-" + UUID.randomUUID());
+        Role ownRole = Role.define(new RoleId(UUID.randomUUID()), new RoleName("propio"), RoleScope.ofTenant(tenant),
+                Instant.now());
+        Role globalRole = Role.define(new RoleId(UUID.randomUUID()), new RoleName("global-" + UUID.randomUUID()),
+                RoleScope.global(), Instant.now());
+        Role otherRole = Role.define(new RoleId(UUID.randomUUID()), new RoleName("ajeno"), RoleScope.ofTenant(other),
+                Instant.now());
+        StepVerifier.create(repository.save(ownRole)).expectNextCount(1).verifyComplete();
+        StepVerifier.create(repository.save(globalRole)).expectNextCount(1).verifyComplete();
+        StepVerifier.create(repository.save(otherRole)).expectNextCount(1).verifyComplete();
+
+        StepVerifier.create(repository.findBy(RoleCriteria.ofTenant(tenant), PageWindow.defaultWindow()))
+                .assertNext(page -> {
+                    List<RoleId> ids = page.content().stream().map(Role::id).toList();
+                    assertThat(ids).contains(ownRole.id(), globalRole.id());
+                    assertThat(ids).doesNotContain(otherRole.id());
+                })
+                .verifyComplete();
     }
 
     @Test

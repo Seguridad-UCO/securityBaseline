@@ -66,12 +66,14 @@ y `docs/06-security/opa/`. Eso lo produce HU-002 y es lo que consumen los otros 
 | # | Historia | Por qué en ese lugar | Desbloquea | Etapa del plan del PEP |
 |---|---|---|---|---|
 | **HU-002** | Endpoint de decisión con el contrato completo, denegando por defecto (`/api/v1/authorize`, canal BFF) | Publica `AccessRequest`/`AccessDecision` como *published language* y el flujo tri-estado. **✅ Hecho** — pero es el canal BFF, no el que consume el PEP (ver hallazgo arriba) | Base de dominio para HU-003 | Etapa 0 (parcial) |
-| **HU-003** | Endpoint interno `POST /internal/v1/access-decisions` con mTLS del PEP + Bearer del usuario como evidencia, conforme a `contracts/pep-pdp/v1` | Es lo único que de verdad desbloquea al PEP — hoy no tiene nada contra qué integrar. Reutiliza el `AuthorizeUseCase` de HU-002 con un segundo adaptador primario; responde `INDETERMINATE`/error mientras no haya política real, nunca `ALLOW` provisional | PEP | **Etapa 1** |
-| **HU-004** | Roles y asignaciones vigentes por inquilino (BC-04 + BC-08) — resolución de recurso/catálogo para el contexto de decisión | Es el **valor propio del PDP**: sin esto OPA no tiene atributos que evaluar. El trozo más grande y 100 % nuestro | HU-005 | Etapa 2 |
-| **HU-005** | Adaptador real de OPA sobre `PolicyDecisionPort` | Sustituye la denegación por defecto por la decisión real | Cierra el flujo ALLOW | Etapa 3 |
-| **HU-006** | `EventoAcceso` correlacionado hacia Auditoría | INV-AUD-01. Sin evidencia no hay cumplimiento | Auditoría | Etapa 4 (parcial — diseño de evento/outbox; almacenamiento y consulta puede ser otra historia) |
-| **HU-007** | Perfiles como agrupación de roles (BC-05) | Comodidad administrativa, no bloquea la decisión | — | — |
-| **HU-008** | Criterio 10: cablear la saga de compensación | Único criterio abierto de la línea base, pero no bloquea a nadie del equipo | — | — |
+| **HU-003** | Endpoint interno `POST /internal/v1/access-decisions` con mTLS del PEP + Bearer del usuario como evidencia, conforme a `contracts/pep-pdp/v1` | Era lo único que desbloqueaba al PEP. Reutiliza el `AuthorizeUseCase` de HU-002 con un segundo adaptador primario. **✅ Hecho y validado el 2026-09-11** | PEP | **Etapa 1** |
+| **HU-004** | Catálogo de roles (BC-04): alcance tenant/aplicación/global y recursos que cada rol autoriza | Primera mitad del **valor propio del PDP**. Partida de la historia original de roles+asignaciones el 2026-09-11: con tres niveles de alcance y el vínculo rol→recurso, cada mitad es del tamaño de HU-003 | HU-005 | Etapa 2 |
+| **HU-005** | Asignaciones vigentes (BC-08): `UsuarioAplicacionRol` con `Vigencia`, y `findActiveRolesFor(usuario, aplicación)` | Segunda mitad. Es **lo que OPA evalúa**: sin esto sigue respondiendo `NO_APPLICABLE_POLICY` porque no hay hechos que darle | HU-006 | Etapa 2 |
+| **HU-006** | Adaptador real de OPA sobre `PolicyDecisionPort` | Sustituye la denegación por defecto por la decisión real. El motor y `contracts/pdp-opa/v1/` ya existen: hay que consumirlos, no publicarlos | Cierra el flujo ALLOW | Etapa 3 |
+| **HU-007** | `EventoAcceso` correlacionado hacia Auditoría | INV-AUD-01. Sin evidencia no hay cumplimiento | Auditoría | Etapa 4 (parcial — diseño de evento/outbox; almacenamiento y consulta puede ser otra historia) |
+| **HU-008** | Perfiles como agrupación de roles (BC-05) | Comodidad administrativa, no bloquea la decisión | — | — |
+| **HU-009** | Administración de seguridad por aplicación: quién puede administrar el catálogo (ítems 17-18 de la reunión con Farid) | Diferida a propósito desde HU-004/HU-005 para no bloquear el catálogo. Desbloquea la creación de roles **globales** por HTTP y es el modelo que el microfrontend necesita. **Necesita ADR antes de planificarse** | Microfrontend de seguridad | — |
+| **HU-010** | Criterio 10: cablear la saga de compensación | Único criterio abierto de la línea base, pero no bloquea a nadie del equipo | — | — |
 
 > Las etapas 5 (despliegue seguro), 6 (adopción/starter) y 7 (observabilidad y gobierno) del plan del
 > compañero son transversales a varias historias y no mapean a un HU único del PDP — se revisan

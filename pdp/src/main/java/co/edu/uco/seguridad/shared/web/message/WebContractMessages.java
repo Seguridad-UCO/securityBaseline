@@ -49,8 +49,32 @@ public final class WebContractMessages {
         return "Solicitud de acceso evaluada";
     }
 
+    public static String successRoleDefined() {
+        return "Rol definido";
+    }
+
+    public static String successRoleResourceGranted() {
+        return "Recurso concedido al rol";
+    }
+
+    public static String successRolesListed() {
+        return "Catálogo de roles consultado";
+    }
+
     public static String mustBeInteger() {
         return "debe ser un número entero";
+    }
+
+    public static String mustBeVersion1() {
+        return "debe ser \"1\"";
+    }
+
+    public static String mustBeIso8601() {
+        return "debe ser una fecha en formato ISO 8601";
+    }
+
+    public static String headerBodyMismatch(String field) {
+        return "El valor de '" + field + "' en la cabecera no coincide con el del cuerpo";
     }
 
     public static String requireErrorCode() {

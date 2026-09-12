@@ -3,6 +3,7 @@ package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.we
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.AuthorizeRawRequest;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.AccessDecisionWebResponse;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.AuthorizeInteractor;
+import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.web.ApiResponse;
 import co.edu.uco.seguridad.shared.web.CorrelationWebFilter;
 import co.edu.uco.seguridad.shared.web.RequestContext;
@@ -24,7 +25,7 @@ final class AuthorizationController {
     private final AuthorizeInteractor interactor;
 
     AuthorizationController(AuthorizeInteractor interactor) {
-        this.interactor = Objects.requireNonNull(interactor);
+        this.interactor = Objects.requireNonNull(interactor, RequiredArgumentMessages.AUTHORIZE_INTERACTOR);
     }
 
     @PostMapping

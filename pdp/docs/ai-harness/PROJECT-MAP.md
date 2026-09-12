@@ -3,15 +3,15 @@
 > Generado por `.claude/tools/mapa.ps1`. **No editar a mano** - se regenera desde el codigo.
 > Es el nivel 0 del grafo de conocimiento: responde "que existe y donde va lo nuevo".
 
-- Clases de produccion: **264**
-- Clases de prueba: **80**
-- Slices de negocio: **6** (applications, authorization, commons, identity, resources, tenants)
+- Clases de produccion: **339**
+- Clases de prueba: **109**
+- Slices de negocio: **7** (applications, authorization, commons, identity, resources, roles, tenants)
 
 ---
 
 ## Slices de negocio (`pdp`)
 
-### `applications` - 49 clases
+### `applications` - 51 clases
 
 | Rol | Clases |
 |---|---|
@@ -24,8 +24,8 @@
 | Dominio (agregado / criteria) | `Application`, `ApplicationCriteria` |
 | Caso de uso (impl) | `ListApplicationsUseCaseImpl`, `RegisterApplicationUseCaseImpl`, `RemoveApplicationUseCaseImpl` |
 | Caso de uso (contrato) | `ListApplicationsUseCase`, `RegisterApplicationUseCase`, `RemoveApplicationUseCase` |
-| Validador de reglas (impl) | `ApplicationMustExistForTenantValidatorImpl`, `RegisterApplicationRulesValidatorImpl` |
-| Validador de reglas (contrato) | `ApplicationMustExistForTenantValidator`, `RegisterApplicationRulesValidator` |
+| Validador de reglas (impl) | `ApplicationMustExistForTenantValidatorImpl`, `ApplicationOwnerLookupValidatorImpl`, `RegisterApplicationRulesValidatorImpl` |
+| Validador de reglas (contrato) | `ApplicationMustExistForTenantValidator`, `ApplicationOwnerLookupValidator`, `RegisterApplicationRulesValidator` |
 | Puerto de salida | `ApplicationRepository` |
 | DTO de entrada al nucleo | `ApplicationOwnershipQuery`, `ListApplicationsRequest`, `RegisterApplicationRequest` |
 | DTO de salida del nucleo | `RegisteredApplicationResponse` |
@@ -42,32 +42,32 @@
 | Cableado (@Bean) | `ApplicationsConfiguration` |
 | Propiedades | `ApplicationCatalogProperties` |
 
-### `authorization` - 18 clases
+### `authorization` - 28 clases
 
 | Rol | Clases |
 |---|---|
 | Value object | `DecisionState`, `PolicyReference`, `ReasonCode` |
-| Caso de uso (impl) | `AuthorizeUseCaseImpl` |
-| Caso de uso (contrato) | `AuthorizeUseCase` |
+| Caso de uso (impl) | `AuthorizeUseCaseImpl`, `EvaluateInternalAccessUseCaseImpl` |
+| Caso de uso (contrato) | `AuthorizeUseCase`, `EvaluateInternalAccessUseCase` |
 | Puerto de salida | `PolicyDecisionPort` |
-| DTO de entrada al nucleo | `AccessRequest` |
+| DTO de entrada al nucleo | `AccessRequest`, `InternalAccessRequest` |
 | DTO de salida del nucleo | `AccessDecision` |
-| Controller | `AuthorizationController` |
-| DTO crudo HTTP | `AuthorizeRawRequest` |
-| DTO de respuesta HTTP | `AccessDecisionWebResponse`, `PolicyReferenceWebResponse` |
-| Interactor (impl) | `AuthorizeInteractorImpl` |
-| Interactor (contrato) | `AuthorizeInteractor` |
-| Mapper web | `AccessDecisionResponseMapper`, `AuthorizeRequestMapper` |
+| Controller | `AuthorizationController`, `InternalAccessDecisionController` |
+| DTO crudo HTTP | `AccessDecisionRawRequest`, `AuthorizeRawRequest` |
+| DTO de respuesta HTTP | `AccessDecisionInternalWebResponse`, `AccessDecisionWebResponse`, `PolicyReferenceWebResponse` |
+| Interactor (impl) | `AuthorizeInteractorImpl`, `InternalAccessDecisionInteractorImpl` |
+| Interactor (contrato) | `AuthorizeInteractor`, `InternalAccessDecisionInteractor` |
+| Mapper web | `AccessDecisionInternalResponseMapper`, `AccessDecisionRawRequestMapper`, `AccessDecisionResponseMapper`, `AuthorizeRequestMapper` |
 | Cableado (@Bean) | `AuthorizationConfiguration` |
 | Otro | `DenyByDefaultPolicyDecisionAdapter` |
 
-### `commons` - 16 clases
+### `commons` - 17 clases
 
 | Rol | Clases |
 |---|---|
 | Excepcion de dominio | `BusinessRuleViolationException`, `ConflictBusinessRuleException`, `DomainException`, `InvalidApplicationNameException`, `InvalidIdentifierException`, `InvalidPageWindowException`, `InvalidTenantIdException`, `InvalidValueException` |
 | Catalogo de mensajes | `ValueObjectMessages` |
-| Value object | `ApplicationId`, `ApplicationName`, `PageWindow`, `ResourceId`, `ResultPage`, `TenantId` |
+| Value object | `ApplicationId`, `ApplicationName`, `PageWindow`, `ResourceId`, `ResultPage`, `RoleId`, `TenantId` |
 | Otro | `AggregateRoot` |
 
 ### `identity` - 38 clases
@@ -99,7 +99,7 @@
 | Cableado (@Bean) | `IdentityConfiguration` |
 | Propiedades | `IdentityProvisioningProperties` |
 
-### `resources` - 44 clases
+### `resources` - 46 clases
 
 | Rol | Clases |
 |---|---|
@@ -113,8 +113,8 @@
 | Dominio (agregado / criteria) | `ProtectedResource` |
 | Caso de uso (impl) | `ListProtectedResourcesUseCaseImpl`, `RegisterProtectedResourceUseCaseImpl` |
 | Caso de uso (contrato) | `ListProtectedResourcesUseCase`, `RegisterProtectedResourceUseCase` |
-| Validador de reglas (impl) | `ProtectedResourceMustExistValidatorImpl`, `RegisterProtectedResourceRulesValidatorImpl` |
-| Validador de reglas (contrato) | `ProtectedResourceMustExistValidator`, `RegisterProtectedResourceRulesValidator` |
+| Validador de reglas (impl) | `ProtectedResourceMustExistValidatorImpl`, `ProtectedResourceOwnerLookupValidatorImpl`, `RegisterProtectedResourceRulesValidatorImpl` |
+| Validador de reglas (contrato) | `ProtectedResourceMustExistValidator`, `ProtectedResourceOwnerLookupValidator`, `RegisterProtectedResourceRulesValidator` |
 | Puerto de salida | `ProtectedResourceRepository` |
 | DTO de entrada al nucleo | `ProtectedResourceLookup`, `RegisterProtectedResourceRequest` |
 | DTO de salida del nucleo | `RegisteredProtectedResourceResponse` |
@@ -130,6 +130,36 @@
 | Esquema de tabla | `ProtectedResourceSchema`, `SurrealProtectedResourceSchemaInitializer` |
 | Adaptador de auditoria | `InMemoryAuditAdapter` |
 | Cableado (@Bean) | `ResourcesConfiguration` |
+
+### `roles` - 56 clases
+
+| Rol | Clases |
+|---|---|
+| Excepcion de dominio | `DuplicateRoleNameException`, `InvalidRoleNameException`, `InvalidRoleScopeException`, `ResourceOutsideRoleScopeException`, `RoleNotFoundException` |
+| Catalogo de mensajes | `RolesMessages` |
+| Value object | `RoleName`, `RoleScope`, `RoleScopeLevel` |
+| Regla de dominio (impl) | `RoleMustExistForTenantRuleImpl`, `RoleNameMustBeUniqueInScopeRuleImpl`, `RoleScopeMustCoverResourceRuleImpl` |
+| Dato de regla (hecho resuelto) | `ResourceCoverage`, `RoleExistence`, `RoleNameAvailability` |
+| Regla de dominio (contrato) | `RoleMustExistForTenantRule`, `RoleNameMustBeUniqueInScopeRule`, `RoleScopeMustCoverResourceRule` |
+| Dominio (agregado / criteria) | `Role`, `RoleCriteria` |
+| Caso de uso (impl) | `DefineRoleUseCaseImpl`, `GrantResourceToRoleUseCaseImpl`, `ListRolesUseCaseImpl` |
+| Caso de uso (contrato) | `DefineRoleUseCase`, `GrantResourceToRoleUseCase`, `ListRolesUseCase` |
+| Validador de reglas (impl) | `DefineRoleRulesValidatorImpl`, `GrantResourceRulesValidatorImpl` |
+| Validador de reglas (contrato) | `DefineRoleRulesValidator`, `GrantResourceRulesValidator` |
+| Puerto de salida | `RoleRepository` |
+| DTO de entrada al nucleo | `DefineRoleRequest`, `GrantResourceRequest`, `ListRolesRequest` |
+| DTO de salida del nucleo | `RoleResponse` |
+| Controller | `RoleController` |
+| DTO crudo HTTP | `DefineRoleRawRequest`, `GrantResourceRawRequest`, `ListRolesRawRequest` |
+| DTO de respuesta HTTP | `RoleWebResponse` |
+| Interactor (impl) | `DefineRoleInteractorImpl`, `GrantResourceToRoleInteractorImpl`, `ListRolesInteractorImpl` |
+| Interactor (contrato) | `DefineRoleInteractor`, `GrantResourceToRoleInteractor`, `ListRolesInteractor` |
+| Mapper web | `DefineRoleRequestMapper`, `GrantResourceRequestMapper`, `ListRolesRequestMapper`, `RoleResponseMapper` |
+| Entidad de persistencia | `RoleEntity` |
+| Mapper de persistencia | `RolePersistenceMapper` |
+| Adaptador de repositorio | `SurrealRoleRepository` |
+| Esquema de tabla | `RoleSchema`, `SurrealRoleSchemaInitializer` |
+| Cableado (@Bean) | `RolesConfiguration` |
 
 ### `tenants` - 42 clases
 
@@ -171,14 +201,14 @@
 | `auth/model` | `OidcFlowIntent` |
 | `auth/service` | `KeycloakOidcSessionService`, `OidcAuthenticationFailureHandler`, `OidcAuthenticationSuccessHandler`, `OidcAuthorizationFlowService`, `OidcFlowStateService`, `OidcRedirectPolicy` |
 | `auth/web` | `KeycloakLoginController`, `KeycloakRegistrationController` |
-| `config` | `EventPublisherConfiguration`, `KeycloakSecurityConfiguration`, `ProjectPackages`, `SecurityConfiguration`, `SharedPortsConfiguration`, `SurrealDbConfiguration` |
+| `config` | `EventPublisherConfiguration`, `InternalSecurityConfiguration`, `KeycloakSecurityConfiguration`, `ProjectPackages`, `SecurityConfiguration`, `SharedPortsConfiguration`, `SurrealDbConfiguration` |
 | `contract` | `Operation`, `OperationWithoutResult`, `ReactiveOperation`, `ReactiveOperationWithoutInput`, `ReactiveOperationWithoutResult`, `ReactiveStreamOperation` |
 | `event` | `DomainEvent`, `DomainEventPublisher`, `SpringDomainEventPublisher` |
 | `message` | `RequiredArgumentMessages` |
 | `observability` | `ReactiveLogContext` |
 | `persistence/surrealdb` | `SurrealDbClient`, `SurrealDbException`, `SurrealDbHealthIndicator`, `SurrealDbProperties`, `SurrealRecordId`, `SurrealSchemaInitializer` |
 | `port` | `IdentifierGenerator`, `TimeProvider` |
-| `security` | `ApiAccessDeniedHandler`, `ApiAuthenticationEntryPoint`, `CorsProperties`, `JwtSecurityProperties`, `KeycloakSessionProperties`, `LocalUserPrincipal`, `PdpPrincipal`, `SecurityContext` |
+| `security` | `ApiAccessDeniedHandler`, `ApiAuthenticationEntryPoint`, `CorsProperties`, `InternalEvidenceJwtProperties`, `InternalMtlsProperties`, `InternalMtlsWebFilter`, `JwtSecurityProperties`, `KeycloakSessionProperties`, `LocalUserPrincipal`, `PdpPrincipal`, `SecurityContext` |
 | `web` | `ApiResponse`, `CorrelationWebFilter`, `PageResponse`, `RequestContext`, `RequestFieldParser` |
 | `web/exception` | `ConflictingRequestParametersException`, `MalformedRequestFieldException`, `MissingRequestFieldException`, `RequestContractException` |
 | `web/exceptionhandler` | `ApiErrorHandler` |
@@ -194,6 +224,7 @@
 | `ApplicationRepository` | `SurrealApplicationRepository` |
 | `PolicyDecisionPort` | `DenyByDefaultPolicyDecisionAdapter` |
 | `ProtectedResourceRepository` | `SurrealProtectedResourceRepository` |
+| `RoleRepository` | `SurrealRoleRepository` |
 | `SecurityUserRepository` | `SurrealSecurityUserRepository` |
 | `TenantRepository` | `SurrealTenantRepository` |
 
@@ -208,12 +239,16 @@
 | GET | `/api/v1/applications/{applicationId}/resources` | `ProtectedResourceController` |
 | POST | `/api/v1/applications/{applicationId}/resources` | `ProtectedResourceController` |
 | POST | `/api/v1/authorize` | `AuthorizationController` |
+| GET | `/api/v1/roles` | `RoleController` |
+| POST | `/api/v1/roles` | `RoleController` |
+| POST | `/api/v1/roles/{roleId}/resources` | `RoleController` |
 | GET | `/api/v1/session` | `SessionController` |
 | GET | `/api/v1/session/logout` | `KeycloakLogoutController` |
 | GET | `/api/v1/tenants` | `TenantController` |
 | POST | `/api/v1/tenants` | `TenantController` |
 | GET | `/api/v1/users` | `UserController` |
 | PUT | `/api/v1/users/{id}/tenant` | `UserController` |
+| POST | `/internal/v1/access-decisions` | `InternalAccessDecisionController` |
 | GET | `/oauth2/authorization/keycloak` | `KeycloakLoginController` |
 | GET | `/oauth2/authorization/keycloak/register` | `KeycloakRegistrationController` |
 
@@ -223,15 +258,16 @@
 
 | Area | Clases de prueba |
 |---|---|
-| `pdp/applications` | `ApplicationBaseUrlTests`, `ApplicationCatalogPropertiesTests`, `ApplicationControllerTests`, `ApplicationCriteriaTests`, `ApplicationHttpTests`, `ApplicationMustExistForTenantValidatorTests`, `ApplicationPersistenceMapperTests`, `ApplicationResponseMapperTests`, `ApplicationRuleTests`, `ListApplicationsRequestMapperTests`, `ListApplicationsUseCaseImplTests`, `RegisterApplicationRequestMapperTests`, `RegisterApplicationRulesValidatorTests`, `RegisterApplicationUseCaseImplTests`, `RemoveApplicationUseCaseImplTests` |
-| `pdp/authorization` | `AccessDecisionResponseMapperTests`, `AuthorizationControllerTests`, `AuthorizationHttpTests`, `AuthorizeRequestMapperTests`, `AuthorizeUseCaseImplTests`, `DecisionStateTests` |
+| `pdp/applications` | `ApplicationBaseUrlTests`, `ApplicationCatalogPropertiesTests`, `ApplicationControllerTests`, `ApplicationCriteriaTests`, `ApplicationHttpTests`, `ApplicationMustExistForTenantValidatorTests`, `ApplicationOwnerLookupValidatorImplTests`, `ApplicationPersistenceMapperTests`, `ApplicationResponseMapperTests`, `ApplicationRuleTests`, `ListApplicationsRequestMapperTests`, `ListApplicationsUseCaseImplTests`, `RegisterApplicationRequestMapperTests`, `RegisterApplicationRulesValidatorTests`, `RegisterApplicationUseCaseImplTests`, `RemoveApplicationUseCaseImplTests` |
+| `pdp/authorization` | `AccessDecisionInternalResponseMapperTests`, `AccessDecisionRawRequestMapperTests`, `AccessDecisionResponseMapperTests`, `AuthorizationControllerTests`, `AuthorizationHttpTests`, `AuthorizeRequestMapperTests`, `AuthorizeUseCaseImplTests`, `DecisionStateTests`, `EvaluateInternalAccessUseCaseImplTests`, `InternalAccessDecisionControllerTests`, `InternalAccessDecisionInteractorImplTests`, `InternalSecurityChainIntegrationTests` |
 | `pdp/commons` | `PageWindowTests`, `ResultPageTests`, `ValueObjectTests` |
 | `pdp/identity` | `AssignTenantRequestMapperTests`, `AssignTenantUseCaseImplTests`, `EmailTests`, `ProvisionIdentityUseCaseImplTests`, `SecurityUserPersistenceMapperTests`, `UserControllerTests`, `UserMustExistRuleTests`, `UserResponseMapperTests` |
-| `pdp/resources` | `HttpVerbTests`, `InMemoryAuditAdapterTests`, `ProtectedResourceControllerTests`, `ProtectedResourceMustBeUniqueRuleTests`, `ProtectedResourceMustExistRuleTests`, `ProtectedResourceMustExistValidatorTests`, `ProtectedResourceResponseMapperTests`, `RegisterProtectedResourceRequestMapperTests`, `RegisterProtectedResourceRulesValidatorTests`, `RegisterProtectedResourceUseCaseImplTests`, `ResourcePathTests` |
+| `pdp/resources` | `HttpVerbTests`, `InMemoryAuditAdapterTests`, `ProtectedResourceControllerTests`, `ProtectedResourceMustBeUniqueRuleTests`, `ProtectedResourceMustExistRuleTests`, `ProtectedResourceMustExistValidatorTests`, `ProtectedResourceOwnerLookupValidatorImplTests`, `ProtectedResourceResponseMapperTests`, `RegisterProtectedResourceRequestMapperTests`, `RegisterProtectedResourceRulesValidatorTests`, `RegisterProtectedResourceUseCaseImplTests`, `ResourcePathTests` |
+| `pdp/roles` | `DefineRoleRequestMapperTests`, `DefineRoleRulesValidatorImplTests`, `DefineRoleUseCaseImplTests`, `GrantResourceRequestMapperTests`, `GrantResourceRulesValidatorImplTests`, `GrantResourceToRoleUseCaseImplTests`, `ListRolesRequestMapperTests`, `ListRolesUseCaseImplTests`, `RoleControllerTests`, `RoleCriteriaTests`, `RoleHttpTests`, `RoleMustExistForTenantRuleImplTests`, `RoleNameMustBeUniqueInScopeRuleImplTests`, `RoleNameTests`, `RolePersistenceMapperTests`, `RoleResponseMapperTests`, `RoleScopeLevelTests`, `RoleScopeMustCoverResourceRuleImplTests`, `RoleScopeTests`, `RoleTests` |
 | `pdp/tenants` | `CreateTenantRequestMapperTests`, `CreateTenantUseCaseImplTests`, `ListTenantsUseCaseImplTests`, `TenantCatalogPropertiesTests`, `TenantControllerTests`, `TenantMustBeActiveValidatorTests`, `TenantNameTests`, `TenantResponseMapperTests`, `TenantRuleTests` |
 | `raiz` | `AbstractSurrealDbIntegrationTest`, `LayeredArchitectureTests`, `ModulithStructureTests`, `PdpApplicationTests` |
 | `shared/auth` | `KeycloakLoginControllerTests`, `KeycloakOidcSessionServiceTests`, `KeycloakRegistrationControllerTests`, `OidcAuthenticationFailureHandlerTests`, `OidcAuthenticationSuccessHandlerTests`, `OidcAuthorizationFlowServiceTests` |
 | `shared/config` | `CorsConfigurationTests`, `KeycloakSecurityConfigurationTests`, `SecurityConfigurationTests` |
 | `shared/persistence` | `SurrealDbClientTests`, `SurrealRecordIdTests`, `SurrealRepositoryIntegrationTests` |
-| `shared/security` | `ApiAccessDeniedHandlerTests`, `ApiAuthenticationEntryPointTests`, `CorsPropertiesTests`, `JwtSecurityPropertiesTests`, `PdpPrincipalSecurityContextTests`, `SecurityWebFilterChainTests`, `TestJwtSupport` |
+| `shared/security` | `ApiAccessDeniedHandlerTests`, `ApiAuthenticationEntryPointTests`, `CorsPropertiesTests`, `InternalMtlsWebFilterTests`, `JwtSecurityPropertiesTests`, `PdpPrincipalSecurityContextTests`, `SecurityWebFilterChainTests`, `TestJwtSupport` |
 | `shared/web` | `ApiErrorHandlerTests`, `CorrelationWebFilterTests`, `KeycloakLogoutControllerTests`, `SessionControllerTests`, `WebContractMessagesTests` |
