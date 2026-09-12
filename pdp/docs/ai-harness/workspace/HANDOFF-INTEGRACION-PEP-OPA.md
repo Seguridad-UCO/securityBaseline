@@ -144,9 +144,12 @@ El JWT que llega por el canal interno lo emitió el IdP de la **aplicación inte
 HU-003 se valida firma, `exp`/`nbf`, `iss` y `aud` contra un conjunto configurado
 (`pdp.security.internal.evidence.*`). Si falla → **401**, sin llegar al caso de uso.
 
-**Aplazado a HU-004:** que cada aplicación registrada declare su propio issuer/JWKS/audiencia y que
-la validación sea *por aplicación*. Es lo correcto a futuro y lo pide la guía ("audiencia para
-`application.id`"), pero exige extender el catálogo, que es justo el alcance de HU-004.
+**Aplazado a una historia propia de credenciales por aplicación** (sin número aún — ver
+`ROADMAP-PDP.md`): que cada aplicación registrada declare su propio issuer/JWKS/audiencia y que la
+validación sea *por aplicación*. Es lo correcto a futuro y lo pide la guía ("audiencia para
+`application.id`"), pero exige extender el catálogo de aplicaciones. Cuando se escribió este handoff
+eso cabía en «HU-004: roles y catálogo»; al partir roles/asignaciones el 2026-09-11 quedó fuera de
+ambas, emparentado con HU-009 (administración por aplicación).
 
 *Por qué se acepta el escalón:* la Etapa 1 del plan del compañero es explícitamente el "mínimo
 seguro", y en el MVP del semillero los tokens vendrán del mismo Keycloak. Queda anotado como deuda
@@ -180,7 +183,7 @@ Un token inválido se rechaza en la cadena de seguridad con **HTTP 401**, antes 
 contrato admite las dos formas (401, o 200 con `DENY`+`TOKEN_INVALID`); se elige la primera por ser
 la que ya tiene el proyecto y la que no mezcla fallo de autenticación con decisión de política.
 
-### D9 — HU-005 (OPA): el adaptador reemplaza a `DenyByDefaultPolicyDecisionAdapter`, no convive con él
+### D9 — HU-006 (OPA): el adaptador reemplaza a `DenyByDefaultPolicyDecisionAdapter`, no convive con él
 
 `OpaPolicyDecisionAdapter` implementa `PolicyDecisionPort` con `WebClient` contra la API de OPA
 (`pdp.opa.base-url`, `pdp.opa.decision-path`, `pdp.opa.timeout`). La denegación por defecto pasa a
@@ -198,7 +201,7 @@ El PEP ya usa `pep.pdp.*`. El PDP adopta:
 |---|---|
 | `pdp.security.internal.mtls.*` | trust store, sujetos de certificado admitidos |
 | `pdp.security.internal.evidence.*` | issuer/JWKS/audiencia del JWT de evidencia (D5) |
-| `pdp.opa.*` | cliente OPA de HU-005 |
+| `pdp.opa.*` | cliente OPA de HU-006 |
 
 Mismo estilo que `JwtSecurityProperties`/`CorsProperties` ya existentes: un `record`
 `@ConfigurationProperties`, sin Bean Validation.
@@ -265,9 +268,9 @@ flags. Ya está documentado en `.claude/agents/4-validador.md`.
 
 ### Fuera (explícitamente)
 
-- Validación de issuer/audiencia **por aplicación** → HU-004 (D5).
-- OPA → HU-005.
-- Auditoría durable → HU-006.
+- Validación de issuer/audiencia **por aplicación** → historia propia de credenciales por aplicación, sin número aún (D5).
+- OPA → HU-006.
+- Auditoría durable → HU-007.
 - Despliegue, red, certificados por ambiente, `X-ARR-ClientCert` → Etapa 5, no es una historia del PDP.
 - Tocar el módulo `pep/`. Es de otra persona. Si algo del contrato no cuadra, se reporta, no se edita.
 
@@ -278,9 +281,9 @@ barreras de D7) y **4** (capacidades transversales: la cadena de seguridad nueva
 
 ---
 
-## 7. Alcance de HU-005 (OPA) — resumen, se planifica cuando toque
+## 7. Alcance de HU-006 (OPA) — resumen, se planifica cuando toque
 
-No la planifiques todavía: depende de HU-004 (roles y atributos), que es lo que le da a OPA algo que
+No la planifiques todavía: depende de HU-004 y HU-005 (roles y asignaciones vigentes), que es lo que le da a OPA algo que
 evaluar. Lo decidido está en D9 y D10. Lo que habrá que producir además del adaptador:
 
 - Forma del `input` que reciben las políticas Rego — es contrato con el compañero de OPA, igual que

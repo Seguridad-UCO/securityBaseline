@@ -78,6 +78,18 @@ public final class SurrealProtectedResourceRepository implements ProtectedResour
                 .then();
     }
 
+    @Override
+    public Mono<ApplicationId> findApplicationIdById(ResourceId resourceId) {
+        return client.execute(
+                        "SELECT applicationId FROM type::record('%s', $id);".formatted(ProtectedResourceSchema.TABLE),
+                        Map.of("id", resourceId.value().toString()))
+                .flatMap(results -> {
+                    JsonNode rows = results.get(0);
+                    return rows.isEmpty() ? Mono.empty()
+                            : Mono.just(ApplicationId.of(rows.get(0).path("applicationId").asString()));
+                });
+    }
+
     private static ProtectedResource toDomain(JsonNode row) {
         ProtectedResourceEntity entity = new ProtectedResourceEntity(
                 SurrealRecordId.idPart(row.path("id").asString()),

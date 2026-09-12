@@ -49,6 +49,18 @@ public final class WebContractMessages {
         return "Solicitud de acceso evaluada";
     }
 
+    public static String successRoleDefined() {
+        return "Rol definido";
+    }
+
+    public static String successRoleResourceGranted() {
+        return "Recurso concedido al rol";
+    }
+
+    public static String successRolesListed() {
+        return "Catálogo de roles consultado";
+    }
+
     public static String mustBeInteger() {
         return "debe ser un número entero";
     }

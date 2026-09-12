@@ -3,9 +3,9 @@
 > Generado por `.claude/tools/mapa.ps1`. **No editar a mano** - se regenera desde el codigo.
 > Es el nivel 0 del grafo de conocimiento: responde "que existe y donde va lo nuevo".
 
-- Clases de produccion: **280**
-- Clases de prueba: **88**
-- Slices de negocio: **6** (applications, authorization, commons, identity, resources, tenants)
+- Clases de produccion: **339**
+- Clases de prueba: **109**
+- Slices de negocio: **7** (applications, authorization, commons, identity, resources, roles, tenants)
 
 ---
 
@@ -61,13 +61,13 @@
 | Cableado (@Bean) | `AuthorizationConfiguration` |
 | Otro | `DenyByDefaultPolicyDecisionAdapter` |
 
-### `commons` - 16 clases
+### `commons` - 17 clases
 
 | Rol | Clases |
 |---|---|
 | Excepcion de dominio | `BusinessRuleViolationException`, `ConflictBusinessRuleException`, `DomainException`, `InvalidApplicationNameException`, `InvalidIdentifierException`, `InvalidPageWindowException`, `InvalidTenantIdException`, `InvalidValueException` |
 | Catalogo de mensajes | `ValueObjectMessages` |
-| Value object | `ApplicationId`, `ApplicationName`, `PageWindow`, `ResourceId`, `ResultPage`, `TenantId` |
+| Value object | `ApplicationId`, `ApplicationName`, `PageWindow`, `ResourceId`, `ResultPage`, `RoleId`, `TenantId` |
 | Otro | `AggregateRoot` |
 
 ### `identity` - 38 clases
@@ -99,7 +99,7 @@
 | Cableado (@Bean) | `IdentityConfiguration` |
 | Propiedades | `IdentityProvisioningProperties` |
 
-### `resources` - 44 clases
+### `resources` - 46 clases
 
 | Rol | Clases |
 |---|---|
@@ -113,8 +113,8 @@
 | Dominio (agregado / criteria) | `ProtectedResource` |
 | Caso de uso (impl) | `ListProtectedResourcesUseCaseImpl`, `RegisterProtectedResourceUseCaseImpl` |
 | Caso de uso (contrato) | `ListProtectedResourcesUseCase`, `RegisterProtectedResourceUseCase` |
-| Validador de reglas (impl) | `ProtectedResourceMustExistValidatorImpl`, `RegisterProtectedResourceRulesValidatorImpl` |
-| Validador de reglas (contrato) | `ProtectedResourceMustExistValidator`, `RegisterProtectedResourceRulesValidator` |
+| Validador de reglas (impl) | `ProtectedResourceMustExistValidatorImpl`, `ProtectedResourceOwnerLookupValidatorImpl`, `RegisterProtectedResourceRulesValidatorImpl` |
+| Validador de reglas (contrato) | `ProtectedResourceMustExistValidator`, `ProtectedResourceOwnerLookupValidator`, `RegisterProtectedResourceRulesValidator` |
 | Puerto de salida | `ProtectedResourceRepository` |
 | DTO de entrada al nucleo | `ProtectedResourceLookup`, `RegisterProtectedResourceRequest` |
 | DTO de salida del nucleo | `RegisteredProtectedResourceResponse` |
@@ -130,6 +130,36 @@
 | Esquema de tabla | `ProtectedResourceSchema`, `SurrealProtectedResourceSchemaInitializer` |
 | Adaptador de auditoria | `InMemoryAuditAdapter` |
 | Cableado (@Bean) | `ResourcesConfiguration` |
+
+### `roles` - 56 clases
+
+| Rol | Clases |
+|---|---|
+| Excepcion de dominio | `DuplicateRoleNameException`, `InvalidRoleNameException`, `InvalidRoleScopeException`, `ResourceOutsideRoleScopeException`, `RoleNotFoundException` |
+| Catalogo de mensajes | `RolesMessages` |
+| Value object | `RoleName`, `RoleScope`, `RoleScopeLevel` |
+| Regla de dominio (impl) | `RoleMustExistForTenantRuleImpl`, `RoleNameMustBeUniqueInScopeRuleImpl`, `RoleScopeMustCoverResourceRuleImpl` |
+| Dato de regla (hecho resuelto) | `ResourceCoverage`, `RoleExistence`, `RoleNameAvailability` |
+| Regla de dominio (contrato) | `RoleMustExistForTenantRule`, `RoleNameMustBeUniqueInScopeRule`, `RoleScopeMustCoverResourceRule` |
+| Dominio (agregado / criteria) | `Role`, `RoleCriteria` |
+| Caso de uso (impl) | `DefineRoleUseCaseImpl`, `GrantResourceToRoleUseCaseImpl`, `ListRolesUseCaseImpl` |
+| Caso de uso (contrato) | `DefineRoleUseCase`, `GrantResourceToRoleUseCase`, `ListRolesUseCase` |
+| Validador de reglas (impl) | `DefineRoleRulesValidatorImpl`, `GrantResourceRulesValidatorImpl` |
+| Validador de reglas (contrato) | `DefineRoleRulesValidator`, `GrantResourceRulesValidator` |
+| Puerto de salida | `RoleRepository` |
+| DTO de entrada al nucleo | `DefineRoleRequest`, `GrantResourceRequest`, `ListRolesRequest` |
+| DTO de salida del nucleo | `RoleResponse` |
+| Controller | `RoleController` |
+| DTO crudo HTTP | `DefineRoleRawRequest`, `GrantResourceRawRequest`, `ListRolesRawRequest` |
+| DTO de respuesta HTTP | `RoleWebResponse` |
+| Interactor (impl) | `DefineRoleInteractorImpl`, `GrantResourceToRoleInteractorImpl`, `ListRolesInteractorImpl` |
+| Interactor (contrato) | `DefineRoleInteractor`, `GrantResourceToRoleInteractor`, `ListRolesInteractor` |
+| Mapper web | `DefineRoleRequestMapper`, `GrantResourceRequestMapper`, `ListRolesRequestMapper`, `RoleResponseMapper` |
+| Entidad de persistencia | `RoleEntity` |
+| Mapper de persistencia | `RolePersistenceMapper` |
+| Adaptador de repositorio | `SurrealRoleRepository` |
+| Esquema de tabla | `RoleSchema`, `SurrealRoleSchemaInitializer` |
+| Cableado (@Bean) | `RolesConfiguration` |
 
 ### `tenants` - 42 clases
 
@@ -194,6 +224,7 @@
 | `ApplicationRepository` | `SurrealApplicationRepository` |
 | `PolicyDecisionPort` | `DenyByDefaultPolicyDecisionAdapter` |
 | `ProtectedResourceRepository` | `SurrealProtectedResourceRepository` |
+| `RoleRepository` | `SurrealRoleRepository` |
 | `SecurityUserRepository` | `SurrealSecurityUserRepository` |
 | `TenantRepository` | `SurrealTenantRepository` |
 
@@ -208,6 +239,9 @@
 | GET | `/api/v1/applications/{applicationId}/resources` | `ProtectedResourceController` |
 | POST | `/api/v1/applications/{applicationId}/resources` | `ProtectedResourceController` |
 | POST | `/api/v1/authorize` | `AuthorizationController` |
+| GET | `/api/v1/roles` | `RoleController` |
+| POST | `/api/v1/roles` | `RoleController` |
+| POST | `/api/v1/roles/{roleId}/resources` | `RoleController` |
 | GET | `/api/v1/session` | `SessionController` |
 | GET | `/api/v1/session/logout` | `KeycloakLogoutController` |
 | GET | `/api/v1/tenants` | `TenantController` |
@@ -228,7 +262,8 @@
 | `pdp/authorization` | `AccessDecisionInternalResponseMapperTests`, `AccessDecisionRawRequestMapperTests`, `AccessDecisionResponseMapperTests`, `AuthorizationControllerTests`, `AuthorizationHttpTests`, `AuthorizeRequestMapperTests`, `AuthorizeUseCaseImplTests`, `DecisionStateTests`, `EvaluateInternalAccessUseCaseImplTests`, `InternalAccessDecisionControllerTests`, `InternalAccessDecisionInteractorImplTests`, `InternalSecurityChainIntegrationTests` |
 | `pdp/commons` | `PageWindowTests`, `ResultPageTests`, `ValueObjectTests` |
 | `pdp/identity` | `AssignTenantRequestMapperTests`, `AssignTenantUseCaseImplTests`, `EmailTests`, `ProvisionIdentityUseCaseImplTests`, `SecurityUserPersistenceMapperTests`, `UserControllerTests`, `UserMustExistRuleTests`, `UserResponseMapperTests` |
-| `pdp/resources` | `HttpVerbTests`, `InMemoryAuditAdapterTests`, `ProtectedResourceControllerTests`, `ProtectedResourceMustBeUniqueRuleTests`, `ProtectedResourceMustExistRuleTests`, `ProtectedResourceMustExistValidatorTests`, `ProtectedResourceResponseMapperTests`, `RegisterProtectedResourceRequestMapperTests`, `RegisterProtectedResourceRulesValidatorTests`, `RegisterProtectedResourceUseCaseImplTests`, `ResourcePathTests` |
+| `pdp/resources` | `HttpVerbTests`, `InMemoryAuditAdapterTests`, `ProtectedResourceControllerTests`, `ProtectedResourceMustBeUniqueRuleTests`, `ProtectedResourceMustExistRuleTests`, `ProtectedResourceMustExistValidatorTests`, `ProtectedResourceOwnerLookupValidatorImplTests`, `ProtectedResourceResponseMapperTests`, `RegisterProtectedResourceRequestMapperTests`, `RegisterProtectedResourceRulesValidatorTests`, `RegisterProtectedResourceUseCaseImplTests`, `ResourcePathTests` |
+| `pdp/roles` | `DefineRoleRequestMapperTests`, `DefineRoleRulesValidatorImplTests`, `DefineRoleUseCaseImplTests`, `GrantResourceRequestMapperTests`, `GrantResourceRulesValidatorImplTests`, `GrantResourceToRoleUseCaseImplTests`, `ListRolesRequestMapperTests`, `ListRolesUseCaseImplTests`, `RoleControllerTests`, `RoleCriteriaTests`, `RoleHttpTests`, `RoleMustExistForTenantRuleImplTests`, `RoleNameMustBeUniqueInScopeRuleImplTests`, `RoleNameTests`, `RolePersistenceMapperTests`, `RoleResponseMapperTests`, `RoleScopeLevelTests`, `RoleScopeMustCoverResourceRuleImplTests`, `RoleScopeTests`, `RoleTests` |
 | `pdp/tenants` | `CreateTenantRequestMapperTests`, `CreateTenantUseCaseImplTests`, `ListTenantsUseCaseImplTests`, `TenantCatalogPropertiesTests`, `TenantControllerTests`, `TenantMustBeActiveValidatorTests`, `TenantNameTests`, `TenantResponseMapperTests`, `TenantRuleTests` |
 | `raiz` | `AbstractSurrealDbIntegrationTest`, `LayeredArchitectureTests`, `ModulithStructureTests`, `PdpApplicationTests` |
 | `shared/auth` | `KeycloakLoginControllerTests`, `KeycloakOidcSessionServiceTests`, `KeycloakRegistrationControllerTests`, `OidcAuthenticationFailureHandlerTests`, `OidcAuthenticationSuccessHandlerTests`, `OidcAuthorizationFlowServiceTests` |

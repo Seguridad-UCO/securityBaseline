@@ -18,4 +18,11 @@ public interface ProtectedResourceRepository {
     Mono<ProtectedResource> save(ProtectedResource resource);
 
     Mono<Void> deleteById(ResourceId resourceId);
+
+    /**
+     * Resuelve qué aplicación es dueña de un recurso, a partir solo de su identificador —
+     * a diferencia de {@link #findAllByApplication}, que ya conoce la aplicación. Vacío si el
+     * recurso no existe (HU-004, {@code ProtectedResourceOwnerLookupValidator}).
+     */
+    Mono<ApplicationId> findApplicationIdById(ResourceId resourceId);
 }
