@@ -1,4 +1,4 @@
-package co.edu.uco.seguridad.pdp.identity.domain.model;
+package co.edu.uco.seguridad.pdp.commons.model;
 
 import co.edu.uco.seguridad.pdp.commons.exception.InvalidIdentifierException;
 import co.edu.uco.seguridad.pdp.commons.message.ValueObjectMessages;
@@ -6,7 +6,8 @@ import co.edu.uco.seguridad.pdp.commons.message.ValueObjectMessages;
 import java.util.Objects;
 import java.util.UUID;
 
-/** Identificador subrogado de un usuario propio (nunca el {@code subject} del IdP externo). */
+/** Identificador subrogado de un usuario propio (nunca el {@code subject} del IdP externo). Vive en
+ * commons porque HU-005 (asignaciones) lo consume junto con {@code identity}. */
 public record UserId(UUID value) {
 
     public UserId {

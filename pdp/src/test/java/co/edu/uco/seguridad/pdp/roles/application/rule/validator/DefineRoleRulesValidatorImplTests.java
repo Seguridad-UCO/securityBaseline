@@ -95,6 +95,11 @@ class DefineRoleRulesValidatorImplTests {
             }
 
             @Override
+            public Mono<Role> findById(RoleId roleId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public Mono<ResultPage<Role>> findBy(RoleCriteria criteria, PageWindow window) {
                 throw new UnsupportedOperationException();
             }
@@ -115,6 +120,11 @@ class DefineRoleRulesValidatorImplTests {
 
             @Override
             public Mono<Role> findByIdForTenant(RoleId roleId, TenantId tenantId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Role> findById(RoleId roleId) {
                 throw new UnsupportedOperationException();
             }
 

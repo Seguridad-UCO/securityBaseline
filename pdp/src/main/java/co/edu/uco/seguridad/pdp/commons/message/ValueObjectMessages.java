@@ -109,6 +109,13 @@ public final class ValueObjectMessages {
         }
     }
 
+    public static final class Validity {
+        public static final String INVALID_RANGE = "el fin de la vigencia debe ser posterior a su inicio";
+
+        private Validity() {
+        }
+    }
+
     public static String invalidTenantId(String reason) {
         return "El id del inquilino es inválido: " + reason;
     }

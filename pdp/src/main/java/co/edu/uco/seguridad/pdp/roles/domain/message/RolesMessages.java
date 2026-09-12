@@ -30,6 +30,10 @@ public final class RolesMessages {
         return "un rol de alcance TENANT no admite applicationId";
     }
 
+    public static String applicationOutsideRoleScope(String applicationId) {
+        return "La aplicación " + applicationId + " está fuera del alcance del rol";
+    }
+
     private RolesMessages() {
     }
 }

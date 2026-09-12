@@ -1,5 +1,7 @@
 package co.edu.uco.seguridad.pdp.identity.infrastructure.config;
 
+import co.edu.uco.seguridad.pdp.identity.application.rule.validator.UserMustExistValidator;
+import co.edu.uco.seguridad.pdp.identity.application.rule.validator.impl.UserMustExistValidatorImpl;
 import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.SecurityUserRepository;
 import co.edu.uco.seguridad.pdp.identity.domain.rule.UserMustExistRule;
 import co.edu.uco.seguridad.pdp.identity.domain.rule.impl.UserMustExistRuleImpl;
@@ -72,5 +74,10 @@ public class IdentityConfiguration {
     @Bean
     UserMustExistRule userMustExistRule() {
         return new UserMustExistRuleImpl();
+    }
+
+    @Bean
+    UserMustExistValidator userMustExistValidator(SecurityUserRepository repository, UserMustExistRule mustExist) {
+        return new UserMustExistValidatorImpl(repository, mustExist);
     }
 }

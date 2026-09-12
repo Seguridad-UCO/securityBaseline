@@ -2,7 +2,7 @@ package co.edu.uco.seguridad.pdp.identity.domain;
 
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.identity.domain.model.Email;
-import co.edu.uco.seguridad.pdp.identity.domain.model.UserId;
+import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.time.Instant;

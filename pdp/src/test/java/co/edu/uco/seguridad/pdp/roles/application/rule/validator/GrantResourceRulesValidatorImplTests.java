@@ -110,6 +110,11 @@ class GrantResourceRulesValidatorImplTests {
             }
 
             @Override
+            public Mono<Role> findById(RoleId roleId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public Mono<ResultPage<Role>> findBy(RoleCriteria criteria, PageWindow window) {
                 throw new UnsupportedOperationException();
             }

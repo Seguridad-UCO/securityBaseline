@@ -1,6 +1,11 @@
 package co.edu.uco.seguridad.shared.persistence.surrealdb;
 
 import co.edu.uco.seguridad.AbstractSurrealDbIntegrationTest;
+import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository.AssignmentRepository;
+import co.edu.uco.seguridad.pdp.assignments.domain.Assignment;
+import co.edu.uco.seguridad.pdp.assignments.domain.AssignmentCriteria;
+import co.edu.uco.seguridad.pdp.assignments.domain.model.AssignmentId;
+import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.repository.SurrealAssignmentRepository;
 import co.edu.uco.seguridad.pdp.applications.application.secondaryport.repository.ApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
@@ -14,7 +19,7 @@ import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.Se
 import co.edu.uco.seguridad.pdp.identity.domain.model.Email;
 import co.edu.uco.seguridad.pdp.identity.domain.model.ExternalIdentity;
 import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;
-import co.edu.uco.seguridad.pdp.identity.domain.model.UserId;
+import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.repository.SurrealSecurityUserRepository;
 import co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository.ProtectedResourceRepository;
 import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
@@ -306,6 +311,113 @@ class SurrealRepositoryIntegrationTests extends AbstractSurrealDbIntegrationTest
                     assertThat(ids).contains(ownRole.id(), globalRole.id());
                     assertThat(ids).doesNotContain(otherRole.id());
                 })
+                .verifyComplete();
+    }
+
+    @Test
+    void role_repository_finds_a_global_role_without_filtering_by_tenant() {
+        client.ensureNamespaceAndDatabase()
+                .then(client.execute("DEFINE TABLE IF NOT EXISTS role SCHEMALESS;", Map.of()))
+                .block();
+
+        RoleRepository repository = new SurrealRoleRepository(client);
+        Role globalRole = Role.define(new RoleId(UUID.randomUUID()), new RoleName("global-" + UUID.randomUUID()),
+                RoleScope.global(), Instant.now());
+        StepVerifier.create(repository.save(globalRole)).expectNextCount(1).verifyComplete();
+
+        StepVerifier.create(repository.findById(globalRole.id()))
+                .assertNext(found -> assertThat(found.scope()).isEqualTo(RoleScope.global()))
+                .verifyComplete();
+
+        StepVerifier.create(repository.findById(new RoleId(UUID.randomUUID()))).verifyComplete();
+    }
+
+    @Test
+    void assignment_repository_saves_and_reports_an_active_assignment() {
+        client.ensureNamespaceAndDatabase()
+                .then(client.execute("DEFINE TABLE IF NOT EXISTS assignment SCHEMALESS;", Map.of()))
+                .block();
+
+        AssignmentRepository repository = new SurrealAssignmentRepository(client);
+        TenantId tenant = new TenantId("surreal-it-assignments-" + UUID.randomUUID());
+        UserId user = new UserId(UUID.randomUUID());
+        ApplicationId application = new ApplicationId(UUID.randomUUID());
+        RoleId role = new RoleId(UUID.randomUUID());
+        Instant now = Instant.now();
+
+        StepVerifier.create(repository.existsActiveByUserApplicationRole(user, application, role, now))
+                .expectNext(false)
+                .verifyComplete();
+
+        Assignment assignment = Assignment.assign(new AssignmentId(UUID.randomUUID()), user, tenant, application, role, now);
+        StepVerifier.create(repository.save(assignment)).expectNext(assignment).verifyComplete();
+
+        StepVerifier.create(repository.existsActiveByUserApplicationRole(user, application, role, now))
+                .expectNext(true)
+                .verifyComplete();
+    }
+
+    @Test
+    void assignment_repository_finds_no_assignment_for_a_tenant_it_does_not_belong_to() {
+        client.ensureNamespaceAndDatabase()
+                .then(client.execute("DEFINE TABLE IF NOT EXISTS assignment SCHEMALESS;", Map.of()))
+                .block();
+
+        AssignmentRepository repository = new SurrealAssignmentRepository(client);
+        TenantId owner = new TenantId("surreal-it-asg-owner-" + UUID.randomUUID().toString().substring(0, 8));
+        TenantId stranger = new TenantId("surreal-it-asg-stranger-" + UUID.randomUUID().toString().substring(0, 8));
+        Assignment assignment = Assignment.assign(new AssignmentId(UUID.randomUUID()), new UserId(UUID.randomUUID()), owner,
+                new ApplicationId(UUID.randomUUID()), new RoleId(UUID.randomUUID()), Instant.now());
+        StepVerifier.create(repository.save(assignment)).expectNext(assignment).verifyComplete();
+
+        StepVerifier.create(repository.findByIdForTenant(assignment.id(), stranger)).verifyComplete();
+    }
+
+    @Test
+    void assignment_repository_lists_the_role_catalog_excluding_other_tenants() {
+        client.ensureNamespaceAndDatabase()
+                .then(client.execute("DEFINE TABLE IF NOT EXISTS assignment SCHEMALESS;", Map.of()))
+                .block();
+
+        AssignmentRepository repository = new SurrealAssignmentRepository(client);
+        RoleId role = new RoleId(UUID.randomUUID());
+        TenantId tenant = new TenantId("surreal-it-asg-list-" + UUID.randomUUID().toString().substring(0, 8));
+        TenantId other = new TenantId("surreal-it-asg-list-o-" + UUID.randomUUID().toString().substring(0, 8));
+        Assignment ownAssignment = Assignment.assign(new AssignmentId(UUID.randomUUID()), new UserId(UUID.randomUUID()),
+                tenant, new ApplicationId(UUID.randomUUID()), role, Instant.now());
+        Assignment otherAssignment = Assignment.assign(new AssignmentId(UUID.randomUUID()), new UserId(UUID.randomUUID()),
+                other, new ApplicationId(UUID.randomUUID()), role, Instant.now());
+        StepVerifier.create(repository.save(ownAssignment)).expectNextCount(1).verifyComplete();
+        StepVerifier.create(repository.save(otherAssignment)).expectNextCount(1).verifyComplete();
+
+        StepVerifier.create(repository.findBy(AssignmentCriteria.of(role, tenant), PageWindow.defaultWindow()))
+                .assertNext(page -> {
+                    List<AssignmentId> ids = page.content().stream().map(Assignment::id).toList();
+                    assertThat(ids).contains(ownAssignment.id());
+                    assertThat(ids).doesNotContain(otherAssignment.id());
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void assignment_repository_excludes_a_revoked_assignment_from_active_roles() {
+        client.ensureNamespaceAndDatabase()
+                .then(client.execute("DEFINE TABLE IF NOT EXISTS assignment SCHEMALESS;", Map.of()))
+                .block();
+
+        AssignmentRepository repository = new SurrealAssignmentRepository(client);
+        UserId user = new UserId(UUID.randomUUID());
+        ApplicationId application = new ApplicationId(UUID.randomUUID());
+        RoleId role = new RoleId(UUID.randomUUID());
+        Instant past = Instant.now().minusSeconds(3600);
+        Assignment revoked = Assignment.assign(new AssignmentId(UUID.randomUUID()), user,
+                        new TenantId("surreal-it-asg-active-" + UUID.randomUUID().toString().substring(0, 8)), application,
+                        role, past.minusSeconds(3600))
+                .revoke(past);
+        StepVerifier.create(repository.save(revoked)).expectNext(revoked).verifyComplete();
+
+        StepVerifier.create(repository.findActiveRoleIdsFor(user, application, Instant.now()))
+                .assertNext(roleIds -> assertThat(roleIds).doesNotContain(role))
                 .verifyComplete();
     }
 

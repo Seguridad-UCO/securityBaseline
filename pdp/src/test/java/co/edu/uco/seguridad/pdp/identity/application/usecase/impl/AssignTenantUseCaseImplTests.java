@@ -7,7 +7,7 @@ import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.Se
 import co.edu.uco.seguridad.pdp.identity.domain.model.Email;
 import co.edu.uco.seguridad.pdp.identity.domain.model.ExternalIdentity;
 import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;
-import co.edu.uco.seguridad.pdp.identity.domain.model.UserId;
+import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.pdp.tenants.application.primaryport.response.TenantResponse;
 import co.edu.uco.seguridad.pdp.tenants.domain.model.TenantName;
 import co.edu.uco.seguridad.pdp.tenants.domain.model.TenantStatus;
