@@ -60,7 +60,9 @@ public class ApiErrorHandler {
 
     @ExceptionHandler(Exception.class)
     ResponseEntity<ProblemDetail> unexpected(Exception exception, ServerWebExchange exchange) {
-        LOG.error("error no manejado mientras se sirve {}", exchange.getRequest().getPath(), exception);
+        LOG.atError().addKeyValue("event.name", "http.request.failed")
+                .addKeyValue("error.type", exception.getClass().getSimpleName())
+                .log("Error no manejado al atender la petición");
         return ResponseEntity.internalServerError().body(problem(HttpStatus.INTERNAL_SERVER_ERROR,
                 "INTERNAL_ERROR", WebContractMessages.internalError(), exchange));
     }

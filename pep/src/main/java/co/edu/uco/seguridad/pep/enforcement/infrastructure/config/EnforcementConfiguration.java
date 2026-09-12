@@ -24,7 +24,7 @@ import reactor.netty.http.client.HttpClient;
 class EnforcementConfiguration {
 
     @Bean
-    WebClient pdpWebClient(PdpClientProperties properties) throws javax.net.ssl.SSLException {
+    WebClient pdpWebClient(PdpClientProperties properties, WebClient.Builder builder) throws javax.net.ssl.SSLException {
         HttpClient transport = HttpClient.create().followRedirect(false)
                 .option(io.netty.channel.ChannelOption.CONNECT_TIMEOUT_MILLIS, Math.toIntExact(properties.connectTimeout().toMillis()))
                 .responseTimeout(properties.timeout());
@@ -36,7 +36,7 @@ class EnforcementConfiguration {
             var context = tls.build();
             transport = transport.secure(spec -> spec.sslContext(context));
         }
-        return WebClient.builder().baseUrl(properties.baseUrl().toString())
+        return builder.clone().baseUrl(properties.baseUrl().toString())
                 .clientConnector(new ReactorClientHttpConnector(transport))
                 .codecs(codecs -> {
                     codecs.defaultCodecs().maxInMemorySize(properties.maxResponseBytes());

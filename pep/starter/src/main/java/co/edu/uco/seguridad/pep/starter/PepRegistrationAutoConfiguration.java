@@ -25,7 +25,7 @@ public class PepRegistrationAutoConfiguration {
     private static final Logger LOG = LoggerFactory.getLogger(PepRegistrationAutoConfiguration.class);
 
     @Bean
-    ApplicationRunner pepRegistrationRunner(PepRegistrationProperties properties) {
+    ApplicationRunner pepRegistrationRunner(PepRegistrationProperties properties, WebClient.Builder builder) {
         return ignored -> {
             try {
                 properties.validate();
@@ -33,7 +33,7 @@ public class PepRegistrationAutoConfiguration {
                 LOG.error("PEP registration is disabled by invalid local configuration: {}", error.getMessage());
                 return;
             }
-            register(properties).retryWhen(Retry.backoff(Long.MAX_VALUE, Duration.ofSeconds(1))
+            register(properties, builder).retryWhen(Retry.backoff(Long.MAX_VALUE, Duration.ofSeconds(1))
                             .maxBackoff(Duration.ofSeconds(60)).filter(error -> !(error instanceof RegistrationRejectedException)))
                     .doOnSuccess(response -> LOG.info("PEP integration active: publicBaseUrl={}", response.publicBaseUrl()))
                     .doOnError(error -> LOG.error("PEP integration registration rejected; correct configuration and restart: {}",
@@ -42,10 +42,10 @@ public class PepRegistrationAutoConfiguration {
         };
     }
 
-    private Mono<RegistrationResponse> register(PepRegistrationProperties properties) {
+    private Mono<RegistrationResponse> register(PepRegistrationProperties properties, WebClient.Builder builder) {
         URI endpoint = URI.create(properties.pepUrl().toString().replaceAll("/$", "") + "/internal/v1/integrations/"
                 + properties.applicationId() + "/" + properties.environment());
-        return WebClient.builder().build().put().uri(endpoint).headers(headers -> headers.setBearerAuth(properties.token()))
+        return builder.clone().build().put().uri(endpoint).headers(headers -> headers.setBearerAuth(properties.token()))
                 .bodyValue(Map.of("backendUrl", properties.backendUrl().toString(), "audience", properties.audience()))
                 .exchangeToMono(response -> response.statusCode().is2xxSuccessful()
                         ? response.bodyToMono(RegistrationResponse.class)

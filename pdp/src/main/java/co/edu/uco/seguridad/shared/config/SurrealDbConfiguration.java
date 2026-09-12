@@ -19,8 +19,8 @@ import tools.jackson.databind.ObjectMapper;
 class SurrealDbConfiguration {
 
     @Bean
-    SurrealDbClient surrealDbClient(SurrealDbProperties properties, ObjectMapper objectMapper) {
-        WebClient webClient = WebClient.builder()
+    SurrealDbClient surrealDbClient(SurrealDbProperties properties, ObjectMapper objectMapper, WebClient.Builder builder) {
+        WebClient webClient = builder.clone()
                 .baseUrl(properties.url())
                 .defaultHeaders(headers -> {
                     headers.setBasicAuth(properties.username(), properties.password());

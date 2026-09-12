@@ -32,8 +32,8 @@ import java.util.List;
 class IngressSecurityConfiguration {
 
     @Bean
-    ReactiveJwtDecoder jwtDecoder(IngressProperties properties) {
-        WebClient jwks = WebClient.builder().clientConnector(new ReactorClientHttpConnector(
+    ReactiveJwtDecoder jwtDecoder(IngressProperties properties, WebClient.Builder builder) {
+        WebClient jwks = builder.clone().clientConnector(new ReactorClientHttpConnector(
                         HttpClient.create().followRedirect(false)
                                 .option(io.netty.channel.ChannelOption.CONNECT_TIMEOUT_MILLIS, 1000)
                                 .responseTimeout(properties.jwksTimeout())))
@@ -76,7 +76,7 @@ class IngressSecurityConfiguration {
                     CorsConfiguration config = new CorsConfiguration();
                     config.setAllowedOrigins(properties.allowedOrigins());
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"));
-                    config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Correlation-Id"));
+                    config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Correlation-Id", "traceparent", "tracestate"));
                     config.setExposedHeaders(List.of("X-Request-Id", "X-Correlation-Id", "X-Decision-Id"));
                     config.setAllowCredentials(false);
                     config.setMaxAge(600L);
