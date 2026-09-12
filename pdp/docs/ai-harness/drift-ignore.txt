@@ -14,6 +14,10 @@
 # falsearia el historial.
 doc:pdp/docs/delivery/refactor-report-2026-08-07.md
 doc:pdp/docs/plans/*
+# Todo REPORTE-{HU|HT}-*.md de @4-validador es el mismo caso: un acta fechada del estado en su
+# momento de aprobacion. Se descubrio con REPORTE-HU-002.md (cita DenyByDefaultPolicyDecisionAdapter,
+# retirado en HU-006) y REPORTE-HU-006.md (cita esa misma clase para documentar por que se elimino).
+doc:pdp/docs/ai-harness/workspace/reportes/*
 
 # --- Documentacion del propio harness ----------------------------------------
 # Cita los nombres ausentes precisamente para documentar que faltan.
@@ -55,9 +59,13 @@ TenantMustBeActiveRule
 # manda cookie, asi que no hay contexto de sesion que reponer). Mismo caso que ObjectMapper.
 WebSessionServerSecurityContextRepository
 
-# --- Pendiente a proposito: HU-005 (OPA) ---------------------------------------
-# La decision D9 del HANDOFF nombra el adaptador que reemplazara a
-# DenyByDefaultPolicyDecisionAdapter cuando se cablee OPA. Es el nombre de un contrato acordado,
-# no una afirmacion sobre el codigo de hoy: el propio documento lo marca como alcance de HU-005.
-# Retirar esta excepcion cuando HU-005 cree la clase.
-OpaPolicyDecisionAdapter
+# --- HU-006 cerro el adaptador que denegaba por defecto ------------------------
+# DenyByDefaultPolicyDecisionAdapter se elimino en HU-006 (decision D9 del handoff):
+# OpaPolicyDecisionAdapter lo reemplaza, no convive con el. Estos dos son diagnostico/decision
+# fechados que citan la clase tal como existia cuando se escribieron - corregirlos falsearia el
+# historial, igual que los "Documentos historicos" de arriba. (Los REPORTE-*.md que tambien la citan
+# ya caen bajo el patron de reportes de arriba.)
+# docs/PLATAFORMA.md NO esta aqui: ese si describe el estado actual y se corrigio en el mismo
+# cambio que retiro esta excepcion de OpaPolicyDecisionAdapter (la clase ya existe).
+doc:pdp/docs/ai-harness/workspace/HANDOFF-INTEGRACION-PEP-OPA.md
+doc:pdp/docs/ai-harness/workspace/INTEGRACION-PDP-PEP-OPA.md

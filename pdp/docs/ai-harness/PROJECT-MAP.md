@@ -3,8 +3,8 @@
 > Generado por `.claude/tools/mapa.ps1`. **No editar a mano** - se regenera desde el codigo.
 > Es el nivel 0 del grafo de conocimiento: responde "que existe y donde va lo nuevo".
 
-- Clases de produccion: **402**
-- Clases de prueba: **130**
+- Clases de produccion: **415**
+- Clases de prueba: **132**
 - Slices de negocio: **8** (applications, assignments, authorization, commons, identity, resources, roles, tenants)
 
 ---
@@ -72,7 +72,7 @@
 | Esquema de tabla | `AssignmentSchema`, `SurrealAssignmentSchemaInitializer` |
 | Cableado (@Bean) | `AssignmentsConfiguration` |
 
-### `authorization` - 28 clases
+### `authorization` - 39 clases
 
 | Rol | Clases |
 |---|---|
@@ -89,7 +89,8 @@
 | Interactor (contrato) | `AuthorizeInteractor`, `InternalAccessDecisionInteractor` |
 | Mapper web | `AccessDecisionInternalResponseMapper`, `AccessDecisionRawRequestMapper`, `AccessDecisionResponseMapper`, `AuthorizeRequestMapper` |
 | Cableado (@Bean) | `AuthorizationConfiguration` |
-| Otro | `DenyByDefaultPolicyDecisionAdapter` |
+| Propiedades | `OpaProperties` |
+| Otro | `OpaApplication`, `OpaEvaluationInput`, `OpaEvaluationRequest`, `OpaPolicyDecisionAdapter`, `OpaPolicyDecisionPayload`, `OpaPolicyReference`, `OpaRequestInfo`, `OpaResource`, `OpaResponse`, `OpaSubject`, `OpaTenant` |
 
 ### `commons` - 18 clases
 
@@ -233,11 +234,11 @@
 | `auth/model` | `OidcFlowIntent` |
 | `auth/service` | `KeycloakOidcSessionService`, `OidcAuthenticationFailureHandler`, `OidcAuthenticationSuccessHandler`, `OidcAuthorizationFlowService`, `OidcFlowStateService`, `OidcRedirectPolicy` |
 | `auth/web` | `KeycloakLoginController`, `KeycloakRegistrationController` |
-| `config` | `EventPublisherConfiguration`, `InternalSecurityConfiguration`, `KeycloakSecurityConfiguration`, `ProjectPackages`, `SecurityConfiguration`, `SharedPortsConfiguration`, `SurrealDbConfiguration` |
+| `config` | `EventPublisherConfiguration`, `InternalSecurityConfiguration`, `KeycloakSecurityConfiguration`, `ProjectPackages`, `SecurityConfiguration`, `SharedPortsConfiguration`, `SurrealDbConfiguration`, `TelemetryConfiguration` |
 | `contract` | `Operation`, `OperationWithoutResult`, `ReactiveOperation`, `ReactiveOperationWithoutInput`, `ReactiveOperationWithoutResult`, `ReactiveStreamOperation` |
 | `event` | `DomainEvent`, `DomainEventPublisher`, `SpringDomainEventPublisher` |
 | `message` | `RequiredArgumentMessages` |
-| `observability` | `ReactiveLogContext` |
+| `observability` | `ReactiveLogContext`, `ReactiveTelemetry` |
 | `persistence/surrealdb` | `SurrealDbClient`, `SurrealDbException`, `SurrealDbHealthIndicator`, `SurrealDbProperties`, `SurrealRecordId`, `SurrealSchemaInitializer` |
 | `port` | `IdentifierGenerator`, `TimeProvider` |
 | `security` | `ApiAccessDeniedHandler`, `ApiAuthenticationEntryPoint`, `CorsProperties`, `InternalEvidenceJwtProperties`, `InternalMtlsProperties`, `InternalMtlsWebFilter`, `JwtSecurityProperties`, `KeycloakSessionProperties`, `LocalUserPrincipal`, `PdpPrincipal`, `SecurityContext` |
@@ -255,7 +256,7 @@
 |---|---|
 | `ApplicationRepository` | `SurrealApplicationRepository` |
 | `AssignmentRepository` | `SurrealAssignmentRepository` |
-| `PolicyDecisionPort` | `DenyByDefaultPolicyDecisionAdapter` |
+| `PolicyDecisionPort` | `OpaPolicyDecisionAdapter` |
 | `ProtectedResourceRepository` | `SurrealProtectedResourceRepository` |
 | `RoleRepository` | `SurrealRoleRepository` |
 | `SecurityUserRepository` | `SurrealSecurityUserRepository` |
@@ -296,7 +297,7 @@
 |---|---|
 | `pdp/applications` | `ApplicationBaseUrlTests`, `ApplicationCatalogPropertiesTests`, `ApplicationControllerTests`, `ApplicationCriteriaTests`, `ApplicationHttpTests`, `ApplicationMustExistForTenantValidatorTests`, `ApplicationOwnerLookupValidatorImplTests`, `ApplicationPersistenceMapperTests`, `ApplicationResponseMapperTests`, `ApplicationRuleTests`, `ListApplicationsRequestMapperTests`, `ListApplicationsUseCaseImplTests`, `RegisterApplicationRequestMapperTests`, `RegisterApplicationRulesValidatorTests`, `RegisterApplicationUseCaseImplTests`, `RemoveApplicationUseCaseImplTests` |
 | `pdp/assignments` | `AssignmentControllerTests`, `AssignmentCriteriaTests`, `AssignmentHttpTests`, `AssignmentMustExistForTenantRuleImplTests`, `AssignmentMustNotDuplicateActiveRuleImplTests`, `AssignmentPersistenceMapperTests`, `AssignmentResponseMapperTests`, `AssignmentTests`, `AssignRoleRequestMapperTests`, `AssignRoleRulesValidatorImplTests`, `AssignRoleUseCaseImplTests`, `ListAssignmentsRequestMapperTests`, `ListAssignmentsUseCaseImplTests`, `ResolveActiveRolesUseCaseImplTests`, `RevokeAssignmentRequestMapperTests`, `RevokeAssignmentRulesValidatorImplTests`, `RevokeAssignmentUseCaseImplTests`, `ValidityTests` |
-| `pdp/authorization` | `AccessDecisionInternalResponseMapperTests`, `AccessDecisionRawRequestMapperTests`, `AccessDecisionResponseMapperTests`, `AuthorizationControllerTests`, `AuthorizationHttpTests`, `AuthorizeRequestMapperTests`, `AuthorizeUseCaseImplTests`, `DecisionStateTests`, `EvaluateInternalAccessUseCaseImplTests`, `InternalAccessDecisionControllerTests`, `InternalAccessDecisionInteractorImplTests`, `InternalSecurityChainIntegrationTests` |
+| `pdp/authorization` | `AccessDecisionInternalResponseMapperTests`, `AccessDecisionRawRequestMapperTests`, `AccessDecisionResponseMapperTests`, `AuthorizationControllerTests`, `AuthorizationHttpTests`, `AuthorizeRequestMapperTests`, `AuthorizeUseCaseImplTests`, `DecisionStateTests`, `EvaluateInternalAccessUseCaseImplTests`, `InternalAccessDecisionControllerTests`, `InternalAccessDecisionInteractorImplTests`, `InternalSecurityChainIntegrationTests`, `OpaFixtureServer`, `OpaPolicyDecisionAdapterTests` |
 | `pdp/commons` | `PageWindowTests`, `ResultPageTests`, `ValueObjectTests` |
 | `pdp/identity` | `AssignTenantRequestMapperTests`, `AssignTenantUseCaseImplTests`, `EmailTests`, `ProvisionIdentityUseCaseImplTests`, `SecurityUserPersistenceMapperTests`, `UserControllerTests`, `UserMustExistRuleTests`, `UserMustExistValidatorImplTests`, `UserResponseMapperTests` |
 | `pdp/resources` | `HttpVerbTests`, `InMemoryAuditAdapterTests`, `ProtectedResourceControllerTests`, `ProtectedResourceMustBeUniqueRuleTests`, `ProtectedResourceMustExistRuleTests`, `ProtectedResourceMustExistValidatorTests`, `ProtectedResourceOwnerLookupValidatorImplTests`, `ProtectedResourceResponseMapperTests`, `RegisterProtectedResourceRequestMapperTests`, `RegisterProtectedResourceRulesValidatorTests`, `RegisterProtectedResourceUseCaseImplTests`, `ResourcePathTests` |

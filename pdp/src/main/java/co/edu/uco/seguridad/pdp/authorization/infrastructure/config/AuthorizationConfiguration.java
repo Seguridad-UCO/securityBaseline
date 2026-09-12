@@ -11,22 +11,31 @@ import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.InternalAccessDecisionInteractor;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.AuthorizeInteractorImpl;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.InternalAccessDecisionInteractorImpl;
-import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.DenyByDefaultPolicyDecisionAdapter;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.OpaPolicyDecisionAdapter;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.properties.OpaProperties;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceMustExistValidator;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
 import co.edu.uco.seguridad.shared.observability.ReactiveTelemetry;
 import io.micrometer.observation.ObservationRegistry;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.reactive.function.client.WebClient;
+import tools.jackson.databind.ObjectMapper;
 
 /** La unica clase consciente de Spring del modulo. */
 @Configuration
+@EnableConfigurationProperties(OpaProperties.class)
 public class AuthorizationConfiguration {
 
+    // HU-006 (D9 del handoff PDP-PEP-OPA): reemplaza a DenyByDefaultPolicyDecisionAdapter, que se
+    // elimina — la denegacion por defecto pasa a vivir en la politica Rego, no en el PDP.
     @Bean
-    PolicyDecisionPort policyDecisionPort(IdentifierGenerator identifiers, TimeProvider time) {
-        return new DenyByDefaultPolicyDecisionAdapter(identifiers, time);
+    PolicyDecisionPort policyDecisionPort(OpaProperties properties, ObjectMapper objectMapper,
+            WebClient.Builder builder, IdentifierGenerator identifiers, TimeProvider time) {
+        WebClient webClient = builder.clone().baseUrl(properties.baseUrl()).build();
+        return new OpaPolicyDecisionAdapter(webClient, objectMapper, properties, identifiers, time);
     }
 
     @Bean

@@ -6,7 +6,7 @@
 > [`../security-policy-engine/README.md`](../security-policy-engine/README.md) para OPA— pero
 > ninguno de los tres, por sí solo, explica cómo encajan. Este sí.
 >
-> **Estado: 2026-09-11.** Marca explícitamente qué corre hoy y qué es plan, porque confundir las dos
+> **Estado: 2026-09-12.** Marca explícitamente qué corre hoy y qué es plan, porque confundir las dos
 > cosas fue el fallo histórico de este proyecto (ver `pdp/docs/criteria-compliance-matrix.md`, hallazgo
 > transversal). Cuando algo cambie de estado, este documento se actualiza en el mismo commit.
 
@@ -42,19 +42,19 @@ flowchart TB
         AUTH["AuthorizationController<br/>POST /api/v1/authorize"]
         USECASE["AuthorizeUseCase"]
         PORT["PolicyDecisionPort"]
-        DENY["DenyByDefaultPolicyDecisionAdapter<br/>(único adaptador hoy)"]
-        CATALOGO["applications / resources / tenants<br/>(SurrealDB)"]
+        POLICY["OpaPolicyDecisionAdapter<br/>(HU-006, llamada HTTP real)"]
+        CATALOGO["applications / resources / tenants / roles / assignments<br/>(SurrealDB)"]
     end
 
-    subgraph PEP_BOX["PEP · puerto 8081 — NO conectado al PDP real"]
+    subgraph PEP_BOX["PEP · puerto 8081"]
         ING["Ingress<br/>valida JWT, rate-limit"]
         NORM["Normalización<br/>arma SolicitudAcceso"]
         CLIENT["Cliente HTTP hacia<br/>/internal/v1/access-decisions"]
     end
 
-    subgraph OPA_BOX["OPA · puerto 8181 — NO conectado al PDP"]
+    subgraph OPA_BOX["OPA · puerto 8181"]
         ENTRY["POST /v1/data/security/authorization/decision"]
-        POLICIES["policies/ (Rego)<br/>composition + tenant guard"]
+        POLICIES["policies/ (Rego)<br/>composition + tenant guard<br/>SIN políticas de aplicación publicadas"]
     end
 
     KC["Keycloak · puerto 9090<br/>IdP, sesiones OIDC"]
@@ -62,28 +62,26 @@ flowchart TB
 
     SPA -- "login OIDC" --> KC
     SPA -- "cookie de sesión" --> AUTH
-    AUTH --> USECASE --> PORT --> DENY
+    AUTH --> USECASE --> PORT --> POLICY
     USECASE --> CATALOGO
     CATALOGO --> DB
     KC -.autentica.-> AUTH
 
-    USER -.->|"Bearer JWT<br/>(hoy no llega a ningún lado real)"| ING
-    APP -.->|"proxied si ALLOW<br/>(hoy nunca ocurre)"| ING
+    USER -.->|"Bearer JWT<br/>(depende del despliegue del PEP)"| ING
+    APP -.->|"proxied si ALLOW<br/>(hoy nunca ocurre: sin políticas de aplicación)"| ING
     ING --> NORM --> CLIENT
-    CLIENT -.->|"HU-003: no existe"| AUTH
+    CLIENT -->|"HU-003"| AUTH
 
-    DENY -.->|"HU-006: no existe"| ENTRY
+    POLICY -->|"HU-006"| ENTRY
     ENTRY --> POLICIES
-
-    style CLIENT stroke-dasharray: 5 5
-    style DENY stroke-dasharray: 5 5
-    style ENTRY stroke-dasharray: 5 5
 ```
 
-**Lectura del diagrama:** las líneas punteadas son las que **no existen todavía**. Hoy el PDP y el
-PEP son dos islas que comparten un contrato escrito pero ningún tráfico real; lo mismo entre el PDP
-y OPA. Lo único que corre de punta a punta hoy es la columna izquierda: SPA → Keycloak → PDP →
-SurrealDB.
+**Lectura del diagrama:** el código de los tres saltos (SPA→PDP, PEP→PDP, PDP→OPA) ya existe y está
+probado — HU-002, HU-003 y HU-006, en ese orden. Lo que **no** existe todavía es una política de
+aplicación real en `policies/applications/`: por eso OPA sigue respondiendo
+`DENY`/`NO_APPLICABLE_POLICY` a cualquier petición, y el PEP nunca llega a dejar pasar el tráfico
+real hacia una aplicación protegida. La columna que corre de punta a punta con una respuesta
+distinta de `DENY` sigue siendo solo SPA → Keycloak → PDP → SurrealDB.
 
 ---
 
@@ -118,8 +116,11 @@ curl -i -b cookies.txt -X POST http://localhost:8080/api/v1/authorize \
 ```
 
 La última llamada **siempre responde `DENY / NO_APPLICABLE_POLICY`** hoy — es correcto, no un bug:
-`DenyByDefaultPolicyDecisionAdapter` es el único adaptador de `PolicyDecisionPort` que existe
-(`pdp/src/main/java/co/edu/uco/seguridad/pdp/authorization/infrastructure/adapter/secondary/policy/DenyByDefaultPolicyDecisionAdapter.java`).
+`OpaPolicyDecisionAdapter` (HU-006) hace una llamada HTTP real a OPA a través de `PolicyDecisionPort`
+(`pdp/src/main/java/co/edu/uco/seguridad/pdp/authorization/infrastructure/adapter/secondary/policy/OpaPolicyDecisionAdapter.java`),
+y OPA responde `DENY`/`NO_APPLICABLE_POLICY` porque `security-policy-engine/policies/application/`
+todavía no tiene ninguna política de aplicación publicada — el *extension point* de
+`allow_candidates`/`deny_candidates` sigue vacío.
 Ver [`pdp/docs/ai-harness/workspace/ROADMAP-PDP.md`](../pdp/docs/ai-harness/workspace/ROADMAP-PDP.md#por-qué-hu-002-deniega-a-propósito).
 
 ### PEP (puerto 8081)
@@ -198,6 +199,7 @@ sequenceDiagram
     participant KC as Keycloak
     participant PDP as PDP :8080
     participant DB as SurrealDB
+    participant OPA as OPA :8181
 
     U->>KC: login OIDC
     KC-->>U: redirige con sesión establecida
@@ -209,7 +211,8 @@ sequenceDiagram
     DB-->>PDP: sí
     PDP->>DB: ¿existe el recurso protegido?
     DB-->>PDP: sí
-    PDP->>PDP: PolicyDecisionPort.execute()<br/>(DenyByDefaultPolicyDecisionAdapter)
+    PDP->>OPA: POST /v1/data/security/authorization/decision<br/>(OpaPolicyDecisionAdapter, HU-006)
+    OPA-->>PDP: {"result": {"effect": "DENY",<br/>"reasonCode": "NO_APPLICABLE_POLICY"}}<br/>(sin política de aplicación publicada)
     PDP-->>U: 200 { "state": "DENY",<br/>"reasonCode": "NO_APPLICABLE_POLICY" }
 ```
 
@@ -259,7 +262,7 @@ verificada** en [`contracts/`](../contracts/README.md); lo que falta es el códi
 | **1** | **HU-003** — endpoint interno `POST /internal/v1/access-decisions` con mTLS + Bearer, según `contracts/pep-pdp/v1/` | Es el **único** de los pendientes que desbloquea a otra persona del equipo. El PEP de David está terminado y probado; solo le falta un PDP real contra el cual hablar | Probar el PEP con tráfico real. Todo lo que hace el PEP hoy es contra un simulador |
 | **2** | **HU-004** — catálogo de roles (BC-04): alcance tenant/aplicación/global y recursos que autoriza | Primera mitad del valor propio del PDP. Partida de la historia original de roles+asignaciones el 2026-09-11 porque, con esas decisiones, cada mitad es del tamaño de HU-003 | Que exista vocabulario de roles que asignar |
 | **3** | **HU-005** — asignaciones vigentes (BC-08): `UsuarioAplicacionRol` + `Vigencia` + `findActiveRolesFor` | Sin atributos que evaluar, conectar OPA no cambiaría nada: seguiría respondiendo `NO_APPLICABLE_POLICY` porque no hay hechos de negocio que darle | Que una política Rego tenga algo real que decidir |
-| **4** | **HU-006** — adaptador `OpaPolicyDecisionAdapter` sobre `PolicyDecisionPort` | Sustituye `DenyByDefaultPolicyDecisionAdapter` por una llamada real a OPA. Con esto se cierra el camino `ALLOW`, que hoy es matemáticamente imposible | Que el PDP alguna vez responda `ALLOW` |
+| **4** | ~~HU-006~~ — adaptador `OpaPolicyDecisionAdapter` sobre `PolicyDecisionPort` — **hecho** | Sustituyó al adaptador que denegaba por defecto por una llamada real a OPA. El camino `ALLOW` ya es posible en código; sigue sin ocurrir en la práctica porque no hay política de aplicación publicada (ver §2) | Que el PDP alguna vez responda `ALLOW` — ya puede, falta la política |
 | **5** | **HU-007** — `EventoAcceso` correlacionado hacia auditoría | Sin evidencia durable no hay cumplimiento (INV-AUD-01) — pero no bloquea a nadie del equipo, a diferencia de 1-4 | Demostrar qué se decidió y por qué, después del hecho |
 | **6** | **HU-009** — administración de seguridad por aplicación (quién administra el catálogo) | Diferida desde HU-004/HU-005 a propósito. Desbloquea los roles globales por HTTP y es el modelo que el microfrontend necesita. Necesita ADR antes | El microfrontend de seguridad |
 | — | `pep-pdp/v1.1` — obligaciones como objetos, no strings | Es de David; el contrato en `contracts/obligations.md` ya dice qué tiene que hacer | Que un `ALLOW` con obligación `AUDIT` no se sirva sin auditar (hoy degrada a `INDETERMINATE`, correcto pero conservador) |

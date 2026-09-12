@@ -149,6 +149,13 @@ public final class RequiredArgumentMessages {
     public static final String SURREALDB_URL = "se requiere la URL de SurrealDB (pdp.persistence.surrealdb.url)";
     public static final String OBJECT_MAPPER = "se requiere ObjectMapper";
 
+    // Cliente y configuración de OPA (HU-006).
+    public static final String OPA_WEB_CLIENT = "se requiere el WebClient de OPA";
+    public static final String OPA_PROPERTIES = "se requieren las propiedades de OPA";
+    public static final String OPA_BASE_URL = "se requiere la URL de OPA (pdp.opa.base-url)";
+    public static final String OPA_DECISION_PATH = "se requiere la ruta de decisión de OPA (pdp.opa.decision-path)";
+    public static final String OPA_TIMEOUT = "se requiere el timeout de OPA (pdp.opa.timeout)";
+
     // Seguridad JWT.
     public static final String JWT_ISSUER = "se requiere el emisor esperado (pdp.security.jwt.issuer)";
     public static final String JWT_EXACTLY_ONE_MODE =
