@@ -42,8 +42,8 @@ public class AuthorizationConfiguration {
     // HU-003 — canal interno para el PEP (D1: mismo AuthorizeUseCase, segundo adaptador primario).
     @Bean
     EvaluateInternalAccessUseCase evaluateInternalAccessUseCase(ApplicationOwnerLookupValidator ownerLookup,
-            AuthorizeUseCase authorizeUseCase) {
-        return new EvaluateInternalAccessUseCaseImpl(ownerLookup, authorizeUseCase);
+            AuthorizeUseCase authorizeUseCase, IdentifierGenerator identifiers, TimeProvider time) {
+        return new EvaluateInternalAccessUseCaseImpl(ownerLookup, authorizeUseCase, identifiers, time);
     }
 
     @Bean

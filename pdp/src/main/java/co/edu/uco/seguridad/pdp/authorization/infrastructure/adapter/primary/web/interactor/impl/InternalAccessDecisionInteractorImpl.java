@@ -29,6 +29,11 @@ public final class InternalAccessDecisionInteractorImpl implements InternalAcces
 
     @Override
     public Mono<AccessDecisionInternalWebResponse> execute(AccessDecisionRawRequest input) {
-        throw new UnsupportedOperationException("pendiente: HU-003");
+        // deferContextual, no un throw directo: el contrato final necesita el contexto de
+        // CorrelationWebFilter (requestId/correlationId de los headers) para las barreras C2/C3, y
+        // un throw sincrono no deja lugar a inyectarlo en la prueba. Sigue sin decidir nada.
+        return Mono.deferContextual(context -> {
+            throw new UnsupportedOperationException("pendiente: HU-003");
+        });
     }
 }

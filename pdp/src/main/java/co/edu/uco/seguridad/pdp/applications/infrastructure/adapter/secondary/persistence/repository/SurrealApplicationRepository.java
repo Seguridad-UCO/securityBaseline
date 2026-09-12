@@ -54,6 +54,11 @@ public final class SurrealApplicationRepository implements ApplicationRepository
                 .map(results -> !results.get(0).isEmpty());
     }
 
+    @Override
+    public Mono<TenantId> findTenantIdById(ApplicationId applicationId) {
+        throw new UnsupportedOperationException("pendiente: HU-003");
+    }
+
     /**
      * Traduce la specification a una consulta: el filtro opcional se añade al {@code WHERE} solo si
      * el criterio lo trae, y el recorte va en la propia consulta, no en memoria — si el puerto

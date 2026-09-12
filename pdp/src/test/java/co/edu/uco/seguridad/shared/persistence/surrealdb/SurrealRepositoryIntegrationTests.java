@@ -133,10 +133,23 @@ class SurrealRepositoryIntegrationTests extends AbstractSurrealDbIntegrationTest
                 .expectNext(true)
                 .verifyComplete();
 
+        // HU-003: findTenantIdById resuelve el dueño solo con el id, sin conocer el tenant de antemano.
+        StepVerifier.create(repository.findTenantIdById(application.id()))
+                .expectNext(tenant)
+                .verifyComplete();
+
         StepVerifier.create(repository.deleteById(application.id())).verifyComplete();
 
         StepVerifier.create(repository.existsByTenantAndName(tenant, name))
                 .expectNext(false)
+                .verifyComplete();
+    }
+
+    @Test
+    void application_repository_finds_no_tenant_for_an_unknown_application_id() {
+        ApplicationRepository repository = new SurrealApplicationRepository(client);
+
+        StepVerifier.create(repository.findTenantIdById(new ApplicationId(UUID.randomUUID())))
                 .verifyComplete();
     }
 
