@@ -2,12 +2,17 @@ package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.we
 
 import co.edu.uco.seguridad.AbstractSurrealDbIntegrationTest;
 import co.edu.uco.seguridad.pdp.PdpApplication;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.OpaFixtureServer;
 import co.edu.uco.seguridad.shared.security.TestJwtSupport;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -15,9 +20,12 @@ import tools.jackson.databind.ObjectMapper;
 import java.util.UUID;
 
 /**
- * Flujo HTTP completo sobre Netty, autenticado y contra una SurrealDB real. Con el adaptador que
- * deniega por defecto (ADR-012), el unico DecisionState observable de punta a punta es DENY — ALLOW
- * e INDETERMINATE-por-fallo-tecnico se prueban en AuthorizeUseCaseImplTests, que no dependen de OPA.
+ * Flujo HTTP completo sobre Netty, autenticado y contra una SurrealDB real. {@code pdp.opa.base-url}
+ * apunta a un {@link OpaFixtureServer} embebido (HU-006) que responde DENY/NO_APPLICABLE_POLICY por
+ * defecto — el mismo resultado que daba el adaptador que denegaba por defecto (ADR-012), ahora
+ * viniendo de una respuesta HTTP real de "OPA" en vez de un valor fijo en el PDP. ALLOW e
+ * INDETERMINATE-por-fallo-tecnico se prueban en AuthorizeUseCaseImplTests y en
+ * OpaPolicyDecisionAdapterTests, que no dependen de este flujo HTTP completo.
  */
 @SpringBootTest(classes = PdpApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class AuthorizationHttpTests extends AbstractSurrealDbIntegrationTest {
@@ -26,11 +34,28 @@ class AuthorizationHttpTests extends AbstractSurrealDbIntegrationTest {
     private static final String OTRO = "tenant-a";
     private static final ObjectMapper JSON = new ObjectMapper();
 
+    private static OpaFixtureServer opa;
+
     @LocalServerPort
     int port;
 
     private String prefix;
     private String applicationId;
+
+    @BeforeAll
+    static void startOpaFixture() throws Exception {
+        opa = OpaFixtureServer.start();
+    }
+
+    @AfterAll
+    static void stopOpaFixture() {
+        opa.stop();
+    }
+
+    @DynamicPropertySource
+    static void opaConnectionProperties(DynamicPropertyRegistry registry) {
+        registry.add("pdp.opa.base-url", () -> opa.baseUrl());
+    }
 
     @BeforeEach
     void registerApplicationAndResource() {
