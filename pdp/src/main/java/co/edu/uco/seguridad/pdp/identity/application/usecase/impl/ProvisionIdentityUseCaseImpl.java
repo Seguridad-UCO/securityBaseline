@@ -6,7 +6,7 @@ import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.Se
 import co.edu.uco.seguridad.pdp.identity.application.usecase.ProvisionIdentityUseCase;
 import co.edu.uco.seguridad.pdp.identity.domain.model.ExternalIdentity;
 import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;
-import co.edu.uco.seguridad.pdp.identity.domain.model.UserId;
+import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
 import co.edu.uco.seguridad.shared.port.TimeProvider;

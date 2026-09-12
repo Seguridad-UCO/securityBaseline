@@ -62,6 +62,17 @@ public final class SurrealRoleRepository implements RoleRepository {
     }
 
     @Override
+    public Mono<Role> findById(RoleId roleId) {
+        return client.execute(
+                        "SELECT * FROM type::record('%s', $id);".formatted(RoleSchema.TABLE),
+                        Map.of("id", roleId.value().toString()))
+                .flatMap(results -> {
+                    JsonNode rows = results.get(0);
+                    return rows.isEmpty() ? Mono.empty() : Mono.just(toDomain(rows.get(0)));
+                });
+    }
+
+    @Override
     public Mono<ResultPage<Role>> findBy(RoleCriteria criteria, PageWindow window) {
         String query = """
                 SELECT * FROM %1$s WHERE tenantId = $tenantId OR level = 'GLOBAL' \

@@ -19,6 +19,9 @@ public interface RoleRepository {
     /** Vacío si el rol no existe o no es de ese inquilino (un rol global tampoco lo es). */
     Mono<Role> findByIdForTenant(RoleId roleId, TenantId tenantId);
 
+    /** Vacío si el rol no existe. A diferencia de {@link #findByIdForTenant}, no filtra por inquilino: un rol GLOBAL debe encontrarse igual (HU-005). */
+    Mono<Role> findById(RoleId roleId);
+
     /** Los roles del inquilino más los globales, recortados en la propia consulta. */
     Mono<ResultPage<Role>> findBy(RoleCriteria criteria, PageWindow window);
 

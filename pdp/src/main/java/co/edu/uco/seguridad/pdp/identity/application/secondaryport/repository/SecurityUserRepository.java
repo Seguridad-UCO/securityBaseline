@@ -3,7 +3,7 @@ package co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository;
 import co.edu.uco.seguridad.pdp.identity.domain.model.Email;
 import co.edu.uco.seguridad.pdp.identity.domain.model.ExternalIdentity;
 import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;
-import co.edu.uco.seguridad.pdp.identity.domain.model.UserId;
+import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

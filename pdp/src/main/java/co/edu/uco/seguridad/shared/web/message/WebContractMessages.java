@@ -61,6 +61,18 @@ public final class WebContractMessages {
         return "Catálogo de roles consultado";
     }
 
+    public static String successAssignmentCreated() {
+        return "Rol asignado";
+    }
+
+    public static String successAssignmentRevoked() {
+        return "Asignación revocada";
+    }
+
+    public static String successAssignmentsListed() {
+        return "Asignaciones del rol consultadas";
+    }
+
     public static String mustBeInteger() {
         return "debe ser un número entero";
     }

@@ -5,8 +5,10 @@ import co.edu.uco.seguridad.pdp.applications.application.rule.validator.Applicat
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceOwnerLookupValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.DefineRoleRulesValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.GrantResourceRulesValidator;
+import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleScopeMustCoverApplicationValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.DefineRoleRulesValidatorImpl;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.GrantResourceRulesValidatorImpl;
+import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.RoleScopeMustCoverApplicationValidatorImpl;
 import co.edu.uco.seguridad.pdp.roles.application.secondaryport.repository.RoleRepository;
 import co.edu.uco.seguridad.pdp.roles.application.usecase.DefineRoleUseCase;
 import co.edu.uco.seguridad.pdp.roles.application.usecase.GrantResourceToRoleUseCase;
@@ -16,9 +18,11 @@ import co.edu.uco.seguridad.pdp.roles.application.usecase.impl.GrantResourceToRo
 import co.edu.uco.seguridad.pdp.roles.application.usecase.impl.ListRolesUseCaseImpl;
 import co.edu.uco.seguridad.pdp.roles.domain.rule.RoleMustExistForTenantRule;
 import co.edu.uco.seguridad.pdp.roles.domain.rule.RoleNameMustBeUniqueInScopeRule;
+import co.edu.uco.seguridad.pdp.roles.domain.rule.RoleScopeMustCoverApplicationRule;
 import co.edu.uco.seguridad.pdp.roles.domain.rule.RoleScopeMustCoverResourceRule;
 import co.edu.uco.seguridad.pdp.roles.domain.rule.impl.RoleMustExistForTenantRuleImpl;
 import co.edu.uco.seguridad.pdp.roles.domain.rule.impl.RoleNameMustBeUniqueInScopeRuleImpl;
+import co.edu.uco.seguridad.pdp.roles.domain.rule.impl.RoleScopeMustCoverApplicationRuleImpl;
 import co.edu.uco.seguridad.pdp.roles.domain.rule.impl.RoleScopeMustCoverResourceRuleImpl;
 import co.edu.uco.seguridad.pdp.roles.infrastructure.adapter.primary.web.interactor.DefineRoleInteractor;
 import co.edu.uco.seguridad.pdp.roles.infrastructure.adapter.primary.web.interactor.GrantResourceToRoleInteractor;
@@ -106,5 +110,16 @@ public class RolesConfiguration {
     @Bean
     ListRolesInteractor listRolesInteractor(ListRolesUseCase useCase) {
         return new ListRolesInteractorImpl(useCase);
+    }
+
+    @Bean
+    RoleScopeMustCoverApplicationRule roleScopeMustCoverApplicationRule() {
+        return new RoleScopeMustCoverApplicationRuleImpl();
+    }
+
+    @Bean
+    RoleScopeMustCoverApplicationValidator roleScopeMustCoverApplicationValidator(RoleRepository repository,
+            RoleMustExistForTenantRule roleMustExist, RoleScopeMustCoverApplicationRule coverageRule) {
+        return new RoleScopeMustCoverApplicationValidatorImpl(repository, roleMustExist, coverageRule);
     }
 }
