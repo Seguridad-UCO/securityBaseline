@@ -35,6 +35,8 @@ public final class RequiredArgumentMessages {
     public static final String PAGE_WINDOW = "se requiere la ventana de paginación";
     public static final String TENANT_STATUS = "se requiere estado del inquilino";
     public static final String SUBJECT = "se requiere sujeto";
+    public static final String PRINCIPAL_USER_ID = "se requiere el identificador interno del principal (puede estar ausente)";
+    public static final String SUBJECT_ROLES = "se requieren los roles del sujeto (puede ser vacío)";
     public static final String SEARCH_CRITERIA = "se requieren criterios de búsqueda";
     public static final String RESULT_WINDOW = "se requiere ventana de resultado";
     public static final String DTO = "se requiere dto";
@@ -112,6 +114,8 @@ public final class RequiredArgumentMessages {
     public static final String REVOKE_ASSIGNMENT_USE_CASE = "se requiere el caso de uso de revocación de asignación";
     public static final String LIST_ASSIGNMENTS_USE_CASE = "se requiere el caso de uso de consulta de asignaciones";
     public static final String RESOLVE_ACTIVE_ROLES_USE_CASE = "se requiere el caso de uso de resolución de roles activos";
+    public static final String ROLE_NAMES_LOOKUP_VALIDATOR = "se requiere el validador de nombres de rol";
+    public static final String ACTIVE_ROLE_NAMES_LOOKUP_VALIDATOR = "se requiere el validador de nombres de roles activos";
     public static final String ASSIGN_ROLE_INTERACTOR = "se requiere el interactor de asignación de rol";
     public static final String REVOKE_ASSIGNMENT_INTERACTOR = "se requiere el interactor de revocación de asignación";
     public static final String LIST_ASSIGNMENTS_INTERACTOR = "se requiere el interactor de consulta de asignaciones";

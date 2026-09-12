@@ -2,6 +2,9 @@ package co.edu.uco.seguridad.pdp.authorization.infrastructure.config;
 
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationMustExistForTenantValidator;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationOwnerLookupValidator;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.ResolveActiveRolesUseCase;
+import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.ActiveRoleNamesLookupValidator;
+import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.impl.ActiveRoleNamesLookupValidatorImpl;
 import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.PolicyDecisionPort;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.AuthorizeUseCase;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.EvaluateInternalAccessUseCase;
@@ -14,6 +17,7 @@ import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.OpaPolicyDecisionAdapter;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.properties.OpaProperties;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceMustExistValidator;
+import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleNamesLookupValidator;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
 import co.edu.uco.seguridad.shared.observability.ReactiveTelemetry;
@@ -39,10 +43,18 @@ public class AuthorizationConfiguration {
     }
 
     @Bean
+    ActiveRoleNamesLookupValidator activeRoleNamesLookupValidator(ResolveActiveRolesUseCase resolveActiveRoles,
+            RoleNamesLookupValidator roleNamesLookup) {
+        return new ActiveRoleNamesLookupValidatorImpl(resolveActiveRoles, roleNamesLookup);
+    }
+
+    @Bean
     AuthorizeUseCase authorizeUseCase(ApplicationMustExistForTenantValidator applicationMustExist,
-            ProtectedResourceMustExistValidator resourceMustExist, PolicyDecisionPort policyDecisionPort,
-            IdentifierGenerator identifiers, TimeProvider time, ObservationRegistry observations) {
-        var delegate = new AuthorizeUseCaseImpl(applicationMustExist, resourceMustExist, policyDecisionPort, identifiers, time);
+            ProtectedResourceMustExistValidator resourceMustExist, ActiveRoleNamesLookupValidator rolesLookup,
+            PolicyDecisionPort policyDecisionPort, IdentifierGenerator identifiers, TimeProvider time,
+            ObservationRegistry observations) {
+        var delegate = new AuthorizeUseCaseImpl(applicationMustExist, resourceMustExist, rolesLookup,
+                policyDecisionPort, identifiers, time);
         return input -> ReactiveTelemetry.observe("security.authorization", observations,
                 io.micrometer.common.KeyValues.of("decision", "none", "reason", "none"), () -> delegate.execute(input),
                 (observation, decision) -> observation.lowCardinalityKeyValue("decision", decision.state().name())

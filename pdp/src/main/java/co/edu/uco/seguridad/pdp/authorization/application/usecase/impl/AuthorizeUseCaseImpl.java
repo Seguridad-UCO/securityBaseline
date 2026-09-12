@@ -3,8 +3,10 @@ package co.edu.uco.seguridad.pdp.authorization.application.usecase.impl;
 import co.edu.uco.seguridad.pdp.applications.application.primaryport.request.ApplicationOwnershipQuery;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationMustExistForTenantValidator;
 import co.edu.uco.seguridad.pdp.applications.domain.exception.ApplicationNotFoundException;
+import co.edu.uco.seguridad.pdp.assignments.application.primaryport.request.ResolveActiveRolesRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AccessRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.response.AccessDecision;
+import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.ActiveRoleNamesLookupValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.PolicyDecisionPort;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.AuthorizeUseCase;
 import co.edu.uco.seguridad.pdp.authorization.domain.model.DecisionState;
@@ -30,17 +32,19 @@ public final class AuthorizeUseCaseImpl implements AuthorizeUseCase {
 
     private final ApplicationMustExistForTenantValidator applicationMustExist;
     private final ProtectedResourceMustExistValidator resourceMustExist;
+    private final ActiveRoleNamesLookupValidator rolesLookup;
     private final PolicyDecisionPort policyDecisionPort;
     private final IdentifierGenerator identifiers;
     private final TimeProvider time;
 
     public AuthorizeUseCaseImpl(ApplicationMustExistForTenantValidator applicationMustExist,
-            ProtectedResourceMustExistValidator resourceMustExist, PolicyDecisionPort policyDecisionPort,
-            IdentifierGenerator identifiers, TimeProvider time) {
+            ProtectedResourceMustExistValidator resourceMustExist, ActiveRoleNamesLookupValidator rolesLookup,
+            PolicyDecisionPort policyDecisionPort, IdentifierGenerator identifiers, TimeProvider time) {
         this.applicationMustExist = Objects.requireNonNull(applicationMustExist,
                 RequiredArgumentMessages.APPLICATION_EXISTS_VALIDATOR);
         this.resourceMustExist = Objects.requireNonNull(resourceMustExist,
                 RequiredArgumentMessages.PROTECTED_RESOURCE_EXISTS_VALIDATOR);
+        this.rolesLookup = Objects.requireNonNull(rolesLookup, RequiredArgumentMessages.ACTIVE_ROLE_NAMES_LOOKUP_VALIDATOR);
         this.policyDecisionPort = Objects.requireNonNull(policyDecisionPort,
                 RequiredArgumentMessages.POLICY_DECISION_PORT);
         this.identifiers = Objects.requireNonNull(identifiers, RequiredArgumentMessages.IDENTIFIER_GENERATOR);
@@ -55,12 +59,26 @@ public final class AuthorizeUseCaseImpl implements AuthorizeUseCase {
         return applicationMustExist.execute(new ApplicationOwnershipQuery(input.tenantId(), input.applicationId()))
                 .then(Mono.defer(() -> resourceMustExist.execute(
                         new ProtectedResourceLookup(input.applicationId(), input.resourcePath(), input.action()))))
-                .then(Mono.defer(() -> policyDecisionPort.execute(input)))
+                .then(Mono.defer(() -> resolveRoles(input)))
+                .flatMap(policyDecisionPort::execute)
                 .onErrorResume(ApplicationNotFoundException.class,
                         error -> Mono.just(deny(input, ReasonCode.TENANT_MISMATCH)))
                 .onErrorResume(ProtectedResourceNotFoundException.class,
                         error -> Mono.just(deny(input, ReasonCode.NO_APPLICABLE_POLICY)))
                 .onErrorResume(error -> Mono.just(indeterminate(input)));
+    }
+
+    /**
+     * Sin {@code subjectUserId} (canal interno, o BFF sin sesión resuelta) no hay con qué preguntar
+     * por roles — el {@code AccessRequest} sigue con {@code subjectRoles} vacío, exactamente como
+     * llegó. Con él, delega en {@link #rolesLookup} (HU-008, §0 del plan) y devuelve el mismo
+     * request enriquecido con los nombres resueltos.
+     */
+    private Mono<AccessRequest> resolveRoles(AccessRequest input) {
+        return input.subjectUserId()
+                .map(userId -> rolesLookup.execute(new ResolveActiveRolesRequest(userId, input.applicationId()))
+                        .map(input::withSubjectRoles))
+                .orElseGet(() -> Mono.just(input));
     }
 
     private AccessDecision deny(AccessRequest input, ReasonCode reasonCode) {

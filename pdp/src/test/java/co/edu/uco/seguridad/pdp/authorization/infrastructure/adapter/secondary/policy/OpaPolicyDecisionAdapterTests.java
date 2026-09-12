@@ -32,7 +32,11 @@ class OpaPolicyDecisionAdapterTests {
     private static final ApplicationId APPLICATION = new ApplicationId(UUID.randomUUID());
     private static final ResourcePath PATH = new ResourcePath("/estudiantes");
     private static final AccessRequest REQUEST =
-            new AccessRequest(TENANT, "test-subject", APPLICATION, PATH, HttpVerb.GET, "req-1", "corr-1");
+            new AccessRequest(TENANT, "test-subject", APPLICATION, PATH, HttpVerb.GET, "req-1", "corr-1",
+                    java.util.Optional.empty(), java.util.Set.of());
+    private static final AccessRequest REQUEST_WITH_ROLES =
+            new AccessRequest(TENANT, "test-subject", APPLICATION, PATH, HttpVerb.GET, "req-1", "corr-1",
+                    java.util.Optional.empty(), java.util.Set.of("Coordinador académico"));
     private static final UUID DECISION_ID = UUID.randomUUID();
     private static final Instant DECIDED_AT = Instant.parse("2026-09-12T00:00:00Z");
 
@@ -111,7 +115,7 @@ class OpaPolicyDecisionAdapterTests {
 
     @Test
     void sends_the_input_wrapped_exactly_as_the_contract_expects() {
-        StepVerifier.create(adapter().execute(REQUEST)).assertNext(decision -> { }).verifyComplete();
+        StepVerifier.create(adapter().execute(REQUEST_WITH_ROLES)).assertNext(decision -> { }).verifyComplete();
 
         JsonNode sent = new ObjectMapper().readTree(fixture.lastRequestBody());
         JsonNode input = sent.path("input");
@@ -125,6 +129,8 @@ class OpaPolicyDecisionAdapterTests {
         assertThat(input.path("resource").path("type").asString()).isNotEmpty();
         assertThat(input.path("resource").path("id").asString()).isEqualTo("/estudiantes");
         assertThat(input.path("action").asString()).isEqualTo("GET");
+        assertThat(input.path("subject").path("roles").valueStream().map(JsonNode::asString).toList())
+                .containsExactly("Coordinador académico");
     }
 
     private OpaPolicyDecisionAdapter adapter() {
