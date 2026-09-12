@@ -175,6 +175,10 @@ public final class RequiredArgumentMessages {
     public static final String DOMAIN_EXCEPTION_MESSAGE = "se requiere mensaje de excepción de dominio";
     public static final String DOMAIN_EXCEPTION_CODE = "se requiere código de excepción de dominio";
 
+    // HU-007 — evidencia de auditoría (AccessEvent).
+    public static final String EVENT_ID = "se requiere el identificador del evento";
+    public static final String ACCESS_AUDIT_REPOSITORY = "se requiere el repositorio de evidencia de auditoría";
+
     private RequiredArgumentMessages() {
     }
 }

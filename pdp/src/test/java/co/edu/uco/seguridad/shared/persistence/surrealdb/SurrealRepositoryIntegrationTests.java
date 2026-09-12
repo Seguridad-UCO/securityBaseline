@@ -10,6 +10,11 @@ import co.edu.uco.seguridad.pdp.applications.application.secondaryport.repositor
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.repository.SurrealApplicationRepository;
+import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.AccessAuditRepository;
+import co.edu.uco.seguridad.pdp.authorization.domain.event.AccessEvent;
+import co.edu.uco.seguridad.pdp.authorization.domain.model.DecisionState;
+import co.edu.uco.seguridad.pdp.authorization.domain.model.ReasonCode;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.persistence.repository.SurrealAccessAuditRepository;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
 import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
@@ -458,6 +463,52 @@ class SurrealRepositoryIntegrationTests extends AbstractSurrealDbIntegrationTest
 
         StepVerifier.create(repository.findAll().collectList())
                 .assertNext(found -> assertThat(found).extracting(SecurityUser::id).contains(user.id()))
+                .verifyComplete();
+    }
+
+    @Test
+    void access_audit_repository_saves_an_event_and_finds_it_by_correlation_id() {
+        client.ensureNamespaceAndDatabase()
+                .then(client.execute("DEFINE TABLE IF NOT EXISTS access_event SCHEMALESS;", Map.of()))
+                .block();
+
+        AccessAuditRepository repository = new SurrealAccessAuditRepository(client);
+        String correlationId = "surreal-it-audit-" + UUID.randomUUID();
+        AccessEvent event = new AccessEvent(UUID.randomUUID(), UUID.randomUUID(), "req-1", correlationId,
+                new TenantId("surreal-it-audit-tenant"), new ApplicationId(UUID.randomUUID()), "test-subject",
+                new ResourcePath("/estudiantes"), HttpVerb.GET, DecisionState.DENY, ReasonCode.NO_APPLICABLE_POLICY,
+                Instant.now());
+
+        StepVerifier.create(repository.save(event)).verifyComplete();
+
+        StepVerifier.create(repository.findByCorrelationId(correlationId).collectList())
+                .assertNext(found -> assertThat(found).extracting(AccessEvent::eventId).containsExactly(event.eventId()))
+                .verifyComplete();
+    }
+
+    @Test
+    void access_audit_repository_finds_both_events_sharing_a_correlation_id() {
+        client.ensureNamespaceAndDatabase()
+                .then(client.execute("DEFINE TABLE IF NOT EXISTS access_event SCHEMALESS;", Map.of()))
+                .block();
+
+        AccessAuditRepository repository = new SurrealAccessAuditRepository(client);
+        String correlationId = "surreal-it-audit-shared-" + UUID.randomUUID();
+        TenantId tenant = new TenantId("surreal-it-audit-shared-tenant");
+        ApplicationId application = new ApplicationId(UUID.randomUUID());
+        AccessEvent first = new AccessEvent(UUID.randomUUID(), UUID.randomUUID(), "req-1", correlationId, tenant,
+                application, "test-subject", new ResourcePath("/estudiantes"), HttpVerb.GET, DecisionState.DENY,
+                ReasonCode.NO_APPLICABLE_POLICY, Instant.now());
+        AccessEvent second = new AccessEvent(UUID.randomUUID(), UUID.randomUUID(), "req-2", correlationId, tenant,
+                application, "test-subject", new ResourcePath("/estudiantes"), HttpVerb.GET, DecisionState.ALLOW,
+                ReasonCode.POLICY_ALLOWED, Instant.now());
+
+        StepVerifier.create(repository.save(first)).verifyComplete();
+        StepVerifier.create(repository.save(second)).verifyComplete();
+
+        StepVerifier.create(repository.findByCorrelationId(correlationId).collectList())
+                .assertNext(found -> assertThat(found).extracting(AccessEvent::eventId)
+                        .containsExactlyInAnyOrder(first.eventId(), second.eventId()))
                 .verifyComplete();
     }
 }
