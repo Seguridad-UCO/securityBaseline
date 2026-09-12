@@ -53,6 +53,18 @@ public final class WebContractMessages {
         return "debe ser un número entero";
     }
 
+    public static String mustBeVersion1() {
+        return "debe ser \"1\"";
+    }
+
+    public static String mustBeIso8601() {
+        return "debe ser una fecha en formato ISO 8601";
+    }
+
+    public static String headerBodyMismatch(String field) {
+        return "El valor de '" + field + "' en la cabecera no coincide con el del cuerpo";
+    }
+
     public static String requireErrorCode() {
         return "se requiere código de error de contrato";
     }

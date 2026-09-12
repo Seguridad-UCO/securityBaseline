@@ -68,7 +68,13 @@ public final class RequiredArgumentMessages {
     public static final String APPLICATION_OWNER_LOOKUP_VALIDATOR = "se requiere el validador de dueño de aplicación";
     public static final String EVALUATE_INTERNAL_ACCESS_USE_CASE = "se requiere el caso de uso de acceso interno";
     public static final String INTERNAL_ACCESS_DECISION_INTERACTOR = "se requiere el interactor de decisión interna";
+    public static final String AUTHORIZE_INTERACTOR = "se requiere el interactor de autorización";
     public static final String INTERNAL_MTLS_PROPERTIES = "se requiere la configuración mTLS del canal interno";
+    public static final String INTERNAL_MTLS_TRUST_CERTIFICATE = "se requiere la ruta al certificado de confianza mTLS";
+    public static final String INTERNAL_MTLS_ALLOWED_SUBJECTS = "se requiere la lista de sujetos admitidos por mTLS";
+    public static final String INTERNAL_EVIDENCE_JWK_SET_URI = "se requiere la URL JWKS de la evidencia del canal interno";
+    public static final String INTERNAL_EVIDENCE_ISSUER = "se requiere el emisor esperado de la evidencia del canal interno";
+    public static final String INTERNAL_EVIDENCE_AUDIENCE = "se requiere la audiencia esperada de la evidencia del canal interno";
 
     // Componentes de AccessRequest / AccessDecision (autorizacion).
     public static final String REQUEST_ID = "se requiere el identificador de la solicitud";

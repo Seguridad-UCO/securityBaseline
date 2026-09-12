@@ -307,10 +307,10 @@ Presupuesto total estimado: **18–22 pruebas** — más que el rango orientativ
 | Fase | Estado | Fecha |
 |---|---|---|
 | Plan | ✅ Generado | 2026-09-11 |
-| Contrato aprobado (gate 1) | ⏳ Pendiente | |
-| Pruebas en rojo | ⏳ Pendiente | |
-| Implementación en verde | ⏳ Pendiente | |
-| Validación | ⏳ Pendiente | |
+| Contrato aprobado (gate 1) | ✅ Aprobado | 2026-09-11 |
+| Pruebas en rojo | ✅ 301/301 pendientes por `UnsupportedOperationException` (incluye 6 reescritas + 1 nueva de integración) | 2026-09-11 |
+| Implementación en verde | ✅ 302 pruebas | 2026-09-11 |
+| Validación | ✅ APROBADO — sin bloqueantes | 2026-09-11 |
 | Entrega (gate 2) | ⏳ Pendiente | |
 
 ## 11. Ambigüedades pendientes

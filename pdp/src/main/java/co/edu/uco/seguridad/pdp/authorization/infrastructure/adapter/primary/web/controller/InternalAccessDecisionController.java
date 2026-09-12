@@ -3,6 +3,7 @@ package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.we
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.AccessDecisionRawRequest;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.AccessDecisionInternalWebResponse;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.InternalAccessDecisionInteractor;
+import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,7 +28,7 @@ final class InternalAccessDecisionController {
     private final InternalAccessDecisionInteractor interactor;
 
     InternalAccessDecisionController(InternalAccessDecisionInteractor interactor) {
-        this.interactor = Objects.requireNonNull(interactor);
+        this.interactor = Objects.requireNonNull(interactor, RequiredArgumentMessages.INTERNAL_ACCESS_DECISION_INTERACTOR);
     }
 
     @PostMapping

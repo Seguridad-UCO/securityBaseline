@@ -42,9 +42,12 @@ import javax.crypto.spec.SecretKeySpec;
 import reactor.core.publisher.Mono;
 
 /**
- * Frontera PEP reactiva (ADR-018, ADR-020). Único lugar del proyecto donde se decide qué ruta
- * necesita un token y cómo se valida ese token; ningún módulo de negocio importa una clase de
- * Spring Security.
+ * Frontera del canal BFF, reactiva (ADR-018, ADR-020). Único lugar **para ese canal** donde se
+ * decide qué ruta necesita un token y cómo se valida; ningún módulo de negocio importa una clase de
+ * Spring Security. Desde HU-003 no es el único canal del proyecto: {@code /internal/v1/**} tiene su
+ * propia cadena en {@code InternalSecurityConfiguration}, con su propia confianza (mTLS + evidencia
+ * JWT) — los dos {@code securityMatcher} no se solapan, así que cada uno sigue siendo la única
+ * fuente de verdad dentro de su propio canal.
  */
 @Configuration
 @Profile("!keycloak")

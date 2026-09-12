@@ -2,6 +2,7 @@ package co.edu.uco.seguridad.pdp.applications.application.rule.validator.impl;
 
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationOwnerLookupValidator;
 import co.edu.uco.seguridad.pdp.applications.application.secondaryport.repository.ApplicationRepository;
+import co.edu.uco.seguridad.pdp.applications.domain.exception.ApplicationNotFoundException;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
@@ -19,6 +20,7 @@ public final class ApplicationOwnerLookupValidatorImpl implements ApplicationOwn
 
     @Override
     public Mono<TenantId> execute(ApplicationId input) {
-        throw new UnsupportedOperationException("pendiente: HU-003");
+        return repository.findTenantIdById(input)
+                .switchIfEmpty(Mono.error(() -> new ApplicationNotFoundException(input)));
     }
 }

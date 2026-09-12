@@ -56,7 +56,13 @@ public final class SurrealApplicationRepository implements ApplicationRepository
 
     @Override
     public Mono<TenantId> findTenantIdById(ApplicationId applicationId) {
-        throw new UnsupportedOperationException("pendiente: HU-003");
+        return client.execute(
+                        "SELECT tenantId FROM type::record('%s', $id);".formatted(ApplicationSchema.TABLE),
+                        Map.of("id", applicationId.value().toString()))
+                .flatMap(results -> {
+                    JsonNode rows = results.get(0);
+                    return rows.isEmpty() ? Mono.empty() : Mono.just(new TenantId(rows.get(0).path("tenantId").asString()));
+                });
     }
 
     /**

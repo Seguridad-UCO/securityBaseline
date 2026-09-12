@@ -2,6 +2,15 @@ package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.we
 
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.InternalAccessRequest;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.AccessDecisionRawRequest;
+import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
+import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
+import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
+import co.edu.uco.seguridad.shared.web.RequestFieldParser;
+import co.edu.uco.seguridad.shared.web.exception.MalformedRequestFieldException;
+import co.edu.uco.seguridad.shared.web.message.WebContractMessages;
+
+import java.time.Instant;
+import java.time.format.DateTimeParseException;
 
 /**
  * {@code AccessDecisionRawRequest} (Strings desnudos, según {@code request.schema.json}) →
@@ -15,6 +24,22 @@ public final class AccessDecisionRawRequestMapper {
     }
 
     public static InternalAccessRequest toRequest(AccessDecisionRawRequest raw, String subject) {
-        throw new UnsupportedOperationException("pendiente: HU-003");
+        String version = RequestFieldParser.requirePresent("version", raw.version());
+        if (!"1".equals(version)) {
+            throw new MalformedRequestFieldException("version", WebContractMessages.mustBeVersion1());
+        }
+
+        ApplicationId applicationId = RequestFieldParser.parse("applicationId", raw.application().id(), ApplicationId::of);
+        ResourcePath resourcePath = RequestFieldParser.parse("resourcePath", raw.resource().path(), ResourcePath::new);
+        HttpVerb action = RequestFieldParser.parse("action", raw.resource().action(), HttpVerb::parse);
+
+        String timestamp = RequestFieldParser.requirePresent("timestamp", raw.timestamp());
+        try {
+            Instant.parse(timestamp);
+        } catch (DateTimeParseException cause) {
+            throw new MalformedRequestFieldException("timestamp", WebContractMessages.mustBeIso8601());
+        }
+
+        return new InternalAccessRequest(subject, applicationId, resourcePath, action, raw.requestId(), raw.correlationId());
     }
 }

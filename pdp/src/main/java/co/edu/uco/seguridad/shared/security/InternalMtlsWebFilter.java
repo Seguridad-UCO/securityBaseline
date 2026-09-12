@@ -1,11 +1,14 @@
 package co.edu.uco.seguridad.shared.security;
 
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.server.reactive.SslInfo;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
+import java.security.cert.X509Certificate;
 import java.util.Objects;
 
 /**
@@ -31,6 +34,20 @@ public final class InternalMtlsWebFilter implements WebFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        throw new UnsupportedOperationException("pendiente: HU-003");
+        SslInfo sslInfo = exchange.getRequest().getSslInfo();
+        X509Certificate[] peerCertificates = sslInfo == null ? null : sslInfo.getPeerCertificates();
+        if (peerCertificates == null || peerCertificates.length == 0) {
+            return reject(exchange);
+        }
+        String subject = peerCertificates[0].getSubjectX500Principal().getName();
+        if (!properties.allowedSubjects().contains(subject)) {
+            return reject(exchange);
+        }
+        return chain.filter(exchange);
+    }
+
+    private static Mono<Void> reject(ServerWebExchange exchange) {
+        exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
+        return exchange.getResponse().setComplete();
     }
 }
