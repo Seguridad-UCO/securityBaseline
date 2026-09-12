@@ -5,6 +5,8 @@ import co.edu.uco.seguridad.pdp.applications.domain.exception.ApplicationNotFoun
 import co.edu.uco.seguridad.pdp.assignments.application.primaryport.request.ResolveActiveRolesRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AccessRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.response.AccessDecision;
+import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.AccessAuditRepository;
+import co.edu.uco.seguridad.pdp.authorization.domain.event.AccessEvent;
 import co.edu.uco.seguridad.pdp.authorization.domain.model.DecisionState;
 import co.edu.uco.seguridad.pdp.authorization.domain.model.ReasonCode;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
@@ -14,6 +16,7 @@ import co.edu.uco.seguridad.pdp.resources.domain.exception.ProtectedResourceNotF
 import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
 import org.junit.jupiter.api.Test;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -49,12 +52,28 @@ class AuthorizeUseCaseImplTests {
     private static final co.edu.uco.seguridad.pdp.authorization.application.rule.validator.ActiveRoleNamesLookupValidator NEVER_ROLES_LOOKUP =
             request -> { throw new AssertionError("must not reach the roles lookup"); };
 
+    // Fake comun para los casos que no ejercitan la auditoria directamente: recordAudit(...) es el
+    // ultimo paso de la cadena y se alcanza sin importar que camino produjo la decision (HU-007,
+    // criterio 1: toda decision emite evento), asi que este fake acepta el guardado en silencio en
+    // vez de tratarlo como un colaborador que no deberia alcanzarse.
+    private static final AccessAuditRepository ACCEPTING_AUDIT = new AccessAuditRepository() {
+        @Override
+        public Mono<Void> save(AccessEvent event) {
+            return Mono.empty();
+        }
+
+        @Override
+        public Flux<AccessEvent> findByCorrelationId(String correlationId) {
+            throw new AssertionError("must not reach the audit query");
+        }
+    };
+
     @Test
     void reports_tenant_mismatch_when_the_application_does_not_exist() {
         AuthorizeUseCaseImpl useCase = new AuthorizeUseCaseImpl(
                 query -> Mono.error(new ApplicationNotFoundException(query.applicationId())),
                 lookup -> { throw new AssertionError("must not reach the resource lookup"); },
-                NEVER_ROLES_LOOKUP,
+                NEVER_ROLES_LOOKUP, ACCEPTING_AUDIT,
                 request -> { throw new AssertionError("must not reach the policy port"); },
                 () -> DECISION_ID, () -> DECIDED_AT);
 
@@ -83,7 +102,7 @@ class AuthorizeUseCaseImplTests {
                     return Mono.error(new ApplicationNotFoundException(query.applicationId()));
                 },
                 lookup -> { throw new AssertionError("must not reach the resource lookup"); },
-                NEVER_ROLES_LOOKUP,
+                NEVER_ROLES_LOOKUP, ACCEPTING_AUDIT,
                 request -> { throw new AssertionError("must not reach the policy port"); },
                 () -> DECISION_ID, () -> DECIDED_AT);
 
@@ -104,7 +123,7 @@ class AuthorizeUseCaseImplTests {
         AuthorizeUseCaseImpl useCase = new AuthorizeUseCaseImpl(
                 query -> Mono.empty(),
                 lookup -> Mono.error(new ProtectedResourceNotFoundException(lookup.applicationId(), lookup.path(), lookup.method())),
-                NEVER_ROLES_LOOKUP,
+                NEVER_ROLES_LOOKUP, ACCEPTING_AUDIT,
                 request -> { throw new AssertionError("must not reach the policy port"); },
                 () -> DECISION_ID, () -> DECIDED_AT);
 
@@ -123,9 +142,11 @@ class AuthorizeUseCaseImplTests {
         AccessDecision expected = new AccessDecision(UUID.randomUUID(), DecisionState.DENY,
                 ReasonCode.NO_APPLICABLE_POLICY, List.of(), "req-1", "corr-1", Instant.parse("2026-09-06T00:00:00Z"));
         AuthorizeUseCaseImpl useCase = new AuthorizeUseCaseImpl(
-                query -> Mono.empty(), lookup -> Mono.empty(), NEVER_ROLES_LOOKUP, request -> Mono.just(expected),
-                () -> { throw new AssertionError("must not generate an id: the port already returned a decision"); },
-                () -> { throw new AssertionError("must not generate a time: the port already returned a decision"); });
+                query -> Mono.empty(), lookup -> Mono.empty(), NEVER_ROLES_LOOKUP, ACCEPTING_AUDIT,
+                request -> Mono.just(expected),
+                // recordAudit(...) si genera un eventId y un instante propios para el evento de
+                // auditoria, aunque la decision ya venga resuelta del puerto de politicas.
+                () -> DECISION_ID, () -> DECIDED_AT);
 
         StepVerifier.create(useCase.execute(REQUEST))
                 .expectNext(expected)
@@ -143,12 +164,14 @@ class AuthorizeUseCaseImplTests {
                     assertThat(request).isEqualTo(new ResolveActiveRolesRequest(USER_ID, APPLICATION));
                     return Mono.just(Set.of("Coordinador académico"));
                 },
+                ACCEPTING_AUDIT,
                 request -> {
                     received.add(request);
                     return Mono.just(expected);
                 },
-                () -> { throw new AssertionError("must not generate an id: the port already returned a decision"); },
-                () -> { throw new AssertionError("must not generate a time: the port already returned a decision"); });
+                // recordAudit(...) si genera un eventId y un instante propios para el evento de
+                // auditoria, aunque la decision ya venga resuelta del puerto de politicas.
+                () -> DECISION_ID, () -> DECIDED_AT);
 
         StepVerifier.create(useCase.execute(REQUEST_WITH_USER))
                 .expectNext(expected)
@@ -161,7 +184,7 @@ class AuthorizeUseCaseImplTests {
     @Test
     void reports_indeterminate_when_the_policy_port_fails() {
         AuthorizeUseCaseImpl useCase = new AuthorizeUseCaseImpl(
-                query -> Mono.empty(), lookup -> Mono.empty(), NEVER_ROLES_LOOKUP,
+                query -> Mono.empty(), lookup -> Mono.empty(), NEVER_ROLES_LOOKUP, ACCEPTING_AUDIT,
                 request -> Mono.error(new RuntimeException("OPA unreachable")),
                 () -> DECISION_ID, () -> DECIDED_AT);
 
@@ -179,7 +202,7 @@ class AuthorizeUseCaseImplTests {
         AuthorizeUseCaseImpl useCase = new AuthorizeUseCaseImpl(
                 query -> Mono.error(new RuntimeException("SurrealDB unreachable")),
                 lookup -> { throw new AssertionError("must not reach the resource lookup"); },
-                NEVER_ROLES_LOOKUP,
+                NEVER_ROLES_LOOKUP, ACCEPTING_AUDIT,
                 request -> { throw new AssertionError("must not reach the policy port"); },
                 () -> DECISION_ID, () -> DECIDED_AT);
 
@@ -189,6 +212,66 @@ class AuthorizeUseCaseImplTests {
                     assertThat(decision.reasonCode()).isEqualTo(ReasonCode.CONTEXT_UNAVAILABLE);
                     assertThat(decision.decisionId()).isEqualTo(DECISION_ID);
                 })
+                .verifyComplete();
+    }
+
+    @Test
+    void records_an_audit_event_matching_the_returned_decision() {
+        AccessDecision expected = new AccessDecision(DECISION_ID, DecisionState.DENY, ReasonCode.NO_APPLICABLE_POLICY,
+                List.of(), "req-1", "corr-1", DECIDED_AT);
+        List<AccessEvent> saved = new ArrayList<>();
+        AccessAuditRepository capturingAudit = new AccessAuditRepository() {
+            @Override
+            public Mono<Void> save(AccessEvent event) {
+                saved.add(event);
+                return Mono.empty();
+            }
+
+            @Override
+            public Flux<AccessEvent> findByCorrelationId(String correlationId) {
+                throw new AssertionError("must not reach the audit query");
+            }
+        };
+        AuthorizeUseCaseImpl useCase = new AuthorizeUseCaseImpl(query -> Mono.empty(), lookup -> Mono.empty(),
+                NEVER_ROLES_LOOKUP, capturingAudit, request -> Mono.just(expected),
+                // recordAudit(...) si genera un eventId y un instante propios para el evento de
+                // auditoria, aunque la decision ya venga resuelta del puerto de politicas.
+                () -> DECISION_ID, () -> DECIDED_AT);
+
+        StepVerifier.create(useCase.execute(REQUEST))
+                .expectNext(expected)
+                .verifyComplete();
+
+        assertThat(saved).hasSize(1);
+        assertThat(saved.getFirst().decisionId()).isEqualTo(expected.decisionId());
+        assertThat(saved.getFirst().correlationId()).isEqualTo(expected.correlationId());
+        assertThat(saved.getFirst().state()).isEqualTo(expected.state());
+        assertThat(saved.getFirst().reasonCode()).isEqualTo(expected.reasonCode());
+    }
+
+    @Test
+    void an_audit_failure_does_not_alter_the_returned_decision() {
+        AccessDecision expected = new AccessDecision(DECISION_ID, DecisionState.DENY, ReasonCode.NO_APPLICABLE_POLICY,
+                List.of(), "req-1", "corr-1", DECIDED_AT);
+        AccessAuditRepository failingAudit = new AccessAuditRepository() {
+            @Override
+            public Mono<Void> save(AccessEvent event) {
+                return Mono.error(new RuntimeException("SurrealDB unreachable"));
+            }
+
+            @Override
+            public Flux<AccessEvent> findByCorrelationId(String correlationId) {
+                throw new AssertionError("must not reach the audit query");
+            }
+        };
+        AuthorizeUseCaseImpl useCase = new AuthorizeUseCaseImpl(query -> Mono.empty(), lookup -> Mono.empty(),
+                NEVER_ROLES_LOOKUP, failingAudit, request -> Mono.just(expected),
+                // recordAudit(...) si genera un eventId y un instante propios para el evento de
+                // auditoria, aunque la decision ya venga resuelta del puerto de politicas.
+                () -> DECISION_ID, () -> DECIDED_AT);
+
+        StepVerifier.create(useCase.execute(REQUEST))
+                .expectNext(expected)
                 .verifyComplete();
     }
 }

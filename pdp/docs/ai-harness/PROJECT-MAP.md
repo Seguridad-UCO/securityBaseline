@@ -3,8 +3,8 @@
 > Generado por `.claude/tools/mapa.ps1`. **No editar a mano** - se regenera desde el codigo.
 > Es el nivel 0 del grafo de conocimiento: responde "que existe y donde va lo nuevo".
 
-- Clases de produccion: **419**
-- Clases de prueba: **134**
+- Clases de produccion: **426**
+- Clases de prueba: **136**
 - Slices de negocio: **8** (applications, assignments, authorization, commons, identity, resources, roles, tenants)
 
 ---
@@ -72,16 +72,17 @@
 | Esquema de tabla | `AssignmentSchema`, `SurrealAssignmentSchemaInitializer` |
 | Cableado (@Bean) | `AssignmentsConfiguration` |
 
-### `authorization` - 41 clases
+### `authorization` - 48 clases
 
 | Rol | Clases |
 |---|---|
 | Value object | `DecisionState`, `PolicyReference`, `ReasonCode` |
+| Evento de dominio | `AccessEvent` |
 | Caso de uso (impl) | `AuthorizeUseCaseImpl`, `EvaluateInternalAccessUseCaseImpl` |
 | Caso de uso (contrato) | `AuthorizeUseCase`, `EvaluateInternalAccessUseCase` |
 | Validador de reglas (impl) | `ActiveRoleNamesLookupValidatorImpl` |
 | Validador de reglas (contrato) | `ActiveRoleNamesLookupValidator` |
-| Puerto de salida | `PolicyDecisionPort` |
+| Puerto de salida | `AccessAuditRepository`, `PolicyDecisionPort` |
 | DTO de entrada al nucleo | `AccessRequest`, `InternalAccessRequest` |
 | DTO de salida del nucleo | `AccessDecision` |
 | Controller | `AuthorizationController`, `InternalAccessDecisionController` |
@@ -90,6 +91,10 @@
 | Interactor (impl) | `AuthorizeInteractorImpl`, `InternalAccessDecisionInteractorImpl` |
 | Interactor (contrato) | `AuthorizeInteractor`, `InternalAccessDecisionInteractor` |
 | Mapper web | `AccessDecisionInternalResponseMapper`, `AccessDecisionRawRequestMapper`, `AccessDecisionResponseMapper`, `AuthorizeRequestMapper` |
+| Entidad de persistencia | `AccessEventEntity` |
+| Mapper de persistencia | `AccessEventPersistenceMapper` |
+| Adaptador de repositorio | `SurrealAccessAuditRepository` |
+| Esquema de tabla | `AccessEventSchema`, `SurrealAccessEventSchemaInitializer` |
 | Cableado (@Bean) | `AuthorizationConfiguration` |
 | Propiedades | `OpaProperties` |
 | Otro | `OpaApplication`, `OpaEvaluationInput`, `OpaEvaluationRequest`, `OpaPolicyDecisionAdapter`, `OpaPolicyDecisionPayload`, `OpaPolicyReference`, `OpaRequestInfo`, `OpaResource`, `OpaResponse`, `OpaSubject`, `OpaTenant` |
@@ -256,6 +261,7 @@
 
 | Puerto | Implementado por |
 |---|---|
+| `AccessAuditRepository` | `SurrealAccessAuditRepository` |
 | `ApplicationRepository` | `SurrealApplicationRepository` |
 | `AssignmentRepository` | `SurrealAssignmentRepository` |
 | `PolicyDecisionPort` | `OpaPolicyDecisionAdapter` |
@@ -299,7 +305,7 @@
 |---|---|
 | `pdp/applications` | `ApplicationBaseUrlTests`, `ApplicationCatalogPropertiesTests`, `ApplicationControllerTests`, `ApplicationCriteriaTests`, `ApplicationHttpTests`, `ApplicationMustExistForTenantValidatorTests`, `ApplicationOwnerLookupValidatorImplTests`, `ApplicationPersistenceMapperTests`, `ApplicationResponseMapperTests`, `ApplicationRuleTests`, `ListApplicationsRequestMapperTests`, `ListApplicationsUseCaseImplTests`, `RegisterApplicationRequestMapperTests`, `RegisterApplicationRulesValidatorTests`, `RegisterApplicationUseCaseImplTests`, `RemoveApplicationUseCaseImplTests` |
 | `pdp/assignments` | `AssignmentControllerTests`, `AssignmentCriteriaTests`, `AssignmentHttpTests`, `AssignmentMustExistForTenantRuleImplTests`, `AssignmentMustNotDuplicateActiveRuleImplTests`, `AssignmentPersistenceMapperTests`, `AssignmentResponseMapperTests`, `AssignmentTests`, `AssignRoleRequestMapperTests`, `AssignRoleRulesValidatorImplTests`, `AssignRoleUseCaseImplTests`, `ListAssignmentsRequestMapperTests`, `ListAssignmentsUseCaseImplTests`, `ResolveActiveRolesUseCaseImplTests`, `RevokeAssignmentRequestMapperTests`, `RevokeAssignmentRulesValidatorImplTests`, `RevokeAssignmentUseCaseImplTests`, `ValidityTests` |
-| `pdp/authorization` | `AccessDecisionInternalResponseMapperTests`, `AccessDecisionRawRequestMapperTests`, `AccessDecisionResponseMapperTests`, `ActiveRoleNamesLookupValidatorImplTests`, `AuthorizationControllerTests`, `AuthorizationHttpTests`, `AuthorizeRequestMapperTests`, `AuthorizeUseCaseImplTests`, `DecisionStateTests`, `EvaluateInternalAccessUseCaseImplTests`, `InternalAccessDecisionControllerTests`, `InternalAccessDecisionInteractorImplTests`, `InternalSecurityChainIntegrationTests`, `OpaFixtureServer`, `OpaPolicyDecisionAdapterTests` |
+| `pdp/authorization` | `AccessDecisionInternalResponseMapperTests`, `AccessDecisionRawRequestMapperTests`, `AccessDecisionResponseMapperTests`, `AccessEventPersistenceMapperTests`, `AccessEventTests`, `ActiveRoleNamesLookupValidatorImplTests`, `AuthorizationControllerTests`, `AuthorizationHttpTests`, `AuthorizeRequestMapperTests`, `AuthorizeUseCaseImplTests`, `DecisionStateTests`, `EvaluateInternalAccessUseCaseImplTests`, `InternalAccessDecisionControllerTests`, `InternalAccessDecisionInteractorImplTests`, `InternalSecurityChainIntegrationTests`, `OpaFixtureServer`, `OpaPolicyDecisionAdapterTests` |
 | `pdp/commons` | `PageWindowTests`, `ResultPageTests`, `ValueObjectTests` |
 | `pdp/identity` | `AssignTenantRequestMapperTests`, `AssignTenantUseCaseImplTests`, `EmailTests`, `ProvisionIdentityUseCaseImplTests`, `SecurityUserPersistenceMapperTests`, `UserControllerTests`, `UserMustExistRuleTests`, `UserMustExistValidatorImplTests`, `UserResponseMapperTests` |
 | `pdp/resources` | `HttpVerbTests`, `InMemoryAuditAdapterTests`, `ProtectedResourceControllerTests`, `ProtectedResourceMustBeUniqueRuleTests`, `ProtectedResourceMustExistRuleTests`, `ProtectedResourceMustExistValidatorTests`, `ProtectedResourceOwnerLookupValidatorImplTests`, `ProtectedResourceResponseMapperTests`, `RegisterProtectedResourceRequestMapperTests`, `RegisterProtectedResourceRulesValidatorTests`, `RegisterProtectedResourceUseCaseImplTests`, `ResourcePathTests` |

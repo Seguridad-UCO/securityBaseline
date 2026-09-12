@@ -7,8 +7,10 @@ import co.edu.uco.seguridad.pdp.assignments.application.primaryport.request.Reso
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AccessRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.response.AccessDecision;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.ActiveRoleNamesLookupValidator;
+import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.AccessAuditRepository;
 import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.PolicyDecisionPort;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.AuthorizeUseCase;
+import co.edu.uco.seguridad.pdp.authorization.domain.event.AccessEvent;
 import co.edu.uco.seguridad.pdp.authorization.domain.model.DecisionState;
 import co.edu.uco.seguridad.pdp.authorization.domain.model.ReasonCode;
 import co.edu.uco.seguridad.pdp.resources.application.primaryport.request.ProtectedResourceLookup;
@@ -17,6 +19,8 @@ import co.edu.uco.seguridad.pdp.resources.domain.exception.ProtectedResourceNotF
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -30,21 +34,26 @@ import java.util.Objects;
  */
 public final class AuthorizeUseCaseImpl implements AuthorizeUseCase {
 
+    private static final Logger LOG = LoggerFactory.getLogger(AuthorizeUseCaseImpl.class);
+
     private final ApplicationMustExistForTenantValidator applicationMustExist;
     private final ProtectedResourceMustExistValidator resourceMustExist;
     private final ActiveRoleNamesLookupValidator rolesLookup;
+    private final AccessAuditRepository audit;
     private final PolicyDecisionPort policyDecisionPort;
     private final IdentifierGenerator identifiers;
     private final TimeProvider time;
 
     public AuthorizeUseCaseImpl(ApplicationMustExistForTenantValidator applicationMustExist,
             ProtectedResourceMustExistValidator resourceMustExist, ActiveRoleNamesLookupValidator rolesLookup,
-            PolicyDecisionPort policyDecisionPort, IdentifierGenerator identifiers, TimeProvider time) {
+            AccessAuditRepository audit, PolicyDecisionPort policyDecisionPort, IdentifierGenerator identifiers,
+            TimeProvider time) {
         this.applicationMustExist = Objects.requireNonNull(applicationMustExist,
                 RequiredArgumentMessages.APPLICATION_EXISTS_VALIDATOR);
         this.resourceMustExist = Objects.requireNonNull(resourceMustExist,
                 RequiredArgumentMessages.PROTECTED_RESOURCE_EXISTS_VALIDATOR);
         this.rolesLookup = Objects.requireNonNull(rolesLookup, RequiredArgumentMessages.ACTIVE_ROLE_NAMES_LOOKUP_VALIDATOR);
+        this.audit = Objects.requireNonNull(audit, RequiredArgumentMessages.ACCESS_AUDIT_REPOSITORY);
         this.policyDecisionPort = Objects.requireNonNull(policyDecisionPort,
                 RequiredArgumentMessages.POLICY_DECISION_PORT);
         this.identifiers = Objects.requireNonNull(identifiers, RequiredArgumentMessages.IDENTIFIER_GENERATOR);
@@ -65,7 +74,27 @@ public final class AuthorizeUseCaseImpl implements AuthorizeUseCase {
                         error -> Mono.just(deny(input, ReasonCode.TENANT_MISMATCH)))
                 .onErrorResume(ProtectedResourceNotFoundException.class,
                         error -> Mono.just(deny(input, ReasonCode.NO_APPLICABLE_POLICY)))
-                .onErrorResume(error -> Mono.just(indeterminate(input)));
+                .onErrorResume(error -> Mono.just(indeterminate(input)))
+                .flatMap(decision -> recordAudit(input, decision));
+    }
+
+    /**
+     * Se alcanza sin importar qué camino produjo la decisión — el último paso de la cadena, después
+     * de los tres {@code onErrorResume} (HU-007, criterio 1). Un fallo al auditar se registra por
+     * log y nunca cambia la decisión ya calculada (criterio 5): {@code onErrorResume} aquí no es
+     * fail-closed hacia el cliente, es "la auditoría es un problema de auditoría, no de la petición".
+     */
+    private Mono<AccessDecision> recordAudit(AccessRequest input, AccessDecision decision) {
+        AccessEvent event = new AccessEvent(identifiers.next(), decision.decisionId(), input.requestId(),
+                input.correlationId(), input.tenantId(), input.applicationId(), input.subject(),
+                input.resourcePath(), input.action(), decision.state(), decision.reasonCode(), time.now());
+        return audit.save(event)
+                .onErrorResume(error -> {
+                    LOG.error("no se pudo registrar la evidencia de auditoría para la decisión {}",
+                            decision.decisionId(), error);
+                    return Mono.empty();
+                })
+                .thenReturn(decision);
     }
 
     /**
