@@ -28,9 +28,9 @@ final class ReactiveProxyAdapter implements ForwardHttpRequest {
     private final WebClient client;
     private final ProxyProperties properties;
 
-    ReactiveProxyAdapter(ProxyProperties properties) {
+    ReactiveProxyAdapter(ProxyProperties properties, WebClient.Builder builder) {
         this.properties = properties;
-        this.client = WebClient.builder().clientConnector(new ReactorClientHttpConnector(
+        this.client = builder.clone().clientConnector(new ReactorClientHttpConnector(
                 HttpClient.create().followRedirect(false)
                         .option(io.netty.channel.ChannelOption.CONNECT_TIMEOUT_MILLIS, Math.toIntExact(properties.connectTimeout().toMillis()))
                         .responseTimeout(properties.timeout()))).build();

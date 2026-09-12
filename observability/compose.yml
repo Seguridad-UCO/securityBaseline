@@ -1,0 +1,69 @@
+name: security-observability
+services:
+  collector:
+    image: otel/opentelemetry-collector-contrib:0.160.0
+    user: "0:0"
+    command: ["--config=/etc/otelcol/config.yml"]
+    volumes:
+      - ./collector.yml:/etc/otelcol/config.yml:ro
+      - ./logs:/var/log/security:ro
+      - collector-data:/var/lib/otelcol
+    environment:
+      PDP_METRICS_TARGET: ${PDP_METRICS_TARGET:-host.docker.internal:9080}
+      PEP_METRICS_TARGET: ${PEP_METRICS_TARGET:-host.docker.internal:9081}
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    ports:
+      - "127.0.0.1:4318:4318"
+      - "127.0.0.1:13133:13133"
+    depends_on: [jaeger, loki]
+    restart: unless-stopped
+  jaeger:
+    image: jaegertracing/jaeger:2.20.0
+    user: "0:0"
+    command: ["--config=/etc/jaeger/config.yml"]
+    volumes:
+      - ./jaeger.yml:/etc/jaeger/config.yml:ro
+      - jaeger-data:/var/lib/jaeger
+    ports: ["127.0.0.1:16686:16686"]
+    restart: unless-stopped
+  loki:
+    image: grafana/loki:3.7.7
+    command: ["-config.file=/etc/loki/local.yml"]
+    volumes:
+      - ./loki.yml:/etc/loki/local.yml:ro
+      - loki-data:/loki
+    ports: ["127.0.0.1:3100:3100"]
+    restart: unless-stopped
+  prometheus:
+    image: prom/prometheus:v3.14.0
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=15d
+      - --storage.tsdb.retention.size=2GB
+      - --enable-feature=exemplar-storage
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports: ["127.0.0.1:9091:9090"]
+    depends_on: [collector]
+    restart: unless-stopped
+  grafana:
+    image: grafana/grafana:13.2.1
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Define GRAFANA_ADMIN_PASSWORD en observability/.env}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    ports: ["127.0.0.1:3001:3000"]
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on: [prometheus, loki, jaeger]
+    restart: unless-stopped
+volumes:
+  collector-data:
+  jaeger-data:
+  loki-data:
+  prometheus-data:
+  grafana-data:

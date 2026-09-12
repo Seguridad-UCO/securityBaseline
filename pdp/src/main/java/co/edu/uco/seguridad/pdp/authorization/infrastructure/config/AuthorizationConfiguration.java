@@ -10,6 +10,8 @@ import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.p
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceMustExistValidator;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
+import co.edu.uco.seguridad.shared.observability.ReactiveTelemetry;
+import io.micrometer.observation.ObservationRegistry;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -25,8 +27,12 @@ public class AuthorizationConfiguration {
     @Bean
     AuthorizeUseCase authorizeUseCase(ApplicationMustExistForTenantValidator applicationMustExist,
             ProtectedResourceMustExistValidator resourceMustExist, PolicyDecisionPort policyDecisionPort,
-            IdentifierGenerator identifiers, TimeProvider time) {
-        return new AuthorizeUseCaseImpl(applicationMustExist, resourceMustExist, policyDecisionPort, identifiers, time);
+            IdentifierGenerator identifiers, TimeProvider time, ObservationRegistry observations) {
+        var delegate = new AuthorizeUseCaseImpl(applicationMustExist, resourceMustExist, policyDecisionPort, identifiers, time);
+        return input -> ReactiveTelemetry.observe("security.authorization", observations,
+                io.micrometer.common.KeyValues.of("decision", "none", "reason", "none"), () -> delegate.execute(input),
+                (observation, decision) -> observation.lowCardinalityKeyValue("decision", decision.state().name())
+                        .lowCardinalityKeyValue("reason", decision.reasonCode().name()));
     }
 
     @Bean

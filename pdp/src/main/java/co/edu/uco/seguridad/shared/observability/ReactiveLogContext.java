@@ -10,13 +10,15 @@ public final class ReactiveLogContext {
     private ReactiveLogContext() { }
     public static <T> Function<Mono<T>, Mono<T>> withContext(Logger log, String event) {
         return upstream -> Mono.deferContextual(context -> upstream
-            .doOnSuccess(value -> log(log, context, event, "outcome=success"))
-            .doOnError(error -> log(log, context, event, "outcome=error type=" + error.getClass().getSimpleName())));
+            .doOnSuccess(value -> log(log, context, event, "success", "none"))
+            .doOnError(error -> log(log, context, event, "error", error.getClass().getSimpleName())));
     }
-    private static void log(Logger logger, reactor.util.context.ContextView context, String event, String outcome) {
+    private static void log(Logger logger, reactor.util.context.ContextView context, String event, String outcome, String errorType) {
         try (MDC.MDCCloseable request = MDC.putCloseable("requestId", context.getOrDefault("requestId", ""));
              MDC.MDCCloseable correlation = MDC.putCloseable("correlationId", context.getOrDefault("correlationId", ""))) {
-            logger.info("{} {}", event, outcome);
+            logger.atInfo().addKeyValue("event.name", event).addKeyValue("operation", event)
+                    .addKeyValue("outcome", outcome).addKeyValue("error.type", errorType)
+                    .log("Operación finalizada");
         }
     }
 }

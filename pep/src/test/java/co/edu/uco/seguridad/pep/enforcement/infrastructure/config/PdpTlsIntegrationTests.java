@@ -51,20 +51,20 @@ class PdpTlsIntegrationTests {
                     new AccessRequest.Context("GET", "HTTP"));
             var request = new EnforceAccessRequest(input, new IdentityEvidence("fixture-evidence"));
             var valid = properties("https://localhost:" + server.port(), false, cert, cert, key);
-            var client = config.decisionPort(config.pdpWebClient(valid), valid, new SimpleMeterRegistry());
+            var client = config.decisionPort(config.pdpWebClient(valid, org.springframework.web.reactive.function.client.WebClient.builder()), valid, new SimpleMeterRegistry());
             assertThat(client.execute(request).block(Duration.ofSeconds(5)).decision()).isEqualTo(AccessDecision.Decision.ALLOW);
             assertThat(evaluated.get()).isEqualTo(1);
 
             var noCertificate = properties("https://localhost:" + server.port(), true, cert, null, null);
-            var anonymous = config.decisionPort(config.pdpWebClient(noCertificate), noCertificate, new SimpleMeterRegistry());
+            var anonymous = config.decisionPort(config.pdpWebClient(noCertificate, org.springframework.web.reactive.function.client.WebClient.builder()), noCertificate, new SimpleMeterRegistry());
             assertThatThrownBy(() -> anonymous.execute(request).block(Duration.ofSeconds(5))).isInstanceOf(EnforcementFailure.class);
 
             var wrongHost = properties("https://127.0.0.1:" + server.port(), false, cert, cert, key);
-            var wrong = config.decisionPort(config.pdpWebClient(wrongHost), wrongHost, new SimpleMeterRegistry());
+            var wrong = config.decisionPort(config.pdpWebClient(wrongHost, org.springframework.web.reactive.function.client.WebClient.builder()), wrongHost, new SimpleMeterRegistry());
             assertThatThrownBy(() -> wrong.execute(request).block(Duration.ofSeconds(5))).isInstanceOf(EnforcementFailure.class);
 
             var untrusted = properties("https://localhost:" + server.port(), true, null, cert, key);
-            var foreign = config.decisionPort(config.pdpWebClient(untrusted), untrusted, new SimpleMeterRegistry());
+            var foreign = config.decisionPort(config.pdpWebClient(untrusted, org.springframework.web.reactive.function.client.WebClient.builder()), untrusted, new SimpleMeterRegistry());
             assertThatThrownBy(() -> foreign.execute(request).block(Duration.ofSeconds(5))).isInstanceOf(EnforcementFailure.class);
             assertThat(evaluated.get()).isEqualTo(1);
         } finally {
