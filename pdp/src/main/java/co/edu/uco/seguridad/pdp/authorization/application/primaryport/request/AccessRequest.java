@@ -2,18 +2,26 @@ package co.edu.uco.seguridad.pdp.authorization.application.primaryport.request;
 
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
+import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * Entrada normalizada del PEP a evaluar (corresponde a {@code SolicitudAcceso} del dominio
  * aceptado). El sujeto y el inquilino llegan del principal autenticado, nunca del cuerpo.
+ * {@code subjectUserId} (HU-008) es el identificador interno ya resuelto del sujeto, cuando el
+ * canal de entrada lo tiene — hoy solo el canal BFF; el interno (PEP) sigue sin él. Lo pone el
+ * mapper/interactor. {@code subjectRoles} lo llena {@code AuthorizeUseCaseImpl} a partir de
+ * {@code subjectUserId} antes de llamar a {@code PolicyDecisionPort} — arranca vacío.
  */
 public record AccessRequest(TenantId tenantId, String subject, ApplicationId applicationId,
-        ResourcePath resourcePath, HttpVerb action, String requestId, String correlationId) {
+        ResourcePath resourcePath, HttpVerb action, String requestId, String correlationId,
+        Optional<UserId> subjectUserId, Set<String> subjectRoles) {
 
     public AccessRequest {
         Objects.requireNonNull(tenantId, RequiredArgumentMessages.TENANT_ID);
@@ -23,5 +31,13 @@ public record AccessRequest(TenantId tenantId, String subject, ApplicationId app
         Objects.requireNonNull(action, RequiredArgumentMessages.HTTP_METHOD);
         Objects.requireNonNull(requestId, RequiredArgumentMessages.REQUEST_ID);
         Objects.requireNonNull(correlationId, RequiredArgumentMessages.CORRELATION_ID);
+        Objects.requireNonNull(subjectUserId, RequiredArgumentMessages.PRINCIPAL_USER_ID);
+        subjectRoles = Set.copyOf(Objects.requireNonNull(subjectRoles, RequiredArgumentMessages.SUBJECT_ROLES));
+    }
+
+    /** Nuevo {@code AccessRequest} con los roles resueltos — el resto de los campos no cambia. */
+    public AccessRequest withSubjectRoles(Set<String> roles) {
+        return new AccessRequest(tenantId, subject, applicationId, resourcePath, action, requestId, correlationId,
+                subjectUserId, roles);
     }
 }

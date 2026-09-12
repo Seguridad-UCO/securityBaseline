@@ -23,6 +23,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -72,7 +73,7 @@ public final class OpaPolicyDecisionAdapter implements PolicyDecisionPort {
         return new OpaEvaluationInput(
                 SCHEMA_VERSION,
                 new OpaRequestInfo(input.requestId(), input.correlationId()),
-                new OpaSubject(input.subject(), SUBJECT_TYPE, input.tenantId().value()),
+                new OpaSubject(input.subject(), SUBJECT_TYPE, input.tenantId().value(), List.copyOf(input.subjectRoles())),
                 new OpaTenant(input.tenantId().value()),
                 new OpaApplication(input.applicationId().value().toString()),
                 new OpaResource(RESOURCE_TYPE, input.resourcePath().value()),

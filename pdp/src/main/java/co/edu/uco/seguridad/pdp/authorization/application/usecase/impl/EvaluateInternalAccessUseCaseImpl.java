@@ -16,6 +16,8 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * {@code IdentifierGenerator}/{@code TimeProvider} no estaban en la firma que dejó el plan (FASE 5
@@ -41,9 +43,13 @@ public final class EvaluateInternalAccessUseCaseImpl implements EvaluateInternal
 
     @Override
     public Mono<AccessDecision> execute(InternalAccessRequest input) {
+        // subjectUserId vacio a proposito (HU-008, fuera de alcance): el canal interno no tiene
+        // identidad de usuario final que resolver todavia -- input.subject() es el JWT de evidencia
+        // que autentica al PEP, no al usuario. Resolverlo exige cambiar contracts/pep-pdp/v1/.
         return ownerLookup.execute(input.applicationId())
                 .map(tenantId -> new AccessRequest(tenantId, input.subject(), input.applicationId(),
-                        input.resourcePath(), input.action(), input.requestId(), input.correlationId()))
+                        input.resourcePath(), input.action(), input.requestId(), input.correlationId(),
+                        Optional.empty(), Set.of()))
                 .flatMap(authorizeUseCase::execute)
                 .onErrorResume(ApplicationNotFoundException.class,
                         error -> Mono.just(deny(input, ReasonCode.TENANT_MISMATCH)));
