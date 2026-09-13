@@ -117,6 +117,26 @@ class ApplicationHttpTests extends AbstractSurrealDbIntegrationTest {
     }
 
     @Test
+    void the_registration_response_includes_a_credential_shown_only_once() {
+        String name = prefix + "-credencial";
+
+        client().post().uri(PATH)
+                .header("Authorization", "Bearer " + TestJwtSupport.signedToken(UCO, "test-subject"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("""
+                        {"name":"%s","description":"","baseUrl":"https://example.com"}""".formatted(name))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody()
+                .jsonPath("$.data.credential").exists();
+
+        get(UCO, "?name=" + name)
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.content[0].credential").doesNotExist();
+    }
+
+    @Test
     void an_empty_result_is_a_page_not_a_not_found() {
         get(UCO, "?name=" + prefix + "-no-existe")
                 .expectStatus().isOk()

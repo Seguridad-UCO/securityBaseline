@@ -2,6 +2,7 @@ package co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web
 
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.request.raw.ListApplicationsRawRequest;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.request.raw.RegisterApplicationRawRequest;
+import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.response.ApplicationRegisteredWebResponse;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.response.ApplicationWebResponse;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.ListApplicationsInteractor;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.RegisterApplicationInteractor;
@@ -41,8 +42,8 @@ final class ApplicationController {
     }
 
     @PostMapping
-    Mono<ResponseEntity<ApiResponse<ApplicationWebResponse>>> register(@RequestBody RegisterApplicationRawRequest body,
-            ServerWebExchange exchange) {
+    Mono<ResponseEntity<ApiResponse<ApplicationRegisteredWebResponse>>> register(
+            @RequestBody RegisterApplicationRawRequest body, ServerWebExchange exchange) {
         RequestContext context = CorrelationWebFilter.context(exchange);
         return registerInteractor.execute(body)
                 .map(response -> ResponseEntity.status(HttpStatus.CREATED)

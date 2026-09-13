@@ -1,6 +1,7 @@
 package co.edu.uco.seguridad.pdp.applications.domain;
 
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
+import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
@@ -17,7 +18,7 @@ import java.util.Objects;
  * son rutas relativas a esa base — el endpoint completo es {@code baseUrl + path}.</p>
  */
 public record Application(ApplicationId id, TenantId tenantId, ApplicationName name, String description,
-        ApplicationBaseUrl baseUrl, Instant registeredAt) {
+        ApplicationBaseUrl baseUrl, ApplicationCredentialHash credentialHash, Instant registeredAt) {
 
     private static final int MAX_DESCRIPTION_LENGTH = 500;
 
@@ -26,6 +27,7 @@ public record Application(ApplicationId id, TenantId tenantId, ApplicationName n
         Objects.requireNonNull(tenantId, RequiredArgumentMessages.TENANT_ID);
         Objects.requireNonNull(name, RequiredArgumentMessages.APPLICATION_NAME);
         Objects.requireNonNull(baseUrl, RequiredArgumentMessages.APPLICATION_BASE_URL);
+        Objects.requireNonNull(credentialHash, RequiredArgumentMessages.APPLICATION_CREDENTIAL_HASH);
         Objects.requireNonNull(registeredAt, RequiredArgumentMessages.REGISTERED_AT);
         description = description == null ? "" : description.trim();
         if (description.length() > MAX_DESCRIPTION_LENGTH) {
@@ -34,7 +36,8 @@ public record Application(ApplicationId id, TenantId tenantId, ApplicationName n
     }
 
     public static Application register(ApplicationId id, TenantId tenantId, ApplicationName name,
-            String description, ApplicationBaseUrl baseUrl, Instant registeredAt) {
-        return new Application(id, tenantId, name, description, baseUrl, registeredAt);
+            String description, ApplicationBaseUrl baseUrl, ApplicationCredentialHash credentialHash,
+            Instant registeredAt) {
+        return new Application(id, tenantId, name, description, baseUrl, credentialHash, registeredAt);
     }
 }

@@ -4,6 +4,7 @@ import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
+import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -75,6 +76,7 @@ class ApplicationCriteriaTests {
 
     private static Application application(TenantId tenantId, String name) {
         return new Application(new ApplicationId(UUID.randomUUID()), tenantId, new ApplicationName(name), "",
-                new ApplicationBaseUrl("https://example.com"), Instant.parse("2026-01-01T00:00:00Z"));
+                new ApplicationBaseUrl("https://example.com"), new ApplicationCredentialHash("hash"),
+                Instant.parse("2026-01-01T00:00:00Z"));
     }
 }

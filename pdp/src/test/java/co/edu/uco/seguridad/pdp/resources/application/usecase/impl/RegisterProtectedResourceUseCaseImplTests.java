@@ -3,6 +3,7 @@ package co.edu.uco.seguridad.pdp.resources.application.usecase.impl;
 import co.edu.uco.seguridad.pdp.applications.domain.exception.ApplicationNotFoundException;
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
+import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
 import co.edu.uco.seguridad.pdp.commons.model.ResourceId;
@@ -50,7 +51,8 @@ class RegisterProtectedResourceUseCaseImplTests {
     @Test
     void registers_the_resource_and_publishes_the_registration_event() {
         Application application = Application.register(new ApplicationId(UUID.randomUUID()), TENANT,
-                new ApplicationName("gestion-academica"), "", new ApplicationBaseUrl("https://example.com"), NOW);
+                new ApplicationName("gestion-academica"), "", new ApplicationBaseUrl("https://example.com"),
+                new ApplicationCredentialHash("hash"), NOW);
         List<ProtectedResource> saved = new ArrayList<>();
         ProtectedResourceRepository resources = new ProtectedResourceRepository() {
             @Override
