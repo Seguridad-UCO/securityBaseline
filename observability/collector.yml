@@ -8,7 +8,7 @@ receivers:
     protocols:
       http:
         endpoint: 0.0.0.0:4318
-  filelog:
+  file_log:
     include: [/var/log/security/*.json]
     start_at: beginning
     storage: file_storage
@@ -68,14 +68,14 @@ processors:
     timeout: 2s
     send_batch_size: 512
 exporters:
-  otlphttp/jaeger:
+  otlp_http/jaeger:
     endpoint: http://jaeger:4318
     sending_queue:
       storage: file_storage
       queue_size: 1000
     retry_on_failure:
       max_elapsed_time: 300s
-  otlphttp/loki:
+  otlp_http/loki:
     endpoint: http://loki:3100/otlp
     sending_queue:
       storage: file_storage
@@ -93,11 +93,11 @@ service:
     traces:
       receivers: [otlp]
       processors: [memory_limiter, transform/privacy, batch]
-      exporters: [otlphttp/jaeger]
+      exporters: [otlp_http/jaeger]
     logs:
-      receivers: [filelog, otlp]
+      receivers: [file_log, otlp]
       processors: [memory_limiter, batch]
-      exporters: [otlphttp/loki]
+      exporters: [otlp_http/loki]
     metrics:
       receivers: [prometheus, otlp]
       processors: [memory_limiter, batch]
