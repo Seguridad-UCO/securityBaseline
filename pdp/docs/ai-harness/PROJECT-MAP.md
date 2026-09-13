@@ -3,9 +3,9 @@
 > Generado por `.claude/tools/mapa.ps1`. **No editar a mano** - se regenera desde el codigo.
 > Es el nivel 0 del grafo de conocimiento: responde "que existe y donde va lo nuevo".
 
-- Clases de produccion: **426**
-- Clases de prueba: **136**
-- Slices de negocio: **8** (applications, assignments, authorization, commons, identity, resources, roles, tenants)
+- Clases de produccion: **520**
+- Clases de prueba: **163**
+- Slices de negocio: **9** (applications, assignments, authorization, commons, identity, profiles, resources, roles, tenants)
 
 ---
 
@@ -42,34 +42,34 @@
 | Cableado (@Bean) | `ApplicationsConfiguration` |
 | Propiedades | `ApplicationCatalogProperties` |
 
-### `assignments` - 54 clases
+### `assignments` - 92 clases
 
 | Rol | Clases |
 |---|---|
-| Excepcion de dominio | `AssignmentNotFoundException`, `DuplicateAssignmentException`, `InvalidValidityException` |
+| Excepcion de dominio | `AssignmentNotFoundException`, `DuplicateAssignmentException`, `DuplicateProfileAssignmentException`, `InvalidValidityException`, `ProfileAssignmentNotFoundException` |
 | Catalogo de mensajes | `AssignmentsMessages` |
-| Value object | `AssignmentId`, `Validity` |
-| Regla de dominio (impl) | `AssignmentMustExistForTenantRuleImpl`, `AssignmentMustNotDuplicateActiveRuleImpl` |
-| Dato de regla (hecho resuelto) | `ActiveAssignmentAvailability`, `AssignmentExistence` |
-| Regla de dominio (contrato) | `AssignmentMustExistForTenantRule`, `AssignmentMustNotDuplicateActiveRule` |
-| Dominio (agregado / criteria) | `Assignment`, `AssignmentCriteria` |
-| Caso de uso (impl) | `AssignRoleUseCaseImpl`, `ListAssignmentsUseCaseImpl`, `ResolveActiveRolesUseCaseImpl`, `RevokeAssignmentUseCaseImpl` |
-| Caso de uso (contrato) | `AssignRoleUseCase`, `ListAssignmentsUseCase`, `ResolveActiveRolesUseCase`, `RevokeAssignmentUseCase` |
-| Validador de reglas (impl) | `AssignRoleRulesValidatorImpl`, `RevokeAssignmentRulesValidatorImpl` |
-| Validador de reglas (contrato) | `AssignRoleRulesValidator`, `RevokeAssignmentRulesValidator` |
-| Puerto de salida | `AssignmentRepository` |
-| DTO de entrada al nucleo | `AssignRoleRequest`, `ListAssignmentsRequest`, `ResolveActiveRolesRequest`, `RevokeAssignmentRequest` |
-| DTO de salida del nucleo | `ActiveRolesResponse`, `AssignmentResponse` |
-| Controller | `AssignmentController` |
-| DTO crudo HTTP | `AssignRoleRawRequest`, `ListAssignmentsRawRequest`, `RevokeAssignmentRawRequest` |
-| DTO de respuesta HTTP | `AssignmentWebResponse` |
-| Interactor (impl) | `AssignRoleInteractorImpl`, `ListAssignmentsInteractorImpl`, `RevokeAssignmentInteractorImpl` |
-| Interactor (contrato) | `AssignRoleInteractor`, `ListAssignmentsInteractor`, `RevokeAssignmentInteractor` |
-| Mapper web | `AssignmentResponseMapper`, `AssignRoleRequestMapper`, `ListAssignmentsRequestMapper`, `RevokeAssignmentRequestMapper` |
-| Entidad de persistencia | `AssignmentEntity` |
-| Mapper de persistencia | `AssignmentPersistenceMapper` |
-| Adaptador de repositorio | `SurrealAssignmentRepository` |
-| Esquema de tabla | `AssignmentSchema`, `SurrealAssignmentSchemaInitializer` |
+| Value object | `AssignmentId`, `ProfileAssignmentId`, `Validity` |
+| Regla de dominio (impl) | `AssignmentMustExistForTenantRuleImpl`, `AssignmentMustNotDuplicateActiveRuleImpl`, `ProfileAssignmentMustExistForTenantRuleImpl`, `ProfileAssignmentMustNotDuplicateActiveRuleImpl` |
+| Dato de regla (hecho resuelto) | `ActiveAssignmentAvailability`, `ActiveProfileAssignmentAvailability`, `AssignmentExistence`, `ProfileAssignmentExistence` |
+| Regla de dominio (contrato) | `AssignmentMustExistForTenantRule`, `AssignmentMustNotDuplicateActiveRule`, `ProfileAssignmentMustExistForTenantRule`, `ProfileAssignmentMustNotDuplicateActiveRule` |
+| Dominio (agregado / criteria) | `Assignment`, `AssignmentCriteria`, `ProfileAssignment` |
+| Caso de uso (impl) | `AssignProfileUseCaseImpl`, `AssignRoleUseCaseImpl`, `ListAssignmentsUseCaseImpl`, `ResolveActiveRolesUseCaseImpl`, `RevokeAssignmentUseCaseImpl`, `RevokeProfileAssignmentUseCaseImpl` |
+| Caso de uso (contrato) | `AssignProfileUseCase`, `AssignRoleUseCase`, `ListAssignmentsUseCase`, `ResolveActiveRolesUseCase`, `RevokeAssignmentUseCase`, `RevokeProfileAssignmentUseCase` |
+| Validador de reglas (impl) | `AssignProfileRulesValidatorImpl`, `AssignRoleRulesValidatorImpl`, `RevokeAssignmentRulesValidatorImpl`, `RevokeProfileAssignmentRulesValidatorImpl` |
+| Validador de reglas (contrato) | `AssignProfileRulesValidator`, `AssignRoleRulesValidator`, `RevokeAssignmentRulesValidator`, `RevokeProfileAssignmentRulesValidator` |
+| Puerto de salida | `AssignmentRepository`, `ProfileAssignmentRepository` |
+| DTO de entrada al nucleo | `AssignProfileRequest`, `AssignRoleRequest`, `ListAssignmentsRequest`, `ResolveActiveRolesRequest`, `RevokeAssignmentRequest`, `RevokeProfileAssignmentRequest` |
+| DTO de salida del nucleo | `ActiveRolesResponse`, `AssignmentResponse`, `ProfileAssignmentResponse` |
+| Controller | `AssignmentController`, `ProfileAssignmentController` |
+| DTO crudo HTTP | `AssignProfileRawRequest`, `AssignRoleRawRequest`, `ListAssignmentsRawRequest`, `RevokeAssignmentRawRequest`, `RevokeProfileAssignmentRawRequest` |
+| DTO de respuesta HTTP | `AssignmentWebResponse`, `ProfileAssignmentWebResponse` |
+| Interactor (impl) | `AssignProfileInteractorImpl`, `AssignRoleInteractorImpl`, `ListAssignmentsInteractorImpl`, `RevokeAssignmentInteractorImpl`, `RevokeProfileAssignmentInteractorImpl` |
+| Interactor (contrato) | `AssignProfileInteractor`, `AssignRoleInteractor`, `ListAssignmentsInteractor`, `RevokeAssignmentInteractor`, `RevokeProfileAssignmentInteractor` |
+| Mapper web | `AssignmentResponseMapper`, `AssignProfileRequestMapper`, `AssignRoleRequestMapper`, `ListAssignmentsRequestMapper`, `ProfileAssignmentResponseMapper`, `RevokeAssignmentRequestMapper`, `RevokeProfileAssignmentRequestMapper` |
+| Entidad de persistencia | `AssignmentEntity`, `ProfileAssignmentEntity` |
+| Mapper de persistencia | `AssignmentPersistenceMapper`, `ProfileAssignmentPersistenceMapper` |
+| Adaptador de repositorio | `SurrealAssignmentRepository`, `SurrealProfileAssignmentRepository` |
+| Esquema de tabla | `AssignmentSchema`, `ProfileAssignmentSchema`, `SurrealAssignmentSchemaInitializer`, `SurrealProfileAssignmentSchemaInitializer` |
 | Cableado (@Bean) | `AssignmentsConfiguration` |
 
 ### `authorization` - 48 clases
@@ -99,13 +99,13 @@
 | Propiedades | `OpaProperties` |
 | Otro | `OpaApplication`, `OpaEvaluationInput`, `OpaEvaluationRequest`, `OpaPolicyDecisionAdapter`, `OpaPolicyDecisionPayload`, `OpaPolicyReference`, `OpaRequestInfo`, `OpaResource`, `OpaResponse`, `OpaSubject`, `OpaTenant` |
 
-### `commons` - 18 clases
+### `commons` - 19 clases
 
 | Rol | Clases |
 |---|---|
 | Excepcion de dominio | `BusinessRuleViolationException`, `ConflictBusinessRuleException`, `DomainException`, `InvalidApplicationNameException`, `InvalidIdentifierException`, `InvalidPageWindowException`, `InvalidTenantIdException`, `InvalidValueException` |
 | Catalogo de mensajes | `ValueObjectMessages` |
-| Value object | `ApplicationId`, `ApplicationName`, `PageWindow`, `ResourceId`, `ResultPage`, `RoleId`, `TenantId`, `UserId` |
+| Value object | `ApplicationId`, `ApplicationName`, `PageWindow`, `ProfileId`, `ResourceId`, `ResultPage`, `RoleId`, `TenantId`, `UserId` |
 | Otro | `AggregateRoot` |
 
 ### `identity` - 39 clases
@@ -139,6 +139,36 @@
 | Cableado (@Bean) | `IdentityConfiguration` |
 | Propiedades | `IdentityProvisioningProperties` |
 
+### `profiles` - 52 clases
+
+| Rol | Clases |
+|---|---|
+| Excepcion de dominio | `DuplicateProfileNameException`, `InvalidProfileNameException`, `ProfileNotFoundException` |
+| Catalogo de mensajes | `ProfilesMessages` |
+| Value object | `ProfileName` |
+| Regla de dominio (impl) | `ProfileMustExistForTenantRuleImpl`, `ProfileNameMustBeUniqueInScopeRuleImpl` |
+| Dato de regla (hecho resuelto) | `ProfileExistence`, `ProfileNameAvailability` |
+| Regla de dominio (contrato) | `ProfileMustExistForTenantRule`, `ProfileNameMustBeUniqueInScopeRule` |
+| Dominio (agregado / criteria) | `Profile`, `ProfileCriteria` |
+| Caso de uso (impl) | `AddRoleToProfileUseCaseImpl`, `DefineProfileUseCaseImpl`, `ListProfilesUseCaseImpl` |
+| Caso de uso (contrato) | `AddRoleToProfileUseCase`, `DefineProfileUseCase`, `ListProfilesUseCase` |
+| Validador de reglas (impl) | `AddRoleToProfileRulesValidatorImpl`, `DefineProfileRulesValidatorImpl`, `ProfileRolesLookupValidatorImpl` |
+| Validador de reglas (contrato) | `AddRoleToProfileRulesValidator`, `DefineProfileRulesValidator`, `ProfileRolesLookupValidator` |
+| Puerto de salida | `ProfileRepository` |
+| DTO de entrada al nucleo | `AddRoleToProfileRequest`, `DefineProfileRequest`, `ListProfilesRequest`, `ProfileOwnershipQuery` |
+| DTO de salida del nucleo | `ProfileResponse` |
+| Controller | `ProfileController` |
+| DTO crudo HTTP | `AddRoleToProfileRawRequest`, `DefineProfileRawRequest`, `ListProfilesRawRequest` |
+| DTO de respuesta HTTP | `ProfileWebResponse` |
+| Interactor (impl) | `AddRoleToProfileInteractorImpl`, `DefineProfileInteractorImpl`, `ListProfilesInteractorImpl` |
+| Interactor (contrato) | `AddRoleToProfileInteractor`, `DefineProfileInteractor`, `ListProfilesInteractor` |
+| Mapper web | `AddRoleToProfileRequestMapper`, `DefineProfileRequestMapper`, `ListProfilesRequestMapper`, `ProfileResponseMapper` |
+| Entidad de persistencia | `ProfileEntity` |
+| Mapper de persistencia | `ProfilePersistenceMapper` |
+| Adaptador de repositorio | `SurrealProfileRepository` |
+| Esquema de tabla | `ProfileSchema`, `SurrealProfileSchemaInitializer` |
+| Cableado (@Bean) | `ProfilesConfiguration` |
+
 ### `resources` - 46 clases
 
 | Rol | Clases |
@@ -171,7 +201,7 @@
 | Adaptador de auditoria | `InMemoryAuditAdapter` |
 | Cableado (@Bean) | `ResourcesConfiguration` |
 
-### `roles` - 65 clases
+### `roles` - 68 clases
 
 | Rol | Clases |
 |---|---|
@@ -184,10 +214,10 @@
 | Dominio (agregado / criteria) | `Role`, `RoleCriteria` |
 | Caso de uso (impl) | `DefineRoleUseCaseImpl`, `GrantResourceToRoleUseCaseImpl`, `ListRolesUseCaseImpl` |
 | Caso de uso (contrato) | `DefineRoleUseCase`, `GrantResourceToRoleUseCase`, `ListRolesUseCase` |
-| Validador de reglas (impl) | `DefineRoleRulesValidatorImpl`, `GrantResourceRulesValidatorImpl`, `RoleNamesLookupValidatorImpl`, `RoleScopeMustCoverApplicationValidatorImpl` |
-| Validador de reglas (contrato) | `DefineRoleRulesValidator`, `GrantResourceRulesValidator`, `RoleNamesLookupValidator`, `RoleScopeMustCoverApplicationValidator` |
+| Validador de reglas (impl) | `DefineRoleRulesValidatorImpl`, `GrantResourceRulesValidatorImpl`, `RoleMustExistForTenantValidatorImpl`, `RoleNamesLookupValidatorImpl`, `RoleScopeMustCoverApplicationValidatorImpl` |
+| Validador de reglas (contrato) | `DefineRoleRulesValidator`, `GrantResourceRulesValidator`, `RoleMustExistForTenantValidator`, `RoleNamesLookupValidator`, `RoleScopeMustCoverApplicationValidator` |
 | Puerto de salida | `RoleRepository` |
-| DTO de entrada al nucleo | `DefineRoleRequest`, `GrantResourceRequest`, `ListRolesRequest`, `RoleCoverageQuery` |
+| DTO de entrada al nucleo | `DefineRoleRequest`, `GrantResourceRequest`, `ListRolesRequest`, `RoleCoverageQuery`, `RoleOwnershipQuery` |
 | DTO de salida del nucleo | `RoleResponse` |
 | Controller | `RoleController` |
 | DTO crudo HTTP | `DefineRoleRawRequest`, `GrantResourceRawRequest`, `ListRolesRawRequest` |
@@ -265,6 +295,8 @@
 | `ApplicationRepository` | `SurrealApplicationRepository` |
 | `AssignmentRepository` | `SurrealAssignmentRepository` |
 | `PolicyDecisionPort` | `OpaPolicyDecisionAdapter` |
+| `ProfileAssignmentRepository` | `SurrealProfileAssignmentRepository` |
+| `ProfileRepository` | `SurrealProfileRepository` |
 | `ProtectedResourceRepository` | `SurrealProtectedResourceRepository` |
 | `RoleRepository` | `SurrealRoleRepository` |
 | `SecurityUserRepository` | `SurrealSecurityUserRepository` |
@@ -281,6 +313,11 @@
 | GET | `/api/v1/applications/{applicationId}/resources` | `ProtectedResourceController` |
 | POST | `/api/v1/applications/{applicationId}/resources` | `ProtectedResourceController` |
 | POST | `/api/v1/authorize` | `AuthorizationController` |
+| GET | `/api/v1/profiles` | `ProfileController` |
+| POST | `/api/v1/profiles` | `ProfileController` |
+| POST | `/api/v1/profiles/{profileId}/assignments` | `ProfileAssignmentController` |
+| DELETE | `/api/v1/profiles/{profileId}/assignments/{profileAssignmentId}` | `ProfileAssignmentController` |
+| POST | `/api/v1/profiles/{profileId}/roles` | `ProfileController` |
 | GET | `/api/v1/roles` | `RoleController` |
 | POST | `/api/v1/roles` | `RoleController` |
 | GET | `/api/v1/roles/{roleId}/assignments` | `AssignmentController` |
@@ -304,12 +341,13 @@
 | Area | Clases de prueba |
 |---|---|
 | `pdp/applications` | `ApplicationBaseUrlTests`, `ApplicationCatalogPropertiesTests`, `ApplicationControllerTests`, `ApplicationCriteriaTests`, `ApplicationHttpTests`, `ApplicationMustExistForTenantValidatorTests`, `ApplicationOwnerLookupValidatorImplTests`, `ApplicationPersistenceMapperTests`, `ApplicationResponseMapperTests`, `ApplicationRuleTests`, `ListApplicationsRequestMapperTests`, `ListApplicationsUseCaseImplTests`, `RegisterApplicationRequestMapperTests`, `RegisterApplicationRulesValidatorTests`, `RegisterApplicationUseCaseImplTests`, `RemoveApplicationUseCaseImplTests` |
-| `pdp/assignments` | `AssignmentControllerTests`, `AssignmentCriteriaTests`, `AssignmentHttpTests`, `AssignmentMustExistForTenantRuleImplTests`, `AssignmentMustNotDuplicateActiveRuleImplTests`, `AssignmentPersistenceMapperTests`, `AssignmentResponseMapperTests`, `AssignmentTests`, `AssignRoleRequestMapperTests`, `AssignRoleRulesValidatorImplTests`, `AssignRoleUseCaseImplTests`, `ListAssignmentsRequestMapperTests`, `ListAssignmentsUseCaseImplTests`, `ResolveActiveRolesUseCaseImplTests`, `RevokeAssignmentRequestMapperTests`, `RevokeAssignmentRulesValidatorImplTests`, `RevokeAssignmentUseCaseImplTests`, `ValidityTests` |
+| `pdp/assignments` | `AssignmentControllerTests`, `AssignmentCriteriaTests`, `AssignmentHttpTests`, `AssignmentMustExistForTenantRuleImplTests`, `AssignmentMustNotDuplicateActiveRuleImplTests`, `AssignmentPersistenceMapperTests`, `AssignmentResponseMapperTests`, `AssignmentTests`, `AssignProfileRequestMapperTests`, `AssignProfileUseCaseImplTests`, `AssignRoleRequestMapperTests`, `AssignRoleRulesValidatorImplTests`, `AssignRoleUseCaseImplTests`, `ListAssignmentsRequestMapperTests`, `ListAssignmentsUseCaseImplTests`, `ProfileAssignmentControllerTests`, `ProfileAssignmentHttpTests`, `ProfileAssignmentMustExistForTenantRuleImplTests`, `ProfileAssignmentMustNotDuplicateActiveRuleImplTests`, `ProfileAssignmentPersistenceMapperTests`, `ProfileAssignmentResponseMapperTests`, `ProfileAssignmentTests`, `ResolveActiveRolesUseCaseImplTests`, `RevokeAssignmentRequestMapperTests`, `RevokeAssignmentRulesValidatorImplTests`, `RevokeAssignmentUseCaseImplTests`, `RevokeProfileAssignmentUseCaseImplTests`, `ValidityTests` |
 | `pdp/authorization` | `AccessDecisionInternalResponseMapperTests`, `AccessDecisionRawRequestMapperTests`, `AccessDecisionResponseMapperTests`, `AccessEventPersistenceMapperTests`, `AccessEventTests`, `ActiveRoleNamesLookupValidatorImplTests`, `AuthorizationControllerTests`, `AuthorizationHttpTests`, `AuthorizeRequestMapperTests`, `AuthorizeUseCaseImplTests`, `DecisionStateTests`, `EvaluateInternalAccessUseCaseImplTests`, `InternalAccessDecisionControllerTests`, `InternalAccessDecisionInteractorImplTests`, `InternalSecurityChainIntegrationTests`, `OpaFixtureServer`, `OpaPolicyDecisionAdapterTests` |
 | `pdp/commons` | `PageWindowTests`, `ResultPageTests`, `ValueObjectTests` |
 | `pdp/identity` | `AssignTenantRequestMapperTests`, `AssignTenantUseCaseImplTests`, `EmailTests`, `ProvisionIdentityUseCaseImplTests`, `SecurityUserPersistenceMapperTests`, `UserControllerTests`, `UserMustExistRuleTests`, `UserMustExistValidatorImplTests`, `UserResponseMapperTests` |
+| `pdp/profiles` | `AddRoleToProfileRequestMapperTests`, `AddRoleToProfileUseCaseImplTests`, `DefineProfileRequestMapperTests`, `DefineProfileUseCaseImplTests`, `ListProfilesRequestMapperTests`, `ListProfilesUseCaseImplTests`, `ProfileControllerTests`, `ProfileCriteriaTests`, `ProfileHttpTests`, `ProfileMustExistForTenantRuleImplTests`, `ProfileNameMustBeUniqueInScopeRuleImplTests`, `ProfileNameTests`, `ProfilePersistenceMapperTests`, `ProfileResponseMapperTests`, `ProfileRolesLookupValidatorImplTests`, `ProfileTests` |
 | `pdp/resources` | `HttpVerbTests`, `InMemoryAuditAdapterTests`, `ProtectedResourceControllerTests`, `ProtectedResourceMustBeUniqueRuleTests`, `ProtectedResourceMustExistRuleTests`, `ProtectedResourceMustExistValidatorTests`, `ProtectedResourceOwnerLookupValidatorImplTests`, `ProtectedResourceResponseMapperTests`, `RegisterProtectedResourceRequestMapperTests`, `RegisterProtectedResourceRulesValidatorTests`, `RegisterProtectedResourceUseCaseImplTests`, `ResourcePathTests` |
-| `pdp/roles` | `DefineRoleRequestMapperTests`, `DefineRoleRulesValidatorImplTests`, `DefineRoleUseCaseImplTests`, `GrantResourceRequestMapperTests`, `GrantResourceRulesValidatorImplTests`, `GrantResourceToRoleUseCaseImplTests`, `ListRolesRequestMapperTests`, `ListRolesUseCaseImplTests`, `RoleControllerTests`, `RoleCriteriaTests`, `RoleHttpTests`, `RoleMustExistForTenantRuleImplTests`, `RoleNameMustBeUniqueInScopeRuleImplTests`, `RoleNamesLookupValidatorImplTests`, `RoleNameTests`, `RolePersistenceMapperTests`, `RoleResponseMapperTests`, `RoleScopeLevelTests`, `RoleScopeMustCoverApplicationRuleImplTests`, `RoleScopeMustCoverApplicationValidatorImplTests`, `RoleScopeMustCoverResourceRuleImplTests`, `RoleScopeTests`, `RoleTests` |
+| `pdp/roles` | `DefineRoleRequestMapperTests`, `DefineRoleRulesValidatorImplTests`, `DefineRoleUseCaseImplTests`, `GrantResourceRequestMapperTests`, `GrantResourceRulesValidatorImplTests`, `GrantResourceToRoleUseCaseImplTests`, `ListRolesRequestMapperTests`, `ListRolesUseCaseImplTests`, `RoleControllerTests`, `RoleCriteriaTests`, `RoleHttpTests`, `RoleMustExistForTenantRuleImplTests`, `RoleMustExistForTenantValidatorImplTests`, `RoleNameMustBeUniqueInScopeRuleImplTests`, `RoleNamesLookupValidatorImplTests`, `RoleNameTests`, `RolePersistenceMapperTests`, `RoleResponseMapperTests`, `RoleScopeLevelTests`, `RoleScopeMustCoverApplicationRuleImplTests`, `RoleScopeMustCoverApplicationValidatorImplTests`, `RoleScopeMustCoverResourceRuleImplTests`, `RoleScopeTests`, `RoleTests` |
 | `pdp/tenants` | `CreateTenantRequestMapperTests`, `CreateTenantUseCaseImplTests`, `ListTenantsUseCaseImplTests`, `TenantCatalogPropertiesTests`, `TenantControllerTests`, `TenantMustBeActiveValidatorTests`, `TenantNameTests`, `TenantResponseMapperTests`, `TenantRuleTests` |
 | `raiz` | `AbstractSurrealDbIntegrationTest`, `LayeredArchitectureTests`, `ModulithStructureTests`, `PdpApplicationTests` |
 | `shared/auth` | `KeycloakLoginControllerTests`, `KeycloakOidcSessionServiceTests`, `KeycloakRegistrationControllerTests`, `OidcAuthenticationFailureHandlerTests`, `OidcAuthenticationSuccessHandlerTests`, `OidcAuthorizationFlowServiceTests` |

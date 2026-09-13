@@ -16,6 +16,15 @@ public final class AssignmentsMessages {
         return "La vigencia es inválida: " + reason;
     }
 
+    public static String profileAssignmentAlreadyActive(String userId, String applicationId, String profileId) {
+        return "El usuario " + userId + " ya tiene una asignación activa del perfil " + profileId
+                + " en la aplicación " + applicationId;
+    }
+
+    public static String profileAssignmentNotFound(String profileAssignmentId) {
+        return "No existe la asignación de perfil " + profileAssignmentId + " para este inquilino";
+    }
+
     private AssignmentsMessages() {
     }
 }
