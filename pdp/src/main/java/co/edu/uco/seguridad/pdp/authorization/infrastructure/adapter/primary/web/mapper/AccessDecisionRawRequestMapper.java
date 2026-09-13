@@ -40,6 +40,8 @@ public final class AccessDecisionRawRequestMapper {
             throw new MalformedRequestFieldException("timestamp", WebContractMessages.mustBeIso8601());
         }
 
-        return new InternalAccessRequest(subject, applicationId, resourcePath, action, raw.requestId(), raw.correlationId());
+        return new InternalAccessRequest(subject, applicationId, resourcePath, action, raw.requestId(), raw.correlationId(),
+                new InternalAccessRequest.RequestFacts(Instant.parse(timestamp), raw.application().environment(),
+                        RequestFieldParser.parse("context.method", raw.context().method(), HttpVerb::parse), raw.context().channel()));
     }
 }

@@ -49,7 +49,8 @@ public final class EvaluateInternalAccessUseCaseImpl implements EvaluateInternal
         return ownerLookup.execute(input.applicationId())
                 .map(tenantId -> new AccessRequest(tenantId, input.subject(), input.applicationId(),
                         input.resourcePath(), input.action(), input.requestId(), input.correlationId(),
-                        Optional.empty(), Set.of()))
+                        Optional.empty(), Set.of(), input.facts().timestamp(), input.facts().environment(),
+                        input.facts().method(), input.facts().channel()))
                 .flatMap(authorizeUseCase::execute)
                 .onErrorResume(ApplicationNotFoundException.class,
                         error -> Mono.just(deny(input, ReasonCode.TENANT_MISMATCH)));

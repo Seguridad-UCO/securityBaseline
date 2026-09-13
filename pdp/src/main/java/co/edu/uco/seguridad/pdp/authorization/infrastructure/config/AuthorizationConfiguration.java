@@ -7,6 +7,8 @@ import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.ActiveR
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.impl.ActiveRoleNamesLookupValidatorImpl;
 import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.AccessAuditRepository;
 import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.PolicyDecisionPort;
+import co.edu.uco.seguridad.pdp.authorization.application.service.AuthorizationContextResolver;
+import co.edu.uco.seguridad.pdp.authorization.application.service.impl.AuthorizationContextResolverImpl;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.AuthorizeUseCase;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.EvaluateInternalAccessUseCase;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.impl.AuthorizeUseCaseImpl;
@@ -65,11 +67,16 @@ public class AuthorizationConfiguration {
     }
 
     @Bean
+    AuthorizationContextResolver authorizationContextResolver() {
+        return new AuthorizationContextResolverImpl();
+    }
+
+    @Bean
     AuthorizeUseCase authorizeUseCase(ApplicationMustExistForTenantValidator applicationMustExist,
             ProtectedResourceMustExistValidator resourceMustExist, ActiveRoleNamesLookupValidator rolesLookup,
-            AccessAuditRepository audit, PolicyDecisionPort policyDecisionPort, IdentifierGenerator identifiers,
+            AuthorizationContextResolver contextResolver, AccessAuditRepository audit, PolicyDecisionPort policyDecisionPort, IdentifierGenerator identifiers,
             TimeProvider time, ObservationRegistry observations) {
-        var delegate = new AuthorizeUseCaseImpl(applicationMustExist, resourceMustExist, rolesLookup, audit,
+        var delegate = new AuthorizeUseCaseImpl(applicationMustExist, resourceMustExist, rolesLookup, contextResolver, audit,
                 policyDecisionPort, identifiers, time);
         return input -> ReactiveTelemetry.observe("security.authorization", observations,
                 io.micrometer.common.KeyValues.of("decision", "none", "reason", "none"), () -> delegate.execute(input),

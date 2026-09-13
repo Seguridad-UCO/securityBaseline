@@ -6,6 +6,7 @@ import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
+import java.time.Instant;
 
 /**
  * Entrada de {@link co.edu.uco.seguridad.pdp.authorization.application.usecase.EvaluateInternalAccessUseCase}.
@@ -13,7 +14,7 @@ import java.util.Objects;
  * antes, a partir de {@code applicationId} (HU-003, decisión D4 del HANDOFF).
  */
 public record InternalAccessRequest(String subject, ApplicationId applicationId, ResourcePath resourcePath,
-        HttpVerb action, String requestId, String correlationId) {
+        HttpVerb action, String requestId, String correlationId, RequestFacts facts) {
 
     public InternalAccessRequest {
         Objects.requireNonNull(subject, RequiredArgumentMessages.SUBJECT);
@@ -22,5 +23,21 @@ public record InternalAccessRequest(String subject, ApplicationId applicationId,
         Objects.requireNonNull(action, RequiredArgumentMessages.HTTP_METHOD);
         Objects.requireNonNull(requestId, RequiredArgumentMessages.REQUEST_ID);
         Objects.requireNonNull(correlationId, RequiredArgumentMessages.CORRELATION_ID);
+        Objects.requireNonNull(facts);
+    }
+
+    public InternalAccessRequest(String subject, ApplicationId applicationId, ResourcePath resourcePath,
+            HttpVerb action, String requestId, String correlationId) {
+        this(subject, applicationId, resourcePath, action, requestId, correlationId,
+                new RequestFacts(Instant.EPOCH, "", action, "HTTP"));
+    }
+
+    public record RequestFacts(Instant timestamp, String environment, HttpVerb method, String channel) {
+        public RequestFacts {
+            Objects.requireNonNull(timestamp);
+            Objects.requireNonNull(environment);
+            Objects.requireNonNull(method, RequiredArgumentMessages.HTTP_METHOD);
+            Objects.requireNonNull(channel);
+        }
     }
 }
