@@ -34,10 +34,10 @@ public final class AssignApplicationAdministratorInteractorImpl implements Assig
 
     @Override
     public Mono<AssignmentWebResponse> execute(AssignApplicationAdministratorRawRequest raw) {
-        ApplicationId applicationId = RequestFieldParser.parse("applicationId", raw.applicationId(), ApplicationId::of);
-        UserId userId = RequestFieldParser.parse("userId", raw.userId(), UserId::of);
-        return ownerLookup.execute(applicationId)
-                .map(tenantId -> new AssignApplicationAdministratorRequest(tenantId, applicationId, userId))
+        return Mono.fromCallable(() -> RequestFieldParser.parse("applicationId", raw.applicationId(), ApplicationId::of))
+                .flatMap(applicationId -> ownerLookup.execute(applicationId)
+                        .map(tenantId -> new AssignApplicationAdministratorRequest(tenantId, applicationId,
+                                RequestFieldParser.parse("userId", raw.userId(), UserId::of))))
                 .flatMap(useCase::execute)
                 .map(AssignmentResponseMapper::toResponse);
     }

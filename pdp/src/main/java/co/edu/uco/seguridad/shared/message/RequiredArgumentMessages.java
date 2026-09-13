@@ -115,6 +115,7 @@ public final class RequiredArgumentMessages {
     public static final String LIST_ASSIGNMENTS_USE_CASE = "se requiere el caso de uso de consulta de asignaciones";
     public static final String RESOLVE_ACTIVE_ROLES_USE_CASE = "se requiere el caso de uso de resolución de roles activos";
     public static final String ROLE_NAMES_LOOKUP_VALIDATOR = "se requiere el validador de nombres de rol";
+    public static final String ROLE_LOOKUP_BY_NAME_IN_SCOPE_VALIDATOR = "se requiere el validador de búsqueda de rol por nombre y alcance";
     public static final String ACTIVE_ROLE_NAMES_LOOKUP_VALIDATOR = "se requiere el validador de nombres de roles activos";
     public static final String ASSIGN_ROLE_INTERACTOR = "se requiere el interactor de asignación de rol";
     public static final String REVOKE_ASSIGNMENT_INTERACTOR = "se requiere el interactor de revocación de asignación";

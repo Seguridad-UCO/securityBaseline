@@ -65,6 +65,11 @@ class ProtectedResourceOwnerLookupValidatorImplTests {
             public Mono<ApplicationId> findApplicationIdById(ResourceId resourceId) {
                 return result;
             }
+
+            @Override
+            public Mono<ResourceId> findIdByApplicationPathAndMethod(ApplicationId applicationId, ResourcePath path, HttpVerb method) {
+                throw new UnsupportedOperationException();
+            }
         };
     }
 }

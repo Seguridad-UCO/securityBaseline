@@ -75,6 +75,11 @@ class RegisterProtectedResourceRulesValidatorTests {
             public Mono<ApplicationId> findApplicationIdById(ResourceId resourceId) {
                 throw new UnsupportedOperationException();
             }
+
+            @Override
+            public Mono<ResourceId> findIdByApplicationPathAndMethod(ApplicationId applicationId, ResourcePath path, HttpVerb method) {
+                throw new UnsupportedOperationException();
+            }
         };
     }
 }

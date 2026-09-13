@@ -365,6 +365,28 @@ complejidad de cada pieza individual).
    ajustando esos dos archivos de test en el mismo cambio (exactamente como sb-testing describe para
    un cambio de puerto: "es trabajo del implementador, no del planificador").
 
+## 13. Corrección encontrada por `ModulithStructureTests` (FASE 3 de `@2-tester-spec`)
+
+Al correr `verificar.ps1 -Rapido` con las pruebas ya escritas, `ModulithStructureTests` rechazó dos
+dependencias que el plan original no vio (no se detectan compilando, solo verificando):
+
+1. `AssignApplicationAdministratorUseCaseImpl` y `AssignmentsConfiguration` consultaban
+   `RoleRepository` (secondaryport de `roles`) **directamente** — nunca exportado, y además una
+   violación de `sb-arquitectura` regla invariante 11 ("una decisión sobre otro módulo se consume
+   como validador publicado, nunca consultando su repositorio"). **Corregido**: nuevo
+   `RoleNameInScopeQuery` (dto) + `RoleLookupByNameInScopeValidator` (+Impl) publicados en
+   `roles :: rule` (ya permitido en `assignments`, no hizo falta tocar ningún `allowedDependencies`
+   nuevo) — mismo patrón que `ApplicationOwnerLookupValidator`.
+2. `AdministeredApplicationResponseMapper` (en `authorization`) leía `ApplicationBaseUrl`
+   (`applications :: model`) sin que ese NamedInterface estuviera en el `allowedDependencies` de
+   `authorization` — se me olvidó añadirlo en la FASE 5 original (sí lo añadí a `assignments`, no a
+   `authorization`). **Corregido**: `"applications :: model"` añadido a
+   `authorization/package-info.java`.
+
+Ambas correcciones son plomería (nuevas dependencias permitidas y un validador publicado, cero
+lógica de negocio) — no cambian ninguna decisión de las secciones 0-6. `ModulithStructureTests`
+está en verde después de ambas.
+
 ## 12. Verificado al cerrar FASE 5
 
 `RoleRepository.findByNameInScope` (nueva, §7) rompe la compilación de **8 clases de prueba** del

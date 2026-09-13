@@ -8,7 +8,7 @@
 @org.springframework.modulith.ApplicationModule(allowedDependencies = {
         "commons",
         "applications", "applications :: rule", "applications :: dto", "applications :: exception",
-        "applications :: usecase",
+        "applications :: usecase", "applications :: model",
         "resources", "resources :: rule", "resources :: dto", "resources :: model", "resources :: exception",
         "assignments :: usecase", "assignments :: dto",
         "roles :: rule"})

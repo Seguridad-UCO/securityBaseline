@@ -5,12 +5,14 @@ import co.edu.uco.seguridad.pdp.applications.application.rule.validator.Applicat
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceOwnerLookupValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.DefineRoleRulesValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.GrantResourceRulesValidator;
+import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleLookupByNameInScopeValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleMustExistForTenantValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleNamesLookupValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleResourcesLookupValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleScopeMustCoverApplicationValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.DefineRoleRulesValidatorImpl;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.GrantResourceRulesValidatorImpl;
+import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.RoleLookupByNameInScopeValidatorImpl;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.RoleMustExistForTenantValidatorImpl;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.RoleNamesLookupValidatorImpl;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.RoleResourcesLookupValidatorImpl;
@@ -137,6 +139,13 @@ public class RolesConfiguration {
     @Bean
     RoleResourcesLookupValidator roleResourcesLookupValidator(RoleRepository repository) {
         return new RoleResourcesLookupValidatorImpl(repository);
+    }
+
+    // HU-015 — publicado para que `assignments` encuentre el rol ADMIN de una aplicación sin
+    // consultar RoleRepository directamente (sb-arquitectura, regla invariante 11).
+    @Bean
+    RoleLookupByNameInScopeValidator roleLookupByNameInScopeValidator(RoleRepository repository) {
+        return new RoleLookupByNameInScopeValidatorImpl(repository);
     }
 
     // HU-011 — publicado para que `profiles` compruebe si un rol existe para el inquilino.

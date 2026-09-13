@@ -359,6 +359,33 @@ class SurrealRepositoryIntegrationTests extends AbstractSurrealDbIntegrationTest
     }
 
     @Test
+    void role_repository_finds_a_role_by_name_in_scope_and_empty_when_none_is_defined() {
+        client.ensureNamespaceAndDatabase()
+                .then(client.execute("DEFINE TABLE IF NOT EXISTS role SCHEMALESS;", Map.of()))
+                .block();
+
+        RoleRepository repository = new SurrealRoleRepository(client);
+        TenantId tenant = new TenantId("surreal-it-admin-role-" + UUID.randomUUID());
+        ApplicationId application = new ApplicationId(UUID.randomUUID());
+        RoleScope scope = RoleScope.ofApplication(tenant, application);
+        RoleName name = new RoleName("ADMIN");
+        Role adminRole = Role.define(new RoleId(UUID.randomUUID()), name, scope, Instant.now());
+
+        // HU-015: sin rol ADMIN todavía en ese alcance exacto.
+        StepVerifier.create(repository.findByNameInScope(name, scope)).verifyComplete();
+
+        StepVerifier.create(repository.save(adminRole)).expectNext(adminRole).verifyComplete();
+
+        StepVerifier.create(repository.findByNameInScope(name, scope))
+                .assertNext(found -> assertThat(found.id()).isEqualTo(adminRole.id()))
+                .verifyComplete();
+
+        // Un ADMIN de otra aplicación no debe colar en este alcance.
+        StepVerifier.create(repository.findByNameInScope(name, RoleScope.ofApplication(tenant, new ApplicationId(UUID.randomUUID()))))
+                .verifyComplete();
+    }
+
+    @Test
     void assignment_repository_saves_and_reports_an_active_assignment() {
         client.ensureNamespaceAndDatabase()
                 .then(client.execute("DEFINE TABLE IF NOT EXISTS assignment SCHEMALESS;", Map.of()))

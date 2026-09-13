@@ -60,10 +60,10 @@ import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.per
 import co.edu.uco.seguridad.pdp.identity.application.rule.validator.UserMustExistValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileRolesLookupValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileNamesLookupValidator;
+import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleLookupByNameInScopeValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleScopeMustCoverApplicationValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleNamesLookupValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleResourcesLookupValidator;
-import co.edu.uco.seguridad.pdp.roles.application.secondaryport.repository.RoleRepository;
 import co.edu.uco.seguridad.pdp.roles.application.usecase.DefineRoleUseCase;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
@@ -227,9 +227,9 @@ public class AssignmentsConfiguration {
     }
 
     @Bean
-    AssignApplicationAdministratorUseCase assignApplicationAdministratorUseCase(RoleRepository roleRepository,
-            DefineRoleUseCase defineRole, AssignRoleUseCase assignRole) {
-        return new AssignApplicationAdministratorUseCaseImpl(roleRepository, defineRole, assignRole);
+    AssignApplicationAdministratorUseCase assignApplicationAdministratorUseCase(
+            RoleLookupByNameInScopeValidator roleLookup, DefineRoleUseCase defineRole, AssignRoleUseCase assignRole) {
+        return new AssignApplicationAdministratorUseCaseImpl(roleLookup, defineRole, assignRole);
     }
 
     @Bean
