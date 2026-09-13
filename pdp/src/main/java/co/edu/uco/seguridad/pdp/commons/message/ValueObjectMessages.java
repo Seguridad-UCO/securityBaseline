@@ -61,6 +61,13 @@ public final class ValueObjectMessages {
         }
     }
 
+    public static final class ProfileName {
+        public static final String LENGTH = "debe contener de 3 a 60 caracteres";
+
+        private ProfileName() {
+        }
+    }
+
     public static final class TenantId {
         public static final String FORMAT =
                 "debe tener de 2 a 64 caracteres alfanuméricos, guiones o guiones bajos";

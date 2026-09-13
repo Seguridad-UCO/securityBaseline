@@ -179,6 +179,45 @@ public final class RequiredArgumentMessages {
     public static final String EVENT_ID = "se requiere el identificador del evento";
     public static final String ACCESS_AUDIT_REPOSITORY = "se requiere el repositorio de evidencia de auditoría";
 
+    // HU-011 — catálogo de perfiles (profiles).
+    public static final String PROFILE_ID = "se requiere id de perfil";
+    public static final String PROFILE_NAME = "se requiere nombre de perfil";
+    public static final String PROFILE_SCOPE = "se requiere el alcance del perfil";
+    public static final String PROFILE_ROLES = "se requiere el conjunto de roles del perfil";
+    public static final String PROFILE = "se requiere el perfil";
+    public static final String PROFILE_CRITERIA = "se requiere el criterio de consulta de perfiles";
+    public static final String PROFILE_REPOSITORY = "se requiere el repositorio de perfiles";
+    public static final String PROFILE_NAME_UNIQUE_RULE = "se requiere la regla de nombre de perfil único";
+    public static final String PROFILE_EXISTS_RULE = "se requiere la regla de existencia de perfil";
+    public static final String DEFINE_PROFILE_RULES_VALIDATOR = "se requiere el validador de definición de perfil";
+    public static final String ADD_ROLE_TO_PROFILE_RULES_VALIDATOR = "se requiere el validador de agregar rol a perfil";
+    public static final String PROFILE_ROLES_LOOKUP_VALIDATOR = "se requiere el validador de roles de perfil";
+    public static final String DEFINE_PROFILE_USE_CASE = "se requiere el caso de uso de definición de perfil";
+    public static final String ADD_ROLE_TO_PROFILE_USE_CASE = "se requiere el caso de uso de agregar rol a perfil";
+    public static final String LIST_PROFILES_USE_CASE = "se requiere el caso de uso de consulta de perfiles";
+    public static final String DEFINE_PROFILE_INTERACTOR = "se requiere el interactor de definición de perfil";
+    public static final String ADD_ROLE_TO_PROFILE_INTERACTOR = "se requiere el interactor de agregar rol a perfil";
+    public static final String LIST_PROFILES_INTERACTOR = "se requiere el interactor de consulta de perfiles";
+    public static final String ROLE_MUST_EXIST_FOR_TENANT_VALIDATOR = "se requiere el validador de existencia de rol";
+
+    // HU-011 — asignación de perfiles (assignments).
+    public static final String PROFILE_ASSIGNMENT_ID = "se requiere id de asignación de perfil";
+    public static final String PROFILE_ASSIGNMENT = "se requiere la asignación de perfil";
+    public static final String PROFILE_ASSIGNMENT_REPOSITORY = "se requiere el repositorio de asignaciones de perfil";
+    public static final String GENERATED_ASSIGNMENT_IDS = "se requiere el conjunto de asignaciones generadas";
+    public static final String PROFILE_ASSIGNMENT_NOT_DUPLICATE_RULE =
+            "se requiere la regla de no duplicidad de asignación de perfil activa";
+    public static final String PROFILE_ASSIGNMENT_EXISTS_RULE = "se requiere la regla de existencia de asignación de perfil";
+    public static final String ASSIGN_PROFILE_RULES_VALIDATOR = "se requiere el validador de asignación de perfil";
+    public static final String REVOKE_PROFILE_ASSIGNMENT_RULES_VALIDATOR =
+            "se requiere el validador de revocación de asignación de perfil";
+    public static final String ASSIGN_PROFILE_USE_CASE = "se requiere el caso de uso de asignación de perfil";
+    public static final String REVOKE_PROFILE_ASSIGNMENT_USE_CASE =
+            "se requiere el caso de uso de revocación de asignación de perfil";
+    public static final String ASSIGN_PROFILE_INTERACTOR = "se requiere el interactor de asignación de perfil";
+    public static final String REVOKE_PROFILE_ASSIGNMENT_INTERACTOR =
+            "se requiere el interactor de revocación de asignación de perfil";
+
     private RequiredArgumentMessages() {
     }
 }

@@ -73,6 +73,26 @@ public final class WebContractMessages {
         return "Asignaciones del rol consultadas";
     }
 
+    public static String successProfileDefined() {
+        return "Perfil definido";
+    }
+
+    public static String successProfileRoleAdded() {
+        return "Rol agregado al perfil";
+    }
+
+    public static String successProfilesListed() {
+        return "Catálogo de perfiles consultado";
+    }
+
+    public static String successProfileAssigned() {
+        return "Perfil asignado";
+    }
+
+    public static String successProfileAssignmentRevoked() {
+        return "Asignación de perfil revocada";
+    }
+
     public static String mustBeInteger() {
         return "debe ser un número entero";
     }

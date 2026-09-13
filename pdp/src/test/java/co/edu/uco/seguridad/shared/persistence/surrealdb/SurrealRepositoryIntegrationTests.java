@@ -26,6 +26,15 @@ import co.edu.uco.seguridad.pdp.identity.domain.model.ExternalIdentity;
 import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;
 import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.repository.SurrealSecurityUserRepository;
+import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository.ProfileAssignmentRepository;
+import co.edu.uco.seguridad.pdp.assignments.domain.ProfileAssignment;
+import co.edu.uco.seguridad.pdp.assignments.domain.model.ProfileAssignmentId;
+import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.repository.SurrealProfileAssignmentRepository;
+import co.edu.uco.seguridad.pdp.commons.model.ProfileId;
+import co.edu.uco.seguridad.pdp.profiles.application.secondaryport.repository.ProfileRepository;
+import co.edu.uco.seguridad.pdp.profiles.domain.Profile;
+import co.edu.uco.seguridad.pdp.profiles.domain.model.ProfileName;
+import co.edu.uco.seguridad.pdp.profiles.infrastructure.adapter.secondary.persistence.repository.SurrealProfileRepository;
 import co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository.ProtectedResourceRepository;
 import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.ProtectedResource;
@@ -52,6 +61,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -509,6 +519,70 @@ class SurrealRepositoryIntegrationTests extends AbstractSurrealDbIntegrationTest
         StepVerifier.create(repository.findByCorrelationId(correlationId).collectList())
                 .assertNext(found -> assertThat(found).extracting(AccessEvent::eventId)
                         .containsExactlyInAnyOrder(first.eventId(), second.eventId()))
+                .verifyComplete();
+    }
+
+    @Test
+    void profile_repository_saves_and_finds_a_profile_with_its_granted_roles() {
+        client.ensureNamespaceAndDatabase()
+                .then(client.execute(
+                        """
+                        DEFINE TABLE IF NOT EXISTS profile SCHEMALESS;
+                        DEFINE INDEX IF NOT EXISTS profile_scope_name ON profile \
+                        COLUMNS level, tenantId, applicationId, name UNIQUE;\
+                        """,
+                        Map.of()))
+                .block();
+
+        ProfileRepository repository = new SurrealProfileRepository(client);
+        TenantId tenant = new TenantId("surreal-it-profiles");
+        ProfileName name = new ProfileName("surreal-it-coordinador");
+        Profile profile = Profile.define(new ProfileId(UUID.randomUUID()), name, RoleScope.ofTenant(tenant), Instant.now())
+                .withRole(new RoleId(UUID.randomUUID()));
+
+        StepVerifier.create(repository.existsByNameInScope(name, RoleScope.ofTenant(tenant)))
+                .expectNext(false)
+                .verifyComplete();
+
+        StepVerifier.create(repository.save(profile)).expectNext(profile).verifyComplete();
+
+        StepVerifier.create(repository.existsByNameInScope(name, RoleScope.ofTenant(tenant)))
+                .expectNext(true)
+                .verifyComplete();
+
+        StepVerifier.create(repository.findByIdForTenant(profile.id(), tenant))
+                .assertNext(found -> assertThat(found.roles()).isEqualTo(profile.roles()))
+                .verifyComplete();
+    }
+
+    @Test
+    void profile_assignment_repository_saves_and_reports_an_active_assignment() {
+        client.ensureNamespaceAndDatabase()
+                .then(client.execute("DEFINE TABLE IF NOT EXISTS profile_assignment SCHEMALESS;", Map.of()))
+                .block();
+
+        ProfileAssignmentRepository repository = new SurrealProfileAssignmentRepository(client);
+        TenantId tenant = new TenantId("surreal-it-pa-" + UUID.randomUUID());
+        UserId user = new UserId(UUID.randomUUID());
+        ApplicationId application = new ApplicationId(UUID.randomUUID());
+        ProfileId profileId = new ProfileId(UUID.randomUUID());
+        Set<AssignmentId> generated = Set.of(new AssignmentId(UUID.randomUUID()));
+        Instant now = Instant.now();
+
+        StepVerifier.create(repository.existsActiveByUserApplicationProfile(user, application, profileId, now))
+                .expectNext(false)
+                .verifyComplete();
+
+        ProfileAssignment profileAssignment = ProfileAssignment.grant(new ProfileAssignmentId(UUID.randomUUID()), user,
+                tenant, application, profileId, generated, now);
+        StepVerifier.create(repository.save(profileAssignment)).expectNext(profileAssignment).verifyComplete();
+
+        StepVerifier.create(repository.existsActiveByUserApplicationProfile(user, application, profileId, now))
+                .expectNext(true)
+                .verifyComplete();
+
+        StepVerifier.create(repository.findByIdForTenant(profileAssignment.id(), tenant))
+                .assertNext(found -> assertThat(found.generatedAssignmentIds()).isEqualTo(generated))
                 .verifyComplete();
     }
 }

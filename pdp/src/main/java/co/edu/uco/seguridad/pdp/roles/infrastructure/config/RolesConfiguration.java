@@ -5,10 +5,12 @@ import co.edu.uco.seguridad.pdp.applications.application.rule.validator.Applicat
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceOwnerLookupValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.DefineRoleRulesValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.GrantResourceRulesValidator;
+import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleMustExistForTenantValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleNamesLookupValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleScopeMustCoverApplicationValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.DefineRoleRulesValidatorImpl;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.GrantResourceRulesValidatorImpl;
+import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.RoleMustExistForTenantValidatorImpl;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.RoleNamesLookupValidatorImpl;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.RoleScopeMustCoverApplicationValidatorImpl;
 import co.edu.uco.seguridad.pdp.roles.application.secondaryport.repository.RoleRepository;
@@ -128,5 +130,12 @@ public class RolesConfiguration {
     @Bean
     RoleNamesLookupValidator roleNamesLookupValidator(RoleRepository repository) {
         return new RoleNamesLookupValidatorImpl(repository);
+    }
+
+    // HU-011 — publicado para que `profiles` compruebe si un rol existe para el inquilino.
+    @Bean
+    RoleMustExistForTenantValidator roleMustExistForTenantValidator(RoleRepository repository,
+            RoleMustExistForTenantRule mustExist) {
+        return new RoleMustExistForTenantValidatorImpl(repository, mustExist);
     }
 }
