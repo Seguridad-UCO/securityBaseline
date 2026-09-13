@@ -39,6 +39,15 @@ public interface ApplicationRepository {
     Mono<ApplicationCredentialHash> findCredentialHashById(ApplicationId applicationId);
 
     /**
+     * Resuelve el agregado completo por id, solo si pertenece al inquilino indicado. Vacío en
+     * cualquier otro caso — no distingue "no existe" de "es de otro inquilino" (HU-014, rotación).
+     */
+    Mono<Application> findByIdForTenant(TenantId tenantId, ApplicationId applicationId);
+
+    /** Actualiza solo el hash de la credencial — nunca reconstruye el resto de la fila (HU-014). */
+    Mono<Void> updateCredentialHash(ApplicationId applicationId, ApplicationCredentialHash credentialHash);
+
+    /**
      * Consulta por criterio y ventana. Sustituye a los métodos por combinación de filtros: añadir un
      * filtro nuevo es ampliar {@link ApplicationCriteria}, no añadir un método aquí.
      */

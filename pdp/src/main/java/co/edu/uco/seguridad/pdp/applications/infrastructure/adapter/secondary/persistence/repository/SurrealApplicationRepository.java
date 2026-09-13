@@ -142,6 +142,27 @@ public final class SurrealApplicationRepository implements ApplicationRepository
     }
 
     @Override
+    public Mono<Application> findByIdForTenant(TenantId tenantId, ApplicationId applicationId) {
+        return client.execute(
+                        "SELECT * FROM type::record('%s', $id) WHERE tenantId = $tenantId;"
+                                .formatted(ApplicationSchema.TABLE),
+                        Map.of("id", applicationId.value().toString(), "tenantId", tenantId.value()))
+                .flatMap(results -> {
+                    JsonNode rows = results.get(0);
+                    return rows.isEmpty() ? Mono.empty() : Mono.just(toDomain(rows.get(0)));
+                });
+    }
+
+    @Override
+    public Mono<Void> updateCredentialHash(ApplicationId applicationId, ApplicationCredentialHash credentialHash) {
+        return client.execute(
+                        "UPDATE type::record('%s', $id) SET credentialHash = $credentialHash;"
+                                .formatted(ApplicationSchema.TABLE),
+                        Map.of("id", applicationId.value().toString(), "credentialHash", credentialHash.value()))
+                .then();
+    }
+
+    @Override
     public Mono<Void> deleteById(ApplicationId applicationId) {
         return client.execute(
                         "DELETE type::record('%s', $id);".formatted(ApplicationSchema.TABLE),

@@ -98,6 +98,17 @@ class ValidateApplicationCredentialUseCaseImplTests {
             }
 
             @Override
+            public Mono<Application> findByIdForTenant(TenantId tenantId, ApplicationId applicationId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Void> updateCredentialHash(ApplicationId applicationId,
+                    ApplicationCredentialHash credentialHash) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public Mono<ResultPage<Application>> findBy(ApplicationCriteria criteria, PageWindow window) {
                 throw new UnsupportedOperationException();
             }

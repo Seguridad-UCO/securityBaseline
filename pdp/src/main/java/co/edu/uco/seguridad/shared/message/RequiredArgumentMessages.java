@@ -233,6 +233,12 @@ public final class RequiredArgumentMessages {
     public static final String VALIDATE_APPLICATION_CREDENTIAL_INTERACTOR =
             "se requiere el interactor de validación de credencial de aplicación";
 
+    // HU-014 — rotación de credencial de aplicación.
+    public static final String ROTATE_APPLICATION_CREDENTIAL_USE_CASE =
+            "se requiere el caso de uso de rotación de credencial de aplicación";
+    public static final String ROTATE_APPLICATION_CREDENTIAL_INTERACTOR =
+            "se requiere el interactor de rotación de credencial de aplicación";
+
     private RequiredArgumentMessages() {
     }
 }
