@@ -40,4 +40,8 @@ public record Application(ApplicationId id, TenantId tenantId, ApplicationName n
             Instant registeredAt) {
         return new Application(id, tenantId, name, description, baseUrl, credentialHash, registeredAt);
     }
+
+    public Application withCredentialHash(ApplicationCredentialHash credentialHash) {
+        return new Application(id, tenantId, name, description, baseUrl, credentialHash, registeredAt);
+    }
 }
