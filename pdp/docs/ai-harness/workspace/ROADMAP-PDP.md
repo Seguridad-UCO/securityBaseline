@@ -72,12 +72,22 @@ y `docs/06-security/opa/`. Eso lo produce HU-002 y es lo que consumen los otros 
 | **HU-006** | Adaptador real de OPA sobre `PolicyDecisionPort` | Sustituye la denegación por defecto por la decisión real. El motor y `contracts/pdp-opa/v1/` ya existen: hay que consumirlos, no publicarlos | Cierra el flujo ALLOW | Etapa 3 |
 | **HU-007** | `EventoAcceso` correlacionado hacia Auditoría | INV-AUD-01. Sin evidencia no hay cumplimiento | Auditoría | Etapa 4 (parcial — diseño de evento/outbox; almacenamiento y consulta puede ser otra historia) |
 | **HU-008** | Perfiles como agrupación de roles (BC-05) | Comodidad administrativa, no bloquea la decisión | — | — |
-| **HU-009** | Administración de seguridad por aplicación: quién puede administrar el catálogo (ítems 17-18 de la reunión con Farid) | Diferida a propósito desde HU-004/HU-005 para no bloquear el catálogo. Desbloquea la creación de roles **globales** por HTTP y es el modelo que el microfrontend necesita. **Necesita ADR antes de planificarse** | Microfrontend de seguridad | — |
-| **HU-010** | Criterio 10: cablear la saga de compensación | Único criterio abierto de la línea base, pero no bloquea a nadie del equipo | — | — |
+| **HU-009** | Modelo y mecanismo de administración por aplicación (`AdministrationDecisionPort`, `AuthorizeAdministrationUseCase`, `PrincipalMustBeApplicationAdministratorValidator`) | El alcance original (ítems 17-18 de la reunión con Farid) resultó demasiado grande para un solo plan y necesitaba un ADR que no existía — se resolvió interactivamente (ver `PLAN-HU-009.md` §0) recortando a solo el mecanismo, sin cablear ningún endpoint. **✅ Hecho y validado el 2026-09-13** — la política Rego real (`security-policy-engine/policies/entrypoints/administration.rego`) también quedó escrita, con `make test` en verde | La familia HU-015 a HU-019 | — |
+| **HU-010** | Criterio 10: cablear la saga de compensación | Único criterio abierto de la línea base, pero no bloquea a nadie del equipo. **Recomendado primero** de lo que queda: chico, cero riesgo, cierra deuda | — | — |
+| **HU-015** | Gatear `applications` (eliminar, rotar credencial) con el validador de HU-009 | Primer endpoint que efectivamente restringe algo. Deja pendientes de decidir: si se gatea también el registro, y cómo se nombra al primer administrador (directo vs. evento de dominio) | Patrón para HU-016 a HU-019 | — |
+| **HU-016** | Gatear `roles` (definir rol de aplicación, conceder recurso) | Depende de HU-015. Deja abierto qué pasa con roles de alcance `TENANT` (sin administrador de tenant todavía) | — | — |
+| **HU-017** | Gatear `resources` (registrar recurso protegido) | Depende de HU-015. Sin ambigüedad de alcance — un recurso siempre es de una aplicación | — | — |
+| **HU-018** | Gatear `assignments` (asignar/revocar rol y perfil) | Depende de HU-015 (cómo se resolvió el primer administrador) y HU-016 (roles de tenant). La de mayor riesgo de diseño: quien controla asignaciones controla quién es administrador | — | — |
+| **HU-019** | Gatear `profiles` (definir perfil, añadir rol a perfil) | Depende de HU-016 y HU-018 — mismo problema de alcance `TENANT` que perfiles heredan de roles | — | — |
 
 > Las etapas 5 (despliegue seguro), 6 (adopción/starter) y 7 (observabilidad y gobierno) del plan del
 > compañero son transversales a varias historias y no mapean a un HU único del PDP — se revisan
 > cuando cada pieza esté lista, no antes.
+>
+> **Administrador global de plataforma** no tiene HU asignada todavía: `Assignment.applicationId`
+> es obligatorio hoy y no puede representar una asignación sin aplicación (hallazgo 6 de
+> `PLAN-HU-009.md`). Tocar ese agregado es su propia decisión de arquitectura — se planifica cuando
+> alguien la necesite de verdad (p. ej. para desbloquear roles globales), no antes.
 
 ---
 
