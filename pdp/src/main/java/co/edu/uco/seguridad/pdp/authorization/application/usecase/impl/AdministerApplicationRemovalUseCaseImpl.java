@@ -29,6 +29,7 @@ public final class AdministerApplicationRemovalUseCaseImpl implements Administer
 
     @Override
     public Mono<Void> execute(AdministrationRequest input) {
-        throw new UnsupportedOperationException("pendiente: HU-015");
+        return mustBeAdministrator.execute(input)
+                .then(Mono.defer(() -> removeApplication.execute(input.applicationId())));
     }
 }

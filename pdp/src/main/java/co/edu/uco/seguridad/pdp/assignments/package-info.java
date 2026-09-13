@@ -10,6 +10,6 @@
         "identity :: rule", "identity :: exception",
         "applications :: rule", "applications :: dto", "applications :: exception",
         "applications :: usecase", "applications :: model",
-        "roles :: rule", "roles :: dto", "roles :: exception", "roles :: usecase",
+        "roles :: rule", "roles :: dto", "roles :: exception", "roles :: usecase", "roles :: model",
         "profiles :: rule", "profiles :: dto"})
 package co.edu.uco.seguridad.pdp.assignments;

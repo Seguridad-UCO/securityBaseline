@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.pdp.authorization.application.usecase.impl;
 
+import co.edu.uco.seguridad.pdp.applications.application.primaryport.request.RotateApplicationCredentialRequest;
 import co.edu.uco.seguridad.pdp.applications.application.primaryport.response.ApplicationRegistrationResponse;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RotateApplicationCredentialUseCase;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministrationRequest;
@@ -31,6 +32,8 @@ public final class AdministerApplicationCredentialRotationUseCaseImpl
 
     @Override
     public Mono<ApplicationRegistrationResponse> execute(AdministrationRequest input) {
-        throw new UnsupportedOperationException("pendiente: HU-015");
+        return mustBeAdministrator.execute(input)
+                .then(Mono.defer(() -> rotateCredential.execute(
+                        new RotateApplicationCredentialRequest(input.tenantId(), input.applicationId()))));
     }
 }

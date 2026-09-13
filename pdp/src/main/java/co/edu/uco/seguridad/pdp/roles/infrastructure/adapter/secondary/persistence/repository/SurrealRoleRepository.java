@@ -52,7 +52,21 @@ public final class SurrealRoleRepository implements RoleRepository {
 
     @Override
     public Mono<Role> findByNameInScope(RoleName name, RoleScope scope) {
-        throw new UnsupportedOperationException("pendiente: HU-015");
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("name", name.value());
+        parameters.put("level", scope.level().name());
+        String tenantIdExpr = bind(parameters, "tenantId", scope.tenantId().map(TenantId::value));
+        String applicationIdExpr = bind(parameters, "applicationId",
+                scope.applicationId().map(applicationId -> applicationId.value().toString()));
+
+        return client.execute(
+                        "SELECT * FROM %s WHERE name = $name AND level = $level AND tenantId = %s AND applicationId = %s LIMIT 1;"
+                                .formatted(RoleSchema.TABLE, tenantIdExpr, applicationIdExpr),
+                        parameters)
+                .flatMap(results -> {
+                    JsonNode rows = results.get(0);
+                    return rows.isEmpty() ? Mono.empty() : Mono.just(toDomain(rows.get(0)));
+                });
     }
 
     @Override
