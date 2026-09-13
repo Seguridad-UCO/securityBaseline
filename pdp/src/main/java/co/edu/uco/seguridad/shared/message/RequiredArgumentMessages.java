@@ -169,6 +169,18 @@ public final class RequiredArgumentMessages {
     public static final String PRINCIPAL_MUST_BE_APPLICATION_ADMINISTRATOR_VALIDATOR =
             "se requiere el validador de administrador de aplicación";
 
+    // Saga de registro de aplicación con recurso inicial (HU-010).
+    public static final String REGISTER_APPLICATION_USE_CASE = "se requiere el caso de uso de registro de aplicación";
+    public static final String REGISTER_PROTECTED_RESOURCE_USE_CASE =
+            "se requiere el caso de uso de registro de recurso protegido";
+    public static final String REMOVE_APPLICATION_USE_CASE = "se requiere el caso de uso de eliminación de aplicación";
+    public static final String REGISTER_APPLICATION_WITH_INITIAL_RESOURCE_USE_CASE =
+            "se requiere el caso de uso de registro de aplicación con recurso inicial";
+    public static final String REGISTER_APPLICATION_WITH_INITIAL_RESOURCE_INTERACTOR =
+            "se requiere el interactor de registro de aplicación con recurso inicial";
+    public static final String REGISTERED_PROTECTED_RESOURCE_RESPONSE =
+            "se requiere la respuesta de recurso protegido registrado";
+
     // Seguridad JWT.
     public static final String JWT_ISSUER = "se requiere el emisor esperado (pdp.security.jwt.issuer)";
     public static final String JWT_EXACTLY_ONE_MODE =

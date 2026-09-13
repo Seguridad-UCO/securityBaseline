@@ -33,7 +33,7 @@ código.
 | 7 | Adaptadores dummy | Parcial | El adaptador de auditoría era un lambda `Mono.empty()`; no había adaptador de transacción | `InMemoryAuditAdapter` real, `SnapshotReactiveTransactionAdapter`, repositorios sobre entidades de persistencia | Cumple |
 | 8 | Logging e instrumentación | No cumplía | `ReactiveLogContext` existía pero **no se usaba en ningún sitio**: era código muerto | Aplicado con `.transform(...)` en los cuatro casos de uso; documentado que no se crea `Observation` manual | Cumple |
 | 9 | Excepciones | Parcial | Dos excepciones sueltas sin jerarquía; el handler traducía `IllegalArgumentException` genérica | Jerarquía `DomainException` → `InvalidValueException` / `BusinessRuleViolationException`, más `RequestContractException`; 15 excepciones específicas | Cumple |
-| 10 | Transacciones | No cumplía | No existía puerto ni adaptador; solo compensación manual encadenada | Se retiraron `ReactiveTransactionPort` y el adaptador de snapshot. `RemoveApplicationUseCase` quedó como operación compensatoria | **No cumple** — ningún caso de uso invoca la compensación: no hay saga cableada |
+| 10 | Transacciones | No cumplía | No existía puerto ni adaptador; solo compensación manual encadenada | Se retiraron `ReactiveTransactionPort` y el adaptador de snapshot. `RemoveApplicationUseCase` quedó como operación compensatoria hasta que **HU-010** construyó `POST /api/v1/applications/with-initial-resource`: `RegisterApplicationWithInitialResourceUseCaseImpl` invoca `RemoveApplicationUseCase` como compensación explícita cuando el registro del recurso falla, sin puerto de transacción genérico | Cumple |
 | 11 | Interacción entre capas | Parcial | No había interactor; el controlador construía el comando | Interactores con interfaz e implementación; el controlador solo recibe, mapea, delega y envuelve | Cumple |
 | 12 | SOLID | Parcial | ISP y DIP débiles: puertos anidados en las implementaciones; servicios con varias responsabilidades | Contratos mínimos y separados; reglas como beans sustituibles; lógica en implementaciones | Cumple |
 | 13 | DTOs | Parcial | Un solo DTO con anotaciones Jakarta; el controlador devolvía el modelo de lectura del núcleo | Estrategia en dos niveles: raw `String` → mapper → DTO validado con setters; DTO de respuesta propio | Cumple |
@@ -52,13 +52,15 @@ código.
 
 | Estado | Criterios |
 |---|---|
-| **Cumple** | 22 |
-| **No cumple** | 1 — el 10 |
+| **Cumple** | 23 |
+| **No cumple** | 0 |
 
-**Estado final: 22 de 23.** La auditoría de agosto dejó los 23 en verde, pero la refactorización
+**Estado final: 23 de 23.** La auditoría de agosto dejó los 23 en verde, pero la refactorización
 posterior desconectó la búsqueda con criterios y la saga de compensación sin actualizar esta matriz.
 En vez de mantener el número, se declaró el estado real (18/23) y se cerraron los criterios 16 a 19
-con código en **HU-001**. Queda el 10: cablear la saga de compensación es su propia historia.
+con código en **HU-001**. El 10 —cablear la saga de compensación— se cerró con **HU-010**
+(2026-09-13): `POST /api/v1/applications/with-initial-resource` registra la aplicación y su recurso
+inicial en una sola operación, compensando explícitamente si el segundo paso falla.
 
 > **Revisión — 2026-08-31.** Al construir el harness de IA se volvió a comprobar la matriz contra el
 > código, y reapareció exactamente el hallazgo transversal de agosto: la evidencia no correspondía al
@@ -76,8 +78,12 @@ con código en **HU-001**. Queda el 10: cablear la saga de compensación es su p
 >
 > **Cerrado el 2026-08-31 por HU-001**, la primera historia que se ejecutó por el flujo agéntico:
 > los criterios 16 a 19 se cumplen con código, y `ApplicationHttpTests` repone la evidencia
-> end-to-end de 5, 6, 9 y 22. Sigue abierto el criterio 10. La comprobación de que la documentación
-> no vuelva a adelantarse al código es ahora ejecutable: `.claude/tools/drift.ps1`.
+> end-to-end de 5, 6, 9 y 22. La comprobación de que la documentación no vuelva a adelantarse al
+> código es ahora ejecutable: `.claude/tools/drift.ps1`.
+>
+> **Actualización — 2026-09-13.** El criterio 10, que quedó abierto tras esta revisión, se cerró con
+> **HU-010**: `RegisterApplicationWithInitialResourceUseCaseImpl` invoca `RemoveApplicationUseCase`
+> como compensación explícita. Ver `REPORTE-HU-010.md` en `pdp/docs/ai-harness/workspace/reportes/`.
 
 ## Lo que sigue sin estar hecho, y se dice aquí
 

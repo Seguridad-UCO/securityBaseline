@@ -7,9 +7,10 @@ demostración.
 Para el antes y el después criterio por criterio, ver la
 [matriz de cumplimiento](criteria-compliance-matrix.md).
 
-> **Estado — 2026-08-31.** 22 de los 23 criterios se cumplen. Los criterios 16 a 19 se cerraron con
-> **HU-001**; sigue abierto el **10** (la operación compensatoria existe pero ningún flujo la
-> invoca). Ver la [matriz de cumplimiento](criteria-compliance-matrix.md).
+> **Estado — 2026-09-13.** Los 23 criterios se cumplen. Los criterios 16 a 19 se cerraron con
+> **HU-001**; el **10** se cerró con **HU-010** (la operación compensatoria ahora la invoca
+> `POST /api/v1/applications/with-initial-resource` cuando el registro del recurso falla). Ver la
+> [matriz de cumplimiento](criteria-compliance-matrix.md).
 
 
 | # | Criterio | Enfoque aplicado en la línea base | Evidencia detallada |
@@ -23,7 +24,7 @@ Para el antes y el después criterio por criterio, ver la
 | 7 | Adaptadores de persistencia | Repositorios reales sobre SurrealDB (HTTP); auditoría aún en memoria. | [07](infrastructure/07-dummy-adapters.md) |
 | 8 | Logging e instrumentación | MDC desde Reactor Context, Actuator y bridge OTEL. | [08](cross-cutting/08-logging-instrumentation.md) |
 | 9 | Excepciones | Una excepción por condición, traducción HTTP centralizada. | [09](cross-cutting/09-exception-handling.md) |
-| 10 | Transacciones | ⛔ **No cumple** — la operación compensatoria existe pero nadie la invoca. | [10](domain-and-data/10-transactions.md) |
+| 10 | Transacciones | Saga con compensación explícita por paso (HU-010): `RemoveApplicationUseCase` se invoca cuando el registro del recurso falla. | [10](domain-and-data/10-transactions.md) |
 | 11 | Interacción entre capas | Controller → interactor → caso de uso → rules → dominio/puertos. | [11](architecture/11-layer-interaction.md) |
 | 12 | SOLID | Contratos pequeños, reglas sustituibles, inversión de dependencias. | [12](architecture/12-solid.md) |
 | 13 | DTOs | Raw DTO en `String` → mapper → DTO validado tipado. | [13](interfaces/13-input-strategy-dtos.md) |
