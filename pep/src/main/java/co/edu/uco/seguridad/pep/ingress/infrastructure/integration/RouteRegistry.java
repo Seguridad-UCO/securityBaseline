@@ -5,7 +5,6 @@ import co.edu.uco.seguridad.pep.ingress.application.port.primary.dto.response.Re
 import co.edu.uco.seguridad.pep.ingress.application.port.secondary.IntegrationRegistrationPort;
 import co.edu.uco.seguridad.pep.ingress.infrastructure.properties.IngressProperties;
 import org.springframework.stereotype.Component;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import tools.jackson.databind.ObjectMapper;
@@ -31,7 +30,6 @@ public final class RouteRegistry implements IntegrationRegistrationPort {
     private final List<IngressProperties.Route> staticRoutes;
     private final boolean allowInsecureHttp;
     private final AtomicReference<List<RegisteredIntegration>> dynamicRoutes;
-    private final BCryptPasswordEncoder passwords = new BCryptPasswordEncoder();
 
     public RouteRegistry(IntegrationProperties properties, IngressProperties ingress, ObjectMapper mapper) {
         this.properties = properties;
@@ -70,20 +68,9 @@ public final class RouteRegistry implements IntegrationRegistrationPort {
         return registered;
     }
 
-    public Optional<IntegrationProperties.Credential> credential(String applicationId, String environment) {
-        return properties.credentials().stream().filter(candidate -> candidate.applicationId().equals(applicationId)
-                && candidate.environment().equals(environment)).findFirst();
-    }
-
     @Override
     public boolean enabled() {
         return properties.enabled();
-    }
-
-    @Override
-    public boolean credentialMatches(String applicationId, String environment, String bearerToken) {
-        return bearerToken != null && credential(applicationId, environment)
-                .map(value -> passwords.matches(bearerToken, value.tokenHash())).orElse(false);
     }
 
     @Override
