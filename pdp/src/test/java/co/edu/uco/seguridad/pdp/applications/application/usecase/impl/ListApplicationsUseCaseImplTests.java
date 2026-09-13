@@ -116,6 +116,12 @@ class ListApplicationsUseCaseImplTests {
             }
 
             @Override
+            public Mono<co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash> findCredentialHashById(
+                    ApplicationId applicationId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public Mono<ResultPage<Application>> findBy(ApplicationCriteria criteria, PageWindow window) {
                 received.add(new Object[] {criteria, window});
                 return Mono.just(page);

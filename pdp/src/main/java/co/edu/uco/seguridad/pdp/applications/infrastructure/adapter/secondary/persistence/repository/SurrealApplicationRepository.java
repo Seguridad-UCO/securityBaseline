@@ -3,6 +3,7 @@ package co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.p
 import co.edu.uco.seguridad.pdp.applications.application.secondaryport.repository.ApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
 import co.edu.uco.seguridad.pdp.applications.domain.ApplicationCriteria;
+import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash;
 import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
 import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.entity.ApplicationEntity;
@@ -62,6 +63,19 @@ public final class SurrealApplicationRepository implements ApplicationRepository
                 .flatMap(results -> {
                     JsonNode rows = results.get(0);
                     return rows.isEmpty() ? Mono.empty() : Mono.just(new TenantId(rows.get(0).path("tenantId").asString()));
+                });
+    }
+
+    @Override
+    public Mono<ApplicationCredentialHash> findCredentialHashById(ApplicationId applicationId) {
+        return client.execute(
+                        "SELECT credentialHash FROM type::record('%s', $id);".formatted(ApplicationSchema.TABLE),
+                        Map.of("id", applicationId.value().toString()))
+                .flatMap(results -> {
+                    JsonNode rows = results.get(0);
+                    return rows.isEmpty()
+                            ? Mono.empty()
+                            : Mono.just(new ApplicationCredentialHash(rows.get(0).path("credentialHash").asString()));
                 });
     }
 

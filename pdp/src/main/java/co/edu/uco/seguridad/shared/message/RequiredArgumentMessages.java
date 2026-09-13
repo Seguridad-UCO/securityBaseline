@@ -225,6 +225,14 @@ public final class RequiredArgumentMessages {
     public static final String REGISTERED_APPLICATION_RESPONSE = "se requiere la respuesta de aplicación registrada";
     public static final String APPLICATION_CREDENTIAL = "se requiere la credencial de la aplicación";
 
+    // HU-013 — validación de credencial de aplicación.
+    public static final String APPLICATION_CREDENTIAL_MUST_BE_VALID_RULE =
+            "se requiere la regla de validez de credencial de aplicación";
+    public static final String VALIDATE_APPLICATION_CREDENTIAL_USE_CASE =
+            "se requiere el caso de uso de validación de credencial de aplicación";
+    public static final String VALIDATE_APPLICATION_CREDENTIAL_INTERACTOR =
+            "se requiere el interactor de validación de credencial de aplicación";
+
     private RequiredArgumentMessages() {
     }
 }

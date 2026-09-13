@@ -11,6 +11,7 @@ import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
 import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
 import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
+import co.edu.uco.seguridad.shared.port.CredentialHasher;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -55,6 +56,12 @@ class RegisterApplicationUseCaseImplTests {
             }
 
             @Override
+            public Mono<co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash> findCredentialHashById(
+                    ApplicationId applicationId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public Mono<ResultPage<Application>> findBy(ApplicationCriteria criteria, PageWindow window) {
                 throw new UnsupportedOperationException();
             }
@@ -73,7 +80,7 @@ class RegisterApplicationUseCaseImplTests {
         UUID fixedId = UUID.randomUUID();
         RegisterApplicationUseCaseImpl useCase = new RegisterApplicationUseCaseImpl(
                 dto -> Mono.empty(), repository, () -> fixedId, () -> NOW,
-                () -> PLAINTEXT_SECRET, plaintext -> HASHED_SECRET);
+                () -> PLAINTEXT_SECRET, hasher(HASHED_SECRET));
 
         RegisterApplicationRequest request = new RegisterApplicationRequest(TENANT,
                 new ApplicationName("gestion-academica"), "Sistema académico",
@@ -113,6 +120,12 @@ class RegisterApplicationUseCaseImplTests {
             }
 
             @Override
+            public Mono<co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash> findCredentialHashById(
+                    ApplicationId applicationId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public Mono<ResultPage<Application>> findBy(ApplicationCriteria criteria, PageWindow window) {
                 throw new UnsupportedOperationException();
             }
@@ -130,7 +143,7 @@ class RegisterApplicationUseCaseImplTests {
         };
         RegisterApplicationUseCaseImpl useCase = new RegisterApplicationUseCaseImpl(
                 dto -> Mono.empty(), repository, UUID::randomUUID, () -> NOW,
-                () -> PLAINTEXT_SECRET, plaintext -> HASHED_SECRET);
+                () -> PLAINTEXT_SECRET, hasher(HASHED_SECRET));
 
         RegisterApplicationRequest request = new RegisterApplicationRequest(TENANT,
                 new ApplicationName("gestion-academica"), "", new ApplicationBaseUrl("https://example.com"));
@@ -165,6 +178,12 @@ class RegisterApplicationUseCaseImplTests {
             }
 
             @Override
+            public Mono<co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash> findCredentialHashById(
+                    ApplicationId applicationId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public Mono<ResultPage<Application>> findBy(ApplicationCriteria criteria, PageWindow window) {
                 throw new UnsupportedOperationException();
             }
@@ -183,11 +202,35 @@ class RegisterApplicationUseCaseImplTests {
         RegisterApplicationUseCaseImpl useCase = new RegisterApplicationUseCaseImpl(
                 alwaysRejects, repository, UUID::randomUUID, () -> NOW,
                 () -> { throw new AssertionError("must not generate a secret when the rules reject the request"); },
-                plaintext -> { throw new AssertionError("must not hash when the rules reject the request"); });
+                new CredentialHasher() {
+                    @Override
+                    public String hash(String plaintext) {
+                        throw new AssertionError("must not hash when the rules reject the request");
+                    }
+
+                    @Override
+                    public boolean matches(String plaintext, String hash) {
+                        throw new AssertionError("must not match when the rules reject the request");
+                    }
+                });
 
         RegisterApplicationRequest request = new RegisterApplicationRequest(TENANT,
                 new ApplicationName("admin"), "", new ApplicationBaseUrl("https://admin.example.com"));
 
         StepVerifier.create(useCase.execute(request)).expectErrorMessage("nombre reservado").verify();
+    }
+
+    private static CredentialHasher hasher(String hashed) {
+        return new CredentialHasher() {
+            @Override
+            public String hash(String plaintext) {
+                return hashed;
+            }
+
+            @Override
+            public boolean matches(String plaintext, String hash) {
+                throw new UnsupportedOperationException();
+            }
+        };
     }
 }

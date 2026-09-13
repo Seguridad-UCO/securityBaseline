@@ -46,6 +46,16 @@ class SharedPortsConfiguration {
     @Bean
     CredentialHasher credentialHasher() {
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        return encoder::encode;
+        return new CredentialHasher() {
+            @Override
+            public String hash(String plaintext) {
+                return encoder.encode(plaintext);
+            }
+
+            @Override
+            public boolean matches(String plaintext, String hash) {
+                return encoder.matches(plaintext, hash);
+            }
+        };
     }
 }
