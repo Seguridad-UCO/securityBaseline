@@ -8,9 +8,9 @@ La integración conserva tres modelos diferentes:
 | `PolicyDecision` | Resultado lógico del core de políticas. | Core OPA |
 | `OpaResponse` | Envelope nativo de la API REST de OPA. | Adapter HTTP |
 
-Un adapter futuro transforma el resultado HTTP en `PolicyDecision`; el core Rego no
-importa ni conoce `OpaResponse`. `policyId` identifica la política de aplicación (o el
-componente core que negó), no una lista de predicados que participaron en la decisión.
+El adapter HTTP transforma `OpaResponse` en una decisión PDP; el core Rego no conoce el
+envelope HTTP. `policyReferences` contiene las policies decisivas, ordenadas de manera
+determinista; una DENY puede referenciar varias policies que coincidieron.
 
 ## Hechos y tenant
 
@@ -24,8 +24,6 @@ positiva. El PDP resuelve y protege esos hechos antes de enviarlos a OPA.
 
 ## Obligaciones
 
-Los únicos tipos admitidos son `AUDIT`, `MASK_FIELDS`, `REQUIRE_MFA`, `READ_ONLY` y
-`LOG_SECURITY_EVENT`, con parámetros objeto. OPA solamente las declara; el PEP las
-ejecuta. Un consumidor que reciba una obligación desconocida con un `ALLOW` debe cerrar
-la solicitud. El contrato completo está en `contracts/pdp-opa/v1/obligation.schema.json`.
-
+Aunque el contrato enumera tipos de obligation, actualmente no se publican obligaciones:
+PDP aún no las transporta y PEP rechaza una lista no vacía. Una PolicyDefinition con
+obligations no vacías debe ser rechazada durante validación de bundle.

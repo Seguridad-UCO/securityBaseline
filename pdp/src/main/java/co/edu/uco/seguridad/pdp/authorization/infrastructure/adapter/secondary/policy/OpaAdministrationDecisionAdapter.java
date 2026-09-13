@@ -19,6 +19,7 @@ import reactor.core.publisher.Mono;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -59,9 +60,10 @@ public final class OpaAdministrationDecisionAdapter implements AdministrationDec
 
     private static OpaAdministrationEvaluationInput toInput(AdministrationRequest input) {
         return new OpaAdministrationEvaluationInput(
-                new OpaSubject(input.subject(), SUBJECT_TYPE, input.tenantId().value(), List.copyOf(input.subjectRoles())),
-                new OpaTenant(input.tenantId().value()),
-                new OpaApplication(input.applicationId().value().toString()));
+                new OpaSubject(input.subject(), SUBJECT_TYPE, input.tenantId().value(), List.copyOf(input.subjectRoles()),
+                        List.of(), List.of(), List.of(), Map.of()),
+                new OpaTenant(input.tenantId().value(), Map.of()),
+                new OpaApplication(input.applicationId().value().toString(), Map.of()));
     }
 
     private static AdministrationDecision toDecision(OpaResponse response) {

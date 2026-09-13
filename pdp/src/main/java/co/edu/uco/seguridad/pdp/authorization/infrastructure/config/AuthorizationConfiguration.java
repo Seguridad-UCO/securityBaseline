@@ -10,6 +10,8 @@ import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.impl.Pr
 import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.AccessAuditRepository;
 import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.AdministrationDecisionPort;
 import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.PolicyDecisionPort;
+import co.edu.uco.seguridad.pdp.authorization.application.service.AuthorizationContextResolver;
+import co.edu.uco.seguridad.pdp.authorization.application.service.impl.AuthorizationContextResolverImpl;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.AuthorizeAdministrationUseCase;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.AuthorizeUseCase;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.EvaluateInternalAccessUseCase;
@@ -22,8 +24,8 @@ import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.InternalAccessDecisionInteractorImpl;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.persistence.repository.SurrealAccessAuditRepository;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.persistence.schema.SurrealAccessEventSchemaInitializer;
-import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.OpaAdministrationDecisionAdapter;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.OpaPolicyDecisionAdapter;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.OpaAdministrationDecisionAdapter;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.properties.OpaProperties;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceMustExistValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleNamesLookupValidator;
@@ -71,12 +73,18 @@ public class AuthorizationConfiguration {
     }
 
     @Bean
+    AuthorizationContextResolver authorizationContextResolver() {
+        return new AuthorizationContextResolverImpl();
+    }
+
+    @Bean
     AuthorizeUseCase authorizeUseCase(ApplicationMustExistForTenantValidator applicationMustExist,
             ProtectedResourceMustExistValidator resourceMustExist, ActiveRoleNamesLookupValidator rolesLookup,
-            AccessAuditRepository audit, PolicyDecisionPort policyDecisionPort, IdentifierGenerator identifiers,
+            AuthorizationContextResolver contextResolver, AccessAuditRepository audit,
+            PolicyDecisionPort policyDecisionPort, IdentifierGenerator identifiers,
             TimeProvider time, ObservationRegistry observations) {
-        var delegate = new AuthorizeUseCaseImpl(applicationMustExist, resourceMustExist, rolesLookup, audit,
-                policyDecisionPort, identifiers, time);
+        var delegate = new AuthorizeUseCaseImpl(applicationMustExist, resourceMustExist, rolesLookup, contextResolver,
+                audit, policyDecisionPort, identifiers, time);
         return input -> ReactiveTelemetry.observe("security.authorization", observations,
                 io.micrometer.common.KeyValues.of("decision", "none", "reason", "none"), () -> delegate.execute(input),
                 (observation, decision) -> observation.lowCardinalityKeyValue("decision", decision.state().name())
@@ -100,8 +108,6 @@ public class AuthorizationConfiguration {
         return new InternalAccessDecisionInteractorImpl(useCase);
     }
 
-    // HU-009 — mecanismo de administración por aplicación (modelo y puerto; sin cablear a ningún
-    // endpoint todavía).
     @Bean
     AdministrationDecisionPort administrationDecisionPort(OpaProperties properties, ObjectMapper objectMapper,
             WebClient.Builder builder) {

@@ -77,8 +77,8 @@ flowchart TB
 ```
 
 **Lectura del diagrama:** el código de los tres saltos (SPA→PDP, PEP→PDP, PDP→OPA) ya existe y está
-probado — HU-002, HU-003 y HU-006, en ese orden. Lo que **no** existe todavía es una política de
-aplicación real en `policies/applications/`: por eso OPA sigue respondiendo
+probado — HU-002, HU-003 y HU-006, en ese orden. Lo que **no** existe todavía es una
+PolicyDefinition publicada en el bundle: por eso OPA sigue respondiendo
 `DENY`/`NO_APPLICABLE_POLICY` a cualquier petición, y el PEP nunca llega a dejar pasar el tráfico
 real hacia una aplicación protegida. La columna que corre de punta a punta con una respuesta
 distinta de `DENY` sigue siendo solo SPA → Keycloak → PDP → SurrealDB.
@@ -118,9 +118,8 @@ curl -i -b cookies.txt -X POST http://localhost:8080/api/v1/authorize \
 La última llamada **siempre responde `DENY / NO_APPLICABLE_POLICY`** hoy — es correcto, no un bug:
 `OpaPolicyDecisionAdapter` (HU-006) hace una llamada HTTP real a OPA a través de `PolicyDecisionPort`
 (`pdp/src/main/java/co/edu/uco/seguridad/pdp/authorization/infrastructure/adapter/secondary/policy/OpaPolicyDecisionAdapter.java`),
-y OPA responde `DENY`/`NO_APPLICABLE_POLICY` porque `security-policy-engine/policies/application/`
-todavía no tiene ninguna política de aplicación publicada — el *extension point* de
-`allow_candidates`/`deny_candidates` sigue vacío.
+y OPA responde `DENY`/`NO_APPLICABLE_POLICY` porque `security-policy-engine/data/policies.json`
+todavía no contiene PolicyDefinitions publicadas.
 Ver [`pdp/docs/ai-harness/workspace/ROADMAP-PDP.md`](../pdp/docs/ai-harness/workspace/ROADMAP-PDP.md#por-qué-hu-002-deniega-a-propósito).
 
 ### PEP (puerto 8081)
@@ -172,7 +171,7 @@ curl -X POST http://localhost:8181/v1/data/security/authorization/decision \
   -H 'content-type: application/json' --data-binary @-
 ```
 
-Sin ninguna política de aplicación registrada bajo `policies/applications/`, la respuesta siempre es:
+Sin ninguna PolicyDefinition publicada en `data/policies.json`, la respuesta siempre es:
 
 ```json
 {"result":{"effect":"DENY","reasonCode":"NO_APPLICABLE_POLICY",

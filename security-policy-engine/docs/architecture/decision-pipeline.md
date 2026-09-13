@@ -2,19 +2,18 @@
 
 ```text
 PolicyEvaluationInput
-  ├─ inválido ─────────────────────────────→ DENY / INVALID_INPUT
-  ├─ explicit deny de aplicación ──────────→ DENY
-  ├─ tenant distinto sin candidato + prueba → DENY / TENANT_ISOLATION_FAILED
-  ├─ candidato ALLOW válido ───────────────→ ALLOW
+  ├─ inválido ─────────────────────────────→ INDETERMINATE / INVALID_INPUT
+  ├─ policy DENY que coincide ─────────────→ DENY / POLICY_DENY
+  ├─ tenant distinto sin evidencia confiable→ DENY / TENANT_ISOLATION_FAILED
+  ├─ una o más policy ALLOW que coinciden ─→ ALLOW / POLICY_ALLOWED
   └─ sin coincidencia ─────────────────────→ DENY / NO_APPLICABLE_POLICY
 ```
 
-El `explicit deny` vence a cualquier allow. El guard de tenant exige igualdad por
-defecto. Una aplicación puede solicitar `tenantScope: CROSS_TENANT`, pero el core exige
-evidencia resuelta por el PDP (`tenant:cross-access` o el atributo booleano
-`crossTenantAccess`) y añade `AUDIT` a todo allow cross-tenant.
+`DENY_OVERRIDES` vence a cualquier ALLOW. El guard de tenant exige igualdad por defecto.
+Una policy `CROSS_TENANT` además exige evidencia resuelta por el PDP. Las obligaciones se
+mantienen vacías hasta que PEP y PDP las soporten end-to-end.
 
-El directorio `policies/domain` contiene capacidades de evidencia reutilizables, no
-autorización completa. Las políticas reales emiten candidatos y el entrypoint único
-`data.security.authorization.decision` aplica las invariantes globales.
-
+Las PolicyDefinitions son datos del bundle bajo `data/policies.json`. El selector aplica
+targeting genérico y el evaluador interpreta condiciones AST; ningún módulo Rego depende del
+nombre de una aplicación. El entrypoint único `data.security.authorization.decision` aplica
+las invariantes globales.
