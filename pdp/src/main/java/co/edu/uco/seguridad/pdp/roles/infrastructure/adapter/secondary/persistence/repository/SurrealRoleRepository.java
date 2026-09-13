@@ -51,6 +51,11 @@ public final class SurrealRoleRepository implements RoleRepository {
     }
 
     @Override
+    public Mono<Role> findByNameInScope(RoleName name, RoleScope scope) {
+        throw new UnsupportedOperationException("pendiente: HU-015");
+    }
+
+    @Override
     public Mono<Role> findByIdForTenant(RoleId roleId, TenantId tenantId) {
         return client.execute(
                         "SELECT * FROM type::record('%s', $id) WHERE tenantId = $tenantId;".formatted(RoleSchema.TABLE),

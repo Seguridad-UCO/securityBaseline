@@ -3,8 +3,8 @@
 > Generado por `.claude/tools/mapa.ps1`. **No editar a mano** - se regenera desde el codigo.
 > Es el nivel 0 del grafo de conocimiento: responde "que existe y donde va lo nuevo".
 
-- Clases de produccion: **570**
-- Clases de prueba: **180**
+- Clases de produccion: **613**
+- Clases de prueba: **181**
 - Slices de negocio: **9** (applications, assignments, authorization, commons, identity, profiles, resources, roles, tenants)
 
 ---
@@ -42,7 +42,7 @@
 | Cableado (@Bean) | `ApplicationsConfiguration` |
 | Propiedades | `ApplicationCatalogProperties` |
 
-### `assignments` - 92 clases
+### `assignments` - 112 clases
 
 | Rol | Clases |
 |---|---|
@@ -53,26 +53,26 @@
 | Dato de regla (hecho resuelto) | `ActiveAssignmentAvailability`, `ActiveProfileAssignmentAvailability`, `AssignmentExistence`, `ProfileAssignmentExistence` |
 | Regla de dominio (contrato) | `AssignmentMustExistForTenantRule`, `AssignmentMustNotDuplicateActiveRule`, `ProfileAssignmentMustExistForTenantRule`, `ProfileAssignmentMustNotDuplicateActiveRule` |
 | Dominio (agregado / criteria) | `Assignment`, `AssignmentCriteria`, `ProfileAssignment` |
-| Caso de uso (impl) | `AssignProfileUseCaseImpl`, `AssignRoleUseCaseImpl`, `ListAssignmentsUseCaseImpl`, `ResolveActiveRolesUseCaseImpl`, `RevokeAssignmentUseCaseImpl`, `RevokeProfileAssignmentUseCaseImpl` |
-| Caso de uso (contrato) | `AssignProfileUseCase`, `AssignRoleUseCase`, `ListAssignmentsUseCase`, `ResolveActiveRolesUseCase`, `RevokeAssignmentUseCase`, `RevokeProfileAssignmentUseCase` |
+| Caso de uso (impl) | `AssignApplicationAdministratorUseCaseImpl`, `AssignProfileUseCaseImpl`, `AssignRoleUseCaseImpl`, `ListAssignmentsUseCaseImpl`, `RegisterApplicationWithFirstAdministratorUseCaseImpl`, `ResolveActiveRolesUseCaseImpl`, `ResolveAuthorizationSubjectFactsUseCaseImpl`, `RevokeAssignmentUseCaseImpl`, `RevokeProfileAssignmentUseCaseImpl` |
+| Caso de uso (contrato) | `AssignApplicationAdministratorUseCase`, `AssignProfileUseCase`, `AssignRoleUseCase`, `ListAssignmentsUseCase`, `RegisterApplicationWithFirstAdministratorUseCase`, `ResolveActiveRolesUseCase`, `ResolveAuthorizationSubjectFactsUseCase`, `RevokeAssignmentUseCase`, `RevokeProfileAssignmentUseCase` |
 | Validador de reglas (impl) | `AssignProfileRulesValidatorImpl`, `AssignRoleRulesValidatorImpl`, `RevokeAssignmentRulesValidatorImpl`, `RevokeProfileAssignmentRulesValidatorImpl` |
 | Validador de reglas (contrato) | `AssignProfileRulesValidator`, `AssignRoleRulesValidator`, `RevokeAssignmentRulesValidator`, `RevokeProfileAssignmentRulesValidator` |
 | Puerto de salida | `AssignmentRepository`, `ProfileAssignmentRepository` |
-| DTO de entrada al nucleo | `AssignProfileRequest`, `AssignRoleRequest`, `ListAssignmentsRequest`, `ResolveActiveRolesRequest`, `RevokeAssignmentRequest`, `RevokeProfileAssignmentRequest` |
-| DTO de salida del nucleo | `ActiveRolesResponse`, `AssignmentResponse`, `ProfileAssignmentResponse` |
-| Controller | `AssignmentController`, `ProfileAssignmentController` |
-| DTO crudo HTTP | `AssignProfileRawRequest`, `AssignRoleRawRequest`, `ListAssignmentsRawRequest`, `RevokeAssignmentRawRequest`, `RevokeProfileAssignmentRawRequest` |
-| DTO de respuesta HTTP | `AssignmentWebResponse`, `ProfileAssignmentWebResponse` |
-| Interactor (impl) | `AssignProfileInteractorImpl`, `AssignRoleInteractorImpl`, `ListAssignmentsInteractorImpl`, `RevokeAssignmentInteractorImpl`, `RevokeProfileAssignmentInteractorImpl` |
-| Interactor (contrato) | `AssignProfileInteractor`, `AssignRoleInteractor`, `ListAssignmentsInteractor`, `RevokeAssignmentInteractor`, `RevokeProfileAssignmentInteractor` |
-| Mapper web | `AssignmentResponseMapper`, `AssignProfileRequestMapper`, `AssignRoleRequestMapper`, `ListAssignmentsRequestMapper`, `ProfileAssignmentResponseMapper`, `RevokeAssignmentRequestMapper`, `RevokeProfileAssignmentRequestMapper` |
+| DTO de entrada al nucleo | `AssignApplicationAdministratorRequest`, `AssignProfileRequest`, `AssignRoleRequest`, `ListAssignmentsRequest`, `RegisterApplicationWithFirstAdministratorRequest`, `ResolveActiveRolesRequest`, `ResolveAuthorizationSubjectFactsRequest`, `RevokeAssignmentRequest`, `RevokeProfileAssignmentRequest` |
+| DTO de salida del nucleo | `ActiveRolesResponse`, `AssignmentResponse`, `AuthorizationSubjectFactsResponse`, `ProfileAssignmentResponse` |
+| Controller | `AssignmentController`, `InternalApplicationAdministratorController`, `ProfileAssignmentController` |
+| DTO crudo HTTP | `AssignApplicationAdministratorRawRequest`, `AssignProfileRawRequest`, `AssignRoleRawRequest`, `ListAssignmentsRawRequest`, `RegisterApplicationWithFirstAdministratorRawRequest`, `RevokeAssignmentRawRequest`, `RevokeProfileAssignmentRawRequest` |
+| DTO de respuesta HTTP | `ApplicationRegisteredWebResponse`, `AssignmentWebResponse`, `ProfileAssignmentWebResponse` |
+| Interactor (impl) | `AssignApplicationAdministratorInteractorImpl`, `AssignProfileInteractorImpl`, `AssignRoleInteractorImpl`, `ListAssignmentsInteractorImpl`, `RegisterApplicationWithFirstAdministratorInteractorImpl`, `RevokeAssignmentInteractorImpl`, `RevokeProfileAssignmentInteractorImpl` |
+| Interactor (contrato) | `AssignApplicationAdministratorInteractor`, `AssignProfileInteractor`, `AssignRoleInteractor`, `ListAssignmentsInteractor`, `RegisterApplicationWithFirstAdministratorInteractor`, `RevokeAssignmentInteractor`, `RevokeProfileAssignmentInteractor` |
+| Mapper web | `ApplicationRegisteredResponseMapper`, `AssignmentResponseMapper`, `AssignProfileRequestMapper`, `AssignRoleRequestMapper`, `ListAssignmentsRequestMapper`, `ProfileAssignmentResponseMapper`, `RegisterApplicationWithFirstAdministratorRequestMapper`, `RevokeAssignmentRequestMapper`, `RevokeProfileAssignmentRequestMapper` |
 | Entidad de persistencia | `AssignmentEntity`, `ProfileAssignmentEntity` |
 | Mapper de persistencia | `AssignmentPersistenceMapper`, `ProfileAssignmentPersistenceMapper` |
 | Adaptador de repositorio | `SurrealAssignmentRepository`, `SurrealProfileAssignmentRepository` |
 | Esquema de tabla | `AssignmentSchema`, `ProfileAssignmentSchema`, `SurrealAssignmentSchemaInitializer`, `SurrealProfileAssignmentSchemaInitializer` |
 | Cableado (@Bean) | `AssignmentsConfiguration` |
 
-### `authorization` - 60 clases
+### `authorization` - 77 clases
 
 | Rol | Clases |
 |---|---|
@@ -80,26 +80,26 @@
 | Catalogo de mensajes | `AuthorizationMessages` |
 | Value object | `DecisionState`, `PolicyReference`, `ReasonCode` |
 | Evento de dominio | `AccessEvent` |
-| Caso de uso (impl) | `AuthorizeAdministrationUseCaseImpl`, `AuthorizeUseCaseImpl`, `EvaluateInternalAccessUseCaseImpl` |
-| Caso de uso (contrato) | `AuthorizeAdministrationUseCase`, `AuthorizeUseCase`, `EvaluateInternalAccessUseCase` |
+| Caso de uso (impl) | `AdministerApplicationCredentialRotationUseCaseImpl`, `AdministerApplicationRemovalUseCaseImpl`, `AuthorizeAdministrationUseCaseImpl`, `AuthorizeUseCaseImpl`, `EvaluateInternalAccessUseCaseImpl` |
+| Caso de uso (contrato) | `AdministerApplicationCredentialRotationUseCase`, `AdministerApplicationRemovalUseCase`, `AuthorizeAdministrationUseCase`, `AuthorizeUseCase`, `EvaluateInternalAccessUseCase` |
 | Validador de reglas (impl) | `ActiveRoleNamesLookupValidatorImpl`, `PrincipalMustBeApplicationAdministratorValidatorImpl` |
 | Validador de reglas (contrato) | `ActiveRoleNamesLookupValidator`, `PrincipalMustBeApplicationAdministratorValidator` |
 | Puerto de salida | `AccessAuditRepository`, `AdministrationDecisionPort`, `PolicyDecisionPort` |
-| DTO de entrada al nucleo | `AccessRequest`, `AdministrationRequest`, `InternalAccessRequest` |
+| DTO de entrada al nucleo | `AccessRequest`, `AdministrationRequest`, `InternalAccessRequest`, `PolicyEvaluationInput` |
 | DTO de salida del nucleo | `AccessDecision`, `AdministrationDecision` |
-| Controller | `AuthorizationController`, `InternalAccessDecisionController` |
-| DTO crudo HTTP | `AccessDecisionRawRequest`, `AuthorizeRawRequest` |
-| DTO de respuesta HTTP | `AccessDecisionInternalWebResponse`, `AccessDecisionWebResponse`, `PolicyReferenceWebResponse` |
-| Interactor (impl) | `AuthorizeInteractorImpl`, `InternalAccessDecisionInteractorImpl` |
-| Interactor (contrato) | `AuthorizeInteractor`, `InternalAccessDecisionInteractor` |
-| Mapper web | `AccessDecisionInternalResponseMapper`, `AccessDecisionRawRequestMapper`, `AccessDecisionResponseMapper`, `AuthorizeRequestMapper` |
+| Controller | `ApplicationAdministrationController`, `AuthorizationController`, `InternalAccessDecisionController` |
+| DTO crudo HTTP | `AccessDecisionRawRequest`, `ApplicationAdministrationRawRequest`, `AuthorizeRawRequest` |
+| DTO de respuesta HTTP | `AccessDecisionInternalWebResponse`, `AccessDecisionWebResponse`, `AdministeredApplicationWebResponse`, `PolicyReferenceWebResponse` |
+| Interactor (impl) | `ApplicationCredentialRotationInteractorImpl`, `ApplicationRemovalInteractorImpl`, `AuthorizeInteractorImpl`, `InternalAccessDecisionInteractorImpl` |
+| Interactor (contrato) | `ApplicationCredentialRotationInteractor`, `ApplicationRemovalInteractor`, `AuthorizeInteractor`, `InternalAccessDecisionInteractor` |
+| Mapper web | `AccessDecisionInternalResponseMapper`, `AccessDecisionRawRequestMapper`, `AccessDecisionResponseMapper`, `AdministeredApplicationResponseMapper`, `ApplicationAdministrationRequestMapper`, `AuthorizeRequestMapper` |
 | Entidad de persistencia | `AccessEventEntity` |
 | Mapper de persistencia | `AccessEventPersistenceMapper` |
 | Adaptador de repositorio | `SurrealAccessAuditRepository` |
 | Esquema de tabla | `AccessEventSchema`, `SurrealAccessEventSchemaInitializer` |
 | Cableado (@Bean) | `AuthorizationConfiguration` |
 | Propiedades | `OpaProperties` |
-| Otro | `OpaAdministrationDecisionAdapter`, `OpaAdministrationEvaluationInput`, `OpaAdministrationEvaluationRequest`, `OpaApplication`, `OpaEvaluationInput`, `OpaEvaluationRequest`, `OpaPolicyDecisionAdapter`, `OpaPolicyDecisionPayload`, `OpaPolicyReference`, `OpaRequestInfo`, `OpaResource`, `OpaResponse`, `OpaSubject`, `OpaTenant` |
+| Otro | `AuthorizationContextResolver`, `AuthorizationContextResolverImpl`, `ObservedAccessAuditRepository`, `OpaAdministrationDecisionAdapter`, `OpaAdministrationEvaluationInput`, `OpaAdministrationEvaluationRequest`, `OpaApplication`, `OpaEvaluationInput`, `OpaEvaluationRequest`, `OpaPolicyDecisionAdapter`, `OpaPolicyDecisionPayload`, `OpaPolicyReference`, `OpaRequestInfo`, `OpaResource`, `OpaResponse`, `OpaSubject`, `OpaTenant` |
 
 ### `commons` - 19 clases
 
@@ -141,7 +141,7 @@
 | Cableado (@Bean) | `IdentityConfiguration` |
 | Propiedades | `IdentityProvisioningProperties` |
 
-### `profiles` - 52 clases
+### `profiles` - 54 clases
 
 | Rol | Clases |
 |---|---|
@@ -154,8 +154,8 @@
 | Dominio (agregado / criteria) | `Profile`, `ProfileCriteria` |
 | Caso de uso (impl) | `AddRoleToProfileUseCaseImpl`, `DefineProfileUseCaseImpl`, `ListProfilesUseCaseImpl` |
 | Caso de uso (contrato) | `AddRoleToProfileUseCase`, `DefineProfileUseCase`, `ListProfilesUseCase` |
-| Validador de reglas (impl) | `AddRoleToProfileRulesValidatorImpl`, `DefineProfileRulesValidatorImpl`, `ProfileRolesLookupValidatorImpl` |
-| Validador de reglas (contrato) | `AddRoleToProfileRulesValidator`, `DefineProfileRulesValidator`, `ProfileRolesLookupValidator` |
+| Validador de reglas (impl) | `AddRoleToProfileRulesValidatorImpl`, `DefineProfileRulesValidatorImpl`, `ProfileNamesLookupValidatorImpl`, `ProfileRolesLookupValidatorImpl` |
+| Validador de reglas (contrato) | `AddRoleToProfileRulesValidator`, `DefineProfileRulesValidator`, `ProfileNamesLookupValidator`, `ProfileRolesLookupValidator` |
 | Puerto de salida | `ProfileRepository` |
 | DTO de entrada al nucleo | `AddRoleToProfileRequest`, `DefineProfileRequest`, `ListProfilesRequest`, `ProfileOwnershipQuery` |
 | DTO de salida del nucleo | `ProfileResponse` |
@@ -171,7 +171,7 @@
 | Esquema de tabla | `ProfileSchema`, `SurrealProfileSchemaInitializer` |
 | Cableado (@Bean) | `ProfilesConfiguration` |
 
-### `resources` - 57 clases
+### `resources` - 59 clases
 
 | Rol | Clases |
 |---|---|
@@ -185,8 +185,8 @@
 | Dominio (agregado / criteria) | `ProtectedResource` |
 | Caso de uso (impl) | `ListProtectedResourcesUseCaseImpl`, `RegisterApplicationWithInitialResourceUseCaseImpl`, `RegisterProtectedResourceUseCaseImpl` |
 | Caso de uso (contrato) | `ListProtectedResourcesUseCase`, `RegisterApplicationWithInitialResourceUseCase`, `RegisterProtectedResourceUseCase` |
-| Validador de reglas (impl) | `ProtectedResourceMustExistValidatorImpl`, `ProtectedResourceOwnerLookupValidatorImpl`, `RegisterProtectedResourceRulesValidatorImpl` |
-| Validador de reglas (contrato) | `ProtectedResourceMustExistValidator`, `ProtectedResourceOwnerLookupValidator`, `RegisterProtectedResourceRulesValidator` |
+| Validador de reglas (impl) | `ProtectedResourceIdLookupValidatorImpl`, `ProtectedResourceMustExistValidatorImpl`, `ProtectedResourceOwnerLookupValidatorImpl`, `RegisterProtectedResourceRulesValidatorImpl` |
+| Validador de reglas (contrato) | `ProtectedResourceIdLookupValidator`, `ProtectedResourceMustExistValidator`, `ProtectedResourceOwnerLookupValidator`, `RegisterProtectedResourceRulesValidator` |
 | Puerto de salida | `ProtectedResourceRepository` |
 | DTO de entrada al nucleo | `ProtectedResourceLookup`, `RegisterApplicationWithInitialResourceRequest`, `RegisterProtectedResourceRequest` |
 | DTO de salida del nucleo | `ApplicationWithInitialResourceRegistrationResponse`, `RegisteredProtectedResourceResponse` |
@@ -203,7 +203,7 @@
 | Adaptador de auditoria | `InMemoryAuditAdapter` |
 | Cableado (@Bean) | `ResourcesConfiguration` |
 
-### `roles` - 68 clases
+### `roles` - 70 clases
 
 | Rol | Clases |
 |---|---|
@@ -216,8 +216,8 @@
 | Dominio (agregado / criteria) | `Role`, `RoleCriteria` |
 | Caso de uso (impl) | `DefineRoleUseCaseImpl`, `GrantResourceToRoleUseCaseImpl`, `ListRolesUseCaseImpl` |
 | Caso de uso (contrato) | `DefineRoleUseCase`, `GrantResourceToRoleUseCase`, `ListRolesUseCase` |
-| Validador de reglas (impl) | `DefineRoleRulesValidatorImpl`, `GrantResourceRulesValidatorImpl`, `RoleMustExistForTenantValidatorImpl`, `RoleNamesLookupValidatorImpl`, `RoleScopeMustCoverApplicationValidatorImpl` |
-| Validador de reglas (contrato) | `DefineRoleRulesValidator`, `GrantResourceRulesValidator`, `RoleMustExistForTenantValidator`, `RoleNamesLookupValidator`, `RoleScopeMustCoverApplicationValidator` |
+| Validador de reglas (impl) | `DefineRoleRulesValidatorImpl`, `GrantResourceRulesValidatorImpl`, `RoleMustExistForTenantValidatorImpl`, `RoleNamesLookupValidatorImpl`, `RoleResourcesLookupValidatorImpl`, `RoleScopeMustCoverApplicationValidatorImpl` |
+| Validador de reglas (contrato) | `DefineRoleRulesValidator`, `GrantResourceRulesValidator`, `RoleMustExistForTenantValidator`, `RoleNamesLookupValidator`, `RoleResourcesLookupValidator`, `RoleScopeMustCoverApplicationValidator` |
 | Puerto de salida | `RoleRepository` |
 | DTO de entrada al nucleo | `DefineRoleRequest`, `GrantResourceRequest`, `ListRolesRequest`, `RoleCoverageQuery`, `RoleOwnershipQuery` |
 | DTO de salida del nucleo | `RoleResponse` |
@@ -293,7 +293,7 @@
 
 | Puerto | Implementado por |
 |---|---|
-| `AccessAuditRepository` | `SurrealAccessAuditRepository` |
+| `AccessAuditRepository` | `ObservedAccessAuditRepository`, `SurrealAccessAuditRepository` |
 | `AdministrationDecisionPort` | `OpaAdministrationDecisionAdapter` |
 | `ApplicationRepository` | `SurrealApplicationRepository` |
 | `AssignmentRepository` | `SurrealAssignmentRepository` |
@@ -313,6 +313,7 @@
 |---|---|---|
 | GET | `/api/v1/applications` | `ApplicationController` |
 | POST | `/api/v1/applications` | `ApplicationController` |
+| DELETE | `/api/v1/applications/{applicationId}` | `ApplicationAdministrationController` |
 | POST | `/api/v1/applications/{applicationId}/credential-rotations` | `ApplicationController` |
 | GET | `/api/v1/applications/{applicationId}/resources` | `ProtectedResourceController` |
 | POST | `/api/v1/applications/{applicationId}/resources` | `ProtectedResourceController` |
@@ -336,6 +337,7 @@
 | GET | `/api/v1/users` | `UserController` |
 | PUT | `/api/v1/users/{id}/tenant` | `UserController` |
 | POST | `/internal/v1/access-decisions` | `InternalAccessDecisionController` |
+| POST | `/internal/v1/applications/{applicationId}/administrators` | `InternalApplicationAdministratorController` |
 | POST | `/internal/v1/applications/{applicationId}/credential-validations` | `InternalApplicationCredentialController` |
 | GET | `/oauth2/authorization/keycloak` | `KeycloakLoginController` |
 | GET | `/oauth2/authorization/keycloak/register` | `KeycloakRegistrationController` |
@@ -348,7 +350,7 @@
 |---|---|
 | `pdp/applications` | `ApplicationBaseUrlTests`, `ApplicationCatalogPropertiesTests`, `ApplicationControllerTests`, `ApplicationCredentialHashTests`, `ApplicationCredentialMustBeValidRuleImplTests`, `ApplicationCredentialValidationResponseMapperTests`, `ApplicationCriteriaTests`, `ApplicationHttpTests`, `ApplicationMustExistForTenantValidatorTests`, `ApplicationOwnerLookupValidatorImplTests`, `ApplicationPersistenceMapperTests`, `ApplicationResponseMapperTests`, `ApplicationRuleTests`, `ApplicationTests`, `InternalApplicationCredentialControllerTests`, `ListApplicationsRequestMapperTests`, `ListApplicationsUseCaseImplTests`, `RegisterApplicationRequestMapperTests`, `RegisterApplicationRulesValidatorTests`, `RegisterApplicationUseCaseImplTests`, `RemoveApplicationUseCaseImplTests`, `RotateApplicationCredentialRequestMapperTests`, `RotateApplicationCredentialUseCaseImplTests`, `ValidateApplicationCredentialInteractorImplTests`, `ValidateApplicationCredentialRequestMapperTests`, `ValidateApplicationCredentialUseCaseImplTests` |
 | `pdp/assignments` | `AssignmentControllerTests`, `AssignmentCriteriaTests`, `AssignmentHttpTests`, `AssignmentMustExistForTenantRuleImplTests`, `AssignmentMustNotDuplicateActiveRuleImplTests`, `AssignmentPersistenceMapperTests`, `AssignmentResponseMapperTests`, `AssignmentTests`, `AssignProfileRequestMapperTests`, `AssignProfileUseCaseImplTests`, `AssignRoleRequestMapperTests`, `AssignRoleRulesValidatorImplTests`, `AssignRoleUseCaseImplTests`, `ListAssignmentsRequestMapperTests`, `ListAssignmentsUseCaseImplTests`, `ProfileAssignmentControllerTests`, `ProfileAssignmentHttpTests`, `ProfileAssignmentMustExistForTenantRuleImplTests`, `ProfileAssignmentMustNotDuplicateActiveRuleImplTests`, `ProfileAssignmentPersistenceMapperTests`, `ProfileAssignmentResponseMapperTests`, `ProfileAssignmentTests`, `ResolveActiveRolesUseCaseImplTests`, `RevokeAssignmentRequestMapperTests`, `RevokeAssignmentRulesValidatorImplTests`, `RevokeAssignmentUseCaseImplTests`, `RevokeProfileAssignmentUseCaseImplTests`, `ValidityTests` |
-| `pdp/authorization` | `AccessDecisionInternalResponseMapperTests`, `AccessDecisionRawRequestMapperTests`, `AccessDecisionResponseMapperTests`, `AccessEventPersistenceMapperTests`, `AccessEventTests`, `ActiveRoleNamesLookupValidatorImplTests`, `AuthorizationControllerTests`, `AuthorizationHttpTests`, `AuthorizeAdministrationUseCaseImplTests`, `AuthorizeRequestMapperTests`, `AuthorizeUseCaseImplTests`, `DecisionStateTests`, `EvaluateInternalAccessUseCaseImplTests`, `InternalAccessDecisionControllerTests`, `InternalAccessDecisionInteractorImplTests`, `InternalSecurityChainIntegrationTests`, `OpaAdministrationDecisionAdapterTests`, `OpaFixtureServer`, `OpaPolicyDecisionAdapterTests`, `PrincipalMustBeApplicationAdministratorValidatorImplTests` |
+| `pdp/authorization` | `AccessDecisionInternalResponseMapperTests`, `AccessDecisionRawRequestMapperTests`, `AccessDecisionResponseMapperTests`, `AccessEventPersistenceMapperTests`, `AccessEventTests`, `ActiveRoleNamesLookupValidatorImplTests`, `AuthorizationControllerTests`, `AuthorizationHttpTests`, `AuthorizeAdministrationUseCaseImplTests`, `AuthorizeRequestMapperTests`, `AuthorizeUseCaseImplTests`, `DecisionStateTests`, `EvaluateInternalAccessUseCaseImplTests`, `InternalAccessDecisionControllerTests`, `InternalAccessDecisionInteractorImplTests`, `InternalSecurityChainIntegrationTests`, `ObservedAccessAuditRepositoryTests`, `OpaAdministrationDecisionAdapterTests`, `OpaFixtureServer`, `OpaPolicyDecisionAdapterTests`, `PrincipalMustBeApplicationAdministratorValidatorImplTests` |
 | `pdp/commons` | `PageWindowTests`, `ResultPageTests`, `ValueObjectTests` |
 | `pdp/identity` | `AssignTenantRequestMapperTests`, `AssignTenantUseCaseImplTests`, `EmailTests`, `ProvisionIdentityUseCaseImplTests`, `SecurityUserPersistenceMapperTests`, `UserControllerTests`, `UserMustExistRuleTests`, `UserMustExistValidatorImplTests`, `UserResponseMapperTests` |
 | `pdp/profiles` | `AddRoleToProfileRequestMapperTests`, `AddRoleToProfileUseCaseImplTests`, `DefineProfileRequestMapperTests`, `DefineProfileUseCaseImplTests`, `ListProfilesRequestMapperTests`, `ListProfilesUseCaseImplTests`, `ProfileControllerTests`, `ProfileCriteriaTests`, `ProfileHttpTests`, `ProfileMustExistForTenantRuleImplTests`, `ProfileNameMustBeUniqueInScopeRuleImplTests`, `ProfileNameTests`, `ProfilePersistenceMapperTests`, `ProfileResponseMapperTests`, `ProfileRolesLookupValidatorImplTests`, `ProfileTests` |

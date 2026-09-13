@@ -127,6 +127,15 @@ public final class WebContractMessages {
         return "Aplicación y recurso inicial registrados correctamente";
     }
 
+    // HU-015 — administración del catálogo de aplicaciones.
+    public static String successApplicationRemoved() {
+        return "La aplicación se eliminó correctamente";
+    }
+
+    public static String successApplicationAdministratorAssigned() {
+        return "El administrador de la aplicación se asignó correctamente";
+    }
+
     private WebContractMessages() {
     }
 }
