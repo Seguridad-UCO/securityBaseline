@@ -9,8 +9,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Flujo HTTP completo sobre Netty, autenticado y contra una SurrealDB real.
@@ -26,6 +29,7 @@ class ApplicationHttpTests extends AbstractSurrealDbIntegrationTest {
     private static final String PATH = "/api/v1/applications";
     private static final String UCO = "universidad-uco";
     private static final String OTRO = "tenant-a";
+    private static final ObjectMapper JSON = new ObjectMapper();
 
     @LocalServerPort
     int port;
@@ -134,6 +138,40 @@ class ApplicationHttpTests extends AbstractSurrealDbIntegrationTest {
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.data.content[0].credential").doesNotExist();
+    }
+
+    @Test
+    void rotating_the_credential_of_an_existing_application_replaces_it_immediately() {
+        String name = prefix + "-rotacion";
+        byte[] registrationBody = client().post().uri(PATH)
+                .header("Authorization", "Bearer " + TestJwtSupport.signedToken(UCO, "test-subject"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("""
+                        {"name":"%s","description":"","baseUrl":"https://example.com"}""".formatted(name))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody().returnResult().getResponseBody();
+        String applicationId = JSON.readTree(registrationBody).path("data").path("id").asString();
+        String originalCredential = JSON.readTree(registrationBody).path("data").path("credential").asString();
+
+        byte[] rotationBody = client().post().uri(PATH + "/" + applicationId + "/credential-rotations")
+                .header("Authorization", "Bearer " + TestJwtSupport.signedToken(UCO, "test-subject"))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody()
+                .jsonPath("$.data.id").isEqualTo(applicationId)
+                .returnResult().getResponseBody();
+        String rotatedCredential = JSON.readTree(rotationBody).path("data").path("credential").asString();
+
+        assertThat(rotatedCredential).isNotEqualTo(originalCredential);
+    }
+
+    @Test
+    void rotating_an_application_that_does_not_exist_responds_with_a_bad_request() {
+        client().post().uri(PATH + "/" + UUID.randomUUID() + "/credential-rotations")
+                .header("Authorization", "Bearer " + TestJwtSupport.signedToken(UCO, "test-subject"))
+                .exchange()
+                .expectStatus().isBadRequest();
     }
 
     @Test

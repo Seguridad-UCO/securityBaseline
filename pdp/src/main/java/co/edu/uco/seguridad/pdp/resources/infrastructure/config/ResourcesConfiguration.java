@@ -1,6 +1,8 @@
 package co.edu.uco.seguridad.pdp.resources.infrastructure.config;
 
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationMustExistForTenantValidator;
+import co.edu.uco.seguridad.pdp.applications.application.usecase.RegisterApplicationUseCase;
+import co.edu.uco.seguridad.pdp.applications.application.usecase.RemoveApplicationUseCase;
 import co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository.ProtectedResourceRepository;
 import co.edu.uco.seguridad.pdp.resources.domain.rule.ProtectedResourceMustBeUniqueRule;
 import co.edu.uco.seguridad.pdp.resources.domain.rule.ProtectedResourceMustExistRule;
@@ -13,12 +15,16 @@ import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.Protec
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.RegisterProtectedResourceRulesValidator;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.RegisterProtectedResourceRulesValidatorImpl;
 import co.edu.uco.seguridad.pdp.resources.application.usecase.ListProtectedResourcesUseCase;
+import co.edu.uco.seguridad.pdp.resources.application.usecase.RegisterApplicationWithInitialResourceUseCase;
 import co.edu.uco.seguridad.pdp.resources.application.usecase.RegisterProtectedResourceUseCase;
 import co.edu.uco.seguridad.pdp.resources.application.usecase.impl.ListProtectedResourcesUseCaseImpl;
+import co.edu.uco.seguridad.pdp.resources.application.usecase.impl.RegisterApplicationWithInitialResourceUseCaseImpl;
 import co.edu.uco.seguridad.pdp.resources.application.usecase.impl.RegisterProtectedResourceUseCaseImpl;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.interactor.ListProtectedResourcesInteractor;
+import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.interactor.RegisterApplicationWithInitialResourceInteractor;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.interactor.RegisterProtectedResourceInteractor;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.interactor.impl.ListProtectedResourcesInteractorImpl;
+import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.interactor.impl.RegisterApplicationWithInitialResourceInteractorImpl;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.interactor.impl.RegisterProtectedResourceInteractorImpl;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.audit.InMemoryAuditAdapter;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.persistence.repository.SurrealProtectedResourceRepository;
@@ -101,5 +107,20 @@ public class ResourcesConfiguration {
     @Bean
     ListProtectedResourcesInteractor listProtectedResourcesInteractor(ListProtectedResourcesUseCase useCase) {
         return new ListProtectedResourcesInteractorImpl(useCase);
+    }
+
+    // HU-010 — saga de registro de aplicación con recurso inicial, con compensación explícita.
+    @Bean
+    RegisterApplicationWithInitialResourceUseCase registerApplicationWithInitialResourceUseCase(
+            RegisterApplicationUseCase registerApplication, RegisterProtectedResourceUseCase registerResource,
+            RemoveApplicationUseCase removeApplication) {
+        return new RegisterApplicationWithInitialResourceUseCaseImpl(registerApplication, registerResource,
+                removeApplication);
+    }
+
+    @Bean
+    RegisterApplicationWithInitialResourceInteractor registerApplicationWithInitialResourceInteractor(
+            RegisterApplicationWithInitialResourceUseCase useCase) {
+        return new RegisterApplicationWithInitialResourceInteractorImpl(useCase);
     }
 }

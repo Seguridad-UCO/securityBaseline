@@ -6,12 +6,22 @@
 Motor de políticas OPA independiente del PDP actual. El PDP entrega hechos confiables,
 OPA toma una decisión lógica y el PEP aplica esa decisión y sus obligaciones.
 
-El único entrypoint público es `security/authorization/decision`:
+Hay dos entrypoints públicos:
 
 ```text
 POST /v1/data/security/authorization/decision
 {"input": <PolicyEvaluationInput>}
 ```
+
+```text
+POST /v1/data/security/administration/decision
+{"input": {"subject": {...}, "tenant": {...}, "application": {...}}}
+```
+
+El primero decide acceso a un recurso externo (PEP); el segundo decide si un sujeto
+administra el catálogo del PDP para una aplicación (HU-009) — deliberadamente separado del
+contrato `pdp-opa/v1`, sin `resource`/`action`. Ver
+[`docs/policies/administration.md`](docs/policies/administration.md).
 
 El core no incluye una política de una aplicación ficticia. Por diseño, una entrada válida
 sin una política de aplicación registrada devuelve `DENY / NO_APPLICABLE_POLICY`.

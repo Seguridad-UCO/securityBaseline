@@ -117,6 +117,16 @@ public final class WebContractMessages {
         return "se requiere campo ofensor";
     }
 
+    // HU-014 — rotación de credencial de aplicación.
+    public static String successApplicationCredentialRotated() {
+        return "La credencial de la aplicación se rotó correctamente";
+    }
+
+    // HU-010 — registro de aplicación con recurso inicial, con compensación explícita.
+    public static String successApplicationRegisteredWithInitialResource() {
+        return "Aplicación y recurso inicial registrados correctamente";
+    }
+
     private WebContractMessages() {
     }
 }

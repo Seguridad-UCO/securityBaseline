@@ -2,6 +2,7 @@ package co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web
 
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.request.raw.ListApplicationsRawRequest;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.request.raw.RegisterApplicationRawRequest;
+import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.request.raw.RotateApplicationCredentialRawRequest;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.response.ApplicationRegisteredWebResponse;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.response.ApplicationWebResponse;
 import co.edu.uco.seguridad.shared.web.CorrelationWebFilter;
@@ -29,7 +30,7 @@ class ApplicationControllerTests {
         ApplicationRegisteredWebResponse expected = new ApplicationRegisteredWebResponse("app-1", "universidad-uco",
                 "gestion-academica", "", "https://example.com", "secreto-en-claro", Instant.now());
         ApplicationController controller = new ApplicationController(
-                raw -> Mono.just(expected), query -> Mono.just(EMPTY_PAGE));
+                raw -> Mono.just(expected), query -> Mono.just(EMPTY_PAGE), raw -> Mono.empty());
         MockServerWebExchange exchange = exchange(MockServerHttpRequest.post("/api/v1/applications"));
 
         var response = controller.register(
@@ -45,7 +46,7 @@ class ApplicationControllerTests {
                 "gestion-academica", "", "https://example.com", Instant.now());
         PageResponse<ApplicationWebResponse> page = new PageResponse<>(List.of(app), 1L, 0, 0, 20);
         ApplicationController controller = new ApplicationController(
-                raw -> Mono.empty(), query -> Mono.just(page));
+                raw -> Mono.empty(), query -> Mono.just(page), raw -> Mono.empty());
         MockServerWebExchange exchange = exchange(MockServerHttpRequest.get("/api/v1/applications"));
 
         var response = controller.list(null, null, null, null, null, exchange).block();
@@ -61,12 +62,32 @@ class ApplicationControllerTests {
         ApplicationController controller = new ApplicationController(raw -> Mono.empty(), query -> {
             received.add(query);
             return Mono.just(EMPTY_PAGE);
-        });
+        }, raw -> Mono.empty());
         MockServerWebExchange exchange = exchange(MockServerHttpRequest.get("/api/v1/applications"));
 
         controller.list("portal", "1", "5", null, null, exchange).block();
 
         assertThat(received).containsExactly(new ListApplicationsRawRequest("portal", "1", "5", null, null));
+    }
+
+    @Test
+    void rotate_delegates_to_the_interactor_with_the_application_id_from_the_path_and_replies_with_201() {
+        ApplicationRegisteredWebResponse expected = new ApplicationRegisteredWebResponse("app-1", "universidad-uco",
+                "gestion-academica", "", "https://example.com", "secreto-nuevo-en-claro", Instant.now());
+        List<RotateApplicationCredentialRawRequest> received = new ArrayList<>();
+        ApplicationController controller = new ApplicationController(raw -> Mono.empty(), query -> Mono.just(EMPTY_PAGE),
+                raw -> {
+                    received.add(raw);
+                    return Mono.just(expected);
+                });
+        MockServerWebExchange exchange = exchange(
+                MockServerHttpRequest.post("/api/v1/applications/app-1/credential-rotations"));
+
+        var response = controller.rotate("app-1", exchange).block();
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody().data()).isEqualTo(expected);
+        assertThat(received).containsExactly(new RotateApplicationCredentialRawRequest("app-1"));
     }
 
     private static MockServerWebExchange exchange(MockServerHttpRequest.BaseBuilder<?> request) {

@@ -122,6 +122,17 @@ class ListApplicationsUseCaseImplTests {
             }
 
             @Override
+            public Mono<Application> findByIdForTenant(TenantId tenantId, ApplicationId applicationId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Void> updateCredentialHash(ApplicationId applicationId,
+                    co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash credentialHash) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public Mono<ResultPage<Application>> findBy(ApplicationCriteria criteria, PageWindow window) {
                 received.add(new Object[] {criteria, window});
                 return Mono.just(page);
