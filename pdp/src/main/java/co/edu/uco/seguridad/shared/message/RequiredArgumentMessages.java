@@ -159,6 +159,15 @@ public final class RequiredArgumentMessages {
     public static final String OPA_BASE_URL = "se requiere la URL de OPA (pdp.opa.base-url)";
     public static final String OPA_DECISION_PATH = "se requiere la ruta de decisión de OPA (pdp.opa.decision-path)";
     public static final String OPA_TIMEOUT = "se requiere el timeout de OPA (pdp.opa.timeout)";
+    public static final String OPA_ADMINISTRATION_DECISION_PATH =
+            "se requiere la ruta de decisión de administración de OPA (pdp.opa.administration-decision-path)";
+
+    // Mecanismo de administración por aplicación (HU-009).
+    public static final String ADMINISTRATION_DECISION_PORT = "se requiere el puerto de decisión de administración";
+    public static final String AUTHORIZE_ADMINISTRATION_USE_CASE =
+            "se requiere el caso de uso de autorización de administración";
+    public static final String PRINCIPAL_MUST_BE_APPLICATION_ADMINISTRATOR_VALIDATOR =
+            "se requiere el validador de administrador de aplicación";
 
     // Seguridad JWT.
     public static final String JWT_ISSUER = "se requiere el emisor esperado (pdp.security.jwt.issuer)";
