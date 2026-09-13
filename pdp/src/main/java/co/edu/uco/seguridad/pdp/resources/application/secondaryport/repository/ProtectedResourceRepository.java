@@ -25,4 +25,6 @@ public interface ProtectedResourceRepository {
      * recurso no existe (HU-004, {@code ProtectedResourceOwnerLookupValidator}).
      */
     Mono<ApplicationId> findApplicationIdById(ResourceId resourceId);
+
+    Mono<ResourceId> findIdByApplicationPathAndMethod(ApplicationId applicationId, ResourcePath path, HttpVerb method);
 }

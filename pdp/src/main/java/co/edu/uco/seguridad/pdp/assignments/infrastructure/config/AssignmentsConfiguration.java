@@ -15,12 +15,14 @@ import co.edu.uco.seguridad.pdp.assignments.application.usecase.AssignProfileUse
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.AssignRoleUseCase;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.ListAssignmentsUseCase;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.ResolveActiveRolesUseCase;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.ResolveAuthorizationSubjectFactsUseCase;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.RevokeAssignmentUseCase;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.RevokeProfileAssignmentUseCase;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.AssignProfileUseCaseImpl;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.AssignRoleUseCaseImpl;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.ListAssignmentsUseCaseImpl;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.ResolveActiveRolesUseCaseImpl;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.ResolveAuthorizationSubjectFactsUseCaseImpl;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.RevokeAssignmentUseCaseImpl;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.RevokeProfileAssignmentUseCaseImpl;
 import co.edu.uco.seguridad.pdp.assignments.domain.rule.AssignmentMustExistForTenantRule;
@@ -47,7 +49,10 @@ import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.per
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.schema.SurrealProfileAssignmentSchemaInitializer;
 import co.edu.uco.seguridad.pdp.identity.application.rule.validator.UserMustExistValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileRolesLookupValidator;
+import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileNamesLookupValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleScopeMustCoverApplicationValidator;
+import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleNamesLookupValidator;
+import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleResourcesLookupValidator;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
@@ -114,6 +119,13 @@ public class AssignmentsConfiguration {
     @Bean
     ResolveActiveRolesUseCase resolveActiveRolesUseCase(AssignmentRepository repository, TimeProvider time) {
         return new ResolveActiveRolesUseCaseImpl(repository, time);
+    }
+
+    @Bean
+    ResolveAuthorizationSubjectFactsUseCase resolveAuthorizationSubjectFactsUseCase(AssignmentRepository assignments,
+            ProfileAssignmentRepository profiles, ProfileRolesLookupValidator profileRoles, ProfileNamesLookupValidator profileNames,
+            RoleNamesLookupValidator roleNames, RoleResourcesLookupValidator resources, TimeProvider time) {
+        return new ResolveAuthorizationSubjectFactsUseCaseImpl(assignments, profiles, profileRoles, profileNames, roleNames, resources, time);
     }
 
     @Bean

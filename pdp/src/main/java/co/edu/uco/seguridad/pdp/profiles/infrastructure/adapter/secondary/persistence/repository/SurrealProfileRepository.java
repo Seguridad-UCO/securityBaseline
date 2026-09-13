@@ -63,6 +63,13 @@ public final class SurrealProfileRepository implements ProfileRepository {
     }
 
     @Override
+    public Mono<Profile> findById(ProfileId profileId) {
+        return client.execute("SELECT * FROM type::record('%s', $id);".formatted(ProfileSchema.TABLE),
+                        Map.of("id", profileId.value().toString()))
+                .flatMap(results -> results.get(0).isEmpty() ? Mono.empty() : Mono.just(toDomain(results.get(0).get(0))));
+    }
+
+    @Override
     public Mono<ResultPage<Profile>> findBy(ProfileCriteria criteria, PageWindow window) {
         String query = """
                 SELECT * FROM %1$s WHERE tenantId = $tenantId OR level = 'GLOBAL' \

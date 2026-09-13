@@ -90,6 +90,13 @@ public final class SurrealProtectedResourceRepository implements ProtectedResour
                 });
     }
 
+    @Override
+    public Mono<ResourceId> findIdByApplicationPathAndMethod(ApplicationId applicationId, ResourcePath path, HttpVerb method) {
+        return client.execute("SELECT id FROM %s WHERE applicationId = $applicationId AND path = $path AND method = $method LIMIT 1;"
+                        .formatted(ProtectedResourceSchema.TABLE), Map.of("applicationId", applicationId.value().toString(), "path", path.value(), "method", method.name()))
+                .flatMap(results -> results.get(0).isEmpty() ? Mono.empty() : Mono.just(ResourceId.of(SurrealRecordId.idPart(results.get(0).get(0).path("id").asString()))));
+    }
+
     private static ProtectedResource toDomain(JsonNode row) {
         ProtectedResourceEntity entity = new ProtectedResourceEntity(
                 SurrealRecordId.idPart(row.path("id").asString()),

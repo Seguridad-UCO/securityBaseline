@@ -10,6 +10,7 @@ fi
 
 opa fmt --fail "$root/policies"
 opa check --strict "$root/policies"
+"$root/scripts/compile-policy-definitions"
 
 python3 - "$root" <<'PY'
 import json
