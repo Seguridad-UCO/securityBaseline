@@ -16,13 +16,19 @@ import co.edu.uco.seguridad.pdp.applications.application.rule.validator.impl.Reg
 import co.edu.uco.seguridad.pdp.applications.application.usecase.ListApplicationsUseCase;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RegisterApplicationUseCase;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RemoveApplicationUseCase;
+import co.edu.uco.seguridad.pdp.applications.application.usecase.ValidateApplicationCredentialUseCase;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.ListApplicationsUseCaseImpl;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.RegisterApplicationUseCaseImpl;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.RemoveApplicationUseCaseImpl;
+import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.ValidateApplicationCredentialUseCaseImpl;
+import co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationCredentialMustBeValidRule;
+import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationCredentialMustBeValidRuleImpl;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.ListApplicationsInteractor;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.RegisterApplicationInteractor;
+import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.ValidateApplicationCredentialInteractor;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.impl.ListApplicationsInteractorImpl;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.impl.RegisterApplicationInteractorImpl;
+import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.impl.ValidateApplicationCredentialInteractorImpl;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.repository.SurrealApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.schema.SurrealApplicationSchemaInitializer;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.properties.ApplicationCatalogProperties;
@@ -120,5 +126,23 @@ public class ApplicationsConfiguration {
     @Bean
     ApplicationOwnerLookupValidator applicationOwnerLookupValidator(ApplicationRepository repository) {
         return new ApplicationOwnerLookupValidatorImpl(repository);
+    }
+
+    // HU-013 — canal interno de validación de credenciales.
+    @Bean
+    ApplicationCredentialMustBeValidRule applicationCredentialMustBeValidRule() {
+        return new ApplicationCredentialMustBeValidRuleImpl();
+    }
+
+    @Bean
+    ValidateApplicationCredentialUseCase validateApplicationCredentialUseCase(
+            ApplicationCredentialMustBeValidRule rule, ApplicationRepository repository, CredentialHasher hasher) {
+        return new ValidateApplicationCredentialUseCaseImpl(rule, repository, hasher);
+    }
+
+    @Bean
+    ValidateApplicationCredentialInteractor validateApplicationCredentialInteractor(
+            ValidateApplicationCredentialUseCase useCase) {
+        return new ValidateApplicationCredentialInteractorImpl(useCase);
     }
 }

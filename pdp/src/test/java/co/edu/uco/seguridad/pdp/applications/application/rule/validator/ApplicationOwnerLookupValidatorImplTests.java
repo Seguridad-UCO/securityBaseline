@@ -59,6 +59,12 @@ class ApplicationOwnerLookupValidatorImplTests {
             }
 
             @Override
+            public Mono<co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash> findCredentialHashById(
+                    ApplicationId applicationId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public Mono<ResultPage<Application>> findBy(ApplicationCriteria criteria, PageWindow window) {
                 throw new UnsupportedOperationException();
             }

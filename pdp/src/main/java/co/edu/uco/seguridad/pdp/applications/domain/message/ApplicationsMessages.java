@@ -21,6 +21,11 @@ public final class ApplicationsMessages {
         return "La aplicación no existe en tu inquilino: " + applicationId;
     }
 
+    // HU-013 — validación de credencial de aplicación.
+    public static String invalidApplicationCredential() {
+        return "La aplicación o la credencial no son válidas";
+    }
+
     private ApplicationsMessages() {
     }
 }

@@ -2,6 +2,7 @@ package co.edu.uco.seguridad.pdp.applications.application.secondaryport.reposito
 
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
 import co.edu.uco.seguridad.pdp.applications.domain.ApplicationCriteria;
+import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash;
 import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
 import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
@@ -29,6 +30,13 @@ public interface ApplicationRepository {
      * nunca la aplicación completa: es lo mínimo que {@code ApplicationOwnerLookupValidator} necesita.
      */
     Mono<TenantId> findTenantIdById(ApplicationId applicationId);
+
+    /**
+     * Resuelve el hash guardado de una aplicación, a partir solo de su identificador. Vacío si la
+     * aplicación no existe (HU-013, canal interno de validación de credenciales). Responde solo el
+     * hash, nunca la aplicación completa.
+     */
+    Mono<ApplicationCredentialHash> findCredentialHashById(ApplicationId applicationId);
 
     /**
      * Consulta por criterio y ventana. Sustituye a los métodos por combinación de filtros: añadir un
