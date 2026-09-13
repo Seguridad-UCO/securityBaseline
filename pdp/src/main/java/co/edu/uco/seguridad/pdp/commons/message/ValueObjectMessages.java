@@ -164,6 +164,11 @@ public final class ValueObjectMessages {
         return "El método HTTP es inválido: " + reason;
     }
 
+    // HU-012 — credencial de aplicación.
+    public static String invalidApplicationCredentialHash(String reason) {
+        return "El hash de la credencial de la aplicación es inválido: " + reason;
+    }
+
     private ValueObjectMessages() {
     }
 }

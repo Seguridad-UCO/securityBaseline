@@ -1,7 +1,9 @@
 package co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.mapper;
 
+import co.edu.uco.seguridad.pdp.applications.application.primaryport.response.ApplicationRegistrationResponse;
 import co.edu.uco.seguridad.pdp.applications.application.primaryport.response.RegisteredApplicationResponse;
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
+import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.response.ApplicationRegisteredWebResponse;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.response.ApplicationWebResponse;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
@@ -47,5 +49,21 @@ class ApplicationResponseMapperTests {
 
         assertThat(webResponses).extracting(ApplicationWebResponse::id)
                 .containsExactly(first.value().toString(), second.value().toString());
+    }
+
+    @Test
+    void toRegisteredResponse_flattens_the_application_and_includes_the_plaintext_credential() {
+        ApplicationId id = new ApplicationId(UUID.randomUUID());
+        Instant registeredAt = Instant.now();
+        RegisteredApplicationResponse application = new RegisteredApplicationResponse(id,
+                new TenantId("universidad-uco"), new ApplicationName("Moodle"), "LMS institucional",
+                new ApplicationBaseUrl("https://moodle.uco.edu.co"), registeredAt);
+        ApplicationRegistrationResponse response = new ApplicationRegistrationResponse(application, "secreto-en-claro");
+
+        ApplicationRegisteredWebResponse webResponse = ApplicationResponseMapper.toRegisteredResponse(response);
+
+        assertThat(webResponse).isEqualTo(new ApplicationRegisteredWebResponse(id.value().toString(),
+                "universidad-uco", "Moodle", "LMS institucional", "https://moodle.uco.edu.co", "secreto-en-claro",
+                registeredAt));
     }
 }

@@ -1,7 +1,7 @@
 package co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor;
 
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.request.raw.RegisterApplicationRawRequest;
-import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.response.ApplicationWebResponse;
+import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.response.ApplicationRegisteredWebResponse;
 import co.edu.uco.seguridad.shared.contract.ReactiveOperation;
 
 /**
@@ -9,5 +9,5 @@ import co.edu.uco.seguridad.shared.contract.ReactiveOperation;
  * respuesta HTTP.
  */
 public interface RegisterApplicationInteractor
-        extends ReactiveOperation<RegisterApplicationRawRequest, ApplicationWebResponse> {
+        extends ReactiveOperation<RegisterApplicationRawRequest, ApplicationRegisteredWebResponse> {
 }

@@ -28,7 +28,9 @@ import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.pe
 import co.edu.uco.seguridad.pdp.applications.infrastructure.properties.ApplicationCatalogProperties;
 import co.edu.uco.seguridad.pdp.tenants.application.rule.validator.TenantMustBeActiveValidator;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
+import co.edu.uco.seguridad.shared.port.CredentialHasher;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
+import co.edu.uco.seguridad.shared.port.SecretGenerator;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -77,8 +79,10 @@ public class ApplicationsConfiguration {
     RegisterApplicationUseCase registerApplicationUseCase(RegisterApplicationRulesValidator rules,
                                                           ApplicationRepository repository,
                                                           IdentifierGenerator identifiers,
-                                                          TimeProvider time) {
-        return new RegisterApplicationUseCaseImpl(rules, repository, identifiers, time);
+                                                          TimeProvider time,
+                                                          SecretGenerator secretGenerator,
+                                                          CredentialHasher hasher) {
+        return new RegisterApplicationUseCaseImpl(rules, repository, identifiers, time, secretGenerator, hasher);
     }
 
     @Bean

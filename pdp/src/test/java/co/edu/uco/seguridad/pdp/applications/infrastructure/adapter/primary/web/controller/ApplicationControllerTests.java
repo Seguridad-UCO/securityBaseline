@@ -2,6 +2,7 @@ package co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web
 
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.request.raw.ListApplicationsRawRequest;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.request.raw.RegisterApplicationRawRequest;
+import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.response.ApplicationRegisteredWebResponse;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.response.ApplicationWebResponse;
 import co.edu.uco.seguridad.shared.web.CorrelationWebFilter;
 import co.edu.uco.seguridad.shared.web.PageResponse;
@@ -25,8 +26,8 @@ class ApplicationControllerTests {
 
     @Test
     void register_delegates_to_the_interactor_and_replies_with_201() {
-        ApplicationWebResponse expected = new ApplicationWebResponse("app-1", "universidad-uco",
-                "gestion-academica", "", "https://example.com", Instant.now());
+        ApplicationRegisteredWebResponse expected = new ApplicationRegisteredWebResponse("app-1", "universidad-uco",
+                "gestion-academica", "", "https://example.com", "secreto-en-claro", Instant.now());
         ApplicationController controller = new ApplicationController(
                 raw -> Mono.just(expected), query -> Mono.just(EMPTY_PAGE));
         MockServerWebExchange exchange = exchange(MockServerHttpRequest.post("/api/v1/applications"));

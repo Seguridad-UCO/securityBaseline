@@ -114,7 +114,7 @@ public final class SurrealApplicationRepository implements ApplicationRepository
                         """
                         CREATE type::record('%s', $id) SET \
                         tenantId = $tenantId, name = $name, description = $description, baseUrl = $baseUrl, \
-                        registeredAt = <datetime>$registeredAt;\
+                        credentialHash = $credentialHash, registeredAt = <datetime>$registeredAt;\
                         """.formatted(ApplicationSchema.TABLE),
                         Map.of(
                                 "id", application.id().value().toString(),
@@ -122,6 +122,7 @@ public final class SurrealApplicationRepository implements ApplicationRepository
                                 "name", application.name().value(),
                                 "description", application.description(),
                                 "baseUrl", application.baseUrl().value(),
+                                "credentialHash", application.credentialHash().value(),
                                 "registeredAt", application.registeredAt().toString()))
                 .thenReturn(application);
     }
@@ -141,6 +142,7 @@ public final class SurrealApplicationRepository implements ApplicationRepository
                 row.path("name").asString(),
                 row.path("description").asString(""),
                 row.path("baseUrl").asString(),
+                row.path("credentialHash").asString(),
                 row.path("registeredAt").asString());
         return ApplicationPersistenceMapper.toDomain(entity);
     }

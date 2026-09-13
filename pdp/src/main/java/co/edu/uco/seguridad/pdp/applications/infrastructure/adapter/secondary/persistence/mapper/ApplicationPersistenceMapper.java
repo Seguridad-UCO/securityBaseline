@@ -2,6 +2,7 @@ package co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.p
 
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
+import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.entity.ApplicationEntity;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
@@ -26,6 +27,7 @@ public final class ApplicationPersistenceMapper {
                 new ApplicationName(entity.name()),
                 entity.description(),
                 new ApplicationBaseUrl(entity.baseUrl()),
+                new ApplicationCredentialHash(entity.credentialHash()),
                 Instant.parse(entity.registeredAt()));
     }
 }

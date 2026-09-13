@@ -4,6 +4,7 @@ import co.edu.uco.seguridad.pdp.applications.application.primaryport.request.Lis
 import co.edu.uco.seguridad.pdp.applications.application.secondaryport.repository.ApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
+import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash;
 import co.edu.uco.seguridad.pdp.applications.domain.ApplicationCriteria;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
@@ -94,7 +95,7 @@ class ListApplicationsUseCaseImplTests {
 
     private static Application application(String name) {
         return new Application(new ApplicationId(UUID.randomUUID()), UCO, new ApplicationName(name), "",
-                new ApplicationBaseUrl("https://example.com"), REGISTERED_AT);
+                new ApplicationBaseUrl("https://example.com"), new ApplicationCredentialHash("hash"), REGISTERED_AT);
     }
 
     private static ApplicationRepository repositoryReturning(ResultPage<Application> page, List<Object[]> received) {

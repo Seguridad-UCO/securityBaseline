@@ -8,7 +8,9 @@ import co.edu.uco.seguridad.pdp.assignments.domain.model.AssignmentId;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.repository.SurrealAssignmentRepository;
 import co.edu.uco.seguridad.pdp.applications.application.secondaryport.repository.ApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
+import co.edu.uco.seguridad.pdp.applications.domain.ApplicationCriteria;
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
+import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.repository.SurrealApplicationRepository;
 import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.AccessAuditRepository;
 import co.edu.uco.seguridad.pdp.authorization.domain.event.AccessEvent;
@@ -145,8 +147,10 @@ class SurrealRepositoryIntegrationTests extends AbstractSurrealDbIntegrationTest
         ApplicationRepository repository = new SurrealApplicationRepository(client);
         TenantId tenant = new TenantId("surreal-it-apps");
         ApplicationName name = new ApplicationName("surreal-it-app");
+        ApplicationCredentialHash credentialHash = new ApplicationCredentialHash("hash-surreal-it");
         Application application = Application.register(new ApplicationId(UUID.randomUUID()), tenant, name,
-                "Aplicación de prueba", new ApplicationBaseUrl("https://surreal-it-app.example.com"), Instant.now());
+                "Aplicación de prueba", new ApplicationBaseUrl("https://surreal-it-app.example.com"), credentialHash,
+                Instant.now());
 
         StepVerifier.create(repository.existsByTenantAndName(tenant, name))
                 .expectNext(false)
@@ -165,6 +169,13 @@ class SurrealRepositoryIntegrationTests extends AbstractSurrealDbIntegrationTest
         // HU-003: findTenantIdById resuelve el dueño solo con el id, sin conocer el tenant de antemano.
         StepVerifier.create(repository.findTenantIdById(application.id()))
                 .expectNext(tenant)
+                .verifyComplete();
+
+        // HU-012: el hash de la credencial persiste y se relee igual, nunca el secreto en claro.
+        StepVerifier.create(repository.findBy(ApplicationCriteria.ofTenant(tenant), PageWindow.ofPage(0, 20)))
+                .assertNext(page -> assertThat(page.content())
+                        .extracting(Application::credentialHash)
+                        .containsExactly(credentialHash))
                 .verifyComplete();
 
         StepVerifier.create(repository.deleteById(application.id())).verifyComplete();

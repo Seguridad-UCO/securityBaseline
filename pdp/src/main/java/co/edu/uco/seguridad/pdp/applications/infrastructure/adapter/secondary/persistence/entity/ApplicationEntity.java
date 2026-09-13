@@ -8,5 +8,5 @@ package co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.p
  * slice se lea igual que los demás.
  */
 public record ApplicationEntity(String id, String tenantId, String name, String description, String baseUrl,
-        String registeredAt) {
+        String credentialHash, String registeredAt) {
 }

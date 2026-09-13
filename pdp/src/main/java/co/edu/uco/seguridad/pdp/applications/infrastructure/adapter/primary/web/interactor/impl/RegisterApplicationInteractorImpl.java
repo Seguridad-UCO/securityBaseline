@@ -2,7 +2,7 @@ package co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web
 
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RegisterApplicationUseCase;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.request.raw.RegisterApplicationRawRequest;
-import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.response.ApplicationWebResponse;
+import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.response.ApplicationRegisteredWebResponse;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.RegisterApplicationInteractor;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.mapper.ApplicationResponseMapper;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.mapper.RegisterApplicationRequestMapper;
@@ -26,10 +26,10 @@ public final class RegisterApplicationInteractorImpl implements RegisterApplicat
     }
 
     @Override
-    public Mono<ApplicationWebResponse> execute(RegisterApplicationRawRequest raw) {
+    public Mono<ApplicationRegisteredWebResponse> execute(RegisterApplicationRawRequest raw) {
         return SecurityContext.currentPrincipal()
                 .map(principal -> RegisterApplicationRequestMapper.toRequest(raw, principal.tenantId()))
                 .flatMap(useCase::execute)
-                .map(ApplicationResponseMapper::toResponse);
+                .map(ApplicationResponseMapper::toRegisteredResponse);
     }
 }

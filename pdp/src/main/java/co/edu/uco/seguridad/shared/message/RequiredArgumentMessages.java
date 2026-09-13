@@ -218,6 +218,13 @@ public final class RequiredArgumentMessages {
     public static final String REVOKE_PROFILE_ASSIGNMENT_INTERACTOR =
             "se requiere el interactor de revocación de asignación de perfil";
 
+    // HU-012 — credencial de aplicación.
+    public static final String SECRET_GENERATOR = "se requiere el generador de secretos";
+    public static final String CREDENTIAL_HASHER = "se requiere el hasher de credenciales";
+    public static final String APPLICATION_CREDENTIAL_HASH = "se requiere el hash de la credencial de la aplicación";
+    public static final String REGISTERED_APPLICATION_RESPONSE = "se requiere la respuesta de aplicación registrada";
+    public static final String APPLICATION_CREDENTIAL = "se requiere la credencial de la aplicación";
+
     private RequiredArgumentMessages() {
     }
 }
