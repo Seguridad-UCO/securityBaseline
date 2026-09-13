@@ -61,8 +61,9 @@ autenticado (`SecurityContext.currentPrincipal()`), mapea a DTO tipado, ejecuta 
 proyecta la respuesta HTTP. El caso de uso registra la aplicación con `RegisterApplicationInteractor`
 (que aplica sus reglas, incluida la del tenant, y publica `ApplicationRegistered`) y luego valida y
 persiste el recurso, publicando `ProtectedResourceRegistered`. `InMemoryAuditAdapter` escucha ese
-evento. La compensación prevista para cuando el recurso falla (`RemoveApplicationUseCase`) existe
-pero **no está cableada a ningún flujo** — ver el criterio 10 en la
+evento. La compensación para cuando el recurso falla (`RemoveApplicationUseCase`) está cableada
+desde HU-010, en `POST /api/v1/applications/with-initial-resource`
+(`RegisterApplicationWithInitialResourceUseCaseImpl`, slice `resources`) — ver el criterio 10 en la
 [matriz de cumplimiento](../criteria-compliance-matrix.md).
 
 ## Evidencia

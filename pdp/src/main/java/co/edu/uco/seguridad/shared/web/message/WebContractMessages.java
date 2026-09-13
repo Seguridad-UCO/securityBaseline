@@ -122,6 +122,11 @@ public final class WebContractMessages {
         return "La credencial de la aplicación se rotó correctamente";
     }
 
+    // HU-010 — registro de aplicación con recurso inicial, con compensación explícita.
+    public static String successApplicationRegisteredWithInitialResource() {
+        return "Aplicación y recurso inicial registrados correctamente";
+    }
+
     private WebContractMessages() {
     }
 }
