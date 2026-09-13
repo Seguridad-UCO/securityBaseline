@@ -8,7 +8,7 @@ rutas dentro del proceso. Antes de comenzar, acuerde con el equipo de seguridad:
 1. application ID y environment definitivos;
 2. audiencia JWT que se exigirá;
 3. URL pública HTTPS del PEP y URL privada HTTPS del backend;
-4. token opaco de alta, almacenado como secreto;
+4. credencial de aplicación emitida una sola vez por el PDP, almacenada como secreto;
 5. conectividad PEP → backend y una regla de red que impida acceso directo externo;
 6. recurso y política PDP, o la expectativa explícita de 503 mientras el PDP se implementa.
 
@@ -44,11 +44,11 @@ Use una propiedad de secretos o variables del despliegue para el token:
 security.enabled=true
 security.pep.registration.enabled=true
 security.pep.registration.pep-url=https://security.example.org
-security.pep.registration.application-id=academic
+security.pep.registration.application-id=${PDP_APPLICATION_ID}
 security.pep.registration.environment=prod
 security.pep.registration.backend-url=https://academic.internal
 security.pep.registration.audience=academic-api
-security.pep.registration.token=${PEP_REGISTRATION_TOKEN}
+security.pep.registration.token=${PDP_APPLICATION_CREDENTIAL}
 security.pep.registration.allow-insecure-http=false
 ```
 
@@ -114,7 +114,7 @@ bloquea un endpoint local; mantener el backend privado sigue siendo obligatorio.
 ## Lista de salida a producción
 
 - [ ] Versión del starter fijada y obtenida de un repositorio Maven confiable.
-- [ ] Token de alta en un gestor de secretos y plan de rotación acordado.
+- [ ] Credencial de aplicación del PDP en un gestor de secretos y plan de rotación acordado.
 - [ ] HTTPS en PEP y backend; `allow-insecure-http=false`.
 - [ ] PEP alcanza al backend y el backend no es público.
 - [ ] Credencial PEP, application ID, environment y audience coinciden.

@@ -3,7 +3,7 @@ info:
   title: Security Platform — PEP/PDP
   version: 1.0.0
   description: |
-    Contract implemented by the PEP client. The current PDP does not yet expose this operation.
+    Contract implemented by the PEP client and PDP internal channel.
     Identity evidence is the original user Bearer token. mTLS authenticates the PEP service;
     a successful user authentication alone must not grant access to this internal operation.
     PDP resolves trusted identity, local tenant, resource, roles and profiles and delegates policies to OPA.
@@ -13,6 +13,42 @@ security:
   - userEvidence: []
     pepIdentity: []
 paths:
+  /internal/v1/applications/{applicationId}/credential-validations:
+    post:
+      operationId: validateApplicationCredential
+      summary: Validate the application credential used for PEP self-registration
+      parameters:
+        - in: path
+          name: applicationId
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [secret]
+              properties:
+                secret: {type: string, minLength: 1}
+      responses:
+        '200':
+          description: Credential is valid; tenant ID is returned only to the PEP.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [tenantId]
+                properties:
+                  tenantId: {type: string}
+        '400':
+          description: Application does not exist or credential is invalid; PDP deliberately does not distinguish them.
+        '401':
+          description: PEP internal evidence JWT is invalid.
+        '403':
+          description: PEP mTLS identity is not admitted.
+        '503':
+          description: Credential validation is unavailable; PEP fails closed.
   /internal/v1/access-decisions:
     post:
       operationId: evaluateAccess
@@ -61,4 +97,3 @@ components:
       bearerFormat: JWT
     pepIdentity:
       type: mutualTLS
-

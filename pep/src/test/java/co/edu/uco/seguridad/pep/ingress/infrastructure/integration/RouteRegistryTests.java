@@ -3,7 +3,6 @@ package co.edu.uco.seguridad.pep.ingress.infrastructure.integration;
 import co.edu.uco.seguridad.pep.ingress.infrastructure.properties.IngressProperties;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.net.URI;
@@ -40,10 +39,8 @@ class RouteRegistryTests {
     }
 
     private RouteRegistry registry(List<IngressProperties.Route> staticRoutes) {
-        var password = new BCryptPasswordEncoder().encode("registration-secret");
         var properties = new IntegrationProperties(true, temporaryDirectory.resolve("routes.json"),
-                URI.create("https://security.example.edu"),
-                List.of(new IntegrationProperties.Credential("academic", "dev", password)));
+                URI.create("https://security.example.edu"), "pep-internal-evidence");
         var ingress = new IngressProperties(staticRoutes, "http://issuer.example.edu", URI.create("http://issuer.example.edu/jwks"),
                 true, List.of(), 1, 1, 1, 1, 1, Duration.ofSeconds(1));
         return new RouteRegistry(properties, ingress, JsonMapper.builder().build());
