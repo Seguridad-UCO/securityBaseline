@@ -139,7 +139,8 @@ class OpaPolicyDecisionAdapterTests {
 
     private OpaPolicyDecisionAdapter adapter(Duration timeout) {
         WebClient webClient = WebClient.builder().baseUrl(fixture.baseUrl()).build();
-        OpaProperties properties = new OpaProperties(fixture.baseUrl(), "/v1/data/security/authorization/decision", timeout);
+        OpaProperties properties = new OpaProperties(fixture.baseUrl(), "/v1/data/security/authorization/decision",
+                "/v1/data/security/administration/decision", timeout);
         return new OpaPolicyDecisionAdapter(webClient, new ObjectMapper(), properties, () -> DECISION_ID, () -> DECIDED_AT);
     }
 }

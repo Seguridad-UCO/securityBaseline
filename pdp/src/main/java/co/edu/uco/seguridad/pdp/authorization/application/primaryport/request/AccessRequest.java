@@ -10,6 +10,7 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.time.Instant;
 
 /**
  * Entrada normalizada del PEP a evaluar (corresponde a {@code SolicitudAcceso} del dominio
@@ -21,7 +22,8 @@ import java.util.Set;
  */
 public record AccessRequest(TenantId tenantId, String subject, ApplicationId applicationId,
         ResourcePath resourcePath, HttpVerb action, String requestId, String correlationId,
-        Optional<UserId> subjectUserId, Set<String> subjectRoles) {
+        Optional<UserId> subjectUserId, Set<String> subjectRoles, Instant timestamp, String environment,
+        HttpVerb contextMethod, String channel) {
 
     public AccessRequest {
         Objects.requireNonNull(tenantId, RequiredArgumentMessages.TENANT_ID);
@@ -35,9 +37,16 @@ public record AccessRequest(TenantId tenantId, String subject, ApplicationId app
         subjectRoles = Set.copyOf(Objects.requireNonNull(subjectRoles, RequiredArgumentMessages.SUBJECT_ROLES));
     }
 
+    public AccessRequest(TenantId tenantId, String subject, ApplicationId applicationId, ResourcePath resourcePath,
+            HttpVerb action, String requestId, String correlationId, Optional<UserId> subjectUserId,
+            Set<String> subjectRoles) {
+        this(tenantId, subject, applicationId, resourcePath, action, requestId, correlationId, subjectUserId,
+                subjectRoles, null, null, null, null);
+    }
+
     /** Nuevo {@code AccessRequest} con los roles resueltos — el resto de los campos no cambia. */
     public AccessRequest withSubjectRoles(Set<String> roles) {
         return new AccessRequest(tenantId, subject, applicationId, resourcePath, action, requestId, correlationId,
-                subjectUserId, roles);
+                subjectUserId, roles, timestamp, environment, contextMethod, channel);
     }
 }

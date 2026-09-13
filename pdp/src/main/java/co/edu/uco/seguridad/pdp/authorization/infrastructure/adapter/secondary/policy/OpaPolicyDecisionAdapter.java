@@ -1,6 +1,7 @@
 package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy;
 
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AccessRequest;
+import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.PolicyEvaluationInput;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.response.AccessDecision;
 import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.PolicyDecisionPort;
 import co.edu.uco.seguridad.pdp.authorization.domain.model.DecisionState;
@@ -24,6 +25,7 @@ import reactor.core.publisher.Mono;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -49,12 +51,8 @@ public final class OpaPolicyDecisionAdapter implements PolicyDecisionPort {
         this.time = Objects.requireNonNull(time, RequiredArgumentMessages.TIME_PROVIDER);
     }
 
-    private static final String SCHEMA_VERSION = "1.0";
-    private static final String SUBJECT_TYPE = "USER";
-    private static final String RESOURCE_TYPE = "http";
-
     @Override
-    public Mono<AccessDecision> execute(AccessRequest input) {
+    public Mono<AccessDecision> decide(PolicyEvaluationInput input) {
         return Mono.defer(() -> {
             String requestBody = objectMapper.writeValueAsString(new OpaEvaluationRequest(toInput(input)));
             return webClient.post()
@@ -69,18 +67,31 @@ public final class OpaPolicyDecisionAdapter implements PolicyDecisionPort {
         });
     }
 
-    private static OpaEvaluationInput toInput(AccessRequest input) {
-        return new OpaEvaluationInput(
-                SCHEMA_VERSION,
-                new OpaRequestInfo(input.requestId(), input.correlationId()),
-                new OpaSubject(input.subject(), SUBJECT_TYPE, input.tenantId().value(), List.copyOf(input.subjectRoles())),
-                new OpaTenant(input.tenantId().value()),
-                new OpaApplication(input.applicationId().value().toString()),
-                new OpaResource(RESOURCE_TYPE, input.resourcePath().value()),
-                input.action().name());
+    /** Compatibility helper retained for direct adapter tests while callers migrate to the resolver. */
+    @Override
+    public Mono<AccessDecision> execute(AccessRequest input) {
+        return decide(toPolicyInput(input));
     }
 
-    private AccessDecision toDecision(AccessRequest input, OpaResponse response) {
+    private static PolicyEvaluationInput toPolicyInput(AccessRequest input) {
+        return new PolicyEvaluationInput(input.requestId(), input.correlationId(), input.subject(), "USER",
+                input.tenantId().value(), input.subjectRoles(), java.util.Set.of(), java.util.Set.of(), java.util.Set.of(),
+                Map.of(), input.tenantId().value(), Map.of(), input.applicationId().value().toString(), Map.of(), "http",
+                input.resourcePath().value(), Map.of("path", input.resourcePath().value(), "method", input.action().name()),
+                input.action().name(), List.of(), Map.of(), Map.of());
+    }
+
+    private static OpaEvaluationInput toInput(PolicyEvaluationInput input) {
+        return new OpaEvaluationInput(
+                "1.0", new OpaRequestInfo(input.requestId(), input.correlationId()),
+                new OpaSubject(input.subjectId(), input.subjectType(), input.subjectTenantId(), List.copyOf(input.roles()),
+                        List.copyOf(input.profiles()), List.copyOf(input.entitlements()), List.copyOf(input.groups()), input.subjectAttributes()),
+                new OpaTenant(input.tenantId(), input.tenantAttributes()), new OpaApplication(input.applicationId(), input.applicationAttributes()),
+                new OpaResource(input.resourceType(), input.resourceId(), input.resourceAttributes()), input.action(),
+                input.relationships(), input.context(), input.security());
+    }
+
+    private AccessDecision toDecision(PolicyEvaluationInput input, OpaResponse response) {
         var payload = response.result();
         var policyReferences = payload.policyReferences().stream()
                 .map(reference -> new PolicyReference(reference.id(), reference.version()))

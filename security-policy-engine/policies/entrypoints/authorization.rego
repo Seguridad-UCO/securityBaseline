@@ -1,7 +1,7 @@
 package security.authorization
 
-import data.security.authorization.application
-import data.security.authorization.application.guards
+import data.security.authorization.application.composition
+import data.security.authorization.application.guard
 import data.security.authorization.application.validation
 import rego.v1
 
@@ -13,7 +13,7 @@ import rego.v1
 decision := {
 	"effect": "INDETERMINATE",
 	"reasonCode": "INVALID_INPUT",
-	"policyReferences": application.core_references("core.input-validation"),
+	"policyReferences": [{"id": "core.input-validation", "version": "1.0"}],
 	"obligations": [],
 } if {
 	not validation.valid
@@ -22,76 +22,44 @@ decision := {
 decision := {
 	"effect": "DENY",
 	"reasonCode": "POLICY_DENY",
-	"policyReferences": application.core_references("core.composition"),
+	"policyReferences": composition.references(composition.matched_denies),
 	"obligations": [],
 } if {
 	validation.valid
-	count(application.explicit_denies) > 0
-}
-
-decision := {
-	"effect": "INDETERMINATE",
-	"reasonCode": "POLICY_OUTPUT_INVALID",
-	"policyReferences": application.candidate_references(candidate),
-	"obligations": [],
-} if {
-	validation.valid
-	count(application.explicit_denies) == 0
-	count(application.invalid_allow_candidates) > 0
-	candidate := application.invalid_allow_candidates[_]
-}
-
-decision := {
-	"effect": "INDETERMINATE",
-	"reasonCode": "POLICY_AMBIGUITY",
-	"policyReferences": application.core_references("core.composition"),
-	"obligations": [],
-} if {
-	validation.valid
-	count(application.explicit_denies) == 0
-	count(application.invalid_allow_candidates) == 0
-	count(application.valid_allow_candidates) > 1
+	count(composition.matched_denies) > 0
 }
 
 decision := {
 	"effect": "DENY",
 	"reasonCode": "TENANT_ISOLATION_FAILED",
-	"policyReferences": application.core_references("core.tenant-guard"),
+	"policyReferences": [{"id": "core.tenant-guard", "version": "1.0"}],
 	"obligations": [],
 } if {
 	validation.valid
-	count(application.explicit_denies) == 0
-	count(application.invalid_allow_candidates) == 0
-	count(application.valid_allow_candidates) <= 1
-	not guards.same_tenant_guard
-	not cross_tenant_candidate_with_evidence
+	count(composition.matched_denies) == 0
+	count(composition.matched_allows) > 0
+	not guard.tenant_allowed
 }
 
-cross_tenant_candidate_with_evidence if {
-	candidate := application.valid_allow_candidates[_]
-	not candidate in application.invalid_allow_candidates
-	guards.cross_tenant_guard(candidate)
-}
-
-decision := application.allow_from(candidate) if {
+decision := {
+	"effect": "ALLOW",
+	"reasonCode": "POLICY_ALLOWED",
+	"policyReferences": composition.references(composition.matched_allows),
+	"obligations": [],
+} if {
 	validation.valid
-	count(application.explicit_denies) == 0
-	count(application.invalid_allow_candidates) == 0
-	count(application.valid_allow_candidates) == 1
-	candidate := application.valid_allow_candidates[_]
-	not candidate in application.invalid_allow_candidates
-	guards.tenant_guard(candidate)
+	count(composition.matched_denies) == 0
+	count(composition.matched_allows) > 0
+	guard.tenant_allowed
 }
 
 decision := {
 	"effect": "DENY",
 	"reasonCode": "NO_APPLICABLE_POLICY",
-	"policyReferences": application.core_references("core.composition"),
+	"policyReferences": [{"id": "core.composition", "version": "1.0"}],
 	"obligations": [],
 } if {
 	validation.valid
-	count(application.explicit_denies) == 0
-	count(application.invalid_allow_candidates) == 0
-	guards.same_tenant_guard
-	count(application.valid_allow_candidates) == 0
+	count(composition.matched_denies) == 0
+	count(composition.matched_allows) == 0
 }

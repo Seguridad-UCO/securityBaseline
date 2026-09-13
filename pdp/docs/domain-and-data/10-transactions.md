@@ -22,30 +22,42 @@ nombrar el patrón que ya estaba ahí — una saga — en vez de disfrazarlo de 
 
 ## Implementación
 
-`RegisterApplicationUseCaseImpl` encadena dos pasos, cada uno con su propia compensación:
+`RegisterApplicationWithInitialResourceUseCaseImpl` (slice `resources`, HU-010 — endpoint `POST
+/api/v1/applications/with-initial-resource`) encadena dos pasos, cada uno con su propia
+compensación:
 
-1. **Registrar la aplicación** (módulo `applications`, vía `RegisterApplicationInteractor`).
-2. **Registrar el recurso protegido** (módulo `resources`, guardado + publicación del evento de
-   dominio). Si este paso falla *después* de guardar el recurso, se compensa borrándolo
-   (`resources.deleteById(...)`) antes de propagar el error. Si el paso completo falla después de
-   registrar la aplicación, se compensa eliminándola (`removeApplicationInteractor.execute(...)`),
-   porque vive detrás del límite de otro módulo y no puede unirse a ninguna transacción de este.
+1. **Registrar la aplicación** (módulo `applications`, vía `RegisterApplicationUseCase`).
+2. **Registrar el recurso protegido** (módulo `resources`, vía `RegisterProtectedResourceUseCase`).
+   Si este paso falla *después* de que la aplicación ya se guardó, se compensa eliminándola
+   (`RemoveApplicationUseCase.execute(applicationId)`) antes de propagar el error del recurso —
+   nunca el de la compensación. Si la propia compensación también falla, se registra por log
+   (`LOG.error`, con el `applicationId` huérfano) sin cambiar el error que llega al cliente.
 
-No hay snapshot ni rollback de framework: cada compensación es una llamada explícita al mismo puerto
-o interactor que hizo el efecto original, encadenada con `onErrorResume`.
+No hay snapshot ni rollback de framework: la compensación es una llamada explícita al mismo caso de
+uso que ya existía como operación compensatoria sin invocar (`RemoveApplicationUseCase`),
+encadenada con `onErrorResume`. Los dos endpoints que registran cada paso por separado (`POST
+/api/v1/applications` y `POST /api/v1/applications/{id}/resources`) siguen existiendo, sin cambios,
+para quien no necesite la operación combinada.
 
 ## Ubicación verificable
 
-- Flujo y compensación: [`RegisterApplicationUseCaseImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/application/usecase/impl/RegisterApplicationUseCaseImpl.java)
-- Prueba: `rolls_back_the_saved_resource_and_removes_the_application_when_event_publication_fails` en
-  [`RegisterApplicationUseCaseImplTests`](../../src/test/java/co/edu/uco/seguridad/pdp/applications/application/usecase/impl/RegisterApplicationUseCaseImplTests.java)
-- Nota de implementación con el razonamiento completo: [ADR-019, sección de retiro de `ReactiveTransactionPort`](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-019-surrealdb-implementation.md#nota-de-implementación)
+- Flujo y compensación: [`RegisterApplicationWithInitialResourceUseCaseImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/application/usecase/impl/RegisterApplicationWithInitialResourceUseCaseImpl.java)
+- Pruebas: `compensates_by_removing_the_application_when_the_resource_registration_fails` y
+  `still_reports_the_original_resource_error_when_the_compensation_itself_fails` en
+  [`RegisterApplicationWithInitialResourceUseCaseImplTests`](../../src/test/java/co/edu/uco/seguridad/pdp/resources/application/usecase/impl/RegisterApplicationWithInitialResourceUseCaseImplTests.java)
+- Plan y reporte de la historia: `PLAN-HU-010.md` y `REPORTE-HU-010.md` en
+  `pdp/docs/ai-harness/workspace/`
 
 ## Evidencia y límite
 
-La prueba fuerza un fallo en la publicación del evento y verifica dos cosas: que el recurso guardado
-se borró y que se solicitó la eliminación de la aplicación. Cubre la compensación en Java; no cubre
-un fallo a mitad de una escritura HTTP individual contra SurrealDB (por ejemplo, la conexión
+Las pruebas unitarias fuerzan el fallo del registro del recurso (con y sin fallo adicional de la
+compensación) contra colaboradores falsos, y verifican que `RemoveApplicationUseCase` se invoca con
+el `applicationId` correcto y que el cliente siempre recibe el error original del recurso. No hay
+un rechazo de negocio real y reproducible tras crear la aplicación (la unicidad del recurso es por
+`(applicationId, path, method)`, y el `applicationId` de este flujo siempre es nuevo — ver
+`PLAN-HU-010.md` §0), así que la prueba end-to-end (`ApplicationWithInitialResourceHttpTests`) cubre
+solo el camino feliz contra SurrealDB real; la compensación se prueba a nivel de caso de uso. No
+cubren un fallo a mitad de una escritura HTTP individual contra SurrealDB (por ejemplo, la conexión
 cayéndose entre el `CREATE` y la respuesta), que queda fuera del alcance de una prueba unitaria y
 sería terreno de una prueba de resiliencia de infraestructura.
 

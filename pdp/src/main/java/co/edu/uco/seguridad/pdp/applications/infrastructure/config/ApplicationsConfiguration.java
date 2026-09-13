@@ -16,18 +16,22 @@ import co.edu.uco.seguridad.pdp.applications.application.rule.validator.impl.Reg
 import co.edu.uco.seguridad.pdp.applications.application.usecase.ListApplicationsUseCase;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RegisterApplicationUseCase;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RemoveApplicationUseCase;
+import co.edu.uco.seguridad.pdp.applications.application.usecase.RotateApplicationCredentialUseCase;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.ValidateApplicationCredentialUseCase;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.ListApplicationsUseCaseImpl;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.RegisterApplicationUseCaseImpl;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.RemoveApplicationUseCaseImpl;
+import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.RotateApplicationCredentialUseCaseImpl;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.ValidateApplicationCredentialUseCaseImpl;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationCredentialMustBeValidRule;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationCredentialMustBeValidRuleImpl;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.ListApplicationsInteractor;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.RegisterApplicationInteractor;
+import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.RotateApplicationCredentialInteractor;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.ValidateApplicationCredentialInteractor;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.impl.ListApplicationsInteractorImpl;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.impl.RegisterApplicationInteractorImpl;
+import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.impl.RotateApplicationCredentialInteractorImpl;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.impl.ValidateApplicationCredentialInteractorImpl;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.repository.SurrealApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.schema.SurrealApplicationSchemaInitializer;
@@ -144,5 +148,18 @@ public class ApplicationsConfiguration {
     ValidateApplicationCredentialInteractor validateApplicationCredentialInteractor(
             ValidateApplicationCredentialUseCase useCase) {
         return new ValidateApplicationCredentialInteractorImpl(useCase);
+    }
+
+    // HU-014 — rotación de credencial de aplicación.
+    @Bean
+    RotateApplicationCredentialUseCase rotateApplicationCredentialUseCase(ApplicationRepository repository,
+            ApplicationMustExistForTenantRule mustExist, SecretGenerator secretGenerator, CredentialHasher hasher) {
+        return new RotateApplicationCredentialUseCaseImpl(repository, mustExist, secretGenerator, hasher);
+    }
+
+    @Bean
+    RotateApplicationCredentialInteractor rotateApplicationCredentialInteractor(
+            RotateApplicationCredentialUseCase useCase) {
+        return new RotateApplicationCredentialInteractorImpl(useCase);
     }
 }

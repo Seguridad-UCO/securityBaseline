@@ -62,6 +62,17 @@ class RegisterApplicationUseCaseImplTests {
             }
 
             @Override
+            public Mono<Application> findByIdForTenant(TenantId tenantId, ApplicationId applicationId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Void> updateCredentialHash(ApplicationId applicationId,
+                    co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash credentialHash) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public Mono<ResultPage<Application>> findBy(ApplicationCriteria criteria, PageWindow window) {
                 throw new UnsupportedOperationException();
             }
@@ -126,6 +137,17 @@ class RegisterApplicationUseCaseImplTests {
             }
 
             @Override
+            public Mono<Application> findByIdForTenant(TenantId tenantId, ApplicationId applicationId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Void> updateCredentialHash(ApplicationId applicationId,
+                    co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash credentialHash) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public Mono<ResultPage<Application>> findBy(ApplicationCriteria criteria, PageWindow window) {
                 throw new UnsupportedOperationException();
             }
@@ -180,6 +202,17 @@ class RegisterApplicationUseCaseImplTests {
             @Override
             public Mono<co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash> findCredentialHashById(
                     ApplicationId applicationId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Application> findByIdForTenant(TenantId tenantId, ApplicationId applicationId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Void> updateCredentialHash(ApplicationId applicationId,
+                    co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash credentialHash) {
                 throw new UnsupportedOperationException();
             }
 

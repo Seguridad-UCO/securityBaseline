@@ -6,6 +6,7 @@ import co.edu.uco.seguridad.pdp.applications.domain.exception.ApplicationNotFoun
 import co.edu.uco.seguridad.pdp.assignments.application.primaryport.request.ResolveActiveRolesRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AccessRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.response.AccessDecision;
+import co.edu.uco.seguridad.pdp.authorization.application.service.AuthorizationContextResolver;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.ActiveRoleNamesLookupValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.AccessAuditRepository;
 import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.PolicyDecisionPort;
@@ -39,6 +40,7 @@ public final class AuthorizeUseCaseImpl implements AuthorizeUseCase {
     private final ApplicationMustExistForTenantValidator applicationMustExist;
     private final ProtectedResourceMustExistValidator resourceMustExist;
     private final ActiveRoleNamesLookupValidator rolesLookup;
+    private final AuthorizationContextResolver contextResolver;
     private final AccessAuditRepository audit;
     private final PolicyDecisionPort policyDecisionPort;
     private final IdentifierGenerator identifiers;
@@ -46,6 +48,7 @@ public final class AuthorizeUseCaseImpl implements AuthorizeUseCase {
 
     public AuthorizeUseCaseImpl(ApplicationMustExistForTenantValidator applicationMustExist,
             ProtectedResourceMustExistValidator resourceMustExist, ActiveRoleNamesLookupValidator rolesLookup,
+            AuthorizationContextResolver contextResolver,
             AccessAuditRepository audit, PolicyDecisionPort policyDecisionPort, IdentifierGenerator identifiers,
             TimeProvider time) {
         this.applicationMustExist = Objects.requireNonNull(applicationMustExist,
@@ -53,11 +56,22 @@ public final class AuthorizeUseCaseImpl implements AuthorizeUseCase {
         this.resourceMustExist = Objects.requireNonNull(resourceMustExist,
                 RequiredArgumentMessages.PROTECTED_RESOURCE_EXISTS_VALIDATOR);
         this.rolesLookup = Objects.requireNonNull(rolesLookup, RequiredArgumentMessages.ACTIVE_ROLE_NAMES_LOOKUP_VALIDATOR);
+        this.contextResolver = Objects.requireNonNull(contextResolver);
         this.audit = Objects.requireNonNull(audit, RequiredArgumentMessages.ACCESS_AUDIT_REPOSITORY);
         this.policyDecisionPort = Objects.requireNonNull(policyDecisionPort,
                 RequiredArgumentMessages.POLICY_DECISION_PORT);
         this.identifiers = Objects.requireNonNull(identifiers, RequiredArgumentMessages.IDENTIFIER_GENERATOR);
         this.time = Objects.requireNonNull(time, RequiredArgumentMessages.TIME_PROVIDER);
+    }
+
+    /** Compatibility constructor for existing in-process callers while the resolver becomes explicit. */
+    public AuthorizeUseCaseImpl(ApplicationMustExistForTenantValidator applicationMustExist,
+            ProtectedResourceMustExistValidator resourceMustExist, ActiveRoleNamesLookupValidator rolesLookup,
+            AccessAuditRepository audit, PolicyDecisionPort policyDecisionPort, IdentifierGenerator identifiers,
+            TimeProvider time) {
+        this(applicationMustExist, resourceMustExist, rolesLookup,
+                new co.edu.uco.seguridad.pdp.authorization.application.service.impl.AuthorizationContextResolverImpl(),
+                audit, policyDecisionPort, identifiers, time);
     }
 
     @Override
@@ -69,7 +83,8 @@ public final class AuthorizeUseCaseImpl implements AuthorizeUseCase {
                 .then(Mono.defer(() -> resourceMustExist.execute(
                         new ProtectedResourceLookup(input.applicationId(), input.resourcePath(), input.action()))))
                 .then(Mono.defer(() -> resolveRoles(input)))
-                .flatMap(policyDecisionPort::execute)
+                .flatMap(contextResolver::execute)
+                .flatMap(policyDecisionPort::decide)
                 .onErrorResume(ApplicationNotFoundException.class,
                         error -> Mono.just(deny(input, ReasonCode.TENANT_MISMATCH)))
                 .onErrorResume(ProtectedResourceNotFoundException.class,

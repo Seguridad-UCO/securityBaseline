@@ -1,0 +1,16 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema", "title":"PolicyDefinition", "type":"object", "additionalProperties":false,
+  "required":["id","version","effect","scope","target","tenantScope","condition","obligations"],
+  "properties":{
+    "id":{"type":"string","pattern":"^[A-Za-z0-9_.:-]{1,128}$"}, "version":{"type":"string","pattern":"^[A-Za-z0-9_.:-]{1,128}$"}, "effect":{"enum":["ALLOW","DENY"]},
+    "scope":{"type":"object","additionalProperties":false,"required":["level"],"properties":{"level":{"enum":["GLOBAL","TENANT","APPLICATION","RESOURCE"]},"ownerTenantId":{"type":"string"}}},
+    "target":{"type":"object","additionalProperties":false,"properties":{"tenantIds":{"$ref":"#/$defs/strings"},"applicationIds":{"$ref":"#/$defs/strings"},"resourceTypes":{"$ref":"#/$defs/strings"},"resourceIds":{"$ref":"#/$defs/strings"},"actions":{"$ref":"#/$defs/strings"},"environments":{"$ref":"#/$defs/strings"}}},
+    "tenantScope":{"enum":["SAME_TENANT","CROSS_TENANT"]}, "condition":{"$ref":"#/$defs/condition"}, "obligations":{"type":"array","maxItems":0}
+  },
+  "$defs":{
+    "strings":{"type":"array","items":{"type":"string"},"uniqueItems":true},
+    "operand":{"oneOf":[{"type":"object","additionalProperties":false,"required":["ref"],"properties":{"ref":{"type":"array","minItems":1,"items":{"type":"string"}}}},{"type":"object","additionalProperties":false,"required":["value"],"properties":{"value":{}}}]},
+    "predicate":{"type":"object","additionalProperties":false,"required":["left","operator","right"],"properties":{"left":{"$ref":"#/$defs/operand"},"operator":{"enum":["EQ","NEQ","CONTAINS","IN","EXISTS","GT","GTE","LT","LTE"]},"right":{"$ref":"#/$defs/operand"}}},
+    "condition":{"oneOf":[{"type":"object","additionalProperties":false,"required":["all"],"properties":{"all":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/condition"}}}},{"type":"object","additionalProperties":false,"required":["any"],"properties":{"any":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/condition"}}}},{"type":"object","additionalProperties":false,"required":["not"],"properties":{"not":{"$ref":"#/$defs/condition"}}},{"type":"object","additionalProperties":false,"required":["predicate"],"properties":{"predicate":{"$ref":"#/$defs/predicate"}}}]}
+  }
+}
