@@ -16,7 +16,7 @@ llame directamente evita el punto de enforcement.
 |---|---|
 | `META-INF/spring/...AutoConfiguration.imports` | Permite el descubrimiento automático de Spring Boot. |
 | `PepRegistrationAutoConfiguration` | Crea el `ApplicationRunner` de alta. |
-| `PepRegistrationProperties` | Hace binding y valida `security.pep.registration.*`. |
+| `PepRegistrationProperties` | Hace binding y valida `security.pep.registration.*`, incluida la credencial del PDP. |
 
 La auto-configuración crea el runner solamente con estas dos condiciones:
 
@@ -69,9 +69,11 @@ Content-Type: application/json
 {"backendUrl":"https://backend.internal","audience":"backend-api"}
 ```
 
-Ese token es una credencial de integración, no un JWT de usuario. El PEP compara el token con el hash BCrypt
-configurado para esa pareja application/environment. Al aceptarlo, valida la URL de backend, asigna el prefijo
-`/apps/{application-id}`, persiste la ruta y devuelve su URL pública.
+Ese token es la credencial de integración emitida por el PDP, no un JWT de usuario. El PEP la valida mediante
+`POST /internal/v1/applications/{application-id}/credential-validations` sobre su canal mTLS con el PDP; para ese
+canal el PEP usa su propia evidencia JWT de servicio (`pep.integration.pdp-evidence-token`). El PEP no persiste
+el secreto ni su hash. Al aceptarla, valida la URL de backend, asigna el prefijo `/apps/{application-id}`,
+persiste la ruta y devuelve su URL pública.
 
 Una alta posterior de la misma aplicación y entorno actualiza backend/audiencia. No permite registrar una pareja
 distinta ni ocupar prefijos que se solapen. `backendUrl` es un origen sin credenciales, path, query ni fragmento.
@@ -87,7 +89,7 @@ distinta ni ocupar prefijos que se solapen. `backendUrl` es un origen sin creden
 | `environment` | Sí | Entorno: `dev`, `test`, `prod`, etc. |
 | `backend-url` | Sí | Origen privado sin path/query/fragment/credenciales. |
 | `audience` | Sí | Audiencia JWT requerida por la ruta PEP. |
-| `token` | Sí | Token opaco de alta, procedente de un secreto. |
+| `token` | Sí | Credencial de aplicación emitida por el PDP y conservada en un secreto. |
 | `allow-insecure-http` | No; default false | Permite HTTP al PEP solo en desarrollo local. |
 
 La validación se hace dentro del runner para no impedir el inicio por un error de properties. Si falla, queda un
@@ -96,20 +98,21 @@ repositorio, argumentos de proceso ni logs.
 
 ## Configuración correspondiente en el PEP
 
-El administrador habilita y prepara la recepción de altas:
+El administrador habilita y prepara la recepción de altas. La conexión PEP→PDP sigue usando
+`pep.pdp.*` (URL, CA, certificado y llave mTLS); además, debe proporcionar una evidencia JWT de servicio válida
+para la audiencia interna que configura el PDP. No se configura ningún hash de credencial en el PEP:
 
 ```properties
 pep.integration.enabled=true
 pep.integration.registry-file=/var/lib/security-pep/integrations.json
 pep.integration.public-base-url=https://security.example.org
-pep.integration.credentials[0].application-id=academic
-pep.integration.credentials[0].environment=prod
-pep.integration.credentials[0].token-hash=$2a$<hash-bcrypt-del-token>
+pep.integration.pdp-evidence-token=${PEP_INTEGRATION_PDP_EVIDENCE_TOKEN}
 ```
 
-El archivo se guarda en un volumen privado y el token en claro se entrega una vez al equipo consumidor. La
-versión actual guarda rutas localmente: una topología de múltiples réplicas necesita almacenamiento o
-sincronización compartida, que el starter no implementa.
+El archivo se guarda en un volumen privado; contiene rutas, nunca secretos. La credencial de aplicación en claro
+se entrega una vez al equipo consumidor al crear su aplicación en el PDP. La versión actual guarda rutas
+localmente: una topología de múltiples réplicas necesita almacenamiento o sincronización compartida, que el
+starter no implementa.
 
 ## Qué significa un alta exitosa
 

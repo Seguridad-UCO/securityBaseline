@@ -33,23 +33,21 @@ sistema central. Mientras un recurso no tenga una decisión disponible en el PDP
 - Aplicación Java 25 con Spring Boot 4.1 y WebFlux.
 - PEP desplegado y accesible por HTTPS.
 - Backend accesible únicamente desde la red privada del PEP.
-- Un `application-id`, entorno, audiencia JWT y token opaco entregados por el administrador del PEP.
+- Un `application-id` emitido por el PDP, entorno, audiencia JWT y la credencial de aplicación que el PDP
+  mostró una única vez al registrarla.
 - PEP configurado con issuer, JWKS, conexión al PDP y una ruta persistente para integraciones.
 
 ## 1. Preparar el PEP
 
-El administrador habilita el registro técnico y guarda un hash BCrypt del token por aplicación y entorno. El
-token en texto plano solo se entrega una vez al equipo de la aplicación y debe almacenarse como secreto de
-despliegue.
+El administrador habilita el registro técnico y configura el PEP para validar la credencial contra el PDP por
+mTLS. El PEP no guarda hashes ni secretos de aplicaciones: el secreto en texto plano solo se entrega una vez al
+equipo de la aplicación al registrarla en el PDP y debe almacenarse como secreto de despliegue.
 
 ```properties
 pep.integration.enabled=true
 pep.integration.registry-file=/var/lib/security-pep/integrations.json
 pep.integration.public-base-url=https://security.example.org
-
-pep.integration.credentials[0].application-id=academic
-pep.integration.credentials[0].environment=prod
-pep.integration.credentials[0].token-hash=$2a$<hash-bcrypt-del-token>
+pep.integration.pdp-evidence-token=${PEP_INTEGRATION_PDP_EVIDENCE_TOKEN}
 ```
 
 El archivo `integrations.json` debe estar en un volumen privado, con permisos de lectura y escritura para el
@@ -60,11 +58,11 @@ El endpoint técnico del PEP es interno:
 
 ```text
 PUT /internal/v1/integrations/{application-id}/{environment}
-Authorization: Bearer <token-opaco>
+Authorization: Bearer <credencial-de-aplicacion-emitida-por-el-PDP>
 ```
 
-El firewall o ingress debe permitirlo solo desde las redes de aplicaciones autorizadas. El token solo puede
-actualizar su propia pareja de aplicación y entorno.
+El firewall o ingress debe permitirlo solo desde las redes de aplicaciones autorizadas. El PEP valida el secreto
+con el PDP para el `application-id` recibido; una credencial no puede registrar otra aplicación.
 
 ## 2. Instalar el starter localmente
 
@@ -91,14 +89,15 @@ En `application.properties` o mediante variables de entorno equivalentes:
 ```properties
 security.pep.registration.enabled=true
 security.pep.registration.pep-url=https://security.example.org
-security.pep.registration.application-id=academic
+security.pep.registration.application-id=${PDP_APPLICATION_ID}
 security.pep.registration.environment=prod
 security.pep.registration.backend-url=https://academic.internal
 security.pep.registration.audience=academic-api
-security.pep.registration.token=${PEP_REGISTRATION_TOKEN}
+security.pep.registration.token=${PDP_APPLICATION_CREDENTIAL}
 ```
 
-Para una demostración estrictamente local se permite `http` solo al declarar explícitamente:
+`PDP_APPLICATION_CREDENTIAL` debe ser la credencial emitida por el PDP, no un token creado ni almacenado por el
+PEP. Para una demostración estrictamente local se permite `http` solo al declarar explícitamente:
 
 ```properties
 security.pep.registration.allow-insecure-http=true
