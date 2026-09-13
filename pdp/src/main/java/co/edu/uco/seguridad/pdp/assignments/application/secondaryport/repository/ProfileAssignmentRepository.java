@@ -9,6 +9,7 @@ import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
+import java.util.Set;
 
 /** Puerto secundario del catálogo de asignaciones de perfil, expresado solo en tipos de dominio. */
 public interface ProfileAssignmentRepository {
@@ -19,6 +20,11 @@ public interface ProfileAssignmentRepository {
 
     /** Vacío si la asignación no existe o no es de ese tenant. */
     Mono<ProfileAssignment> findByIdForTenant(ProfileAssignmentId profileAssignmentId, TenantId tenantId);
+
+    /** Identificadores de perfiles asignados y vigentes para el sujeto y la aplicación. */
+    default Mono<Set<ProfileId>> findActiveProfileIdsFor(UserId userId, ApplicationId applicationId, Instant now) {
+        return Mono.just(Set.of());
+    }
 
     Mono<ProfileAssignment> save(ProfileAssignment profileAssignment);
 }

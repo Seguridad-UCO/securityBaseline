@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.Set;
 
 /** Adaptador real sobre SurrealDB. Lee la fila en ProfileAssignmentEntity y delega en ProfileAssignmentPersistenceMapper. */
 public final class SurrealProfileAssignmentRepository implements ProfileAssignmentRepository {
@@ -55,6 +56,18 @@ public final class SurrealProfileAssignmentRepository implements ProfileAssignme
                     JsonNode rows = results.get(0);
                     return rows.isEmpty() ? Mono.empty() : Mono.just(toDomain(rows.get(0)));
                 });
+    }
+
+    @Override
+    public Mono<Set<ProfileId>> findActiveProfileIdsFor(UserId userId, ApplicationId applicationId, Instant now) {
+        return client.execute("""
+                        SELECT profileId FROM %s WHERE userId = $userId AND applicationId = $applicationId \
+                        AND validFrom <= <datetime>$now AND (validUntil = NONE OR validUntil > <datetime>$now);\
+                        """.formatted(ProfileAssignmentSchema.TABLE),
+                        Map.of("userId", userId.value().toString(), "applicationId", applicationId.value().toString(),
+                                "now", now.toString()))
+                .map(results -> results.get(0).valueStream().map(row -> ProfileId.of(row.path("profileId").asString()))
+                        .collect(Collectors.toSet()));
     }
 
     @Override

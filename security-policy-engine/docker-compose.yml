@@ -1,4 +1,14 @@
 services:
+  # Herramienta efímera: ejecuta scripts dentro de Docker y escribe el bundle en el checkout.
+  # Se monta la raíz para que validate pueda leer contracts/pdp-opa/v1 fuera de este subdirectorio.
+  opa-tools:
+    build:
+      context: .
+      dockerfile: Dockerfile.tools
+    working_dir: /workspace/security-policy-engine
+    volumes:
+      - ../:/workspace
+
   opa:
     build: .
     ports:
@@ -8,4 +18,3 @@ services:
       interval: 10s
       timeout: 3s
       retries: 3
-

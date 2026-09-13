@@ -19,6 +19,9 @@ public interface ProfileRepository {
     /** Vacío si el perfil no existe o no es de ese inquilino (un perfil global tampoco lo es). */
     Mono<Profile> findByIdForTenant(ProfileId profileId, TenantId tenantId);
 
+    /** Lookup sin filtro de tenant para enriquecer hechos ya autorizados por assignments. */
+    default Mono<Profile> findById(ProfileId profileId) { return Mono.empty(); }
+
     Mono<ResultPage<Profile>> findBy(ProfileCriteria criteria, PageWindow window);
 
     Mono<Profile> save(Profile profile);

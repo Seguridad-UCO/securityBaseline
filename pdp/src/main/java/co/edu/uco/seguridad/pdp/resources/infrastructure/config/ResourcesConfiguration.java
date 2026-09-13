@@ -10,8 +10,10 @@ import co.edu.uco.seguridad.pdp.resources.domain.rule.impl.ProtectedResourceMust
 import co.edu.uco.seguridad.pdp.resources.domain.rule.impl.ProtectedResourceMustExistRuleImpl;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceMustExistValidator;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceOwnerLookupValidator;
+import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceIdLookupValidator;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.ProtectedResourceMustExistValidatorImpl;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.ProtectedResourceOwnerLookupValidatorImpl;
+import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.ProtectedResourceIdLookupValidatorImpl;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.RegisterProtectedResourceRulesValidator;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.RegisterProtectedResourceRulesValidatorImpl;
 import co.edu.uco.seguridad.pdp.resources.application.usecase.ListProtectedResourcesUseCase;
@@ -79,6 +81,11 @@ public class ResourcesConfiguration {
     @Bean
     ProtectedResourceOwnerLookupValidator protectedResourceOwnerLookupValidator(ProtectedResourceRepository repository) {
         return new ProtectedResourceOwnerLookupValidatorImpl(repository);
+    }
+
+    @Bean
+    ProtectedResourceIdLookupValidator protectedResourceIdLookupValidator(ProtectedResourceRepository repository) {
+        return new ProtectedResourceIdLookupValidatorImpl(repository);
     }
 
     @Bean

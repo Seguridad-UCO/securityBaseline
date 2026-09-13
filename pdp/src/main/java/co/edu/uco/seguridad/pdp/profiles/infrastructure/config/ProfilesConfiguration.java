@@ -4,9 +4,11 @@ import co.edu.uco.seguridad.pdp.applications.application.rule.validator.Applicat
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.AddRoleToProfileRulesValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.DefineProfileRulesValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileRolesLookupValidator;
+import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileNamesLookupValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.impl.AddRoleToProfileRulesValidatorImpl;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.impl.DefineProfileRulesValidatorImpl;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.impl.ProfileRolesLookupValidatorImpl;
+import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.impl.ProfileNamesLookupValidatorImpl;
 import co.edu.uco.seguridad.pdp.profiles.application.secondaryport.repository.ProfileRepository;
 import co.edu.uco.seguridad.pdp.profiles.application.usecase.AddRoleToProfileUseCase;
 import co.edu.uco.seguridad.pdp.profiles.application.usecase.DefineProfileUseCase;
@@ -74,6 +76,11 @@ public class ProfilesConfiguration {
     ProfileRolesLookupValidator profileRolesLookupValidator(ProfileRepository repository,
             ProfileMustExistForTenantRule mustExist) {
         return new ProfileRolesLookupValidatorImpl(repository, mustExist);
+    }
+
+    @Bean
+    ProfileNamesLookupValidator profileNamesLookupValidator(ProfileRepository repository) {
+        return new ProfileNamesLookupValidatorImpl(repository);
     }
 
     @Bean
