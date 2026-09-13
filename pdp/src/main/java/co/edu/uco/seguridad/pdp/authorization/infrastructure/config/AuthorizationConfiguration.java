@@ -4,11 +4,16 @@ import co.edu.uco.seguridad.pdp.applications.application.rule.validator.Applicat
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationOwnerLookupValidator;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.ResolveActiveRolesUseCase;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.ActiveRoleNamesLookupValidator;
+import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.PrincipalMustBeApplicationAdministratorValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.impl.ActiveRoleNamesLookupValidatorImpl;
+import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.impl.PrincipalMustBeApplicationAdministratorValidatorImpl;
 import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.AccessAuditRepository;
+import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.AdministrationDecisionPort;
 import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.PolicyDecisionPort;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.AuthorizeAdministrationUseCase;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.AuthorizeUseCase;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.EvaluateInternalAccessUseCase;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.impl.AuthorizeAdministrationUseCaseImpl;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.impl.AuthorizeUseCaseImpl;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.impl.EvaluateInternalAccessUseCaseImpl;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.AuthorizeInteractor;
@@ -17,6 +22,7 @@ import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.InternalAccessDecisionInteractorImpl;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.persistence.repository.SurrealAccessAuditRepository;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.persistence.schema.SurrealAccessEventSchemaInitializer;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.OpaAdministrationDecisionAdapter;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.OpaPolicyDecisionAdapter;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.properties.OpaProperties;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceMustExistValidator;
@@ -92,5 +98,26 @@ public class AuthorizationConfiguration {
     @Bean
     InternalAccessDecisionInteractor internalAccessDecisionInteractor(EvaluateInternalAccessUseCase useCase) {
         return new InternalAccessDecisionInteractorImpl(useCase);
+    }
+
+    // HU-009 — mecanismo de administración por aplicación (modelo y puerto; sin cablear a ningún
+    // endpoint todavía).
+    @Bean
+    AdministrationDecisionPort administrationDecisionPort(OpaProperties properties, ObjectMapper objectMapper,
+            WebClient.Builder builder) {
+        WebClient webClient = builder.clone().baseUrl(properties.baseUrl()).build();
+        return new OpaAdministrationDecisionAdapter(webClient, objectMapper, properties);
+    }
+
+    @Bean
+    AuthorizeAdministrationUseCase authorizeAdministrationUseCase(ActiveRoleNamesLookupValidator rolesLookup,
+            AdministrationDecisionPort administrationDecisionPort) {
+        return new AuthorizeAdministrationUseCaseImpl(rolesLookup, administrationDecisionPort);
+    }
+
+    @Bean
+    PrincipalMustBeApplicationAdministratorValidator principalMustBeApplicationAdministratorValidator(
+            AuthorizeAdministrationUseCase useCase) {
+        return new PrincipalMustBeApplicationAdministratorValidatorImpl(useCase);
     }
 }
