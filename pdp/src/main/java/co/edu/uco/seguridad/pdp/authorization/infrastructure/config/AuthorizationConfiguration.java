@@ -5,6 +5,17 @@ import co.edu.uco.seguridad.pdp.applications.application.rule.validator.Applicat
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RemoveApplicationUseCase;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RotateApplicationCredentialUseCase;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.ResolveActiveRolesUseCase;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerRoleDefinitionUseCase;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerResourceGrantUseCase;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.impl.AdministerRoleDefinitionUseCaseImpl;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.impl.AdministerResourceGrantUseCaseImpl;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.AdministerRoleDefinitionInteractor;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.AdministerResourceGrantInteractor;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.AdministerRoleDefinitionInteractorImpl;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.AdministerResourceGrantInteractorImpl;
+import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleApplicationLookupValidator;
+import co.edu.uco.seguridad.pdp.roles.application.usecase.DefineRoleUseCase;
+import co.edu.uco.seguridad.pdp.roles.application.usecase.GrantResourceToRoleUseCase;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.ResolveAuthorizationSubjectFactsUseCase;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.ActiveRoleNamesLookupValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.PrincipalMustBeApplicationAdministratorValidator;
@@ -173,5 +184,33 @@ public class AuthorizationConfiguration {
     ApplicationCredentialRotationInteractor applicationCredentialRotationInteractor(
             AdministerApplicationCredentialRotationUseCase useCase, SubjectUserIdLookupValidator subjectUserIdLookup) {
         return new ApplicationCredentialRotationInteractorImpl(useCase, subjectUserIdLookup);
+    }
+
+    // HU-016 — gatea DefineRole/GrantResourceToRole (slice roles), mismo motivo que HU-015: vive
+    // aquí porque authorization ya depende de roles. El controller que expone estas rutas
+    // (RoleAdministrationController) y la baja de RoleController.define()/grantResource() son [M]
+    // del implementador (PLAN-HU-016.md §8) — de momento estos beans no quedan enrutados.
+    @Bean
+    AdministerRoleDefinitionUseCase administerRoleDefinitionUseCase(
+            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator, DefineRoleUseCase defineRole) {
+        return new AdministerRoleDefinitionUseCaseImpl(mustBeAdministrator, defineRole);
+    }
+
+    @Bean
+    AdministerRoleDefinitionInteractor administerRoleDefinitionInteractor(AdministerRoleDefinitionUseCase useCase,
+            SubjectUserIdLookupValidator subjectUserIdLookup) {
+        return new AdministerRoleDefinitionInteractorImpl(useCase, subjectUserIdLookup);
+    }
+
+    @Bean
+    AdministerResourceGrantUseCase administerResourceGrantUseCase(
+            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator, GrantResourceToRoleUseCase grantResource) {
+        return new AdministerResourceGrantUseCaseImpl(mustBeAdministrator, grantResource);
+    }
+
+    @Bean
+    AdministerResourceGrantInteractor administerResourceGrantInteractor(AdministerResourceGrantUseCase useCase,
+            SubjectUserIdLookupValidator subjectUserIdLookup, RoleApplicationLookupValidator roleApplicationLookup) {
+        return new AdministerResourceGrantInteractorImpl(useCase, subjectUserIdLookup, roleApplicationLookup);
     }
 }

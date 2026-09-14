@@ -5,6 +5,7 @@ import co.edu.uco.seguridad.pdp.applications.application.rule.validator.Applicat
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceOwnerLookupValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.DefineRoleRulesValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.GrantResourceRulesValidator;
+import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleApplicationLookupValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleLookupByNameInScopeValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleMustExistForTenantValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleNamesLookupValidator;
@@ -12,6 +13,7 @@ import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleResourcesLo
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleScopeMustCoverApplicationValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.DefineRoleRulesValidatorImpl;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.GrantResourceRulesValidatorImpl;
+import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.RoleApplicationLookupValidatorImpl;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.RoleLookupByNameInScopeValidatorImpl;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.RoleMustExistForTenantValidatorImpl;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.RoleNamesLookupValidatorImpl;
@@ -32,11 +34,7 @@ import co.edu.uco.seguridad.pdp.roles.domain.rule.impl.RoleMustExistForTenantRul
 import co.edu.uco.seguridad.pdp.roles.domain.rule.impl.RoleNameMustBeUniqueInScopeRuleImpl;
 import co.edu.uco.seguridad.pdp.roles.domain.rule.impl.RoleScopeMustCoverApplicationRuleImpl;
 import co.edu.uco.seguridad.pdp.roles.domain.rule.impl.RoleScopeMustCoverResourceRuleImpl;
-import co.edu.uco.seguridad.pdp.roles.infrastructure.adapter.primary.web.interactor.DefineRoleInteractor;
-import co.edu.uco.seguridad.pdp.roles.infrastructure.adapter.primary.web.interactor.GrantResourceToRoleInteractor;
 import co.edu.uco.seguridad.pdp.roles.infrastructure.adapter.primary.web.interactor.ListRolesInteractor;
-import co.edu.uco.seguridad.pdp.roles.infrastructure.adapter.primary.web.interactor.impl.DefineRoleInteractorImpl;
-import co.edu.uco.seguridad.pdp.roles.infrastructure.adapter.primary.web.interactor.impl.GrantResourceToRoleInteractorImpl;
 import co.edu.uco.seguridad.pdp.roles.infrastructure.adapter.primary.web.interactor.impl.ListRolesInteractorImpl;
 import co.edu.uco.seguridad.pdp.roles.infrastructure.adapter.secondary.persistence.repository.SurrealRoleRepository;
 import co.edu.uco.seguridad.pdp.roles.infrastructure.adapter.secondary.persistence.schema.SurrealRoleSchemaInitializer;
@@ -105,16 +103,10 @@ public class RolesConfiguration {
         return new ListRolesUseCaseImpl(repository);
     }
 
-    @Bean
-    DefineRoleInteractor defineRoleInteractor(DefineRoleUseCase useCase) {
-        return new DefineRoleInteractorImpl(useCase);
-    }
-
-    @Bean
-    GrantResourceToRoleInteractor grantResourceToRoleInteractor(GrantResourceToRoleUseCase useCase) {
-        return new GrantResourceToRoleInteractorImpl(useCase);
-    }
-
+    // HU-016 — defineRoleInteractor/grantResourceToRoleInteractor se retiraron de aquí: las
+    // escrituras se exponen ahora desde RoleAdministrationController (authorization), que gatea
+    // contra el mecanismo de administración por aplicación. DefineRoleUseCase/GrantResourceToRoleUseCase
+    // siguen aquí, sin cambios: authorization los consume vía "roles :: usecase".
     @Bean
     ListRolesInteractor listRolesInteractor(ListRolesUseCase useCase) {
         return new ListRolesInteractorImpl(useCase);
@@ -153,5 +145,13 @@ public class RolesConfiguration {
     RoleMustExistForTenantValidator roleMustExistForTenantValidator(RoleRepository repository,
             RoleMustExistForTenantRule mustExist) {
         return new RoleMustExistForTenantValidatorImpl(repository, mustExist);
+    }
+
+    // HU-016 — publicado para que `authorization` resuelva contra qué aplicación gatear una
+    // concesión de recurso, sin consultar RoleRepository directamente (sb-arquitectura, regla 11).
+    @Bean
+    RoleApplicationLookupValidator roleApplicationLookupValidator(RoleRepository repository,
+            RoleMustExistForTenantRule mustExist) {
+        return new RoleApplicationLookupValidatorImpl(repository, mustExist);
     }
 }

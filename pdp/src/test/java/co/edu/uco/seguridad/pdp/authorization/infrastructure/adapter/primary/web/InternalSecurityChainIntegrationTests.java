@@ -115,6 +115,10 @@ class InternalSecurityChainIntegrationTests extends AbstractSurrealDbIntegration
         registry.add("server.ssl.certificate-private-key", () -> "file:" + serverKey);
         registry.add("server.ssl.client-auth", () -> "want");
         registry.add("server.ssl.trust-certificate", () -> "file:" + clientCert);
+        // El perfil por defecto (application.properties) trae mtls.enabled=false para conveniencia
+        // de desarrollo local (PR #49) — esta prueba fija su propia postura explícitamente, sin
+        // depender del default de ningún perfil.
+        registry.add("pdp.security.internal.mtls.enabled", () -> "true");
         registry.add("pdp.security.internal.mtls.trust-certificate", clientCert::toString);
         registry.add("pdp.security.internal.mtls.allowed-subjects[0]", () -> CLIENT_SUBJECT);
         registry.add("pdp.security.internal.evidence.jwk-set-uri",

@@ -22,14 +22,6 @@ public final class RolesMessages {
         return "El recurso pertenece a la aplicación " + applicationId + ", fuera del alcance del rol";
     }
 
-    public static String globalScopeNotAdministrableYet() {
-        return "los roles globales no se administran por este canal todavía";
-    }
-
-    public static String applicationIdNotApplicableForTenantScope() {
-        return "un rol de alcance TENANT no admite applicationId";
-    }
-
     public static String applicationOutsideRoleScope(String applicationId) {
         return "La aplicación " + applicationId + " está fuera del alcance del rol";
     }

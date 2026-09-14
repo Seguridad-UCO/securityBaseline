@@ -87,6 +87,7 @@ public final class RequiredArgumentMessages {
     public static final String ROLE_SCOPE_COVERS_RULE = "se requiere la regla de cobertura del alcance";
     public static final String DEFINE_ROLE_RULES_VALIDATOR = "se requiere el validador de definición de rol";
     public static final String GRANT_RESOURCE_RULES_VALIDATOR = "se requiere el validador de concesión de recurso";
+    public static final String ROLE_APPLICATION_LOOKUP_VALIDATOR = "se requiere el validador de aplicación del rol";
     public static final String PROTECTED_RESOURCE_OWNER_LOOKUP_VALIDATOR = "se requiere el validador de dueño de recurso";
     public static final String DEFINE_ROLE_USE_CASE = "se requiere el caso de uso de definición de rol";
     public static final String GRANT_RESOURCE_TO_ROLE_USE_CASE = "se requiere el caso de uso de concesión de recurso";
@@ -170,6 +171,15 @@ public final class RequiredArgumentMessages {
             "se requiere el caso de uso de autorización de administración";
     public static final String PRINCIPAL_MUST_BE_APPLICATION_ADMINISTRATOR_VALIDATOR =
             "se requiere el validador de administrador de aplicación";
+
+    // Gate de administración cableado en roles (HU-016).
+    public static final String ADMINISTER_ROLE_DEFINITION_USE_CASE =
+            "se requiere el caso de uso de administración de definición de rol";
+    public static final String ADMINISTER_RESOURCE_GRANT_USE_CASE =
+            "se requiere el caso de uso de administración de concesión de recurso";
+    public static final String ADMINISTRATION = "se requiere la solicitud de administración (puede estar vacía)";
+    public static final String DEFINE_ROLE_REQUEST = "se requiere la solicitud de definición de rol";
+    public static final String GRANT_RESOURCE_REQUEST = "se requiere la solicitud de concesión de recurso";
 
     // Saga de registro de aplicación con recurso inicial (HU-010).
     public static final String REGISTER_APPLICATION_USE_CASE = "se requiere el caso de uso de registro de aplicación";
