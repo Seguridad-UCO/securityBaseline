@@ -17,12 +17,18 @@
  * <p>{@code "identity :: dto"} corrige una omisión de la PR #49: {@code InternalAccessDecisionInteractorImpl}
  * ya construía {@code ResolveExternalIdentityRequest} sin que ese paquete estuviera publicado —
  * {@code ModulithStructureTests} lo marcó al fusionar con el backlog de HU-016.
+ *
+ * <p>HU-017: se agrega {@code "resources :: usecase"} — mismo patrón que HU-016, para que
+ * {@code AdministerResourceRegistrationUseCase} delegue en {@code RegisterProtectedResourceUseCase}
+ * tras el mismo validador. {@code resources :: rule/:: dto/:: model/:: exception} ya estaban
+ * declarados, así que esto no dispara la trampa de "primer NamedInterface del módulo".
  */
 @org.springframework.modulith.ApplicationModule(allowedDependencies = {
         "commons",
         "applications", "applications :: rule", "applications :: dto", "applications :: exception",
         "applications :: usecase", "applications :: model",
         "resources", "resources :: rule", "resources :: dto", "resources :: model", "resources :: exception",
+        "resources :: usecase",
         "assignments :: usecase", "assignments :: dto",
         "identity :: usecase", "identity :: dto",
         "identity :: rule",

@@ -181,6 +181,13 @@ public final class RequiredArgumentMessages {
     public static final String DEFINE_ROLE_REQUEST = "se requiere la solicitud de definición de rol";
     public static final String GRANT_RESOURCE_REQUEST = "se requiere la solicitud de concesión de recurso";
 
+    // Gate de administración cableado en resources (HU-017).
+    public static final String ADMINISTER_RESOURCE_REGISTRATION_USE_CASE =
+            "se requiere el caso de uso de administración de registro de recurso";
+    public static final String REGISTER_PROTECTED_RESOURCE_REQUEST =
+            "se requiere la solicitud de registro de recurso protegido";
+    public static final String ADMINISTRATION_REQUEST = "se requiere la solicitud de administración";
+
     // Saga de registro de aplicación con recurso inicial (HU-010).
     public static final String REGISTER_APPLICATION_USE_CASE = "se requiere el caso de uso de registro de aplicación";
     public static final String REGISTER_PROTECTED_RESOURCE_USE_CASE =
