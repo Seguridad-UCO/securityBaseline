@@ -3,6 +3,7 @@ package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.we
 import co.edu.uco.seguridad.AbstractSurrealDbIntegrationTest;
 import co.edu.uco.seguridad.pdp.PdpApplication;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.OpaFixtureServer;
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.shared.security.TestJwtSupport;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -60,6 +61,9 @@ class AuthorizationHttpTests extends AbstractSurrealDbIntegrationTest {
     @BeforeEach
     void registerApplicationAndResource() {
         prefix = "hu002-" + UUID.randomUUID().toString().substring(0, 8);
+        // HU-015: SubjectUserIdLookupValidator necesita una identidad vinculada para el subject del
+        // JWT de prueba — registerApplication() pasa por el registro gateado.
+        linkTestIdentity(new TenantId(UCO), "test-subject");
         applicationId = registerApplication(UCO, prefix + "-gestion-academica");
         registerResource(UCO, applicationId, "/estudiantes", "GET");
     }

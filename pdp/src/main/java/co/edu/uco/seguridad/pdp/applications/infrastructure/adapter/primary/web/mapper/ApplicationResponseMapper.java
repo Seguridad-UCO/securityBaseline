@@ -1,8 +1,6 @@
 package co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.mapper;
 
-import co.edu.uco.seguridad.pdp.applications.application.primaryport.response.ApplicationRegistrationResponse;
 import co.edu.uco.seguridad.pdp.applications.application.primaryport.response.RegisteredApplicationResponse;
-import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.response.ApplicationRegisteredWebResponse;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.response.ApplicationWebResponse;
 
 import java.util.List;
@@ -21,13 +19,5 @@ public final class ApplicationResponseMapper {
 
     public static List<ApplicationWebResponse> toResponseList(List<RegisteredApplicationResponse> responses) {
         return responses.stream().map(ApplicationResponseMapper::toResponse).toList();
-    }
-
-    /** Aplana {@link ApplicationRegistrationResponse}, incluyendo el secreto en claro (HU-012). */
-    public static ApplicationRegisteredWebResponse toRegisteredResponse(ApplicationRegistrationResponse response) {
-        RegisteredApplicationResponse application = response.application();
-        return new ApplicationRegisteredWebResponse(application.id().value().toString(),
-                application.tenantId().value(), application.name().value(), application.description(),
-                application.baseUrl().value(), response.credential(), application.registeredAt());
     }
 }

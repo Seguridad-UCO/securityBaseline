@@ -2,6 +2,7 @@ package co.edu.uco.seguridad.pdp.roles.infrastructure.adapter.primary.web;
 
 import co.edu.uco.seguridad.AbstractSurrealDbIntegrationTest;
 import co.edu.uco.seguridad.pdp.PdpApplication;
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.shared.security.TestJwtSupport;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,6 +34,9 @@ class RoleHttpTests extends AbstractSurrealDbIntegrationTest {
     @BeforeEach
     void freshPrefix() {
         prefix = "hu004-" + UUID.randomUUID().toString().substring(0, 8);
+        // HU-015: SubjectUserIdLookupValidator necesita una identidad vinculada para el subject del
+        // JWT de prueba — registerApplication() pasa por el registro gateado.
+        linkTestIdentity(new TenantId(UCO), "test-subject");
     }
 
     @Test

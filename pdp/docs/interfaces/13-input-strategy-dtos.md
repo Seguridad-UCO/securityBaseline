@@ -114,7 +114,9 @@ cualificados cuando hace falta.
 
 ## Ubicación verificable
 
-- Crudo: [`RegisterApplicationRawRequest.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/infrastructure/adapter/primary/web/dto/request/raw/RegisterApplicationRawRequest.java),
+- Crudo: [`RegisterApplicationWithFirstAdministratorRawRequest.java`](../../src/main/java/co/edu/uco/seguridad/pdp/assignments/infrastructure/adapter/primary/web/dto/request/raw/RegisterApplicationWithFirstAdministratorRawRequest.java)
+  (HU-015: el registro se trasladó de `applications` a `assignments`, que orquesta también el alta
+  del primer administrador — ver `pdp/docs/ai-harness/workspace/planes/PLAN-HU-015.md` §0),
   `SearchProtectedApplicationsRawRequest.java`
 - Web Request (solo búsqueda): `SearchProtectedApplicationsRequest.java`
 - [`RequestFieldParser.java`](../../src/main/java/co/edu/uco/seguridad/shared/web/RequestFieldParser.java)
@@ -122,11 +124,11 @@ cualificados cuando hace falta.
 - Tenant: [`PdpPrincipal.java`](../../src/main/java/co/edu/uco/seguridad/shared/security/PdpPrincipal.java),
   [`SecurityContext.java`](../../src/main/java/co/edu/uco/seguridad/shared/security/SecurityContext.java)
 - App Request: [`application/primaryport/request`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/application/primaryport/request)
-- Mappers: [`RegisterApplicationRequestMapper.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/infrastructure/adapter/primary/web/mapper/RegisterApplicationRequestMapper.java),
+- Mappers: [`RegisterApplicationWithFirstAdministratorRequestMapper.java`](../../src/main/java/co/edu/uco/seguridad/pdp/assignments/infrastructure/adapter/primary/web/mapper/RegisterApplicationWithFirstAdministratorRequestMapper.java),
   `ListApplicationsRequestMapper.java`
-- Interactores: `RegisterProtectedApplicationInteractorImpl.java`,
+- Interactores: `RegisterApplicationWithFirstAdministratorInteractorImpl.java`,
   `SearchProtectedApplicationsInteractorImpl.java`
-- Pruebas: [`RegisterApplicationRequestMapperTests`](../../src/test/java/co/edu/uco/seguridad/pdp/applications/infrastructure/adapter/primary/web/mapper/RegisterApplicationRequestMapperTests.java),
+- Pruebas: [`RegisterApplicationWithFirstAdministratorRequestMapperTests`](../../src/test/java/co/edu/uco/seguridad/pdp/assignments/infrastructure/adapter/primary/web/mapper/RegisterApplicationWithFirstAdministratorRequestMapperTests.java),
   `ListApplicationsRequestMapperTests`
 
 ## Evidencia y límite

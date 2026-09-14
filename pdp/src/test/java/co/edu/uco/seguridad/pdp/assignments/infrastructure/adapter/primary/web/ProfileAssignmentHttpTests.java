@@ -43,6 +43,9 @@ class ProfileAssignmentHttpTests extends AbstractSurrealDbIntegrationTest {
     @BeforeEach
     void freshPrefix() {
         prefix = "hu011-" + UUID.randomUUID().toString().substring(0, 8);
+        // HU-015: SubjectUserIdLookupValidator necesita una identidad vinculada para el subject del
+        // JWT de prueba — registerApplication() pasa por el registro gateado.
+        linkTestIdentity(new TenantId(UCO), "test-subject");
     }
 
     @Test

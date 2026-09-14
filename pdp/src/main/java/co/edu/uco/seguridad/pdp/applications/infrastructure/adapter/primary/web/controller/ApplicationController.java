@@ -1,24 +1,15 @@
 package co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.controller;
 
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.request.raw.ListApplicationsRawRequest;
-import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.request.raw.RegisterApplicationRawRequest;
-import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.request.raw.RotateApplicationCredentialRawRequest;
-import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.response.ApplicationRegisteredWebResponse;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.response.ApplicationWebResponse;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.ListApplicationsInteractor;
-import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.RegisterApplicationInteractor;
-import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.RotateApplicationCredentialInteractor;
 import co.edu.uco.seguridad.shared.web.ApiResponse;
 import co.edu.uco.seguridad.shared.web.PageResponse;
 import co.edu.uco.seguridad.shared.web.CorrelationWebFilter;
 import co.edu.uco.seguridad.shared.web.RequestContext;
 import co.edu.uco.seguridad.shared.web.message.WebContractMessages;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,30 +22,22 @@ import java.util.Objects;
  * Adaptador primario HTTP del catálogo de aplicaciones. Solo recibe el payload, ejecuta el
  * interactor y envuelve la respuesta. El mapeo (incluyendo derivar el tenant de la sesión) vive en
  * el interactor.
+ *
+ * <p>Desde HU-015, este controlador ya no sirve {@code POST} (registro) ni
+ * {@code POST .../credential-rotations} (rotación): el registro se trasladó a
+ * {@code ApplicationRegistrationController} de {@code assignments} (para poder dar de alta al primer
+ * administrador) y la rotación a {@code ApplicationAdministrationController} de {@code authorization}
+ * (para poder exigir que solo un administrador la ejecute) — ver PLAN-HU-015.md §0. La URL pública no
+ * cambia para ningún cliente existente; solo cambió qué módulo la atiende.</p>
  */
 @RestController
 @RequestMapping("/api/v1/applications")
 final class ApplicationController {
 
-    private final RegisterApplicationInteractor registerInteractor;
     private final ListApplicationsInteractor listInteractor;
-    private final RotateApplicationCredentialInteractor rotateInteractor;
 
-    ApplicationController(RegisterApplicationInteractor registerInteractor, ListApplicationsInteractor listInteractor,
-            RotateApplicationCredentialInteractor rotateInteractor) {
-        this.registerInteractor = Objects.requireNonNull(registerInteractor);
+    ApplicationController(ListApplicationsInteractor listInteractor) {
         this.listInteractor = Objects.requireNonNull(listInteractor);
-        this.rotateInteractor = Objects.requireNonNull(rotateInteractor);
-    }
-
-    @PostMapping
-    Mono<ResponseEntity<ApiResponse<ApplicationRegisteredWebResponse>>> register(
-            @RequestBody RegisterApplicationRawRequest body, ServerWebExchange exchange) {
-        RequestContext context = CorrelationWebFilter.context(exchange);
-        return registerInteractor.execute(body)
-                .map(response -> ResponseEntity.status(HttpStatus.CREATED)
-                        .body(ApiResponse.success("APPLICATION_REGISTERED",
-                                WebContractMessages.successApplicationRegistered(), response, context)));
     }
 
     @GetMapping
@@ -69,15 +52,5 @@ final class ApplicationController {
         return listInteractor.execute(new ListApplicationsRawRequest(name, page, size, offset, limit))
                 .map(response -> ResponseEntity.ok(ApiResponse.success("APPLICATIONS_LISTED",
                         WebContractMessages.successCatalogQueried(), response, context)));
-    }
-
-    @PostMapping("/{applicationId}/credential-rotations")
-    Mono<ResponseEntity<ApiResponse<ApplicationRegisteredWebResponse>>> rotate(@PathVariable String applicationId,
-            ServerWebExchange exchange) {
-        RequestContext context = CorrelationWebFilter.context(exchange);
-        return rotateInteractor.execute(new RotateApplicationCredentialRawRequest(applicationId))
-                .map(response -> ResponseEntity.status(HttpStatus.CREATED)
-                        .body(ApiResponse.success("APPLICATION_CREDENTIAL_ROTATED",
-                                WebContractMessages.successApplicationCredentialRotated(), response, context)));
     }
 }

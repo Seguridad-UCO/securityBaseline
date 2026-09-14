@@ -81,6 +81,11 @@ class RegisterProtectedResourceUseCaseImplTests {
             public Mono<ApplicationId> findApplicationIdById(ResourceId resourceId) {
                 throw new UnsupportedOperationException();
             }
+
+            @Override
+            public Mono<ResourceId> findIdByApplicationPathAndMethod(ApplicationId applicationId, ResourcePath path, HttpVerb method) {
+                throw new UnsupportedOperationException();
+            }
         };
         List<DomainEvent> published = new ArrayList<>();
         UUID fixedId = UUID.randomUUID();
@@ -132,6 +137,11 @@ class RegisterProtectedResourceUseCaseImplTests {
 
             @Override
             public Mono<ApplicationId> findApplicationIdById(ResourceId resourceId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<ResourceId> findIdByApplicationPathAndMethod(ApplicationId applicationId, ResourcePath path, HttpVerb method) {
                 throw new UnsupportedOperationException();
             }
         };

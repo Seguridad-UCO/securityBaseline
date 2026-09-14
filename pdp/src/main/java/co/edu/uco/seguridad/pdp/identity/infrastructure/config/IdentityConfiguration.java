@@ -1,6 +1,8 @@
 package co.edu.uco.seguridad.pdp.identity.infrastructure.config;
 
+import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserIdLookupValidator;
 import co.edu.uco.seguridad.pdp.identity.application.rule.validator.UserMustExistValidator;
+import co.edu.uco.seguridad.pdp.identity.application.rule.validator.impl.SubjectUserIdLookupValidatorImpl;
 import co.edu.uco.seguridad.pdp.identity.application.rule.validator.impl.UserMustExistValidatorImpl;
 import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.SecurityUserRepository;
 import co.edu.uco.seguridad.pdp.identity.domain.rule.UserMustExistRule;
@@ -86,5 +88,12 @@ public class IdentityConfiguration {
     @Bean
     UserMustExistValidator userMustExistValidator(SecurityUserRepository repository, UserMustExistRule mustExist) {
         return new UserMustExistValidatorImpl(repository, mustExist);
+    }
+
+    // HU-015 (enmienda §14) — resuelve el UserId de quien llama cuando el principal no lo trae ya
+    // resuelto (JWT crudo, sin pasar por LocalUserPrincipal).
+    @Bean
+    SubjectUserIdLookupValidator subjectUserIdLookupValidator(SecurityUserRepository repository) {
+        return new SubjectUserIdLookupValidatorImpl(repository);
     }
 }
