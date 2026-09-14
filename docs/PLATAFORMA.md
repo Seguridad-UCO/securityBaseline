@@ -6,9 +6,11 @@
 > [`../security-policy-engine/README.md`](../security-policy-engine/README.md) para OPA— pero
 > ninguno de los tres, por sí solo, explica cómo encajan. Este sí.
 >
-> **Estado: 2026-09-12.** Marca explícitamente qué corre hoy y qué es plan, porque confundir las dos
-> cosas fue el fallo histórico de este proyecto (ver `pdp/docs/criteria-compliance-matrix.md`, hallazgo
-> transversal). Cuando algo cambie de estado, este documento se actualiza en el mismo commit.
+> **Estado: 2026-09-13 (noche), verificado contra `develop`.** Marca explícitamente qué corre hoy y
+> qué es plan, porque confundir las dos cosas fue el fallo histórico de este proyecto (ver
+> `pdp/docs/criteria-compliance-matrix.md`, hallazgo transversal). Cuando algo cambie de estado, este
+> documento se actualiza en el mismo commit. Detalle completo, historia por historia y con evidencia
+> por ítem: [`MAPA-PLATAFORMA-SEGURIDAD.md`](../pdp/docs/ai-harness/workspace/MAPA-PLATAFORMA-SEGURIDAD.md).
 
 ---
 
@@ -16,9 +18,9 @@
 
 | Componente | Qué es | Dónde vive | Quién lo lleva | Estado |
 |---|---|---|---|---|
-| **PDP** — Policy Decision Point | El servicio que decide: dado un sujeto, una aplicación, un recurso y una acción, ¿se permite? | [`pdp/`](../pdp/) | Sebastián | 🟢 En producción de desarrollo. Decide con **denegación por defecto** — todavía no consulta una política real |
-| **PEP** — Policy Enforcement Point | El proxy que se pone delante de cada aplicación protegida: valida el JWT del usuario, pregunta al PDP y solo deja pasar la petición si la respuesta es `ALLOW` | [`pep/`](../pep/) | David | 🟡 Implementado y probado contra un PDP **simulado** (fixtures). Su cliente real apunta a un endpoint del PDP que **todavía no existe** (HU-003) |
-| **OPA** — Open Policy Agent / motor de políticas | El que de verdad evalúa la política: recibe hechos del PDP y devuelve una decisión lógica en Rego | [`security-policy-engine/`](../security-policy-engine/) | Laura | 🟡 El motor y sus políticas core están implementados y probados. **Nada lo llama todavía** — el PDP no tiene un adaptador que lo consuma (HU-006) |
+| **PDP** — Policy Decision Point | El servicio que decide: dado un sujeto, una aplicación, un recurso y una acción, ¿se permite? | [`pdp/`](../pdp/) | Sebastián | 🟢 En producción de desarrollo. Ya emite, valida y rota su propia credencial de aplicación (HU-012/013/014), gatea la administración del catálogo (HU-015) y llama a OPA de verdad (HU-006) — la respuesta sigue siendo `DENY` porque falta la **política**, no la conexión |
+| **PEP** — Policy Enforcement Point | El proxy que se pone delante de cada aplicación protegida: valida el JWT del usuario, pregunta al PDP y solo deja pasar la petición si la respuesta es `ALLOW` | [`pep/`](../pep/) | David | 🟢 Habla con el PDP real por el canal interno mTLS (HU-003), no con un simulador. Pendiente: migrar su alta técnica para consumir la credencial de aplicación que el PDP ya emite, en vez de su token manual |
+| **OPA** — Open Policy Agent / motor de políticas | El que de verdad evalúa la política: recibe hechos del PDP y devuelve una decisión lógica en Rego | [`security-policy-engine/`](../security-policy-engine/) | Laura | 🟡 El motor y sus políticas core están implementados y probados, y el PDP ya le hace una llamada HTTP real por cada decisión (HU-006). **Sigue sin existir una política de aplicación publicada** — por eso responde `DENY`/`NO_APPLICABLE_POLICY` a todo |
 
 Los tres viven en **un solo repositorio** (`securityBaseline`), cada uno en su propio árbol de
 primer nivel, con su propio build (`pdp/pom.xml` y `pep/pom.xml` son independientes entre sí — el

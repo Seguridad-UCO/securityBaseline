@@ -327,12 +327,12 @@ complejidad de cada pieza individual).
 
 | Fase | Estado | Fecha |
 |---|---|---|
-| Plan | ✅ Generado | 2026-09-13 |
-| Contrato aprobado (gate 1) | ⏳ Pendiente | |
-| Pruebas en rojo | ⏳ Pendiente | |
-| Implementación en verde | ⏳ Pendiente | |
-| Validación | ⛔ RECHAZADO — 2ª vuelta, deriva doc↔código (ver REPORTE-HU-015.md) | 2026-09-13 |
-| Entrega (gate 2) | ⏳ Pendiente | |
+| Plan | ✅ Generado (con enmiendas §13, §14, §15) | 2026-09-13 |
+| Contrato aprobado (gate 1) | ✅ Aprobado, tras las tres enmiendas | 2026-09-13 |
+| Pruebas en rojo | ✅ SPEC materializada, rojo por `UnsupportedOperationException` | 2026-09-13 |
+| Implementación en verde | ✅ Verde | 2026-09-13 |
+| Validación | ✅ Los cuatro juicios en verde en la 2ª vuelta; único bloqueante (deriva doc↔código) corregido el mismo día — ver el addendum en REPORTE-HU-015.md | 2026-09-13 |
+| Entrega (gate 2) | ✅ Fusionado a `develop` (PR #48) + fix de índice único y de cobertura sobre `develop` (commits `56891ca`, `ff4774f`) | 2026-09-13 |
 
 ## 11. Ambigüedades pendientes
 

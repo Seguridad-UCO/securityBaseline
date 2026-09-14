@@ -1,5 +1,20 @@
 # Reporte de validación — HU-015 (segunda vuelta)
 
+> **Addendum — 2026-09-13, posterior a este reporte.** El bloqueante único de esta vuelta (deriva de
+> documentación) se corrigió: los tres documentos citados abajo se actualizaron para apuntar a las
+> clases reales de `assignments`, y `drift.ps1` volvió a quedar en el único hallazgo preexistente y
+> ajeno (`PepRegistrationProperties`). La rama se fusionó a `develop` en PR #48. Durante la
+> verificación posterior de `develop` completo (`clean verify`, no `-Rapido`) apareció además un
+> **bug de producción no atribuible a esta historia**: el índice único
+> `role_scope_name`/`profile_scope_name` no indexaba ni aplicaba unicidad cuando `applicationId`
+> está ausente (roles/perfiles de alcance `TENANT`/`GLOBAL`) — corregido en un commit aparte
+> (`56891ca`) sobre `develop`, junto con un fallo de cobertura no relacionado (dos métodos `default`
+> de puerto secundario sin ejercitar, commit `ff4774f`). `develop` queda **VERDE**: 653 pruebas, 0
+> fallos, cobertura, consistencia y deriva en verde. Este addendum lo escribe la sesión que aplicó
+> los fixes, no una nueva pasada de `@4-validador` — el veredicto formal de los cuatro juicios de
+> esta vuelta (todos ✅ salvo el Juicio 3, ya resuelto) sigue siendo válido tal como se escribió
+> abajo. Ver `pdp/docs/ai-harness/workspace/MAPA-PLATAFORMA-SEGURIDAD.md` §3 para el detalle del bug.
+
 ## Metadata
 
 - **Slice:** `applications` (sin cambios propios) + `assignments` + `authorization` + `roles` + `identity`

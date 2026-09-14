@@ -1,4 +1,4 @@
-# Checkpoint — 2026-08-31
+# Checkpoint — 2026-09-13
 
 Estado del trabajo para retomarlo en cualquier máquina. Se actualiza al cerrar cada tramo.
 
@@ -17,10 +17,58 @@ Estado del trabajo para retomarlo en cualquier máquina. Se actualiza al cerrar 
 | Fase A | Reglas de negocio movidas a `domain/{slice}/rule/`, puras y síncronas · `domain/` reorganizado por categoría | ✅ |
 | 2 | `2-tester-spec` y `3-implementador` ✅ · slash commands, mutation testing, `5-entrega` ⏳ | 🟡 |
 | 3 | Grafo nivel 1 y 2 | ⏳ |
-| Fase B | El PDP se muda a `pdp/`, sibling de `pep/` y `security-policy-engine/` — ver abajo | ✅ |
+| Fase B | El PDP se muda a `pdp/`, sibling de `pep/` y `security-policy-engine/` | ✅ |
+| HU-002 → HU-011 | Endpoint interno PEP↔PDP (mTLS), roles, asignaciones, `OpaPolicyDecisionAdapter` real, auditoría de decisiones (`AccessEvent`), perfiles, administración de aplicaciones (HU-009), saga de compensación (criterio 10) | ✅ |
+| HU-012 → HU-014 | El PDP emite (HU-012), valida (HU-013) y rota (HU-014) su propia credencial de aplicación | ✅ |
+| HU-015 | Administración del catálogo: alta automática del primer administrador al registrar; borrar/rotar credencial exige serlo (gate vía OPA, mecanismo de HU-009); backfill manual para aplicaciones preexistentes | ✅ — fusionada a `develop`, PR #48 |
 
-**Lo siguiente:** estrenar `2-tester-spec` y `3-implementador` con la historia que cierre el
-criterio 10 (cablear la saga de compensación), que es la única deuda de la línea base.
+**Estado de `develop` verificado el 2026-09-13 (noche):** `mvnw clean verify` → **653 pruebas, 0
+fallos, 0 errores**, cobertura ≥ 50 % por paquete, `LayeredArchitectureTests`/`ModulithStructureTests`
+en verde, `consistencia.ps1` CONSISTENTE (8 slices), `drift.ps1` SIN DERIVA. Detalle completo, con lo
+que sigue pendiente por prioridad, en
+[`workspace/MAPA-PLATAFORMA-SEGURIDAD.md`](workspace/MAPA-PLATAFORMA-SEGURIDAD.md).
+
+**Lo siguiente:** backlog ordenado de 6 historias (HU-016 a HU-021), todas del lado del PDP, que
+cierran la administración por aplicación — ver `workspace/HU-016.md` a `workspace/HU-021.md` y
+`ADR-023`/`ADR-024` en `security-platform-architecture` (`docs/01-governance/adr/`). Orden de
+planificación:
+
+1. **HU-016, HU-017, HU-018, HU-019** — gatear roles, recursos, asignaciones y perfiles (pueden
+   planificarse en paralelo entre sí; prioridad #1 sobre HU-020, decidida explícitamente: cierran una
+   brecha de mínimo privilegio activa hoy).
+2. **HU-020** — autoservicio de administradores (agregar/quitar/listar por HTTP público). Depende de
+   que HU-016 a HU-019 estén cerradas.
+3. **HU-021** — auditoría de operaciones administrativas (evento propio, no `AccessEvent`). Depende
+   de que HU-015 y HU-016 a HU-020 estén cerradas, para auditar toda la superficie de una vez.
+
+Cada una entra al ciclo normal del harness: `@1-planificador` primero (cada HU-XXX.md ya trae "Lo que
+ya está decidido" para no reabrir nada, y "Lo que hay que decidir antes de planificarla" para lo que
+sigue genuinamente abierto). Administrador global (`ADR-024`) queda fuera de este backlog — diferido
+hasta que exista un caso de uso concreto.
+
+---
+
+## Un bug de producción encontrado fuera del flujo de historias (2026-09-13)
+
+Verificando `develop` tras fusionar HU-015 (`clean verify`, no `-Rapido`: el único que corre
+`jacoco-check`), aparecieron 3 fallos que el reporte de HU-015 había atribuido a "preexistentes y
+ajenos" sin investigar la causa real. Investigarlos en vez de solo revalidar mostró que dos de los
+tres eran síntoma de un bug real:
+
+| Síntoma reportado como "ajeno" | Causa real |
+|---|---|
+| `InternalSecurityChainIntegrationTests` falla por falta de `openssl` | No faltaba `openssl`: la variable de usuario `OPENSSL_CONF` apuntaba a un `openssl.cnf` de una instalación de PostgreSQL/psqlODBC ya desinstalada. Se corrigió borrando la variable, no el código |
+| Dos pruebas de `SurrealRepositoryIntegrationTests` fallaban "por nombres fijos que chocan entre corridas" | Falso: el índice único `role_scope_name`/`profile_scope_name` no indexa ni aplica unicidad cuando `applicationId` está ausente (roles/perfiles de alcance `TENANT`/`GLOBAL`) — confirmado reproduciendo el caso contra SurrealDB directamente. `NONE` no es comparable vía índice; una cadena vacía sí. Corregido en `SurrealRoleRepository`/`SurrealProfileRepository` |
+| `PepRegistrationProperties` citada y "no encontrada" por `drift.ps1` | La clase sí existe, en `pep/starter/`. `drift.ps1` solo indexaba `pdp/src`. Ampliado a `pep/src` y `pep/starter/src` |
+
+Además, `clean verify` (a diferencia de `-Rapido`, que ningún validador de HU-015 corrió hasta el
+final) reveló un cuarto problema real: dos paquetes al 0 % de cobertura porque dos métodos `default`
+de puerto secundario (`ProfileRepository.findById`, `ProfileAssignmentRepository.findActiveProfileIdsFor`)
+nunca se ejercitaban — las implementaciones reales siempre los sobreescriben. Corregido con dos
+pruebas mínimas que ejercitan el `default` directamente vía un doble anónimo.
+
+**Lección:** "preexistente y ajeno" es una conclusión, no una excusa para no investigar. Los tres
+casos parecían ruido de entorno y dos eran, en realidad, un defecto de producción silencioso.
 
 ---
 
@@ -31,7 +79,7 @@ Todo el estado vive en el repositorio: no hace falta arrastrar ninguna conversac
 ```bash
 git clone https://github.com/Seguridad-UCO/securityBaseline.git
 cd securityBaseline
-git checkout feature/harness-agentes-ia
+git checkout develop
 ```
 
 Clona también los repos hermanos **al lado**, porque las skills los referencian por ruta relativa:
@@ -56,7 +104,7 @@ Semillero/
 ### Comprobar que todo está sano
 
 ```bash
-powershell -NoProfile -ExecutionPolicy Bypass -File .claude/tools/verificar.ps1   # VERDE, 225 pruebas
+powershell -NoProfile -ExecutionPolicy Bypass -File .claude/tools/verificar.ps1   # VERDE, 653 pruebas
 powershell -NoProfile -ExecutionPolicy Bypass -File .claude/tools/mapa.ps1 -Check # al día
 powershell -NoProfile -ExecutionPolicy Bypass -File .claude/tools/drift.ps1       # sin deriva
 ```
@@ -324,7 +372,13 @@ en verde.
 
 | Deuda | Dónde |
 |---|---|
-| **Criterio 10** — la operación compensatoria existe y ningún flujo la invoca | `docs/criteria-compliance-matrix.md`. Necesita su propia historia |
 | Las herramientas son solo PowerShell | Si entra alguien en Linux/macOS, hay que portarlas |
 | `repository-structure.md` del repo de arquitectura sigue siendo un stub | Ahora que la estructura está verificada por herramienta, se puede elaborar |
 | El agente `5-entrega` no existe | Los commits y PRs se hacen a mano, con los dos gates igualmente |
+| Migrar `pep/starter` para consumir la credencial que el PDP ya emite/valida/rota | Historia del lado del PEP (David), no del PDP — ver `workspace/MAPA-PLATAFORMA-SEGURIDAD.md` P1 |
+| Política de aplicación real en OPA | `security-policy-engine/` (Laura) — sin ella, OPA sigue respondiendo `DENY`/`NO_APPLICABLE_POLICY` a cualquier decisión |
+| ADR formal de administración por aplicación (rol global vs. por aplicación vs. perfil, delegación) | HU-015 resolvió el caso concreto (gate en remove/rotate); la decisión general sigue sin ADR |
+
+**Cerrada:** Criterio 10 (operación compensatoria sin invocar) — HU-010 cableó
+`RegisterApplicationWithInitialResourceUseCaseImpl` para invocar `RemoveApplicationUseCase` como
+compensación explícita. Los 23 criterios de la línea base se cumplen.
