@@ -15,9 +15,9 @@ import java.time.Instant;
 /**
  * Entrada normalizada del PEP a evaluar (corresponde a {@code SolicitudAcceso} del dominio
  * aceptado). El sujeto y el inquilino llegan del principal autenticado, nunca del cuerpo.
- * {@code subjectUserId} (HU-008) es el identificador interno ya resuelto del sujeto, cuando el
- * canal de entrada lo tiene — hoy solo el canal BFF; el interno (PEP) sigue sin él. Lo pone el
- * mapper/interactor. {@code subjectRoles} lo llena {@code AuthorizeUseCaseImpl} a partir de
+ * {@code subjectUserId} es el identificador interno ya resuelto del sujeto. El canal BFF lo toma
+ * de la sesión local y el canal PEP lo resuelve desde {@code issuer + sub}. {@code subjectRoles}
+ * lo llena {@code AuthorizeUseCaseImpl} a partir de
  * {@code subjectUserId} antes de llamar a {@code PolicyDecisionPort} — arranca vacío.
  */
 public record AccessRequest(TenantId tenantId, String subject, ApplicationId applicationId,

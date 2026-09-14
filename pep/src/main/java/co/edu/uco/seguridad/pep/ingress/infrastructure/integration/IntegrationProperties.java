@@ -9,16 +9,15 @@ import java.nio.file.Path;
  * Configuration for application self-registration. Credential validation belongs to the PDP.
  */
 @ConfigurationProperties("pep.integration")
-public record IntegrationProperties(boolean enabled, Path registryFile, URI publicBaseUrl, String pdpEvidenceToken) {
+public record IntegrationProperties(boolean enabled, Path registryFile, URI publicBaseUrl) {
 
     public IntegrationProperties {
         if (enabled) {
             if (registryFile == null || publicBaseUrl == null || publicBaseUrl.getHost() == null
                     || publicBaseUrl.getRawUserInfo() != null || publicBaseUrl.getRawQuery() != null
                     || publicBaseUrl.getRawFragment() != null || publicBaseUrl.getRawPath() != null
-                    && !publicBaseUrl.getRawPath().isEmpty() || !"https".equals(publicBaseUrl.getScheme())
-                    || pdpEvidenceToken == null || pdpEvidenceToken.isBlank()) {
-                throw new IllegalArgumentException("Integration registry file, HTTPS public base URL and PDP evidence token are required");
+                    && !publicBaseUrl.getRawPath().isEmpty() || !"https".equals(publicBaseUrl.getScheme())) {
+                throw new IllegalArgumentException("Integration registry file and HTTPS public base URL are required");
             }
         }
     }

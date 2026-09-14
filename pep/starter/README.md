@@ -1,8 +1,8 @@
 # Guía de integración — starter Spring Boot WebFlux
 
-Este starter permite que una aplicación WebFlux se dé de alta técnicamente ante el PEP sin que el equipo tenga
-que añadir filtros, anotaciones ni modificar sus controladores. El PEP sigue siendo el punto que intercepta y
-protege las solicitudes.
+Este starter instala un filtro WebFlux que protege por defecto las rutas de una aplicación sin que el equipo
+añada filtros, anotaciones ni modifique sus controladores. Cada solicitud protegida conserva el Bearer del
+usuario y el starter pide una decisión al PEP; el PEP valida la credencial de la aplicación y consulta al PDP.
 
 ## Cómo funciona
 
@@ -13,17 +13,17 @@ sequenceDiagram
     participant PDP as PDP / políticas
     participant Client as Cliente
 
-    App->>PEP: Alta técnica al iniciar (token de integración)
-    PEP-->>App: URL pública /apps/{application-id}
-    Client->>PEP: Solicitud a la URL pública
-    PEP->>PDP: Consulta de decisión
+    Client->>App: GET /api/recurso + Bearer usuario
+    App->>PEP: aplicación, ruta, método, Bearer y credencial de aplicación
+    PEP->>PDP: valida credencial y evalúa el Bearer
     PDP-->>PEP: ALLOW o DENY
-    PEP->>App: Reenvía solo si recibe ALLOW
+    PEP-->>App: 204, 401, 403 o 503
+    App->>App: ejecuta el handler solo con ALLOW
 ```
 
-El starter registra el origen privado del backend, su audiencia JWT, el identificador de la aplicación y el
-entorno. El PEP crea la ruta pública `https://<pep>/apps/<application-id>` y persiste el registro localmente.
-Todas las rutas bajo ese prefijo pasan por el PEP.
+No hay proxy ni ruta pública alternativa: el cliente llama a la URL normal del backend y el filtro impide que
+llegue al controlador mientras no exista una decisión `ALLOW`. El PEP no confía en el `application-id` por sí
+solo: valida la credencial emitida para esa aplicación por el PDP.
 
 El starter **no** administra recursos, roles, perfiles, tenants ni políticas. El equipo debe configurarlos en el
 sistema central. Mientras un recurso no tenga una decisión disponible en el PDP, el acceso falla cerrado.
@@ -39,15 +39,17 @@ sistema central. Mientras un recurso no tenga una decisión disponible en el PDP
 
 ## 1. Preparar el PEP
 
-El administrador habilita el registro técnico y configura el PEP para validar la credencial contra el PDP por
-mTLS. El PEP no guarda hashes ni secretos de aplicaciones: el secreto en texto plano solo se entrega una vez al
-equipo de la aplicación al registrarla en el PDP y debe almacenarse como secreto de despliegue.
+El administrador configura el PEP para validar la credencial contra el PDP por mTLS. El PEP no guarda hashes ni
+secretos de aplicaciones: el secreto en texto plano solo se entrega una vez al equipo de la aplicación al
+registrarla en el PDP y debe almacenarse como secreto de despliegue.
 
 ```properties
 pep.integration.enabled=true
 pep.integration.registry-file=/var/lib/security-pep/integrations.json
 pep.integration.public-base-url=https://security.example.org
-pep.integration.pdp-evidence-token=${PEP_INTEGRATION_PDP_EVIDENCE_TOKEN}
+pep.pdp.service-identity.token-uri=${PEP_KEYCLOAK_TOKEN_URI}
+pep.pdp.service-identity.client-id=${PEP_KEYCLOAK_CLIENT_ID}
+pep.pdp.service-identity.client-secret=${PEP_KEYCLOAK_CLIENT_SECRET}
 ```
 
 El archivo `integrations.json` debe estar en un volumen privado, con permisos de lectura y escritura para el
@@ -87,20 +89,21 @@ Esto instala el artefacto en el repositorio Maven local. En la aplicación consu
 En `application.properties` o mediante variables de entorno equivalentes:
 
 ```properties
-security.pep.registration.enabled=true
-security.pep.registration.pep-url=https://security.example.org
-security.pep.registration.application-id=${PDP_APPLICATION_ID}
-security.pep.registration.environment=prod
-security.pep.registration.backend-url=https://academic.internal
-security.pep.registration.audience=academic-api
-security.pep.registration.token=${PDP_APPLICATION_CREDENTIAL}
+security.enabled=true
+security.pep.enforcement.enabled=true
+security.pep.enforcement.pep-url=https://security.example.org
+security.pep.enforcement.application-id=${PDP_APPLICATION_ID}
+security.pep.enforcement.environment=prod
+security.pep.enforcement.application-credential=${PDP_APPLICATION_CREDENTIAL}
+# Solo estas rutas omiten la autorización. Si se omite, no hay rutas públicas.
+security.pep.enforcement.public-paths=/actuator/health
 ```
 
 `PDP_APPLICATION_CREDENTIAL` debe ser la credencial emitida por el PDP, no un token creado ni almacenado por el
 PEP. Para una demostración estrictamente local se permite `http` solo al declarar explícitamente:
 
 ```properties
-security.pep.registration.allow-insecure-http=true
+security.pep.enforcement.allow-insecure-http=true
 ```
 
 No usar esa propiedad en producción.
@@ -111,54 +114,25 @@ La integración se puede apagar completamente para un entorno local o una contin
 security.enabled=false
 ```
 
-Con `security.enabled=false` el starter no crea el `ApplicationRunner`, no registra ni reintenta contra el
-PEP. Si la propiedad no está presente, su valor efectivo es `true`. La propiedad correcta es
-`security.enabled` (no `security.eneble`). También debe permanecer en `true`
-`security.pep.registration.enabled` para que haya alta técnica.
-
-Este interruptor **no instala ni retira seguridad dentro de los controladores del backend**, porque este
-starter no es un filtro de autorización local: la protección se materializa al publicar el backend solamente
-por el PEP. Por ello, al apagarlo se debe mantener la restricción de red que impide el acceso directo al
-backend; de otro modo se puede eludir el PEP.
-
-`backend-url` debe ser un origen sin path, query, fragmento ni credenciales. En producción debe usar HTTPS; HTTP
-solo se permite si el PEP fue configurado explícitamente para desarrollo. La URL debe ser alcanzable desde el
-PEP, no necesariamente desde Internet.
-
-Al iniciar, el starter llama al PEP y registra o actualiza la integración. Un registro exitoso deja un log similar
-a `PEP integration active: publicBaseUrl=https://security.example.org/apps/academic`.
+Con `security.enabled=false` el starter no instala el filtro. Si la propiedad no está presente, su valor efectivo
+es `true`. En producción no se debe apagar: una configuración incompleta hace fallar el arranque, y un PEP/PDP no
+disponible responde `503`, nunca permite el handler.
 
 ## Comportamiento ante errores
 
-- Si el PEP no responde o devuelve 5xx, la aplicación inicia y reintenta con backoff entre 1 y 60 segundos.
-- Si la configuración local es inválida o el PEP devuelve 4xx, la aplicación inicia y deja un error sanitizado en
-  el log. Corregir la configuración o el token y reiniciar la aplicación.
-- Si la aplicación aún no está registrada, el PEP responde `404 ROUTE_NOT_FOUND` al cliente.
-- Si existe la ruta pero el PDP no puede tomar una decisión, el PEP falla cerrado según su contrato actual.
+- Sin Bearer válido, la aplicación responde `401`.
+- Si el PDP deniega el recurso, responde `403`.
+- Si PEP/PDP no está disponible o su respuesta es inválida, responde `503`.
+- Una ruta incluida explícitamente en `public-paths` no consulta al PEP.
 
 ## Uso por clientes
 
-Los clientes no consumen el backend privado directamente. Deben usar la URL pública del PEP:
-
-```text
-https://security.example.org/apps/academic/api/v1/courses
-```
-
-El PEP elimina el prefijo `/apps/academic` antes de reenviar la solicitud, por lo que el backend recibe:
-
-```text
-/api/v1/courses
-```
-
-Las rutas de salud públicas pertenecen al PEP (`/actuator/health`, `/actuator/health/liveness` y
-`/actuator/health/readiness`). La salud de cada backend se supervisa dentro de su red privada.
+Los clientes consumen la URL normal de la aplicación, por ejemplo
+`https://academic.example/api/v1/courses`, e incluyen `Authorization: Bearer <access-token>`.
 
 ## Límites de la primera versión
 
 - Solo Spring Boot WebFlux; no hay starter MVC ni SDK para otros lenguajes.
 - Una sola réplica PEP para registros dinámicos persistidos en archivo.
-- El starter no reenvía tráfico ni instala autenticación local: el PEP externo conserva esas responsabilidades.
-- El PDP actual debe implementar el contrato de decisión para que los recursos configurados puedan autorizarse.
-- Si el PDP no está disponible o todavía no implementa el contrato, una llamada a la URL pública del PEP falla
-  cerrada con `503`; nunca llega al backend. La alta técnica de una aplicación puede completar antes porque no
-  evalúa políticas.
+- El canal PEP→PDP requiere una identidad técnica del PEP y mTLS en producción; no se sustituye por el Bearer del
+  usuario ni por la credencial de la aplicación.

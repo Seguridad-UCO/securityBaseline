@@ -43,13 +43,10 @@ public final class EvaluateInternalAccessUseCaseImpl implements EvaluateInternal
 
     @Override
     public Mono<AccessDecision> execute(InternalAccessRequest input) {
-        // subjectUserId vacio a proposito (HU-008, fuera de alcance): el canal interno no tiene
-        // identidad de usuario final que resolver todavia -- input.subject() es el JWT de evidencia
-        // que autentica al PEP, no al usuario. Resolverlo exige cambiar contracts/pep-pdp/v1/.
         return ownerLookup.execute(input.applicationId())
                 .map(tenantId -> new AccessRequest(tenantId, input.subject(), input.applicationId(),
                         input.resourcePath(), input.action(), input.requestId(), input.correlationId(),
-                        Optional.empty(), Set.of(), input.facts().timestamp(), input.facts().environment(),
+                        input.subjectUserId(), Set.of(), input.facts().timestamp(), input.facts().environment(),
                         input.facts().method(), input.facts().channel()))
                 .flatMap(authorizeUseCase::execute)
                 .onErrorResume(ApplicationNotFoundException.class,

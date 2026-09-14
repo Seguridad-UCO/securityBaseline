@@ -3,7 +3,7 @@ package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.we
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.response.AccessDecision;
 import co.edu.uco.seguridad.pdp.authorization.domain.model.PolicyReference;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.AccessDecisionInternalWebResponse;
-import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.PolicyReferenceWebResponse;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.PolicyReferenceInternalWebResponse;
 
 /**
  * {@link AccessDecision} (núcleo) → {@code AccessDecisionInternalWebResponse} (plano, según
@@ -25,7 +25,7 @@ public final class AccessDecisionInternalResponseMapper {
                 decision.correlationId());
     }
 
-    private static PolicyReferenceWebResponse toReferenceResponse(PolicyReference reference) {
-        return new PolicyReferenceWebResponse(reference.policyId(), reference.version());
+    private static PolicyReferenceInternalWebResponse toReferenceResponse(PolicyReference reference) {
+        return new PolicyReferenceInternalWebResponse(reference.policyId(), reference.version());
     }
 }

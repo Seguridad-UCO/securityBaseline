@@ -9,6 +9,8 @@ import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.AccessDecisionRawRequest.RawApplication;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.AccessDecisionRawRequest.RawContext;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.AccessDecisionRawRequest.RawResource;
+import co.edu.uco.seguridad.pdp.commons.model.UserId;
+import co.edu.uco.seguridad.pdp.identity.application.usecase.ResolveExternalIdentityUseCase;
 import co.edu.uco.seguridad.shared.security.TestJwtSupport;
 import co.edu.uco.seguridad.shared.web.exception.ConflictingRequestParametersException;
 import org.junit.jupiter.api.Test;
@@ -20,6 +22,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -36,6 +39,9 @@ class InternalAccessDecisionInteractorImplTests {
 
     private static final String TENANT = "universidad-uco";
     private static final String SUBJECT = "evidence-subject";
+    private static final UserId USER_ID = new UserId(UUID.randomUUID());
+
+    private static final ResolveExternalIdentityUseCase KNOWN_IDENTITY = request -> Mono.just(Optional.of(USER_ID));
 
     private static final EvaluateInternalAccessUseCase NEVER_CALLED = request -> {
         throw new AssertionError("must not reach the use case: the mapper/barriers run first");
@@ -49,7 +55,7 @@ class InternalAccessDecisionInteractorImplTests {
 
     @Test
     void rejects_when_the_header_request_id_does_not_match_the_body() {
-        InternalAccessDecisionInteractorImpl interactor = new InternalAccessDecisionInteractorImpl(NEVER_CALLED);
+        InternalAccessDecisionInteractorImpl interactor = new InternalAccessDecisionInteractorImpl(NEVER_CALLED, KNOWN_IDENTITY);
 
         StepVerifier.create(interactor.execute(rawWith("body-req", "corr-1"))
                         .contextWrite(TestJwtSupport.withPrincipal(TENANT, SUBJECT))
@@ -63,7 +69,7 @@ class InternalAccessDecisionInteractorImplTests {
 
     @Test
     void rejects_when_the_header_correlation_id_does_not_match_the_body() {
-        InternalAccessDecisionInteractorImpl interactor = new InternalAccessDecisionInteractorImpl(NEVER_CALLED);
+        InternalAccessDecisionInteractorImpl interactor = new InternalAccessDecisionInteractorImpl(NEVER_CALLED, KNOWN_IDENTITY);
 
         StepVerifier.create(interactor.execute(rawWith("req-1", "body-corr"))
                         .contextWrite(TestJwtSupport.withPrincipal(TENANT, SUBJECT))
@@ -83,7 +89,7 @@ class InternalAccessDecisionInteractorImplTests {
         InternalAccessDecisionInteractorImpl interactor = new InternalAccessDecisionInteractorImpl(request -> {
             received.add(request);
             return Mono.just(decision);
-        });
+        }, KNOWN_IDENTITY);
 
         StepVerifier.create(interactor.execute(rawWith("req-1", "corr-1"))
                         .contextWrite(TestJwtSupport.withPrincipal(TENANT, SUBJECT))
@@ -98,5 +104,6 @@ class InternalAccessDecisionInteractorImplTests {
 
         assertThat(received).hasSize(1);
         assertThat(received.getFirst().subject()).isEqualTo(SUBJECT);
+        assertThat(received.getFirst().subjectUserId()).contains(USER_ID);
     }
 }

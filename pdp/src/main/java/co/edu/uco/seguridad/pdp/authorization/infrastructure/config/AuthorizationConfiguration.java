@@ -29,6 +29,7 @@ import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.o
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.OpaPolicyDecisionAdapter;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.OpaAdministrationDecisionAdapter;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.properties.OpaProperties;
+import co.edu.uco.seguridad.pdp.identity.application.usecase.ResolveExternalIdentityUseCase;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceMustExistValidator;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceIdLookupValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleNamesLookupValidator;
@@ -109,8 +110,9 @@ public class AuthorizationConfiguration {
     }
 
     @Bean
-    InternalAccessDecisionInteractor internalAccessDecisionInteractor(EvaluateInternalAccessUseCase useCase) {
-        return new InternalAccessDecisionInteractorImpl(useCase);
+    InternalAccessDecisionInteractor internalAccessDecisionInteractor(EvaluateInternalAccessUseCase useCase,
+            ResolveExternalIdentityUseCase identities) {
+        return new InternalAccessDecisionInteractorImpl(useCase, identities);
     }
 
     @Bean

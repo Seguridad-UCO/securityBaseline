@@ -40,7 +40,7 @@ class RouteRegistryTests {
 
     private RouteRegistry registry(List<IngressProperties.Route> staticRoutes) {
         var properties = new IntegrationProperties(true, temporaryDirectory.resolve("routes.json"),
-                URI.create("https://security.example.edu"), "pep-internal-evidence");
+                URI.create("https://security.example.edu"));
         var ingress = new IngressProperties(staticRoutes, "http://issuer.example.edu", URI.create("http://issuer.example.edu/jwks"),
                 true, List.of(), 1, 1, 1, 1, 1, Duration.ofSeconds(1));
         return new RouteRegistry(properties, ingress, JsonMapper.builder().build());

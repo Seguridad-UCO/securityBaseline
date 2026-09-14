@@ -1,7 +1,7 @@
 package co.edu.uco.seguridad.pep.ingress.infrastructure.adapter.secondary.http;
 
 import co.edu.uco.seguridad.pep.commons.EnforcementFailure;
-import co.edu.uco.seguridad.pep.ingress.infrastructure.integration.IntegrationProperties;
+import co.edu.uco.seguridad.pep.ingress.application.port.secondary.PdpServiceTokenProvider;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -10,14 +10,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.net.URI;
-import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class PdpApplicationCredentialValidationAdapterTests {
-    private final IntegrationProperties properties = new IntegrationProperties(true, Path.of("routes.json"),
-            URI.create("https://security.example.edu"), "pep-evidence-jwt");
+    private final PdpServiceTokenProvider token = () -> Mono.just("pep-evidence-jwt");
 
     @Test
     void accepts_a_credential_only_when_the_pdp_confirms_it() {
@@ -53,6 +50,6 @@ class PdpApplicationCredentialValidationAdapterTests {
     }
 
     private PdpApplicationCredentialValidationAdapter adapter(ExchangeFunction exchange) {
-        return new PdpApplicationCredentialValidationAdapter(WebClient.builder().exchangeFunction(exchange).build(), properties);
+        return new PdpApplicationCredentialValidationAdapter(WebClient.builder().exchangeFunction(exchange).build(), token);
     }
 }

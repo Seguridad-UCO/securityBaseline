@@ -19,6 +19,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -34,7 +35,8 @@ class EvaluateInternalAccessUseCaseImplTests {
     private static final TenantId OWNER = new TenantId("universidad-uco");
     private static final ResourcePath PATH = new ResourcePath("/estudiantes");
     private static final InternalAccessRequest REQUEST = new InternalAccessRequest("evidence-subject",
-            APPLICATION, PATH, HttpVerb.GET, "req-1", "corr-1");
+            Optional.of(new co.edu.uco.seguridad.pdp.commons.model.UserId(UUID.randomUUID())), APPLICATION, PATH,
+            HttpVerb.GET, "req-1", "corr-1", new InternalAccessRequest.RequestFacts(Instant.EPOCH, "", HttpVerb.GET, "HTTP"));
     private static final UUID DECISION_ID = UUID.randomUUID();
     private static final Instant DECIDED_AT = Instant.parse("2026-09-06T00:00:00Z");
 
@@ -60,6 +62,7 @@ class EvaluateInternalAccessUseCaseImplTests {
         AccessRequest built = received.getFirst();
         assertThat(built.tenantId()).isEqualTo(OWNER);
         assertThat(built.subject()).isEqualTo("evidence-subject");
+        assertThat(built.subjectUserId()).isEqualTo(REQUEST.subjectUserId());
         assertThat(built.applicationId()).isEqualTo(APPLICATION);
         assertThat(built.resourcePath()).isEqualTo(PATH);
         assertThat(built.action()).isEqualTo(HttpVerb.GET);
