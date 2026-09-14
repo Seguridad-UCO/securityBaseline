@@ -16,6 +16,13 @@ public interface RoleRepository {
     /** Unicidad dentro del alcance exacto: nivel + inquilino + aplicación. */
     Mono<Boolean> existsByNameInScope(RoleName name, RoleScope scope);
 
+    /**
+     * Resuelve el rol con ese nombre en ese alcance exacto, si existe (HU-015: backfill de
+     * administrador — reutiliza un rol {@code ADMIN} creado a mano en vez de duplicarlo). Vacío si
+     * no hay ninguno. Complemento de {@link #existsByNameInScope}, que solo responde si existe.
+     */
+    Mono<Role> findByNameInScope(RoleName name, RoleScope scope);
+
     /** Vacío si el rol no existe o no es de ese inquilino (un rol global tampoco lo es). */
     Mono<Role> findByIdForTenant(RoleId roleId, TenantId tenantId);
 

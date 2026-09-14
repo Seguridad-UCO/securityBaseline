@@ -86,6 +86,11 @@ class RoleScopeMustCoverApplicationValidatorImplTests {
             }
 
             @Override
+            public Mono<Role> findByNameInScope(RoleName name, RoleScope scope) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public Mono<Role> findByIdForTenant(RoleId roleId, TenantId tenantId) {
                 throw new UnsupportedOperationException();
             }

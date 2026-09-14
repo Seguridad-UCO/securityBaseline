@@ -107,6 +107,7 @@ public final class RequiredArgumentMessages {
     public static final String VALID_UNTIL = "se requiere el fin de vigencia";
     public static final String ACTIVE_ROLE_IDS = "se requiere el conjunto de roles activos";
     public static final String USER_MUST_EXIST_VALIDATOR = "se requiere el validador de existencia de usuario";
+    public static final String SUBJECT_USER_ID_LOOKUP_VALIDATOR = "se requiere el validador de búsqueda de usuario por subject";
     public static final String ROLE_SCOPE_COVERS_APPLICATION_VALIDATOR = "se requiere el validador de cobertura de aplicación del alcance de rol";
     public static final String ASSIGN_ROLE_RULES_VALIDATOR = "se requiere el validador de asignación de rol";
     public static final String REVOKE_ASSIGNMENT_RULES_VALIDATOR = "se requiere el validador de revocación de asignación";
@@ -115,6 +116,7 @@ public final class RequiredArgumentMessages {
     public static final String LIST_ASSIGNMENTS_USE_CASE = "se requiere el caso de uso de consulta de asignaciones";
     public static final String RESOLVE_ACTIVE_ROLES_USE_CASE = "se requiere el caso de uso de resolución de roles activos";
     public static final String ROLE_NAMES_LOOKUP_VALIDATOR = "se requiere el validador de nombres de rol";
+    public static final String ROLE_LOOKUP_BY_NAME_IN_SCOPE_VALIDATOR = "se requiere el validador de búsqueda de rol por nombre y alcance";
     public static final String ACTIVE_ROLE_NAMES_LOOKUP_VALIDATOR = "se requiere el validador de nombres de roles activos";
     public static final String ASSIGN_ROLE_INTERACTOR = "se requiere el interactor de asignación de rol";
     public static final String REVOKE_ASSIGNMENT_INTERACTOR = "se requiere el interactor de revocación de asignación";

@@ -2,6 +2,8 @@ package co.edu.uco.seguridad.pdp.authorization.infrastructure.config;
 
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationMustExistForTenantValidator;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationOwnerLookupValidator;
+import co.edu.uco.seguridad.pdp.applications.application.usecase.RemoveApplicationUseCase;
+import co.edu.uco.seguridad.pdp.applications.application.usecase.RotateApplicationCredentialUseCase;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.ResolveActiveRolesUseCase;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.ResolveAuthorizationSubjectFactsUseCase;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.ActiveRoleNamesLookupValidator;
@@ -13,14 +15,22 @@ import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.Administ
 import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.PolicyDecisionPort;
 import co.edu.uco.seguridad.pdp.authorization.application.service.AuthorizationContextResolver;
 import co.edu.uco.seguridad.pdp.authorization.application.service.impl.AuthorizationContextResolverImpl;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerApplicationCredentialRotationUseCase;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerApplicationRemovalUseCase;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.AuthorizeAdministrationUseCase;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.AuthorizeUseCase;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.EvaluateInternalAccessUseCase;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.impl.AdministerApplicationCredentialRotationUseCaseImpl;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.impl.AdministerApplicationRemovalUseCaseImpl;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.impl.AuthorizeAdministrationUseCaseImpl;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.impl.AuthorizeUseCaseImpl;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.impl.EvaluateInternalAccessUseCaseImpl;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.ApplicationCredentialRotationInteractor;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.ApplicationRemovalInteractor;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.AuthorizeInteractor;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.InternalAccessDecisionInteractor;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.ApplicationCredentialRotationInteractorImpl;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.ApplicationRemovalInteractorImpl;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.AuthorizeInteractorImpl;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.InternalAccessDecisionInteractorImpl;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.persistence.repository.SurrealAccessAuditRepository;
@@ -29,6 +39,7 @@ import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.o
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.OpaPolicyDecisionAdapter;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.OpaAdministrationDecisionAdapter;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.properties.OpaProperties;
+import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserIdLookupValidator;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceMustExistValidator;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceIdLookupValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleNamesLookupValidator;
@@ -130,5 +141,35 @@ public class AuthorizationConfiguration {
     PrincipalMustBeApplicationAdministratorValidator principalMustBeApplicationAdministratorValidator(
             AuthorizeAdministrationUseCase useCase) {
         return new PrincipalMustBeApplicationAdministratorValidatorImpl(useCase);
+    }
+
+    // HU-015 — endpoints administrativos gateados. Viven aquí, no en "applications": es el módulo
+    // que ya depende de ella (ver PLAN-HU-015.md §0).
+    @Bean
+    AdministerApplicationRemovalUseCase administerApplicationRemovalUseCase(
+            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator, RemoveApplicationUseCase removeApplication) {
+        return new AdministerApplicationRemovalUseCaseImpl(mustBeAdministrator, removeApplication);
+    }
+
+    @Bean
+    ApplicationRemovalInteractor applicationRemovalInteractor(AdministerApplicationRemovalUseCase useCase,
+            SubjectUserIdLookupValidator subjectUserIdLookup) {
+        return new ApplicationRemovalInteractorImpl(useCase, subjectUserIdLookup);
+    }
+
+    // Caso de uso e interactor listos; el @PostMapping de credential-rotations sigue en
+    // ApplicationController (applications) hasta que el implementador lo traslade aquí en el mismo
+    // cambio que lo retira de allí (ver PLAN-HU-015.md árbol §8).
+    @Bean
+    AdministerApplicationCredentialRotationUseCase administerApplicationCredentialRotationUseCase(
+            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator,
+            RotateApplicationCredentialUseCase rotateCredential) {
+        return new AdministerApplicationCredentialRotationUseCaseImpl(mustBeAdministrator, rotateCredential);
+    }
+
+    @Bean
+    ApplicationCredentialRotationInteractor applicationCredentialRotationInteractor(
+            AdministerApplicationCredentialRotationUseCase useCase, SubjectUserIdLookupValidator subjectUserIdLookup) {
+        return new ApplicationCredentialRotationInteractorImpl(useCase, subjectUserIdLookup);
     }
 }

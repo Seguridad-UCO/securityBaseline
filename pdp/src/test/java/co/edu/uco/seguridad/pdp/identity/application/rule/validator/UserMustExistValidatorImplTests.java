@@ -49,6 +49,11 @@ class UserMustExistValidatorImplTests {
             }
 
             @Override
+            public Mono<ExternalIdentity> findIdentityBySubject(String subject) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public Mono<SecurityUser> findByEmail(Email email) {
                 throw new UnsupportedOperationException();
             }

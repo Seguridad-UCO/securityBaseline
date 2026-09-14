@@ -2,12 +2,18 @@ package co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web
 
 import co.edu.uco.seguridad.AbstractSurrealDbIntegrationTest;
 import co.edu.uco.seguridad.pdp.PdpApplication;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.OpaFixtureServer;
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.shared.security.TestJwtSupport;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import tools.jackson.databind.ObjectMapper;
 
@@ -22,6 +28,11 @@ import static org.assertj.core.api.Assertions.assertThat;
  * 9 (traducción de excepciones) y 22 (cadena reactiva sin bloqueo), y sobre todo del aislamiento
  * entre inquilinos: ninguna prueba unitaria puede demostrar que el filtro por inquilino sobrevive a
  * la cadena entera, porque el tenant sale del token y no de un parámetro.
+ *
+ * <p>HU-015: registrar y rotar la credencial ahora consultan a OPA (¿administra?) — sin un OPA real
+ * disponible en {@code pdp.opa.base-url}, cae en fail-closed (DENY). Un {@link OpaFixtureServer}
+ * embebido, igual patrón que {@code AuthorizationHttpTests}, responde {@code ALLOW} para que el
+ * registrador (ya dado de alta como administrador por HU-015) pueda rotar su propia credencial.</p>
  */
 @SpringBootTest(classes = PdpApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ApplicationHttpTests extends AbstractSurrealDbIntegrationTest {
@@ -30,16 +41,39 @@ class ApplicationHttpTests extends AbstractSurrealDbIntegrationTest {
     private static final String UCO = "universidad-uco";
     private static final String OTRO = "tenant-a";
     private static final ObjectMapper JSON = new ObjectMapper();
+    private static final String OPA_ALLOW_BODY =
+            "{\"result\":{\"effect\":\"ALLOW\",\"reasonCode\":\"POLICY_ALLOWED\",\"policyReferences\":[],\"obligations\":[]}}";
+
+    private static OpaFixtureServer opa;
 
     @LocalServerPort
     int port;
 
     private String prefix;
 
+    @BeforeAll
+    static void startOpaFixture() throws Exception {
+        opa = OpaFixtureServer.start();
+        opa.respondWith(200, OPA_ALLOW_BODY);
+    }
+
+    @AfterAll
+    static void stopOpaFixture() {
+        opa.stop();
+    }
+
+    @DynamicPropertySource
+    static void opaConnectionProperties(DynamicPropertyRegistry registry) {
+        registry.add("pdp.opa.base-url", () -> opa.baseUrl());
+    }
+
     @BeforeEach
     void registerApplications() {
         // Cada ejecución usa nombres únicos: la base es compartida entre pruebas y no se limpia.
         prefix = "hu001-" + UUID.randomUUID().toString().substring(0, 8);
+        // HU-015: el registro ahora da de alta un administrador — SubjectUserIdLookupValidator
+        // necesita una identidad vinculada para el subject del JWT de prueba.
+        linkTestIdentity(new TenantId(UCO), "test-subject");
         register(UCO, prefix + "-portal-estudiante");
         register(UCO, prefix + "-portal-docente");
         register(UCO, prefix + "-gestion-academica");

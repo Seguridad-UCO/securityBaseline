@@ -51,6 +51,25 @@ public final class SurrealRoleRepository implements RoleRepository {
     }
 
     @Override
+    public Mono<Role> findByNameInScope(RoleName name, RoleScope scope) {
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("name", name.value());
+        parameters.put("level", scope.level().name());
+        String tenantIdExpr = bind(parameters, "tenantId", scope.tenantId().map(TenantId::value));
+        String applicationIdExpr = bind(parameters, "applicationId",
+                scope.applicationId().map(applicationId -> applicationId.value().toString()));
+
+        return client.execute(
+                        "SELECT * FROM %s WHERE name = $name AND level = $level AND tenantId = %s AND applicationId = %s LIMIT 1;"
+                                .formatted(RoleSchema.TABLE, tenantIdExpr, applicationIdExpr),
+                        parameters)
+                .flatMap(results -> {
+                    JsonNode rows = results.get(0);
+                    return rows.isEmpty() ? Mono.empty() : Mono.just(toDomain(rows.get(0)));
+                });
+    }
+
+    @Override
     public Mono<Role> findByIdForTenant(RoleId roleId, TenantId tenantId) {
         return client.execute(
                         "SELECT * FROM type::record('%s', $id) WHERE tenantId = $tenantId;".formatted(RoleSchema.TABLE),
@@ -117,12 +136,17 @@ public final class SurrealRoleRepository implements RoleRepository {
         return client.execute(query, parameters).thenReturn(role);
     }
 
-    /** Une un componente opcional del alcance como parámetro ligado, o {@code NONE} si está ausente. */
+    /**
+     * Une un componente opcional del alcance como parámetro ligado, con cadena vacía como centinela
+     * de ausencia. {@code NONE} no sirve: el índice único {@code role_scope_name} no indexa ni
+     * compara correctamente un campo ausente contra {@code NONE} (confirmado contra SurrealDB:
+     * {@code WHERE applicationId = NONE} no encuentra la fila que acaba de insertarse con
+     * {@code applicationId = NONE}, y el índice UNIQUE no rechaza un segundo registro idéntico). Una
+     * cadena vacía es un valor real que el índice sí puede indexar y comparar.
+     */
     private static String bind(Map<String, String> parameters, String field, Optional<String> value) {
-        return value.map(present -> {
-            parameters.put(field, present);
-            return "$" + field;
-        }).orElse("NONE");
+        parameters.put(field, value.orElse(""));
+        return "$" + field;
     }
 
     private static Role toDomain(JsonNode row) {

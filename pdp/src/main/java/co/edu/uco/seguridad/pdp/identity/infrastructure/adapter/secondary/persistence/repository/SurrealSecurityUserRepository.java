@@ -44,6 +44,15 @@ public final class SurrealSecurityUserRepository implements SecurityUserReposito
     }
 
     @Override
+    public Mono<ExternalIdentity> findIdentityBySubject(String subject) {
+        return client.execute(
+                        "SELECT * FROM %s WHERE subject = $subject LIMIT 1;".formatted(IdentitySchema.IDENTITY_TABLE),
+                        Map.of("subject", subject))
+                .map(results -> results.get(0))
+                .flatMap(rows -> rows.isEmpty() ? Mono.empty() : Mono.just(toExternalIdentity(rows.get(0))));
+    }
+
+    @Override
     public Mono<SecurityUser> findByEmail(Email email) {
         return client.execute(
                         "SELECT * FROM %s WHERE email = $email LIMIT 1;".formatted(IdentitySchema.USER_TABLE),

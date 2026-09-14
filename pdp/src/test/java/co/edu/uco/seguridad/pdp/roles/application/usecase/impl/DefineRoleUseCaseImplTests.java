@@ -70,6 +70,11 @@ class DefineRoleUseCaseImplTests {
             }
 
             @Override
+            public Mono<Role> findByNameInScope(RoleName name, RoleScope scope) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public Mono<Role> findByIdForTenant(RoleId roleId, TenantId tenantId) {
                 throw new UnsupportedOperationException();
             }
@@ -96,6 +101,11 @@ class DefineRoleUseCaseImplTests {
         return new RoleRepository() {
             @Override
             public Mono<Boolean> existsByNameInScope(RoleName name, RoleScope scope) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Role> findByNameInScope(RoleName name, RoleScope scope) {
                 throw new UnsupportedOperationException();
             }
 

@@ -26,12 +26,8 @@ import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.ValidateAp
 import co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationCredentialMustBeValidRule;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationCredentialMustBeValidRuleImpl;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.ListApplicationsInteractor;
-import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.RegisterApplicationInteractor;
-import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.RotateApplicationCredentialInteractor;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.ValidateApplicationCredentialInteractor;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.impl.ListApplicationsInteractorImpl;
-import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.impl.RegisterApplicationInteractorImpl;
-import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.impl.RotateApplicationCredentialInteractorImpl;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.impl.ValidateApplicationCredentialInteractorImpl;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.repository.SurrealApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.schema.SurrealApplicationSchemaInitializer;
@@ -106,11 +102,6 @@ public class ApplicationsConfiguration {
     }
 
     @Bean
-    RegisterApplicationInteractor registerApplicationInteractor(RegisterApplicationUseCase useCase) {
-        return new RegisterApplicationInteractorImpl(useCase);
-    }
-
-    @Bean
     ListApplicationsInteractor listApplicationsInteractor(ListApplicationsUseCase useCase) {
         return new ListApplicationsInteractorImpl(useCase);
     }
@@ -157,9 +148,4 @@ public class ApplicationsConfiguration {
         return new RotateApplicationCredentialUseCaseImpl(repository, mustExist, secretGenerator, hasher);
     }
 
-    @Bean
-    RotateApplicationCredentialInteractor rotateApplicationCredentialInteractor(
-            RotateApplicationCredentialUseCase useCase) {
-        return new RotateApplicationCredentialInteractorImpl(useCase);
-    }
 }

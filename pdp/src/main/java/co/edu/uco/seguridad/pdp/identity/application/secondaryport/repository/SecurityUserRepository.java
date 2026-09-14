@@ -12,6 +12,13 @@ public interface SecurityUserRepository {
 
     Mono<ExternalIdentity> findIdentity(String issuer, String subject);
 
+    /**
+     * Complemento de {@link #findIdentity(String, String)} para cuando no se conoce el emisor (HU-015,
+     * enmienda §14: el principal de un JWT crudo no lo trae). Vacío si no hay ninguna identidad
+     * externa con ese subject.
+     */
+    Mono<ExternalIdentity> findIdentityBySubject(String subject);
+
     Mono<SecurityUser> findByEmail(Email email);
 
     Mono<SecurityUser> findById(UserId userId);

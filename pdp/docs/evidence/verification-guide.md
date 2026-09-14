@@ -30,7 +30,7 @@ El POM exige Java 25.
 | `RemoveApplicationUseCaseImplTests` | 2, 7 | Borrado idempotente. **No hay saga que la invoque — ver nota** |
 | `RegisterProtectedResourceUseCaseImplTests` | 2, 4, 7, 11 | Orquestación entre módulos y publicación del evento |
 | `ProvisionIdentityUseCaseImplTests` · `AssignTenantUseCaseImplTests` | 2, 3, 11 | Provisión de identidad y asignación de inquilino |
-| `RegisterApplicationRequestMapperTests` · `CreateTenantRequestMapperTests` · `RegisterProtectedResourceRequestMapperTests` · `AssignTenantRequestMapperTests` | 6, 13, 14 | Raw → validado: válido, ausente, mal formado |
+| `RegisterApplicationWithFirstAdministratorRequestMapperTests` (assignments, HU-015) · `CreateTenantRequestMapperTests` · `RegisterProtectedResourceRequestMapperTests` · `AssignTenantRequestMapperTests` | 6, 13, 14 | Raw → validado: válido, ausente, mal formado |
 | `ApplicationResponseMapperTests` · `TenantResponseMapperTests` · `ProtectedResourceResponseMapperTests` · `UserResponseMapperTests` | 13, 14, 20 | La respuesta sale plana, sin value objects |
 | `ApplicationControllerTests` · `TenantControllerTests` · `ProtectedResourceControllerTests` · `UserControllerTests` | 11, 13, 20 | El controller delega al interactor y no decide |
 | `ApiErrorHandlerTests` | 5, 9 | Excepción → `ProblemDetail` con código estable y 500 sin datos técnicos |
