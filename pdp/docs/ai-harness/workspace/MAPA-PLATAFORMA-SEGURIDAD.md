@@ -12,6 +12,12 @@
 
 **Balance: 31 hechos y verificados · 12 parciales · 24 sin empezar**, de 67 ítems.
 
+> **Actualización 2026-09-13:** Zero Trust pasó de "parcial" a documentado (`ADR-025`, sin código
+> nuevo). Cache distribuida, revocación de tokens y MFA salieron de "P4 — evaluar, no construir": ya
+> tienen ADR (`ADR-026`, `ADR-027`) e historias listas (`HU-022` a `HU-024`, ver §4). Serverless se
+> evaluó y no se adopta (`ADR-028`). El balance numérico de arriba no se recalculó — sigue
+> reflejando el corte original de la reunión; §4 tiene el estado vigente del backlog.
+
 ---
 
 ## 1. El mecanismo — qué corre hoy y qué solo está acordado
@@ -120,17 +126,23 @@ de agentes:
 | HU-017 | Gatear registro de recursos protegidos | Misma brecha, slice `resources` |
 | HU-018 | Gatear asignación/revocación de roles | Misma brecha, slice `assignments` |
 | HU-019 | Gatear perfiles (definir, componer, asignar) | Misma brecha, slices `profiles`+`assignments` |
+| HU-022 | Infraestructura Redis + revocación de tokens (`jti`) | Brecha de seguridad real — ningún token puede invalidarse antes de expirar |
 | HU-020 | Autoservicio de administradores (agregar/quitar/listar por HTTP público) | Reemplaza la dependencia del canal interno mTLS para uso cotidiano |
 | HU-021 | Auditoría de operaciones administrativas (evento propio) | Deuda aplazada dos veces (HU-009, HU-015) |
+| HU-023 | Caché distribuida de roles activos vía Redis, invalidada por evento | Reduce carga de lectura repetida en el camino caliente de autorización y administración |
+| HU-024 | MFA como step-up para operaciones administrativas | Una credencial de un solo factor comprometida hoy alcanza para control administrativo total |
 
 Administrador global (`ADR-024`): decisión de diseño tomada y documentada, construcción diferida
 hasta que exista un caso de uso concreto (candidato: abrir `POST /api/v1/roles` para alcance
 `GLOBAL`, hoy en `400` a propósito) — no es una historia de este backlog.
 
-### P4 — evaluar, no construir
+### P4 — decidido (2026-09-13)
 
-Zero Trust como postura escrita, MFA (config de Keycloak), cache distribuida, serverless (no
-evaluado).
+Zero Trust ya estaba practicado; se documentó como postura formal (`ADR-025`), sin código nuevo.
+Caché distribuida, revocación de tokens y MFA dejaron de ser "evaluar, no construir": `ADR-026`
+(Redis) y `ADR-027` (MFA vía Keycloak) las deciden, `HU-022` a `HU-024` (arriba) las implementan.
+Serverless se evaluó y **no** se adopta para ningún componente existente — diseño de referencia
+documentado en `ADR-028` para cuando exista un caso de uso concreto; no genera ninguna historia.
 
 ---
 
