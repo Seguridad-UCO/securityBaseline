@@ -1,6 +1,8 @@
 package co.edu.uco.seguridad.pep.ingress.infrastructure.adapter.primary.web;
 
 import co.edu.uco.seguridad.pep.commons.EnforcementFailure;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -15,6 +17,8 @@ import java.util.Locale;
 
 @Component
 public final class ProblemWriter {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ProblemWriter.class);
 
     private final ObjectMapper mapper;
 
@@ -57,6 +61,16 @@ public final class ProblemWriter {
             detail.setProperty("decisionId", failure.decisionId());
             headers.set("X-Decision-Id", failure.decisionId());
             exchange.getAttributes().put("pep.decisionId", failure.decisionId());
+        }
+        if (failure.kind() == EnforcementFailure.Kind.UNAVAILABLE) {
+            String requestId = exchange.getAttribute("pep.requestId");
+            String correlationId = exchange.getAttribute("pep.correlationId");
+            LOG.atWarn().addKeyValue("event.name", "pep.enforcement.unavailable")
+                    .addKeyValue("requestId", requestId)
+                    .addKeyValue("correlationId", correlationId)
+                    .addKeyValue("failure.code", failure.code())
+                    .addKeyValue("decisionId", failure.decisionId())
+                    .log("Enforcement no disponible");
         }
         return exchange.getResponse().writeWith(Mono.fromSupplier(() ->
                 exchange.getResponse().bufferFactory().wrap(mapper.writeValueAsBytes(detail))));

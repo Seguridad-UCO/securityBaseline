@@ -3,6 +3,7 @@ package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.we
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.InternalAccessRequest;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.AccessDecisionRawRequest;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
+import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
 import co.edu.uco.seguridad.shared.web.RequestFieldParser;
@@ -11,6 +12,7 @@ import co.edu.uco.seguridad.shared.web.message.WebContractMessages;
 
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
+import java.util.Optional;
 
 /**
  * {@code AccessDecisionRawRequest} (Strings desnudos, según {@code request.schema.json}) →
@@ -23,7 +25,13 @@ public final class AccessDecisionRawRequestMapper {
     private AccessDecisionRawRequestMapper() {
     }
 
+    /** Compatibilidad para los consumidores que todavía no han resuelto una identidad local. */
     public static InternalAccessRequest toRequest(AccessDecisionRawRequest raw, String subject) {
+        return toRequest(raw, subject, Optional.empty());
+    }
+
+    public static InternalAccessRequest toRequest(AccessDecisionRawRequest raw, String subject,
+            Optional<UserId> subjectUserId) {
         String version = RequestFieldParser.requirePresent("version", raw.version());
         if (!"1".equals(version)) {
             throw new MalformedRequestFieldException("version", WebContractMessages.mustBeVersion1());
@@ -40,7 +48,7 @@ public final class AccessDecisionRawRequestMapper {
             throw new MalformedRequestFieldException("timestamp", WebContractMessages.mustBeIso8601());
         }
 
-        return new InternalAccessRequest(subject, applicationId, resourcePath, action, raw.requestId(), raw.correlationId(),
+        return new InternalAccessRequest(subject, subjectUserId, applicationId, resourcePath, action, raw.requestId(), raw.correlationId(),
                 new InternalAccessRequest.RequestFacts(Instant.parse(timestamp), raw.application().environment(),
                         RequestFieldParser.parse("context.method", raw.context().method(), HttpVerb::parse), raw.context().channel()));
     }

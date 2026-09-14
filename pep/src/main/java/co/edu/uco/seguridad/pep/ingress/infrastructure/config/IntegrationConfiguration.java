@@ -11,7 +11,9 @@ import co.edu.uco.seguridad.pep.ingress.application.rulesvalidator.impl.Register
 import co.edu.uco.seguridad.pep.ingress.application.usecase.RegisterIntegrationUseCase;
 import co.edu.uco.seguridad.pep.ingress.application.usecase.impl.RegisterIntegrationUseCaseImpl;
 import co.edu.uco.seguridad.pep.ingress.infrastructure.adapter.secondary.http.PdpApplicationCredentialValidationAdapter;
-import co.edu.uco.seguridad.pep.ingress.infrastructure.integration.IntegrationProperties;
+import co.edu.uco.seguridad.pep.ingress.infrastructure.adapter.secondary.http.KeycloakClientCredentialsTokenProvider;
+import co.edu.uco.seguridad.pep.ingress.application.port.secondary.PdpServiceTokenProvider;
+import co.edu.uco.seguridad.pep.ingress.infrastructure.properties.PdpServiceIdentityProperties;
 import co.edu.uco.seguridad.pep.ingress.infrastructure.adapter.primary.web.interactor.RegisterIntegrationInteractor;
 import co.edu.uco.seguridad.pep.ingress.infrastructure.adapter.primary.web.interactor.impl.RegisterIntegrationInteractorImpl;
 import org.springframework.context.annotation.Bean;
@@ -29,9 +31,14 @@ class IntegrationConfiguration {
     }
 
     @Bean
+    PdpServiceTokenProvider pdpServiceTokenProvider(PdpServiceIdentityProperties properties) {
+        return new KeycloakClientCredentialsTokenProvider(properties, WebClient.builder().build());
+    }
+
+    @Bean
     ApplicationCredentialValidationPort applicationCredentialValidationPort(@Qualifier("pdpWebClient") WebClient client,
-            IntegrationProperties properties) {
-        return new PdpApplicationCredentialValidationAdapter(client, properties);
+            PdpServiceTokenProvider serviceToken) {
+        return new PdpApplicationCredentialValidationAdapter(client, serviceToken);
     }
 
     @Bean

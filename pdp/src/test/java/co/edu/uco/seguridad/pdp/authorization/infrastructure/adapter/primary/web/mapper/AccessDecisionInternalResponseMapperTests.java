@@ -48,7 +48,7 @@ class AccessDecisionInternalResponseMapperTests {
         AccessDecisionInternalWebResponse response = AccessDecisionInternalResponseMapper.toResponse(decision);
 
         assertThat(response.policyReferences()).hasSize(1);
-        assertThat(response.policyReferences().getFirst().policyId()).isEqualTo("application.real-system");
+        assertThat(response.policyReferences().getFirst().id()).isEqualTo("application.real-system");
         assertThat(response.policyReferences().getFirst().version()).isEqualTo("1.0");
     }
 }

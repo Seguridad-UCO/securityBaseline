@@ -16,7 +16,7 @@ import java.net.URI;
 import java.time.Duration;
 import java.util.Map;
 
-/** Registers an application with the remote PEP. It deliberately installs no HTTP filter. */
+/** Optional control-plane self-registration with the remote PEP. */
 @AutoConfiguration
 @EnableConfigurationProperties(PepRegistrationProperties.class)
 @ConditionalOnProperty(prefix = "security", name = "enabled", havingValue = "true", matchIfMissing = true)

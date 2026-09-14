@@ -10,9 +10,11 @@ import co.edu.uco.seguridad.pdp.identity.domain.rule.impl.UserMustExistRuleImpl;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.AssignTenantUseCase;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.ListUsersUseCase;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.ProvisionIdentityUseCase;
+import co.edu.uco.seguridad.pdp.identity.application.usecase.ResolveExternalIdentityUseCase;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.impl.AssignTenantUseCaseImpl;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.impl.ListUsersUseCaseImpl;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.impl.ProvisionIdentityUseCaseImpl;
+import co.edu.uco.seguridad.pdp.identity.application.usecase.impl.ResolveExternalIdentityUseCaseImpl;
 import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.interactor.AssignTenantInteractor;
 import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.interactor.ListUsersInteractor;
 import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.interactor.impl.AssignTenantInteractorImpl;
@@ -50,6 +52,11 @@ public class IdentityConfiguration {
             IdentityProvisioningProperties properties, IdentifierGenerator identifiers, TimeProvider time) {
         return new ProvisionIdentityUseCaseImpl(repository, new TenantId(properties.defaultTenantId()),
                 identifiers, time);
+    }
+
+    @Bean
+    ResolveExternalIdentityUseCase resolveExternalIdentityUseCase(SecurityUserRepository repository) {
+        return new ResolveExternalIdentityUseCaseImpl(repository);
     }
 
     @Bean

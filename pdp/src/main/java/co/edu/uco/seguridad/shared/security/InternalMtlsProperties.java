@@ -8,14 +8,15 @@ import java.util.Objects;
 
 /**
  * Confianza mTLS del canal interno (HU-003, decisión D2, confirmada con el usuario: PEM + lista de
- * sujetos, sin keystore). {@code trustCertificate} es la ruta al CA en PEM que
+ * sujetos, sin keystore). {@code enabled} solo puede desactivarse explícitamente para una prueba
+ * local; su valor por defecto en la configuración base es {@code true}. {@code trustCertificate} es la ruta al CA en PEM que
  * {@code server.ssl.trust-certificate} usa para validar la cadena del certificado de cliente en el
  * handshake (Netty ya rechaza una cadena no confiable antes de que llegue al filtro).
  * {@code allowedSubjects} es la lista de Subject DN/CN exactos admitidos — vacía por defecto, así
  * que ningún certificado pasa hasta que se configure explícitamente (falla cerrado).
  */
 @ConfigurationProperties(prefix = "pdp.security.internal.mtls")
-public record InternalMtlsProperties(String trustCertificate, List<String> allowedSubjects) {
+public record InternalMtlsProperties(boolean enabled, String trustCertificate, List<String> allowedSubjects) {
 
     public InternalMtlsProperties {
         Objects.requireNonNull(trustCertificate, RequiredArgumentMessages.INTERNAL_MTLS_TRUST_CERTIFICATE);

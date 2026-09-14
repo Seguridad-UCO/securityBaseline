@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class InternalMtlsWebFilterTests {
 
     private static final InternalMtlsProperties PROPERTIES =
-            new InternalMtlsProperties("ca.pem", List.of("CN=pep"));
+            new InternalMtlsProperties(true, "ca.pem", List.of("CN=pep"));
 
     private static final WebFilterChain NEVER_CALLED = exchange -> {
         throw new AssertionError("must not call the chain: mTLS must reject first");
@@ -80,6 +80,23 @@ class InternalMtlsWebFilterTests {
         StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
 
         assertThat(chainCalled).isTrue();
+    }
+
+    @Test
+    void explicitly_disabled_local_mtls_does_not_require_a_client_certificate() {
+        InternalMtlsWebFilter filter = new InternalMtlsWebFilter(
+                new InternalMtlsProperties(false, "", List.of()));
+        MockServerWebExchange exchange =
+                MockServerWebExchange.from(MockServerHttpRequest.post("/internal/v1/access-decisions").build());
+        AtomicBoolean chainCalled = new AtomicBoolean(false);
+
+        StepVerifier.create(filter.filter(exchange, ex -> {
+            chainCalled.set(true);
+            return Mono.empty();
+        })).verifyComplete();
+
+        assertThat(chainCalled).isTrue();
+        assertThat(exchange.getResponse().getStatusCode()).isNull();
     }
 
     private static SslInfo sslInfoWithSubject(String distinguishedName) {

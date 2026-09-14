@@ -34,6 +34,7 @@ public final class InternalMtlsWebFilter implements WebFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+        if (!properties.enabled()) return chain.filter(exchange);
         SslInfo sslInfo = exchange.getRequest().getSslInfo();
         X509Certificate[] peerCertificates = sslInfo == null ? null : sslInfo.getPeerCertificates();
         if (peerCertificates == null || peerCertificates.length == 0) {

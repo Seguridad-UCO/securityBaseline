@@ -11,6 +11,7 @@
         "applications :: usecase", "applications :: model",
         "resources", "resources :: rule", "resources :: dto", "resources :: model", "resources :: exception",
         "assignments :: usecase", "assignments :: dto",
+        "identity :: usecase",
         "identity :: rule",
         "roles :: rule"})
 package co.edu.uco.seguridad.pdp.authorization;

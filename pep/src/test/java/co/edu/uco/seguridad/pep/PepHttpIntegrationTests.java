@@ -23,6 +23,8 @@ class PepHttpIntegrationTests {
             .followRedirects(HttpClient.Redirect.NEVER).build();
     @LocalServerPort int port;
     @DynamicPropertySource static void properties(DynamicPropertyRegistry registry) {
+        // El plano de datos del proxy no necesita habilitar el registro dinámico en esta fixture.
+        registry.add("pep.integration.enabled", () -> false);
         registry.add("pep.ingress.issuer", fixtures::issuer);
         registry.add("pep.ingress.jwks-uri", () -> fixtures.pdpUrl() + "/jwks");
         registry.add("pep.ingress.allow-insecure-http", () -> true);

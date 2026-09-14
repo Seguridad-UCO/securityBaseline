@@ -1,6 +1,8 @@
 package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl;
 
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.EvaluateInternalAccessUseCase;
+import co.edu.uco.seguridad.pdp.identity.application.primaryport.request.ResolveExternalIdentityRequest;
+import co.edu.uco.seguridad.pdp.identity.application.usecase.ResolveExternalIdentityUseCase;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.AccessDecisionRawRequest;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.AccessDecisionInternalWebResponse;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.InternalAccessDecisionInteractor;
@@ -30,9 +32,12 @@ import java.util.Objects;
 public final class InternalAccessDecisionInteractorImpl implements InternalAccessDecisionInteractor {
 
     private final EvaluateInternalAccessUseCase useCase;
+    private final ResolveExternalIdentityUseCase identities;
 
-    public InternalAccessDecisionInteractorImpl(EvaluateInternalAccessUseCase useCase) {
+    public InternalAccessDecisionInteractorImpl(EvaluateInternalAccessUseCase useCase,
+            ResolveExternalIdentityUseCase identities) {
         this.useCase = Objects.requireNonNull(useCase, RequiredArgumentMessages.EVALUATE_INTERNAL_ACCESS_USE_CASE);
+        this.identities = Objects.requireNonNull(identities);
     }
 
     @Override
@@ -48,8 +53,10 @@ public final class InternalAccessDecisionInteractorImpl implements InternalAcces
                 return Mono.<AccessDecisionInternalWebResponse>error(new ConflictingRequestParametersException(
                         "correlationId", WebContractMessages.headerBodyMismatch("correlationId")));
             }
-            return currentEvidenceSubject()
-                    .map(subject -> AccessDecisionRawRequestMapper.toRequest(input, subject))
+            return currentEvidence()
+                    .flatMap(evidence -> identities.execute(new ResolveExternalIdentityRequest(
+                            evidence.issuer(), evidence.subject()))
+                            .map(userId -> AccessDecisionRawRequestMapper.toRequest(input, evidence.subject(), userId)))
                     .flatMap(useCase::execute)
                     .map(AccessDecisionInternalResponseMapper::toResponse);
         });
@@ -61,11 +68,14 @@ public final class InternalAccessDecisionInteractorImpl implements InternalAcces
      * exige el claim {@code tenant}, que este canal no tiene). Se lee directo del
      * {@code Authentication} reactivo, sin envolverlo en {@code PdpPrincipal}.
      */
-    private static Mono<String> currentEvidenceSubject() {
+    private static Mono<EvidenceIdentity> currentEvidence() {
         return ReactiveSecurityContextHolder.getContext()
                 .map(SecurityContext::getAuthentication)
                 .map(Authentication::getPrincipal)
                 .cast(Jwt.class)
-                .map(Jwt::getSubject);
+                .map(jwt -> new EvidenceIdentity(jwt.getIssuer().toString(), jwt.getSubject()));
+    }
+
+    private record EvidenceIdentity(String issuer, String subject) {
     }
 }

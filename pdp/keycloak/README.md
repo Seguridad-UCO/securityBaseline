@@ -32,6 +32,9 @@ Para versionar ese estado mas adelante, guarda ahi un archivo como `security-bas
 
 Como la instancia local anterior ya se perdio, esta vez debes recrear manualmente al menos esta configuracion en la consola de admin de Keycloak.
 
+Para preparar la prueba completa aplicación → PEP → PDP → OPA con Postman, sigue además la
+[guía de clientes técnico y de prueba](GUIA-PRUEBA-PEP-PDP-POSTMAN.md).
+
 ### 1. Realm
 
 - Crear el realm `security-baseline`.
