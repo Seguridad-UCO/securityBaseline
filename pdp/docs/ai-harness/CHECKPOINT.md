@@ -87,10 +87,15 @@ Clona también los repos hermanos **al lado**, porque las skills los referencian
 ```
 Semillero/
 ├── securityBaseline/
-├── securityBaseline-fr/                 github.com/Seguridad-UCO/securityBaseline-fr
+├── securityBaseline-vue/                github.com/Seguridad-UCO/securityBaseline-vue   (frontend actual)
+├── securityBaseline-fr/                 github.com/Seguridad-UCO/securityBaseline-fr    (anterior, sin cambios nuevos)
 ├── security-platform-architecture/      github.com/Seguridad-UCO/security-platform-architecture
 └── artefactos-referencia/               (sin repositorio remoto — cópiala a mano)
 ```
+
+**2026-09-13:** el frontend se migró de React (`securityBaseline-fr`) a Vue 3 + TS + Pinia
+(`securityBaseline-vue`), validado contra el PDP/Keycloak/OPA reales el mismo día — ver el `README.md`
+de ese repo. `securityBaseline-fr` se conserva como referencia, sin recibir cambios nuevos.
 
 ### Requisitos del entorno
 
