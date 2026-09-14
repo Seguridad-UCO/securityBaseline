@@ -394,6 +394,24 @@ en verde.
 | Migrar `pep/starter` para consumir la credencial que el PDP ya emite/valida/rota | Historia del lado del PEP (David), no del PDP — ver `workspace/MAPA-PLATAFORMA-SEGURIDAD.md` P1 |
 | Política de aplicación real en OPA | `security-policy-engine/` (Laura) — sin ella, OPA sigue respondiendo `DENY`/`NO_APPLICABLE_POLICY` a cualquier decisión |
 
+**Actualización 2026-09-14:** `develop` recibió la PR #49 (`feature/ajustes_integracion_completa`,
+David — PEP): el `pep/starter` ya valida la credencial de aplicación contra el PDP por mTLS
+(`PdpApplicationCredentialValidationAdapter`, `EmbeddedAccessDecisionController`,
+`KeycloakClientCredentialsTokenProvider` para la identidad de servicio del PEP) — el P1 del mapa de
+plataforma ("migrar `pep/starter` para consumir la credencial") parece cerrado del lado del PEP; falta
+verificarlo end-to-end antes de tacharlo del mapa. También trajo `ResolveExternalIdentityUseCase`
+(`identity`) para que el canal interno resuelva el `UserId` local de una identidad externa.
+
+Al fusionar con el trabajo de HU-016 en curso, `ModulithStructureTests` marcó una omisión real de esa
+PR: `InternalAccessDecisionInteractorImpl` (`authorization`) ya construía `ResolveExternalIdentityRequest`
+sin que `identity/application/primaryport/request` estuviera publicado como interfaz nombrada ni
+`"identity :: dto"` estuviera en el `allowedDependencies` de `authorization` — rompía `mvnw verify`
+independientemente de Docker, no es ruido de entorno. Corregido: `package-info.java` nuevo en
+`identity/application/primaryport/{request,response}` (`@NamedInterface("dto")`, mismo patrón que
+`roles :: dto`) y `"identity :: dto"` agregado a `authorization`. `consistencia.ps1`, `drift.ps1` y
+`mapa.ps1` vuelven a estar en verde; `verificar.ps1 -Rapido` solo con los mismos fallos de entorno
+(sin Docker) que ya existían antes de este pull.
+
 **Cerrada (2026-09-13):** ADR formal de administración por aplicación — `ADR-023` en
 `security-platform-architecture` formaliza rol de alcance `APPLICATION` vía OPA; `ADR-024` evalúa y
 difiere el administrador global. Caché distribuida, revocación de tokens y MFA dejaron de ser

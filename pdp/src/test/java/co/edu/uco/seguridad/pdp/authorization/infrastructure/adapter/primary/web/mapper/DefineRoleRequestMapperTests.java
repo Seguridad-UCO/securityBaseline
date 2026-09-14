@@ -1,10 +1,10 @@
-package co.edu.uco.seguridad.pdp.roles.infrastructure.adapter.primary.web.mapper;
+package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.mapper;
 
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.DefineRoleRawRequest;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.roles.application.primaryport.request.DefineRoleRequest;
 import co.edu.uco.seguridad.pdp.roles.domain.model.RoleScope;
-import co.edu.uco.seguridad.pdp.roles.infrastructure.adapter.primary.web.dto.request.raw.DefineRoleRawRequest;
 import co.edu.uco.seguridad.shared.web.exception.MalformedRequestFieldException;
 import co.edu.uco.seguridad.shared.web.exception.MissingRequestFieldException;
 import org.junit.jupiter.api.Test;
@@ -14,7 +14,11 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/** Barreras C1 (scope solo TENANT/APPLICATION por este canal) y C2 (applicationId exigido/prohibido según el nivel). */
+/**
+ * Barreras C1 (scope solo TENANT/APPLICATION por este canal) y C2 (applicationId exigido/prohibido
+ * según el nivel) — HU-016: movido desde {@code roles}, mismos casos, ahora sobre el mapper que vive
+ * en {@code authorization} (PLAN-HU-016.md §7).
+ */
 class DefineRoleRequestMapperTests {
 
     private static final TenantId TENANT = new TenantId("universidad-uco");

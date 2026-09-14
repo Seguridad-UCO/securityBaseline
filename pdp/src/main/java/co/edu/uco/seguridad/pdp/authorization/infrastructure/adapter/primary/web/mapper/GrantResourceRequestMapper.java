@@ -1,13 +1,16 @@
-package co.edu.uco.seguridad.pdp.roles.infrastructure.adapter.primary.web.mapper;
+package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.mapper;
 
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.GrantResourceRawRequest;
 import co.edu.uco.seguridad.pdp.commons.model.ResourceId;
 import co.edu.uco.seguridad.pdp.commons.model.RoleId;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.roles.application.primaryport.request.GrantResourceRequest;
-import co.edu.uco.seguridad.pdp.roles.infrastructure.adapter.primary.web.dto.request.raw.GrantResourceRawRequest;
 import co.edu.uco.seguridad.shared.web.RequestFieldParser;
 
-/** raw a GrantResourceRequest: roleId y resourceId con RequestFieldParser (RoleId::of, ResourceId::of). */
+/**
+ * raw a {@code GrantResourceRequest} (HU-016): idéntico a {@code roles...GrantResourceRequestMapper}
+ * — sin cambios de catálogo de mensajes, este mapper no lanza ningún mensaje propio.
+ */
 public final class GrantResourceRequestMapper {
 
     private GrantResourceRequestMapper() {

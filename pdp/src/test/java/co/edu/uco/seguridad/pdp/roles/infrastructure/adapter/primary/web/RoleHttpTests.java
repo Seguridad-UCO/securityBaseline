@@ -2,13 +2,18 @@ package co.edu.uco.seguridad.pdp.roles.infrastructure.adapter.primary.web;
 
 import co.edu.uco.seguridad.AbstractSurrealDbIntegrationTest;
 import co.edu.uco.seguridad.pdp.PdpApplication;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.OpaFixtureServer;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.shared.security.TestJwtSupport;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -18,6 +23,12 @@ import java.util.UUID;
 /**
  * Flujo HTTP completo sobre Netty, autenticado y contra una SurrealDB real — mismo patrón que
  * AuthorizationHttpTests (HU-002/HU-003).
+ *
+ * <p>HU-016: definir un rol {@code APPLICATION} y conceder un recurso ahora pasan por el gate de
+ * administración, que consulta a OPA. Mismo {@link OpaFixtureServer} embebido que
+ * {@code ApplicationHttpTests} ya usa para HU-015, respondiendo {@code ALLOW} — esta clase no prueba
+ * el rechazo del gate (eso vive en {@code AdministerRoleDefinitionUseCaseImplTests}/
+ * {@code AdministerResourceGrantUseCaseImplTests}), solo necesita que las fixtures funcionen.</p>
  */
 @SpringBootTest(classes = PdpApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class RoleHttpTests extends AbstractSurrealDbIntegrationTest {
@@ -25,11 +36,31 @@ class RoleHttpTests extends AbstractSurrealDbIntegrationTest {
     private static final String UCO = "universidad-uco";
     private static final String OTRO = "tenant-a";
     private static final ObjectMapper JSON = new ObjectMapper();
+    private static final String OPA_ALLOW_BODY =
+            "{\"result\":{\"effect\":\"ALLOW\",\"reasonCode\":\"POLICY_ALLOWED\",\"policyReferences\":[],\"obligations\":[]}}";
+
+    private static OpaFixtureServer opa;
 
     @LocalServerPort
     int port;
 
     private String prefix;
+
+    @BeforeAll
+    static void startOpaFixture() throws Exception {
+        opa = OpaFixtureServer.start();
+        opa.respondWith(200, OPA_ALLOW_BODY);
+    }
+
+    @AfterAll
+    static void stopOpaFixture() {
+        opa.stop();
+    }
+
+    @DynamicPropertySource
+    static void opaConnectionProperties(DynamicPropertyRegistry registry) {
+        registry.add("pdp.opa.base-url", () -> opa.baseUrl());
+    }
 
     @BeforeEach
     void freshPrefix() {
