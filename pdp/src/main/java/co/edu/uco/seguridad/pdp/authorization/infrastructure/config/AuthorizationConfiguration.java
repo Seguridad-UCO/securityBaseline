@@ -39,6 +39,7 @@ import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.o
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.OpaPolicyDecisionAdapter;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.OpaAdministrationDecisionAdapter;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.properties.OpaProperties;
+import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserIdLookupValidator;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceMustExistValidator;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceIdLookupValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleNamesLookupValidator;
@@ -151,8 +152,9 @@ public class AuthorizationConfiguration {
     }
 
     @Bean
-    ApplicationRemovalInteractor applicationRemovalInteractor(AdministerApplicationRemovalUseCase useCase) {
-        return new ApplicationRemovalInteractorImpl(useCase);
+    ApplicationRemovalInteractor applicationRemovalInteractor(AdministerApplicationRemovalUseCase useCase,
+            SubjectUserIdLookupValidator subjectUserIdLookup) {
+        return new ApplicationRemovalInteractorImpl(useCase, subjectUserIdLookup);
     }
 
     // Caso de uso e interactor listos; el @PostMapping de credential-rotations sigue en
@@ -167,7 +169,7 @@ public class AuthorizationConfiguration {
 
     @Bean
     ApplicationCredentialRotationInteractor applicationCredentialRotationInteractor(
-            AdministerApplicationCredentialRotationUseCase useCase) {
-        return new ApplicationCredentialRotationInteractorImpl(useCase);
+            AdministerApplicationCredentialRotationUseCase useCase, SubjectUserIdLookupValidator subjectUserIdLookup) {
+        return new ApplicationCredentialRotationInteractorImpl(useCase, subjectUserIdLookup);
     }
 }

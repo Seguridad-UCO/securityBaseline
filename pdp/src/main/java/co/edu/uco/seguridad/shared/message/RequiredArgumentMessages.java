@@ -107,6 +107,7 @@ public final class RequiredArgumentMessages {
     public static final String VALID_UNTIL = "se requiere el fin de vigencia";
     public static final String ACTIVE_ROLE_IDS = "se requiere el conjunto de roles activos";
     public static final String USER_MUST_EXIST_VALIDATOR = "se requiere el validador de existencia de usuario";
+    public static final String SUBJECT_USER_ID_LOOKUP_VALIDATOR = "se requiere el validador de búsqueda de usuario por subject";
     public static final String ROLE_SCOPE_COVERS_APPLICATION_VALIDATOR = "se requiere el validador de cobertura de aplicación del alcance de rol";
     public static final String ASSIGN_ROLE_RULES_VALIDATOR = "se requiere el validador de asignación de rol";
     public static final String REVOKE_ASSIGNMENT_RULES_VALIDATOR = "se requiere el validador de revocación de asignación";

@@ -104,6 +104,15 @@ class ProvisionIdentityUseCaseImplTests {
         }
 
         @Override
+        public Mono<ExternalIdentity> findIdentityBySubject(String subject) {
+            return identities.stream()
+                    .filter(identity -> identity.subject().equals(subject))
+                    .findFirst()
+                    .map(Mono::just)
+                    .orElseGet(Mono::empty);
+        }
+
+        @Override
         public Mono<SecurityUser> findByEmail(Email email) {
             return users.values().stream()
                     .filter(user -> user.email().equals(email))

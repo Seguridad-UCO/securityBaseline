@@ -1,47 +1,42 @@
-package co.edu.uco.seguridad.pdp.identity.application.rule.validator;
+package co.edu.uco.seguridad.pdp.identity.application.rule.validator.impl;
 
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.commons.model.UserId;
-import co.edu.uco.seguridad.pdp.identity.application.rule.validator.impl.UserMustExistValidatorImpl;
 import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.SecurityUserRepository;
 import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;
-import co.edu.uco.seguridad.pdp.identity.domain.exception.UserNotFoundException;
 import co.edu.uco.seguridad.pdp.identity.domain.model.Email;
 import co.edu.uco.seguridad.pdp.identity.domain.model.ExternalIdentity;
-import co.edu.uco.seguridad.pdp.identity.domain.rule.UserMustExistRule;
-import co.edu.uco.seguridad.pdp.identity.domain.rule.impl.UserMustExistRuleImpl;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.time.Instant;
 import java.util.UUID;
 
-class UserMustExistValidatorImplTests {
+/**
+ * Traduce, no decide: si {@code identity} no tiene ninguna identidad externa con ese subject, el
+ * validador queda vacío — no inventa un rechazo (PLAN-HU-015.md §14).
+ */
+class SubjectUserIdLookupValidatorImplTests {
 
     private static final UserId USER = new UserId(UUID.randomUUID());
-    private static final UserMustExistRule MUST_EXIST = new UserMustExistRuleImpl();
-    private static final SecurityUser SECURITY_USER = SecurityUser.provision(USER, new TenantId("universidad-uco"),
-            new Email("docente@uco.edu.co"), "Docente", Instant.parse("2026-09-12T00:00:00Z"));
+    private static final String SUBJECT = "keycloak-subject-123";
 
     @Test
-    void completes_when_the_user_exists() {
-        UserMustExistValidatorImpl validator = new UserMustExistValidatorImpl(repositoryReturning(Mono.just(SECURITY_USER)), MUST_EXIST);
+    void resolves_the_user_id_linked_to_an_existing_external_identity() {
+        SubjectUserIdLookupValidatorImpl validator = new SubjectUserIdLookupValidatorImpl(
+                repositoryResolving(Mono.just(new ExternalIdentity(USER, "https://issuer.example", SUBJECT, "keycloak"))));
 
-        StepVerifier.create(validator.execute(USER)).verifyComplete();
+        StepVerifier.create(validator.execute(SUBJECT)).expectNext(USER).verifyComplete();
     }
 
     @Test
-    void rejects_when_the_user_does_not_exist() {
-        UserMustExistValidatorImpl validator = new UserMustExistValidatorImpl(repositoryReturning(Mono.empty()), MUST_EXIST);
+    void resolves_empty_when_no_external_identity_has_that_subject() {
+        SubjectUserIdLookupValidatorImpl validator = new SubjectUserIdLookupValidatorImpl(repositoryResolving(Mono.empty()));
 
-        StepVerifier.create(validator.execute(USER))
-                .expectError(UserNotFoundException.class)
-                .verify();
+        StepVerifier.create(validator.execute(SUBJECT)).verifyComplete();
     }
 
-    private static SecurityUserRepository repositoryReturning(Mono<SecurityUser> result) {
+    private static SecurityUserRepository repositoryResolving(Mono<ExternalIdentity> result) {
         return new SecurityUserRepository() {
             @Override
             public Mono<ExternalIdentity> findIdentity(String issuer, String subject) {
@@ -50,7 +45,7 @@ class UserMustExistValidatorImplTests {
 
             @Override
             public Mono<ExternalIdentity> findIdentityBySubject(String subject) {
-                throw new UnsupportedOperationException();
+                return result;
             }
 
             @Override
@@ -60,7 +55,7 @@ class UserMustExistValidatorImplTests {
 
             @Override
             public Mono<SecurityUser> findById(UserId userId) {
-                return result;
+                throw new UnsupportedOperationException();
             }
 
             @Override

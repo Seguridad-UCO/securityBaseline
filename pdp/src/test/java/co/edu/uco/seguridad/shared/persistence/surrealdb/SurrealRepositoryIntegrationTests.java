@@ -187,6 +187,10 @@ class SurrealRepositoryIntegrationTests extends AbstractSurrealDbIntegrationTest
 
     @Test
     void application_repository_finds_no_tenant_for_an_unknown_application_id() {
+        client.ensureNamespaceAndDatabase()
+                .then(client.execute("DEFINE TABLE IF NOT EXISTS application SCHEMALESS;", Map.of()))
+                .block();
+
         ApplicationRepository repository = new SurrealApplicationRepository(client);
 
         StepVerifier.create(repository.findTenantIdById(new ApplicationId(UUID.randomUUID())))

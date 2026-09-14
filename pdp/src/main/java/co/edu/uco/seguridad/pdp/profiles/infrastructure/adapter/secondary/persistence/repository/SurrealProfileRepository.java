@@ -114,12 +114,17 @@ public final class SurrealProfileRepository implements ProfileRepository {
         return client.execute(query, parameters).thenReturn(profile);
     }
 
-    /** Une un componente opcional del alcance como parámetro ligado, o {@code NONE} si está ausente. */
+    /**
+     * Une un componente opcional del alcance como parámetro ligado, con cadena vacía como centinela
+     * de ausencia. {@code NONE} no sirve: el índice único {@code profile_scope_name} no indexa ni
+     * compara correctamente un campo ausente contra {@code NONE} (confirmado contra SurrealDB:
+     * {@code WHERE applicationId = NONE} no encuentra la fila que acaba de insertarse con
+     * {@code applicationId = NONE}, y el índice UNIQUE no rechaza un segundo registro idéntico). Una
+     * cadena vacía es un valor real que el índice sí puede indexar y comparar.
+     */
     private static String bind(Map<String, String> parameters, String field, Optional<String> value) {
-        return value.map(present -> {
-            parameters.put(field, present);
-            return "$" + field;
-        }).orElse("NONE");
+        parameters.put(field, value.orElse(""));
+        return "$" + field;
     }
 
     private static Profile toDomain(JsonNode row) {

@@ -331,7 +331,7 @@ complejidad de cada pieza individual).
 | Contrato aprobado (gate 1) | ⏳ Pendiente | |
 | Pruebas en rojo | ⏳ Pendiente | |
 | Implementación en verde | ⏳ Pendiente | |
-| Validación | ⏳ Pendiente | |
+| Validación | ⛔ RECHAZADO — 2ª vuelta, deriva doc↔código (ver REPORTE-HU-015.md) | 2026-09-13 |
 | Entrega (gate 2) | ⏳ Pendiente | |
 
 ## 11. Ambigüedades pendientes
@@ -364,6 +364,141 @@ complejidad de cada pieza individual).
    los `@PostMapping` que faltan a `ApplicationRegistrationController`/`ApplicationAdministrationController`,
    ajustando esos dos archivos de test en el mismo cambio (exactamente como sb-testing describe para
    un cambio de puerto: "es trabajo del implementador, no del planificador").
+
+## 14. Enmienda de contrato (gate 1, segunda vuelta) — resolver el `UserId` del llamador vía `identity`
+
+Al intentar activar los endpoints (corrección del bloqueante del REPORTE-HU-015.md), `@3-implementador`
+encontró que el diseño original — `principal.userId().orElseThrow(...)` en
+`RegisterApplicationWithFirstAdministratorInteractorImpl` y `ApplicationAdministrationRequestMapper` —
+**rompe las 7 clases `*HttpTests` del proyecto** (`ApplicationHttpTests`, `AssignmentHttpTests`,
+`ProfileAssignmentHttpTests`, `AuthorizationHttpTests`, `ProfileHttpTests`,
+`ApplicationWithInitialResourceHttpTests`, `RoleHttpTests`): todas se autentican con
+`TestJwtSupport` (JWT crudo, perfil dev), que `SecurityContext.currentPrincipal()` resuelve como
+`PdpPrincipal.from(jwt)` — **siempre** con `userId = Optional.empty()`. Solo
+`LocalUserPrincipal` (que construye `ProvisionIdentityUseCaseImpl` tras un login real vía Keycloak)
+trae el `userId` ya resuelto, y ninguna prueba HTTP pasa por ahí. La ambigüedad 1 del borrador original
+decía "solo pasa fuera del perfil `keycloak`, nunca en producción real" — cierto para producción, pero
+la ambigüedad no contempló que es **el único modo que cualquier prueba HTTP del proyecto ejercita**.
+
+**Decisión (con Sebastián):** el `UserId` del llamador se resuelve vía `identity` cuando el principal no
+lo trae ya resuelto, en vez de exigirlo del principal. Esto cambia dos firmas ya aprobadas en la
+sección 7 — de ahí la segunda vuelta por el gate 1, en vez de que el implementador lo decidiera solo.
+
+### Piezas nuevas
+
+```java
+// pdp/identity/application/secondaryport/repository/SecurityUserRepository.java              [M]
+/** Vacío si no hay identidad externa con ese subject, sin importar el emisor. Complemento de
+ *  findIdentity(issuer, subject) para cuando el principal no trae el issuer (JWT crudo de dev/pruebas,
+ *  ver ambigüedad 1 y su enmienda). */
+Mono<ExternalIdentity> findIdentityBySubject(String subject);
+```
+
+```java
+// pdp/identity/application/rule/validator/SubjectUserIdLookupValidator.java                   [N]
+public interface SubjectUserIdLookupValidator extends ReactiveOperation<String, UserId> {
+}
+// Impl: repository.findIdentityBySubject(subject).map(ExternalIdentity::userId)
+```
+
+`identity/application/rule/validator` ya es `@NamedInterface("rule")` con consumidores (`assignments`
+la tiene permitida) — publicar aquí no dispara la trampa del primer NamedInterface. **`authorization`
+no tenía ninguna dependencia hacia `identity` todavía**: se añade `"identity :: rule"` a su
+`allowedDependencies` (frontera nueva, justificada aquí, no relajada para que compile).
+
+### Firmas modificadas (ya aprobadas antes, cambian ahora)
+
+```java
+// pdp/assignments/infrastructure/adapter/primary/web/interactor/impl/
+// RegisterApplicationWithFirstAdministratorInteractorImpl.java                                [M]
+// Constructor gana: SubjectUserIdLookupValidator subjectUserIdLookup
+// execute(): principal.userId() presente -> Mono.just(it); si no, subjectUserIdLookup.execute(principal.subject())
+// El resto de la orquestación (mapper, use case) no cambia.
+```
+
+```java
+// pdp/authorization/infrastructure/adapter/primary/web/mapper/
+// ApplicationAdministrationRequestMapper.java                                                 [M]
+// ANTES: toAdministrationRequest(ApplicationAdministrationRawRequest raw, PdpPrincipal principal)
+//        — resolvía el UserId internamente con orElseThrow.
+// AHORA: toAdministrationRequest(ApplicationAdministrationRawRequest raw, PdpPrincipal principal,
+//        UserId resolvedUserId) — sigue síncrono; ya no decide de dónde sale el UserId, solo lo recibe.
+```
+
+```java
+// ApplicationRemovalInteractorImpl.java / ApplicationCredentialRotationInteractorImpl.java     [M]
+// Ambos ganan: SubjectUserIdLookupValidator subjectUserIdLookup
+// execute(): resuelven el UserId igual que el interactor de registro, ANTES de llamar al mapper
+//            (ya no síncrono de punta a punta: SecurityContext.currentPrincipal()
+//             .flatMap(principal -> resolveUserId(principal).map(userId ->
+//                 ApplicationAdministrationRequestMapper.toAdministrationRequest(raw, principal, userId)))
+//             .flatMap(useCase::execute)...)
+```
+
+### Impacto en pruebas ya escritas (para `@2-tester-spec`, no para `@3-implementador`)
+
+- **Fakes de `SecurityUserRepository`** — confirmado con `mvnw test-compile` tras materializar el
+  método nuevo: exactamente 3 archivos, `UserMustExistValidatorImplTests`,
+  `AssignTenantUseCaseImplTests`, `ProvisionIdentityUseCaseImplTests`. Necesitan
+  `findIdentityBySubject` con `throw new UnsupportedOperationException();`.
+- **`ApplicationAdministrationRequestMapperTests.fails_fast_when_the_principal_has_no_resolved_user_id`**
+  ya no tiene sentido con la firma nueva (el mapper ya no decide, solo recibe) — se retira o se
+  reescribe contra la firma nueva. Es un cambio de contrato aprobado aquí, no una "prueba discutible".
+- Nuevo caso de prueba: `SubjectUserIdLookupValidatorImplTests` (encontrado / vacío).
+- Sigue pendiente, sin relación con esta enmienda: el bloqueante original del REPORTE-HU-015.md
+  (`ApplicationControllerTests`/`ApplicationHttpTests` por el traslado de `register()`/`rotate()`).
+
+## 15. Enmienda de contrato (gate 1, tercera vuelta) — fixture de identidad para las pruebas HTTP
+
+Al implementar `findIdentityBySubject` (§14), `@3-implementador` confirmó que la consulta funciona
+—y que además había un bug real: la cadena resolvía vacía en silencio en vez de fallar, produciendo
+un `200 OK` sin cuerpo en vez de un error; ya corregido con `switchIfEmpty(Mono.error(...))`— pero
+**ninguna de las 7 clases `*HttpTests` del proyecto vincula jamás una identidad externa** para el
+`subject` con el que firman su JWT de prueba (`grep -c '\.linkIdentity(' pdp/src/test/**/*HttpTests.java`
+→ 0 en las 7). Activar el registro/rotación gateados las deja en rojo con
+`IllegalStateException: No fue posible resolver el UserId del llamador` — no un caso límite, el 100 %
+de sus llamadas, porque `SubjectUserIdLookupValidator` siempre resuelve vacío para un subject que
+nadie vinculó.
+
+**Decisión de diseño (por qué aquí y no en cada clase por separado):** el fixture vive en
+`AbstractSurrealDbIntegrationTest` — la base que **ya** comparten las 7 clases y que **ya** expone el
+contenedor `SURREALDB` (mismo patrón sin Spring que usa `SurrealRepositoryIntegrationTests` para
+construir un `SurrealDbClient` a mano) — en vez de duplicar la construcción del repositorio en cada
+`@BeforeEach`. Es un método nuevo, aditivo, que no cambia el comportamiento de ninguna prueba que no
+lo llame — su alcance real es más ancho que HU-015 (lo hereda cualquier prueba HTTP futura que
+necesite un llamador con `UserId` resoluble), pero nace de una necesidad de esta historia.
+
+### Pieza nueva
+
+```java
+// pdp/src/test/java/co/edu/uco/seguridad/AbstractSurrealDbIntegrationTest.java                [M-test, aditivo]
+/**
+ * Vincula una identidad externa para que {@code SubjectUserIdLookupValidator} (HU-015 §14) pueda
+ * resolver el {@code UserId} de un JWT crudo de prueba —el único principal que produce
+ * {@code TestJwtSupport}, que nunca trae {@code userId} ya resuelto—. Sin Spring: construye su
+ * propio {@code SurrealDbClient} contra el mismo contenedor, igual que
+ * {@code SurrealRepositoryIntegrationTests}. Llamar una vez por prueba/clase, con un {@code subject}
+ * único (la base no se limpia entre corridas).
+ */
+protected static UserId linkTestIdentity(TenantId tenant, String subject) {
+    UserId userId = new UserId(UUID.randomUUID());
+    SurrealDbClient client = /* mismo client que ya construye SurrealRepositoryIntegrationTests */;
+    SecurityUserRepository repository = new SurrealSecurityUserRepository(client);
+    repository.save(SecurityUser.provision(userId, tenant, new Email(subject.replaceAll("[^a-zA-Z0-9]", "") + "@test.local"),
+                    "Test User", Instant.now()))
+            .then(repository.linkIdentity(new ExternalIdentity(userId, TestJwtSupport.ISSUER, subject, "test")))
+            .block();
+    return userId;
+}
+```
+
+### Consumidores a ajustar (las 7 clases, `@2-tester-spec`)
+
+Cada `*HttpTests` llama `linkTestIdentity(tenant, subject)` en su `@BeforeEach`/fixture, con el mismo
+`subject` que ya usa al firmar su token con `TestJwtSupport.signedToken(tenant, subject)` — no se
+inventa un subject nuevo, se vincula el que cada clase ya usaba. Las 7:
+`ApplicationHttpTests`, `AssignmentHttpTests`, `ProfileAssignmentHttpTests`, `AuthorizationHttpTests`,
+`ProfileHttpTests`, `ApplicationWithInitialResourceHttpTests`, `RoleHttpTests`.
 
 ## 13. Corrección encontrada por `ModulithStructureTests` (FASE 3 de `@2-tester-spec`)
 

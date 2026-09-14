@@ -57,6 +57,7 @@ import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.per
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.repository.SurrealProfileAssignmentRepository;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.schema.SurrealAssignmentSchemaInitializer;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.schema.SurrealProfileAssignmentSchemaInitializer;
+import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserIdLookupValidator;
 import co.edu.uco.seguridad.pdp.identity.application.rule.validator.UserMustExistValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileRolesLookupValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileNamesLookupValidator;
@@ -222,8 +223,8 @@ public class AssignmentsConfiguration {
 
     @Bean
     RegisterApplicationWithFirstAdministratorInteractor registerApplicationWithFirstAdministratorInteractor(
-            RegisterApplicationWithFirstAdministratorUseCase useCase) {
-        return new RegisterApplicationWithFirstAdministratorInteractorImpl(useCase);
+            RegisterApplicationWithFirstAdministratorUseCase useCase, SubjectUserIdLookupValidator subjectUserIdLookup) {
+        return new RegisterApplicationWithFirstAdministratorInteractorImpl(useCase, subjectUserIdLookup);
     }
 
     @Bean

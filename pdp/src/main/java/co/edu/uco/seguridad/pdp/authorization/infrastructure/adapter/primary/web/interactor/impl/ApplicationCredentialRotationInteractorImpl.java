@@ -6,32 +6,46 @@ import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.ApplicationCredentialRotationInteractor;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.mapper.AdministeredApplicationResponseMapper;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.mapper.ApplicationAdministrationRequestMapper;
+import co.edu.uco.seguridad.pdp.commons.model.UserId;
+import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserIdLookupValidator;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
+import co.edu.uco.seguridad.shared.security.PdpPrincipal;
 import co.edu.uco.seguridad.shared.security.SecurityContext;
 import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 
 /**
- * Pendiente de cablear a un {@code @PostMapping} (HU-015): la ruta
- * {@code POST /api/v1/applications/{applicationId}/credential-rotations} sigue siendo de
- * {@code ApplicationController} (applications) hasta que el implementador la retire de allí en el
- * mismo cambio que active este interactor aquí — hacerlo antes duplicaría el mapeo HTTP y el
- * contexto de Spring no arrancaría (ver PLAN-HU-015.md árbol §8).
+ * {@code UserId} del llamador resuelto igual que {@link ApplicationRemovalInteractorImpl}
+ * (PLAN-HU-015.md §14).
  */
 public final class ApplicationCredentialRotationInteractorImpl implements ApplicationCredentialRotationInteractor {
 
     private final AdministerApplicationCredentialRotationUseCase useCase;
+    private final SubjectUserIdLookupValidator subjectUserIdLookup;
 
-    public ApplicationCredentialRotationInteractorImpl(AdministerApplicationCredentialRotationUseCase useCase) {
+    public ApplicationCredentialRotationInteractorImpl(AdministerApplicationCredentialRotationUseCase useCase,
+            SubjectUserIdLookupValidator subjectUserIdLookup) {
         this.useCase = Objects.requireNonNull(useCase, RequiredArgumentMessages.ROTATE_APPLICATION_CREDENTIAL_USE_CASE);
+        this.subjectUserIdLookup = Objects.requireNonNull(subjectUserIdLookup,
+                RequiredArgumentMessages.SUBJECT_USER_ID_LOOKUP_VALIDATOR);
     }
 
     @Override
     public Mono<AdministeredApplicationWebResponse> execute(ApplicationAdministrationRawRequest raw) {
         return SecurityContext.currentPrincipal()
-                .map(principal -> ApplicationAdministrationRequestMapper.toAdministrationRequest(raw, principal))
+                .flatMap(principal -> resolveUserId(principal)
+                        .map(userId -> ApplicationAdministrationRequestMapper.toAdministrationRequest(raw, principal, userId)))
                 .flatMap(useCase::execute)
                 .map(AdministeredApplicationResponseMapper::toWebResponse);
+    }
+
+    private Mono<UserId> resolveUserId(PdpPrincipal principal) {
+        return principal.userId()
+                .map(Mono::just)
+                .orElseGet(() -> subjectUserIdLookup.execute(principal.subject()))
+                .switchIfEmpty(Mono.error(() -> new IllegalStateException(
+                        "No fue posible resolver el UserId del llamador: el principal no lo trae y no hay "
+                                + "ninguna identidad externa vinculada a su subject")));
     }
 }
