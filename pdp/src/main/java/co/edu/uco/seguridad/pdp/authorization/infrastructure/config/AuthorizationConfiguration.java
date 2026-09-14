@@ -54,6 +54,11 @@ import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserI
 import co.edu.uco.seguridad.pdp.identity.application.usecase.ResolveExternalIdentityUseCase;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceMustExistValidator;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceIdLookupValidator;
+import co.edu.uco.seguridad.pdp.resources.application.usecase.RegisterProtectedResourceUseCase;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerResourceRegistrationUseCase;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.impl.AdministerResourceRegistrationUseCaseImpl;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.AdministerResourceRegistrationInteractor;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.AdministerResourceRegistrationInteractorImpl;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleNamesLookupValidator;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
@@ -212,5 +217,22 @@ public class AuthorizationConfiguration {
     AdministerResourceGrantInteractor administerResourceGrantInteractor(AdministerResourceGrantUseCase useCase,
             SubjectUserIdLookupValidator subjectUserIdLookup, RoleApplicationLookupValidator roleApplicationLookup) {
         return new AdministerResourceGrantInteractorImpl(useCase, subjectUserIdLookup, roleApplicationLookup);
+    }
+
+    // HU-017 — gatea RegisterProtectedResourceUseCase (slice resources), mismo motivo que HU-015/HU-016:
+    // vive aquí porque authorization ya depende de resources. El controller que expone esta ruta
+    // (ResourceAdministrationController) y la baja de ProtectedResourceController.register() son [M]
+    // del implementador (PLAN-HU-017.md §8) — de momento estos beans no quedan enrutados.
+    @Bean
+    AdministerResourceRegistrationUseCase administerResourceRegistrationUseCase(
+            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator,
+            RegisterProtectedResourceUseCase registerResource) {
+        return new AdministerResourceRegistrationUseCaseImpl(mustBeAdministrator, registerResource);
+    }
+
+    @Bean
+    AdministerResourceRegistrationInteractor administerResourceRegistrationInteractor(
+            AdministerResourceRegistrationUseCase useCase, SubjectUserIdLookupValidator subjectUserIdLookup) {
+        return new AdministerResourceRegistrationInteractorImpl(useCase, subjectUserIdLookup);
     }
 }

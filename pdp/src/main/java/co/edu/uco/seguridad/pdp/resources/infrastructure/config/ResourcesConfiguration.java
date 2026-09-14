@@ -24,10 +24,8 @@ import co.edu.uco.seguridad.pdp.resources.application.usecase.impl.RegisterAppli
 import co.edu.uco.seguridad.pdp.resources.application.usecase.impl.RegisterProtectedResourceUseCaseImpl;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.interactor.ListProtectedResourcesInteractor;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.interactor.RegisterApplicationWithInitialResourceInteractor;
-import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.interactor.RegisterProtectedResourceInteractor;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.interactor.impl.ListProtectedResourcesInteractorImpl;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.interactor.impl.RegisterApplicationWithInitialResourceInteractorImpl;
-import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.interactor.impl.RegisterProtectedResourceInteractorImpl;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.audit.InMemoryAuditAdapter;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.persistence.repository.SurrealProtectedResourceRepository;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.persistence.schema.SurrealProtectedResourceSchemaInitializer;
@@ -106,11 +104,11 @@ public class ResourcesConfiguration {
         return new ListProtectedResourcesUseCaseImpl(resources);
     }
 
-    @Bean
-    RegisterProtectedResourceInteractor registerProtectedResourceInteractor(RegisterProtectedResourceUseCase useCase) {
-        return new RegisterProtectedResourceInteractorImpl(useCase);
-    }
-
+    // HU-017 — registerProtectedResourceInteractor se retiró de aquí: la escritura se expone ahora
+    // desde ResourceAdministrationController (authorization), que gatea contra el mecanismo de
+    // administración por aplicación. RegisterProtectedResourceUseCase sigue aquí, sin cambios:
+    // authorization lo consume vía "resources :: usecase", y la saga de HU-010 lo sigue invocando
+    // directo (sin gate, mismo precedente que RegisterApplicationUseCase en HU-015).
     @Bean
     ListProtectedResourcesInteractor listProtectedResourcesInteractor(ListProtectedResourcesUseCase useCase) {
         return new ListProtectedResourcesInteractorImpl(useCase);

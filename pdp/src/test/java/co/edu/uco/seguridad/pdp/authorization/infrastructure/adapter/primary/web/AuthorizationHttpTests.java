@@ -27,6 +27,12 @@ import java.util.UUID;
  * viniendo de una respuesta HTTP real de "OPA" en vez de un valor fijo en el PDP. ALLOW e
  * INDETERMINATE-por-fallo-tecnico se prueban en AuthorizeUseCaseImplTests y en
  * OpaPolicyDecisionAdapterTests, que no dependen de este flujo HTTP completo.
+ *
+ * <p>HU-017: {@code registerResource} (usado en el {@code @BeforeEach}) ahora pasa por el gate de
+ * administración, que también consulta a OPA — pero por una ruta distinta
+ * ({@code pdp.opa.administration-decision-path}). El fixture fija esa ruta en ALLOW explícitamente
+ * (ver {@code startOpaFixture}) sin tocar el default DENY que las pruebas de esta clase siguen
+ * necesitando para la ruta de autorización de negocio.</p>
  */
 @SpringBootTest(classes = PdpApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class AuthorizationHttpTests extends AbstractSurrealDbIntegrationTest {
@@ -43,9 +49,14 @@ class AuthorizationHttpTests extends AbstractSurrealDbIntegrationTest {
     private String prefix;
     private String applicationId;
 
+    private static final String ADMINISTRATION_DECISION_PATH = "/v1/data/security/administration/decision";
+    private static final String ADMINISTRATION_ALLOW_BODY =
+            "{\"result\":{\"effect\":\"ALLOW\",\"reasonCode\":\"POLICY_ALLOWED\",\"policyReferences\":[],\"obligations\":[]}}";
+
     @BeforeAll
     static void startOpaFixture() throws Exception {
         opa = OpaFixtureServer.start();
+        opa.respondWithForPath(ADMINISTRATION_DECISION_PATH, 200, ADMINISTRATION_ALLOW_BODY);
     }
 
     @AfterAll
