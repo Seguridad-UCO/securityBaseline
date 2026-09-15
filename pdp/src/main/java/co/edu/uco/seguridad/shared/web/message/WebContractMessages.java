@@ -136,6 +136,15 @@ public final class WebContractMessages {
         return "El administrador de la aplicación se asignó correctamente";
     }
 
+    // HU-020 — autoservicio de administradores.
+    public static String successApplicationAdministratorRemoved() {
+        return "El administrador de la aplicación se quitó correctamente";
+    }
+
+    public static String successApplicationAdministratorsListed() {
+        return "Los administradores de la aplicación se listaron correctamente";
+    }
+
     private WebContractMessages() {
     }
 }

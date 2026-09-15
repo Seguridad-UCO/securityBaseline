@@ -294,6 +294,23 @@ public final class RequiredArgumentMessages {
     public static final String ROTATE_APPLICATION_CREDENTIAL_INTERACTOR =
             "se requiere el interactor de rotación de credencial de aplicación";
 
+    // HU-020 — autoservicio de administradores.
+    public static final String LAST_ADMINISTRATOR_MUST_NOT_BE_REVOKED_RULE = "se requiere la regla de último administrador";
+    public static final String REMOVE_APPLICATION_ADMINISTRATOR_USE_CASE = "se requiere el caso de uso de remoción de administrador de aplicación";
+    public static final String LIST_APPLICATION_ADMINISTRATORS_USE_CASE = "se requiere el caso de uso de listado de administradores de aplicación";
+    public static final String ADMINISTER_APPLICATION_ADMINISTRATOR_ASSIGNMENT_USE_CASE = "se requiere el caso de uso de administración de alta de administrador";
+    public static final String ADMINISTER_APPLICATION_ADMINISTRATOR_REMOVAL_USE_CASE = "se requiere el caso de uso de administración de remoción de administrador";
+    public static final String ADMINISTER_APPLICATION_ADMINISTRATOR_LIST_USE_CASE = "se requiere el caso de uso de administración de listado de administradores";
+    public static final String ASSIGN_APPLICATION_ADMINISTRATOR_USE_CASE = "se requiere el caso de uso de asignación de administrador de aplicación";
+    public static final String ASSIGN_APPLICATION_ADMINISTRATOR_REQUEST = "se requiere la solicitud de asignación de administrador de aplicación";
+    public static final String REMOVE_APPLICATION_ADMINISTRATOR_REQUEST = "se requiere la solicitud de remoción de administrador de aplicación";
+    public static final String LIST_APPLICATION_ADMINISTRATORS_REQUEST = "se requiere la solicitud de listado de administradores de aplicación";
+
+    // HU-021 — auditoría de operaciones administrativas.
+    public static final String ADMINISTRATION_AUDIT_REPOSITORY = "se requiere el repositorio de auditoría de operaciones administrativas";
+    public static final String ADMINISTRATION_OPERATION = "se requiere la operación administrativa";
+    public static final String ADMINISTRATION_OUTCOME = "se requiere el resultado de la operación administrativa";
+
     private RequiredArgumentMessages() {
     }
 }

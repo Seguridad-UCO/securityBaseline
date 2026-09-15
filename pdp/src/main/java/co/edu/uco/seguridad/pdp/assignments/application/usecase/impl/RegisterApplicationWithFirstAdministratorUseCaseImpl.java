@@ -16,12 +16,11 @@ import reactor.core.publisher.Mono;
 import java.util.Objects;
 
 /**
- * Implementación de {@link RegisterApplicationWithFirstAdministratorUseCase} (HU-015). Pendiente:
- * {@code registerApplication.execute(dto)} → con la aplicación registrada, {@code defineRole.execute}
- * con {@code RoleName("ADMIN")} y {@code RoleScope.ofApplication(dto.application().tenantId(), registered.id())}
- * → {@code assignRole.execute} al {@code dto.registrarUserId()} → devuelve la respuesta de registro
- * original sin modificar. Si el registro falla, no se define ningún rol ni asignación (falla antes
- * del primer paso).
+ * Implementación de {@link RegisterApplicationWithFirstAdministratorUseCase} (HU-015): registra,
+ * define el rol {@code ADMIN} de la aplicación recién creada y lo asigna al registrador. No audita
+ * (HU-021): no tiene gate propio ni {@code AdministrationRequest} disponible — inventar un
+ * {@code subject} sintético para este paso interno de registro no es preferible a simplemente no
+ * auditarlo (ver PLAN-HU-021.md, nota de retrofit).
  */
 public final class RegisterApplicationWithFirstAdministratorUseCaseImpl
         implements RegisterApplicationWithFirstAdministratorUseCase {

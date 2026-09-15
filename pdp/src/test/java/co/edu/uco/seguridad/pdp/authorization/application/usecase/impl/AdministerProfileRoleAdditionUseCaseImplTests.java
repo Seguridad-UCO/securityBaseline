@@ -14,6 +14,10 @@ import co.edu.uco.seguridad.pdp.profiles.application.primaryport.response.Profil
 import co.edu.uco.seguridad.pdp.profiles.application.usecase.AddRoleToProfileUseCase;
 import co.edu.uco.seguridad.pdp.profiles.domain.model.ProfileName;
 import co.edu.uco.seguridad.pdp.roles.domain.model.RoleScope;
+import co.edu.uco.seguridad.shared.audit.AdministrationEvent;
+import co.edu.uco.seguridad.shared.audit.AdministrationOperation;
+import co.edu.uco.seguridad.shared.audit.AdministrationOutcome;
+import co.edu.uco.seguridad.shared.audit.TestAdministrationAuditRepositories;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -43,45 +47,69 @@ class AdministerProfileRoleAdditionUseCaseImplTests {
     private static final AddRoleToProfileRequest ADDITION = new AddRoleToProfileRequest(TENANT, PROFILE, ROLE);
     private static final ProfileResponse RESPONSE = new ProfileResponse(PROFILE, new ProfileName("Docentes de matematicas"),
             RoleScope.ofApplication(TENANT, APPLICATION), Set.of(ROLE), Instant.parse("2026-09-15T00:00:00Z"));
+    private static final UUID FIXED_UUID = UUID.randomUUID();
+    private static final Instant FIXED_INSTANT = Instant.parse("2026-09-15T00:00:00Z");
 
     @Test
-    void adds_the_role_when_the_principal_administers_the_application() {
+    void adds_the_role_when_the_principal_administers_the_application_and_audits_allowed() {
         List<AddRoleToProfileRequest> received = new ArrayList<>();
+        List<AdministrationEvent> audited = new ArrayList<>();
         AdministerProfileRoleAdditionUseCaseImpl useCase = new AdministerProfileRoleAdditionUseCaseImpl(
-                allows(), addRoleCapturing(received));
+                allows(), addRoleCapturing(received), TestAdministrationAuditRepositories.capturing(audited),
+                () -> FIXED_UUID, () -> FIXED_INSTANT);
 
         StepVerifier.create(useCase.execute(new AdministerProfileRoleAdditionRequest(Optional.of(ADMINISTRATION), ADDITION)))
                 .assertNext(response -> assertThat(response).isEqualTo(RESPONSE))
                 .verifyComplete();
         assertThat(received).containsExactly(ADDITION);
+        assertThat(audited).hasSize(1);
+        assertThat(audited.getFirst().operation()).isEqualTo(AdministrationOperation.PROFILE_ROLE_ADDED);
+        assertThat(audited.getFirst().outcome()).isEqualTo(AdministrationOutcome.ALLOWED);
     }
 
     @Test
-    void never_adds_the_role_when_the_principal_does_not_administer_the_application() {
+    void never_adds_the_role_when_the_principal_does_not_administer_the_application_and_audits_denied() {
         AddRoleToProfileUseCase addRoleToProfile = input -> {
             throw new AssertionError("must not reach AddRoleToProfileUseCase");
         };
+        List<AdministrationEvent> audited = new ArrayList<>();
         AdministerProfileRoleAdditionUseCaseImpl useCase = new AdministerProfileRoleAdditionUseCaseImpl(
-                denies(), addRoleToProfile);
+                denies(), addRoleToProfile, TestAdministrationAuditRepositories.capturing(audited), () -> FIXED_UUID,
+                () -> FIXED_INSTANT);
 
         StepVerifier.create(useCase.execute(new AdministerProfileRoleAdditionRequest(Optional.of(ADMINISTRATION), ADDITION)))
                 .expectError(NotAuthorizedToAdministerException.class)
                 .verify();
+        assertThat(audited).hasSize(1);
+        assertThat(audited.getFirst().outcome()).isEqualTo(AdministrationOutcome.DENIED);
     }
 
     @Test
-    void adds_a_role_to_a_tenant_scoped_profile_without_gating_when_administration_is_empty() {
+    void adds_a_role_to_a_tenant_scoped_profile_without_gating_or_auditing_when_administration_is_empty() {
         List<AddRoleToProfileRequest> received = new ArrayList<>();
         PrincipalMustBeApplicationAdministratorValidator neverCalled = request -> {
             throw new AssertionError("must not reach the administration gate");
         };
         AdministerProfileRoleAdditionUseCaseImpl useCase = new AdministerProfileRoleAdditionUseCaseImpl(
-                neverCalled, addRoleCapturing(received));
+                neverCalled, addRoleCapturing(received), TestAdministrationAuditRepositories.unreachable(),
+                () -> FIXED_UUID, () -> FIXED_INSTANT);
 
         StepVerifier.create(useCase.execute(new AdministerProfileRoleAdditionRequest(Optional.empty(), ADDITION)))
                 .assertNext(response -> assertThat(response).isEqualTo(RESPONSE))
                 .verifyComplete();
         assertThat(received).containsExactly(ADDITION);
+    }
+
+    @Test
+    void does_not_block_the_result_when_the_audit_repository_fails() {
+        List<AddRoleToProfileRequest> received = new ArrayList<>();
+        AdministerProfileRoleAdditionUseCaseImpl useCase = new AdministerProfileRoleAdditionUseCaseImpl(
+                allows(), addRoleCapturing(received), TestAdministrationAuditRepositories.failing(), () -> FIXED_UUID,
+                () -> FIXED_INSTANT);
+
+        StepVerifier.create(useCase.execute(new AdministerProfileRoleAdditionRequest(Optional.of(ADMINISTRATION), ADDITION)))
+                .assertNext(response -> assertThat(response).isEqualTo(RESPONSE))
+                .verifyComplete();
     }
 
     private static PrincipalMustBeApplicationAdministratorValidator allows() {

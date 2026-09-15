@@ -14,6 +14,10 @@ import co.edu.uco.seguridad.pdp.roles.application.primaryport.response.RoleRespo
 import co.edu.uco.seguridad.pdp.roles.application.usecase.GrantResourceToRoleUseCase;
 import co.edu.uco.seguridad.pdp.roles.domain.model.RoleName;
 import co.edu.uco.seguridad.pdp.roles.domain.model.RoleScope;
+import co.edu.uco.seguridad.shared.audit.AdministrationEvent;
+import co.edu.uco.seguridad.shared.audit.AdministrationOperation;
+import co.edu.uco.seguridad.shared.audit.AdministrationOutcome;
+import co.edu.uco.seguridad.shared.audit.TestAdministrationAuditRepositories;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -43,44 +47,68 @@ class AdministerResourceGrantUseCaseImplTests {
     private static final GrantResourceRequest GRANT = new GrantResourceRequest(TENANT, ROLE, RESOURCE);
     private static final RoleResponse RESPONSE = new RoleResponse(ROLE, new RoleName("Docente"),
             RoleScope.ofApplication(TENANT, APPLICATION), Set.of(RESOURCE), Instant.parse("2026-09-14T00:00:00Z"));
+    private static final UUID FIXED_UUID = UUID.randomUUID();
+    private static final Instant FIXED_INSTANT = Instant.parse("2026-09-15T00:00:00Z");
 
     @Test
-    void grants_the_resource_when_the_principal_administers_the_application() {
+    void grants_the_resource_when_the_principal_administers_the_application_and_audits_allowed() {
         List<GrantResourceRequest> received = new ArrayList<>();
+        List<AdministrationEvent> audited = new ArrayList<>();
         AdministerResourceGrantUseCaseImpl useCase = new AdministerResourceGrantUseCaseImpl(
-                allows(), grantResourceCapturing(received));
+                allows(), grantResourceCapturing(received), TestAdministrationAuditRepositories.capturing(audited),
+                () -> FIXED_UUID, () -> FIXED_INSTANT);
 
         StepVerifier.create(useCase.execute(new AdministerResourceGrantRequest(Optional.of(ADMINISTRATION), GRANT)))
                 .assertNext(response -> assertThat(response).isEqualTo(RESPONSE))
                 .verifyComplete();
         assertThat(received).containsExactly(GRANT);
+        assertThat(audited).hasSize(1);
+        assertThat(audited.getFirst().operation()).isEqualTo(AdministrationOperation.RESOURCE_GRANTED);
+        assertThat(audited.getFirst().outcome()).isEqualTo(AdministrationOutcome.ALLOWED);
     }
 
     @Test
-    void never_grants_the_resource_when_the_principal_does_not_administer_the_application() {
+    void never_grants_the_resource_when_the_principal_does_not_administer_the_application_and_audits_denied() {
         GrantResourceToRoleUseCase grantResource = input -> {
             throw new AssertionError("must not reach GrantResourceToRoleUseCase");
         };
-        AdministerResourceGrantUseCaseImpl useCase = new AdministerResourceGrantUseCaseImpl(denies(), grantResource);
+        List<AdministrationEvent> audited = new ArrayList<>();
+        AdministerResourceGrantUseCaseImpl useCase = new AdministerResourceGrantUseCaseImpl(denies(), grantResource,
+                TestAdministrationAuditRepositories.capturing(audited), () -> FIXED_UUID, () -> FIXED_INSTANT);
 
         StepVerifier.create(useCase.execute(new AdministerResourceGrantRequest(Optional.of(ADMINISTRATION), GRANT)))
                 .expectError(NotAuthorizedToAdministerException.class)
                 .verify();
+        assertThat(audited).hasSize(1);
+        assertThat(audited.getFirst().outcome()).isEqualTo(AdministrationOutcome.DENIED);
     }
 
     @Test
-    void grants_a_resource_to_a_tenant_scoped_role_without_gating_when_administration_is_empty() {
+    void grants_a_resource_to_a_tenant_scoped_role_without_gating_or_auditing_when_administration_is_empty() {
         List<GrantResourceRequest> received = new ArrayList<>();
         PrincipalMustBeApplicationAdministratorValidator neverCalled = request -> {
             throw new AssertionError("must not reach the administration gate");
         };
         AdministerResourceGrantUseCaseImpl useCase = new AdministerResourceGrantUseCaseImpl(
-                neverCalled, grantResourceCapturing(received));
+                neverCalled, grantResourceCapturing(received), TestAdministrationAuditRepositories.unreachable(),
+                () -> FIXED_UUID, () -> FIXED_INSTANT);
 
         StepVerifier.create(useCase.execute(new AdministerResourceGrantRequest(Optional.empty(), GRANT)))
                 .assertNext(response -> assertThat(response).isEqualTo(RESPONSE))
                 .verifyComplete();
         assertThat(received).containsExactly(GRANT);
+    }
+
+    @Test
+    void does_not_block_the_result_when_the_audit_repository_fails() {
+        List<GrantResourceRequest> received = new ArrayList<>();
+        AdministerResourceGrantUseCaseImpl useCase = new AdministerResourceGrantUseCaseImpl(
+                allows(), grantResourceCapturing(received), TestAdministrationAuditRepositories.failing(),
+                () -> FIXED_UUID, () -> FIXED_INSTANT);
+
+        StepVerifier.create(useCase.execute(new AdministerResourceGrantRequest(Optional.of(ADMINISTRATION), GRANT)))
+                .assertNext(response -> assertThat(response).isEqualTo(RESPONSE))
+                .verifyComplete();
     }
 
     private static PrincipalMustBeApplicationAdministratorValidator allows() {
