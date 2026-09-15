@@ -7,7 +7,7 @@ import java.util.List;
 
 /** Configuración mínima que identifica una aplicación ante el PEP desde el starter embebido. */
 @ConfigurationProperties("security.pep.enforcement")
-public record PepEnforcementProperties(boolean enabled, URI pepUrl, String applicationId, String environment,
+public record PepEnforcementProperties(boolean enabled, URI pepUrl, String applicationName, String environment,
                                        String applicationCredential, List<String> publicPaths,
                                        boolean allowInsecureHttp) {
     public PepEnforcementProperties {
@@ -15,10 +15,10 @@ public record PepEnforcementProperties(boolean enabled, URI pepUrl, String appli
     }
 
     void validate() {
-        if (pepUrl == null || pepUrl.getHost() == null || applicationId == null || applicationId.isBlank()
+        if (pepUrl == null || pepUrl.getHost() == null || applicationName == null || applicationName.isBlank()
                 || environment == null || environment.isBlank() || applicationCredential == null
                 || applicationCredential.isBlank()) {
-            throw new IllegalArgumentException("PEP enforcement requires URL, application id, environment and application credential");
+            throw new IllegalArgumentException("PEP enforcement requires URL, application name, environment and application credential");
         }
         if (!"https".equals(pepUrl.getScheme()) && !(allowInsecureHttp && "http".equals(pepUrl.getScheme()))) {
             throw new IllegalArgumentException("PEP URL must use HTTPS (HTTP only with explicit development setting)");

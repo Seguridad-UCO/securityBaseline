@@ -24,8 +24,8 @@ public final class PdpApplicationCredentialValidationAdapter implements Applicat
     }
 
     @Override
-    public Mono<Void> validate(String applicationId, String secret) {
-        return serviceToken.token().flatMap(token -> client.post().uri("/internal/v1/applications/{applicationId}/credential-validations", applicationId)
+    public Mono<Void> validate(String applicationName, String secret) {
+        return serviceToken.token().flatMap(token -> client.post().uri("/internal/v1/applications/names/{applicationName}/credential-validations", applicationName)
                 .contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
                 .headers(headers -> headers.setBearerAuth(token))
                 .bodyValue(Map.of("secret", secret))
@@ -33,7 +33,7 @@ public final class PdpApplicationCredentialValidationAdapter implements Applicat
                     if (response.statusCode().is2xxSuccessful()) return response.releaseBody();
                     if (response.statusCode().value() == 400) {
                         LOG.atWarn().addKeyValue("event.name", "pep.application-credential.rejected")
-                                .addKeyValue("applicationId", applicationId)
+                                .addKeyValue("applicationName", applicationName)
                                 .addKeyValue("pdp.status", response.statusCode().value())
                                 .log("PDP rechazó la credencial de aplicación");
                         return response.releaseBody().then(Mono.error(new EnforcementFailure(

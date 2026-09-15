@@ -13,15 +13,15 @@ security:
   - userEvidence: []
     pepIdentity: []
 paths:
-  /internal/v1/applications/{applicationId}/credential-validations:
+  /internal/v1/applications/names/{applicationName}/credential-validations:
     post:
       operationId: validateApplicationCredential
       summary: Validate the application credential used for PEP self-registration
       parameters:
         - in: path
-          name: applicationId
+          name: applicationName
           required: true
-          schema: {type: string, format: uuid}
+          schema: {type: string, minLength: 3, maxLength: 100}
       requestBody:
         required: true
         content:

@@ -10,7 +10,7 @@ El cliente real está implementado en el PEP; el simulador vive exclusivamente e
   acepta correlationId solo con caracteres y longitud acotados. No representan identidad ni autorización.
 - El token original va exclusivamente en Authorization. El contrato no contiene tokens, roles o tenants
   aportados por el llamador. Nunca registrar Authorization, cookies, cuerpo de negocio ni query.
-- application.id y environment vienen de configuración confiable del PEP; el PDP verifica que el servicio
+- application.name y environment vienen de configuración confiable del PEP; el PDP verifica que el servicio
   PEP autenticado por mTLS puede evaluar esa aplicación/entorno.
 - resource.path es la ruta relativa exacta que el backend recibirá, sin prefijo público ni query.
   resource.action y context.method son el mismo verbo HTTP en v1.
@@ -47,4 +47,3 @@ El PEP conserva su puerto y cliente; cambian URL y certificados de configuració
 El PDP debe ofrecer GET /actuator/health para readiness del cliente. Esta sonda no evalúa acceso.
 La verificación TLS debe validar CA, vigencia y hostname; el PEP no contiene trust-all.
 HTTP solo se admite cuando allow-insecure-http se configura explícitamente para desarrollo.
-
