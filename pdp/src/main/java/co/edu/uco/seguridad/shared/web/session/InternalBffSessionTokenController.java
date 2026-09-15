@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.shared.web.session;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -11,9 +12,15 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-/** Canal interno PEP→PDP: cambia una sesión BFF por el token del usuario, nunca expuesto al navegador. */
+/**
+ * Canal interno PEP→PDP: cambia una sesión BFF por el token del usuario, nunca expuesto al
+ * navegador. {@code ServerOAuth2AuthorizedClientRepository} solo existe cuando el perfil
+ * {@code keycloak} registra el cliente OAuth2 — mismo guard que {@code KeycloakLoginController}
+ * (sin él, cualquier perfil sin Keycloak activo falla al arrancar el contexto).
+ */
 @RestController
 @RequestMapping("/internal/v1/bff-session-token")
+@Profile("keycloak")
 final class InternalBffSessionTokenController {
     private final ServerOAuth2AuthorizedClientRepository clients;
     InternalBffSessionTokenController(ServerOAuth2AuthorizedClientRepository clients) { this.clients = clients; }
