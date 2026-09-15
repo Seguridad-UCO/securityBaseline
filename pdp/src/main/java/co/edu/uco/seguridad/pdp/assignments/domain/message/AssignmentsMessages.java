@@ -25,6 +25,10 @@ public final class AssignmentsMessages {
         return "No existe la asignación de perfil " + profileAssignmentId + " para este inquilino";
     }
 
+    public static String cannotRemoveLastAdministrator(String applicationId) {
+        return "no se puede quitar al único administrador activo de la aplicación " + applicationId;
+    }
+
     private AssignmentsMessages() {
     }
 }

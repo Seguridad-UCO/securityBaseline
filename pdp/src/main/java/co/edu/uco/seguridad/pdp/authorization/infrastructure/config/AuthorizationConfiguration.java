@@ -4,6 +4,9 @@ import co.edu.uco.seguridad.pdp.applications.application.rule.validator.Applicat
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationOwnerLookupValidator;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RemoveApplicationUseCase;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RotateApplicationCredentialUseCase;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.AssignApplicationAdministratorUseCase;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.ListApplicationAdministratorsUseCase;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.RemoveApplicationAdministratorUseCase;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.ResolveActiveRolesUseCase;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerRoleDefinitionUseCase;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerResourceGrantUseCase;
@@ -22,6 +25,7 @@ import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.Princip
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.impl.ActiveRoleNamesLookupValidatorImpl;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.impl.PrincipalMustBeApplicationAdministratorValidatorImpl;
 import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.AccessAuditRepository;
+import co.edu.uco.seguridad.shared.audit.AdministrationAuditRepository;
 import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.AdministrationDecisionPort;
 import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.PolicyDecisionPort;
 import co.edu.uco.seguridad.pdp.authorization.application.service.AuthorizationContextResolver;
@@ -45,8 +49,10 @@ import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.AuthorizeInteractorImpl;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.InternalAccessDecisionInteractorImpl;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.persistence.repository.SurrealAccessAuditRepository;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.persistence.repository.SurrealAdministrationAuditRepository;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.persistence.schema.SurrealAccessEventSchemaInitializer;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.observability.ObservedAccessAuditRepository;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.observability.ObservedAdministrationAuditRepository;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.OpaPolicyDecisionAdapter;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.OpaAdministrationDecisionAdapter;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.properties.OpaProperties;
@@ -90,6 +96,18 @@ import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.AdministerProfileRoleAdditionInteractorImpl;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.AdministerProfileAssignmentCreationInteractorImpl;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.AdministerProfileAssignmentRevocationInteractorImpl;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerApplicationAdministratorAssignmentUseCase;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerApplicationAdministratorRemovalUseCase;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerApplicationAdministratorListUseCase;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.impl.AdministerApplicationAdministratorAssignmentUseCaseImpl;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.impl.AdministerApplicationAdministratorRemovalUseCaseImpl;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.impl.AdministerApplicationAdministratorListUseCaseImpl;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.AdministerApplicationAdministratorAssignmentInteractor;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.AdministerApplicationAdministratorRemovalInteractor;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.AdministerApplicationAdministratorListInteractor;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.AdministerApplicationAdministratorAssignmentInteractorImpl;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.AdministerApplicationAdministratorRemovalInteractorImpl;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.AdministerApplicationAdministratorListInteractorImpl;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileApplicationLookupValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.usecase.AddRoleToProfileUseCase;
 import co.edu.uco.seguridad.pdp.profiles.application.usecase.DefineProfileUseCase;
@@ -130,6 +148,12 @@ public class AuthorizationConfiguration {
     @Bean
     AccessAuditRepository accessAuditRepository(SurrealDbClient client, MeterRegistry metrics) {
         return new ObservedAccessAuditRepository(new SurrealAccessAuditRepository(client), metrics);
+    }
+
+    // HU-021 — auditoría de operaciones administrativas.
+    @Bean
+    AdministrationAuditRepository administrationAuditRepository(SurrealDbClient client, MeterRegistry metrics) {
+        return new ObservedAdministrationAuditRepository(new SurrealAdministrationAuditRepository(client), metrics);
     }
 
     @Bean
@@ -198,8 +222,9 @@ public class AuthorizationConfiguration {
     // que ya depende de ella (ver PLAN-HU-015.md §0).
     @Bean
     AdministerApplicationRemovalUseCase administerApplicationRemovalUseCase(
-            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator, RemoveApplicationUseCase removeApplication) {
-        return new AdministerApplicationRemovalUseCaseImpl(mustBeAdministrator, removeApplication);
+            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator, RemoveApplicationUseCase removeApplication,
+            AdministrationAuditRepository audit, IdentifierGenerator identifiers, TimeProvider time) {
+        return new AdministerApplicationRemovalUseCaseImpl(mustBeAdministrator, removeApplication, audit, identifiers, time);
     }
 
     @Bean
@@ -214,8 +239,10 @@ public class AuthorizationConfiguration {
     @Bean
     AdministerApplicationCredentialRotationUseCase administerApplicationCredentialRotationUseCase(
             PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator,
-            RotateApplicationCredentialUseCase rotateCredential) {
-        return new AdministerApplicationCredentialRotationUseCaseImpl(mustBeAdministrator, rotateCredential);
+            RotateApplicationCredentialUseCase rotateCredential, AdministrationAuditRepository audit,
+            IdentifierGenerator identifiers, TimeProvider time) {
+        return new AdministerApplicationCredentialRotationUseCaseImpl(mustBeAdministrator, rotateCredential, audit,
+                identifiers, time);
     }
 
     @Bean
@@ -230,8 +257,9 @@ public class AuthorizationConfiguration {
     // del implementador (PLAN-HU-016.md §8) — de momento estos beans no quedan enrutados.
     @Bean
     AdministerRoleDefinitionUseCase administerRoleDefinitionUseCase(
-            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator, DefineRoleUseCase defineRole) {
-        return new AdministerRoleDefinitionUseCaseImpl(mustBeAdministrator, defineRole);
+            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator, DefineRoleUseCase defineRole,
+            AdministrationAuditRepository audit, IdentifierGenerator identifiers, TimeProvider time) {
+        return new AdministerRoleDefinitionUseCaseImpl(mustBeAdministrator, defineRole, audit, identifiers, time);
     }
 
     @Bean
@@ -242,8 +270,9 @@ public class AuthorizationConfiguration {
 
     @Bean
     AdministerResourceGrantUseCase administerResourceGrantUseCase(
-            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator, GrantResourceToRoleUseCase grantResource) {
-        return new AdministerResourceGrantUseCaseImpl(mustBeAdministrator, grantResource);
+            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator, GrantResourceToRoleUseCase grantResource,
+            AdministrationAuditRepository audit, IdentifierGenerator identifiers, TimeProvider time) {
+        return new AdministerResourceGrantUseCaseImpl(mustBeAdministrator, grantResource, audit, identifiers, time);
     }
 
     @Bean
@@ -259,8 +288,9 @@ public class AuthorizationConfiguration {
     @Bean
     AdministerResourceRegistrationUseCase administerResourceRegistrationUseCase(
             PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator,
-            RegisterProtectedResourceUseCase registerResource) {
-        return new AdministerResourceRegistrationUseCaseImpl(mustBeAdministrator, registerResource);
+            RegisterProtectedResourceUseCase registerResource, AdministrationAuditRepository audit,
+            IdentifierGenerator identifiers, TimeProvider time) {
+        return new AdministerResourceRegistrationUseCaseImpl(mustBeAdministrator, registerResource, audit, identifiers, time);
     }
 
     @Bean
@@ -275,8 +305,9 @@ public class AuthorizationConfiguration {
     // momento estos beans no quedan enrutados.
     @Bean
     AdministerAssignmentCreationUseCase administerAssignmentCreationUseCase(
-            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator, AssignRoleUseCase assignRole) {
-        return new AdministerAssignmentCreationUseCaseImpl(mustBeAdministrator, assignRole);
+            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator, AssignRoleUseCase assignRole,
+            AdministrationAuditRepository audit, IdentifierGenerator identifiers, TimeProvider time) {
+        return new AdministerAssignmentCreationUseCaseImpl(mustBeAdministrator, assignRole, audit, identifiers, time);
     }
 
     @Bean
@@ -287,8 +318,9 @@ public class AuthorizationConfiguration {
 
     @Bean
     AdministerAssignmentRevocationUseCase administerAssignmentRevocationUseCase(
-            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator, RevokeAssignmentUseCase revokeAssignment) {
-        return new AdministerAssignmentRevocationUseCaseImpl(mustBeAdministrator, revokeAssignment);
+            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator, RevokeAssignmentUseCase revokeAssignment,
+            AdministrationAuditRepository audit, IdentifierGenerator identifiers, TimeProvider time) {
+        return new AdministerAssignmentRevocationUseCaseImpl(mustBeAdministrator, revokeAssignment, audit, identifiers, time);
     }
 
     @Bean
@@ -306,8 +338,9 @@ public class AuthorizationConfiguration {
     // de momento estos beans no quedan enrutados.
     @Bean
     AdministerProfileDefinitionUseCase administerProfileDefinitionUseCase(
-            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator, DefineProfileUseCase defineProfile) {
-        return new AdministerProfileDefinitionUseCaseImpl(mustBeAdministrator, defineProfile);
+            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator, DefineProfileUseCase defineProfile,
+            AdministrationAuditRepository audit, IdentifierGenerator identifiers, TimeProvider time) {
+        return new AdministerProfileDefinitionUseCaseImpl(mustBeAdministrator, defineProfile, audit, identifiers, time);
     }
 
     @Bean
@@ -318,8 +351,9 @@ public class AuthorizationConfiguration {
 
     @Bean
     AdministerProfileRoleAdditionUseCase administerProfileRoleAdditionUseCase(
-            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator, AddRoleToProfileUseCase addRoleToProfile) {
-        return new AdministerProfileRoleAdditionUseCaseImpl(mustBeAdministrator, addRoleToProfile);
+            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator, AddRoleToProfileUseCase addRoleToProfile,
+            AdministrationAuditRepository audit, IdentifierGenerator identifiers, TimeProvider time) {
+        return new AdministerProfileRoleAdditionUseCaseImpl(mustBeAdministrator, addRoleToProfile, audit, identifiers, time);
     }
 
     @Bean
@@ -331,8 +365,9 @@ public class AuthorizationConfiguration {
 
     @Bean
     AdministerProfileAssignmentCreationUseCase administerProfileAssignmentCreationUseCase(
-            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator, AssignProfileUseCase assignProfile) {
-        return new AdministerProfileAssignmentCreationUseCaseImpl(mustBeAdministrator, assignProfile);
+            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator, AssignProfileUseCase assignProfile,
+            AdministrationAuditRepository audit, IdentifierGenerator identifiers, TimeProvider time) {
+        return new AdministerProfileAssignmentCreationUseCaseImpl(mustBeAdministrator, assignProfile, audit, identifiers, time);
     }
 
     @Bean
@@ -344,8 +379,10 @@ public class AuthorizationConfiguration {
     @Bean
     AdministerProfileAssignmentRevocationUseCase administerProfileAssignmentRevocationUseCase(
             PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator,
-            RevokeProfileAssignmentUseCase revokeProfileAssignment) {
-        return new AdministerProfileAssignmentRevocationUseCaseImpl(mustBeAdministrator, revokeProfileAssignment);
+            RevokeProfileAssignmentUseCase revokeProfileAssignment, AdministrationAuditRepository audit,
+            IdentifierGenerator identifiers, TimeProvider time) {
+        return new AdministerProfileAssignmentRevocationUseCaseImpl(mustBeAdministrator, revokeProfileAssignment, audit,
+                identifiers, time);
     }
 
     @Bean
@@ -354,5 +391,52 @@ public class AuthorizationConfiguration {
             ProfileAssignmentApplicationLookupValidator profileAssignmentApplicationLookup) {
         return new AdministerProfileAssignmentRevocationInteractorImpl(useCase, subjectUserIdLookup,
                 profileAssignmentApplicationLookup);
+    }
+
+    // HU-020 — autoservicio de administradores.
+    @Bean
+    AdministerApplicationAdministratorAssignmentUseCase administerApplicationAdministratorAssignmentUseCase(
+            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator,
+            AssignApplicationAdministratorUseCase assignApplicationAdministrator, AdministrationAuditRepository audit,
+            IdentifierGenerator identifiers, TimeProvider time) {
+        return new AdministerApplicationAdministratorAssignmentUseCaseImpl(mustBeAdministrator,
+                assignApplicationAdministrator, audit, identifiers, time);
+    }
+
+    @Bean
+    AdministerApplicationAdministratorRemovalUseCase administerApplicationAdministratorRemovalUseCase(
+            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator,
+            RemoveApplicationAdministratorUseCase removeApplicationAdministrator, AdministrationAuditRepository audit,
+            IdentifierGenerator identifiers, TimeProvider time) {
+        return new AdministerApplicationAdministratorRemovalUseCaseImpl(mustBeAdministrator,
+                removeApplicationAdministrator, audit, identifiers, time);
+    }
+
+    @Bean
+    AdministerApplicationAdministratorListUseCase administerApplicationAdministratorListUseCase(
+            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator,
+            ListApplicationAdministratorsUseCase listApplicationAdministrators) {
+        return new AdministerApplicationAdministratorListUseCaseImpl(mustBeAdministrator, listApplicationAdministrators);
+    }
+
+    @Bean
+    AdministerApplicationAdministratorAssignmentInteractor administerApplicationAdministratorAssignmentInteractor(
+            ApplicationOwnerLookupValidator ownerLookup, SubjectUserIdLookupValidator subjectUserIdLookup,
+            AdministerApplicationAdministratorAssignmentUseCase useCase) {
+        return new AdministerApplicationAdministratorAssignmentInteractorImpl(ownerLookup, subjectUserIdLookup, useCase);
+    }
+
+    @Bean
+    AdministerApplicationAdministratorRemovalInteractor administerApplicationAdministratorRemovalInteractor(
+            ApplicationOwnerLookupValidator ownerLookup, SubjectUserIdLookupValidator subjectUserIdLookup,
+            AdministerApplicationAdministratorRemovalUseCase useCase) {
+        return new AdministerApplicationAdministratorRemovalInteractorImpl(ownerLookup, subjectUserIdLookup, useCase);
+    }
+
+    @Bean
+    AdministerApplicationAdministratorListInteractor administerApplicationAdministratorListInteractor(
+            ApplicationOwnerLookupValidator ownerLookup, SubjectUserIdLookupValidator subjectUserIdLookup,
+            AdministerApplicationAdministratorListUseCase useCase) {
+        return new AdministerApplicationAdministratorListInteractorImpl(ownerLookup, subjectUserIdLookup, useCase);
     }
 }

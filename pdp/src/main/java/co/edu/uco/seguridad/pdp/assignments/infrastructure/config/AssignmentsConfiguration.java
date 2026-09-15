@@ -20,8 +20,10 @@ import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.AssignApplicationAdministratorUseCase;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.AssignProfileUseCase;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.AssignRoleUseCase;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.ListApplicationAdministratorsUseCase;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.ListAssignmentsUseCase;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.RegisterApplicationWithFirstAdministratorUseCase;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.RemoveApplicationAdministratorUseCase;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.ResolveActiveRolesUseCase;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.ResolveAuthorizationSubjectFactsUseCase;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.RevokeAssignmentUseCase;
@@ -29,18 +31,22 @@ import co.edu.uco.seguridad.pdp.assignments.application.usecase.RevokeProfileAss
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.AssignApplicationAdministratorUseCaseImpl;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.AssignProfileUseCaseImpl;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.AssignRoleUseCaseImpl;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.ListApplicationAdministratorsUseCaseImpl;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.ListAssignmentsUseCaseImpl;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.RegisterApplicationWithFirstAdministratorUseCaseImpl;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.RemoveApplicationAdministratorUseCaseImpl;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.ResolveActiveRolesUseCaseImpl;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.ResolveAuthorizationSubjectFactsUseCaseImpl;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.RevokeAssignmentUseCaseImpl;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.RevokeProfileAssignmentUseCaseImpl;
 import co.edu.uco.seguridad.pdp.assignments.domain.rule.AssignmentMustExistForTenantRule;
 import co.edu.uco.seguridad.pdp.assignments.domain.rule.AssignmentMustNotDuplicateActiveRule;
+import co.edu.uco.seguridad.pdp.assignments.domain.rule.LastAdministratorMustNotBeRevokedRule;
 import co.edu.uco.seguridad.pdp.assignments.domain.rule.ProfileAssignmentMustExistForTenantRule;
 import co.edu.uco.seguridad.pdp.assignments.domain.rule.ProfileAssignmentMustNotDuplicateActiveRule;
 import co.edu.uco.seguridad.pdp.assignments.domain.rule.impl.AssignmentMustExistForTenantRuleImpl;
 import co.edu.uco.seguridad.pdp.assignments.domain.rule.impl.AssignmentMustNotDuplicateActiveRuleImpl;
+import co.edu.uco.seguridad.pdp.assignments.domain.rule.impl.LastAdministratorMustNotBeRevokedRuleImpl;
 import co.edu.uco.seguridad.pdp.assignments.domain.rule.impl.ProfileAssignmentMustExistForTenantRuleImpl;
 import co.edu.uco.seguridad.pdp.assignments.domain.rule.impl.ProfileAssignmentMustNotDuplicateActiveRuleImpl;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.interactor.AssignApplicationAdministratorInteractor;
@@ -229,5 +235,27 @@ public class AssignmentsConfiguration {
     AssignApplicationAdministratorInteractor assignApplicationAdministratorInteractor(
             ApplicationOwnerLookupValidator ownerLookup, AssignApplicationAdministratorUseCase useCase) {
         return new AssignApplicationAdministratorInteractorImpl(ownerLookup, useCase);
+    }
+
+    // HU-020 — autoservicio de administradores. Beans sin cablear a un controller todavía (FASE 5
+    // del planificador): el adaptador web queda para 2-tester-spec, igual que en HU-018/HU-019.
+    @Bean
+    LastAdministratorMustNotBeRevokedRule lastAdministratorMustNotBeRevokedRule() {
+        return new LastAdministratorMustNotBeRevokedRuleImpl();
+    }
+
+    @Bean
+    RemoveApplicationAdministratorUseCase removeApplicationAdministratorUseCase(
+            RoleLookupByNameInScopeValidator roleLookup, AssignmentRepository repository,
+            LastAdministratorMustNotBeRevokedRule mustNotBeLastAdministrator, RevokeAssignmentUseCase revokeAssignment,
+            TimeProvider time) {
+        return new RemoveApplicationAdministratorUseCaseImpl(roleLookup, repository, mustNotBeLastAdministrator,
+                revokeAssignment, time);
+    }
+
+    @Bean
+    ListApplicationAdministratorsUseCase listApplicationAdministratorsUseCase(
+            RoleLookupByNameInScopeValidator roleLookup, AssignmentRepository repository, TimeProvider time) {
+        return new ListApplicationAdministratorsUseCaseImpl(roleLookup, repository, time);
     }
 }
