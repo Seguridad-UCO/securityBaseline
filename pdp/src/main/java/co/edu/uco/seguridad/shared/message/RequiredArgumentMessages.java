@@ -261,6 +261,9 @@ public final class RequiredArgumentMessages {
             "se requiere la regla de no duplicidad de asignación de perfil activa";
     public static final String PROFILE_ASSIGNMENT_EXISTS_RULE = "se requiere la regla de existencia de asignación de perfil";
     public static final String PROFILE_ASSIGNMENT_APPLICATION_LOOKUP_VALIDATOR = "se requiere el validador de aplicación de la asignación de perfil";
+    public static final String PROFILE_ASSIGNMENT_CRITERIA = "se requiere el criterio de consulta de asignaciones de perfil";
+    public static final String LIST_PROFILE_ASSIGNMENTS_USE_CASE = "se requiere el caso de uso de consulta de asignaciones de perfil";
+    public static final String LIST_PROFILE_ASSIGNMENTS_INTERACTOR = "se requiere el interactor de consulta de asignaciones de perfil";
     public static final String ADMINISTER_PROFILE_ASSIGNMENT_CREATION_USE_CASE = "se requiere el caso de uso de administración de asignación de perfil";
     public static final String ADMINISTER_PROFILE_ASSIGNMENT_REVOCATION_USE_CASE = "se requiere el caso de uso de administración de revocación de asignación de perfil";
     public static final String ASSIGN_PROFILE_RULES_VALIDATOR = "se requiere el validador de asignación de perfil";

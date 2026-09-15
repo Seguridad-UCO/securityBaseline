@@ -93,6 +93,10 @@ public final class WebContractMessages {
         return "Asignación de perfil revocada";
     }
 
+    public static String successProfileAssignmentsListed() {
+        return "Asignaciones del perfil consultadas";
+    }
+
     public static String mustBeInteger() {
         return "debe ser un número entero";
     }

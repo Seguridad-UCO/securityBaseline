@@ -6,10 +6,13 @@ import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.RevokePro
 import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository.ProfileAssignmentRepository;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.RevokeAssignmentUseCase;
 import co.edu.uco.seguridad.pdp.assignments.domain.ProfileAssignment;
+import co.edu.uco.seguridad.pdp.assignments.domain.ProfileAssignmentCriteria;
 import co.edu.uco.seguridad.pdp.assignments.domain.model.AssignmentId;
 import co.edu.uco.seguridad.pdp.assignments.domain.model.ProfileAssignmentId;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
+import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
 import co.edu.uco.seguridad.pdp.commons.model.ProfileId;
+import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import org.junit.jupiter.api.Test;
@@ -87,6 +90,11 @@ class RevokeProfileAssignmentUseCaseImplTests {
             }
 
             @Override
+            public Mono<ResultPage<ProfileAssignment>> findBy(ProfileAssignmentCriteria criteria, PageWindow window) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public Mono<ProfileAssignment> save(ProfileAssignment profileAssignment) {
                 saved.add(profileAssignment);
                 return Mono.just(profileAssignment);
@@ -104,6 +112,11 @@ class RevokeProfileAssignmentUseCaseImplTests {
 
             @Override
             public Mono<ProfileAssignment> findByIdForTenant(ProfileAssignmentId profileAssignmentId, TenantId tenantId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<ResultPage<ProfileAssignment>> findBy(ProfileAssignmentCriteria criteria, PageWindow window) {
                 throw new UnsupportedOperationException();
             }
 

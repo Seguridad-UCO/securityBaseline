@@ -22,6 +22,7 @@ import co.edu.uco.seguridad.pdp.assignments.application.usecase.AssignProfileUse
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.AssignRoleUseCase;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.ListApplicationAdministratorsUseCase;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.ListAssignmentsUseCase;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.ListProfileAssignmentsUseCase;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.RegisterApplicationWithFirstAdministratorUseCase;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.RemoveApplicationAdministratorUseCase;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.ResolveActiveRolesUseCase;
@@ -33,6 +34,7 @@ import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.AssignProfi
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.AssignRoleUseCaseImpl;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.ListApplicationAdministratorsUseCaseImpl;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.ListAssignmentsUseCaseImpl;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.ListProfileAssignmentsUseCaseImpl;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.RegisterApplicationWithFirstAdministratorUseCaseImpl;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.RemoveApplicationAdministratorUseCaseImpl;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.ResolveActiveRolesUseCaseImpl;
@@ -51,9 +53,11 @@ import co.edu.uco.seguridad.pdp.assignments.domain.rule.impl.ProfileAssignmentMu
 import co.edu.uco.seguridad.pdp.assignments.domain.rule.impl.ProfileAssignmentMustNotDuplicateActiveRuleImpl;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.interactor.AssignApplicationAdministratorInteractor;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.interactor.ListAssignmentsInteractor;
+import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.interactor.ListProfileAssignmentsInteractor;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.interactor.RegisterApplicationWithFirstAdministratorInteractor;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.interactor.impl.AssignApplicationAdministratorInteractorImpl;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.interactor.impl.ListAssignmentsInteractorImpl;
+import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.interactor.impl.ListProfileAssignmentsInteractorImpl;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.interactor.impl.RegisterApplicationWithFirstAdministratorInteractorImpl;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.repository.SurrealAssignmentRepository;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.repository.SurrealProfileAssignmentRepository;
@@ -208,6 +212,18 @@ public class AssignmentsConfiguration {
     RevokeProfileAssignmentUseCase revokeProfileAssignmentUseCase(RevokeProfileAssignmentRulesValidator rules,
             RevokeAssignmentUseCase revokeAssignmentUseCase, ProfileAssignmentRepository repository, TimeProvider time) {
         return new RevokeProfileAssignmentUseCaseImpl(rules, revokeAssignmentUseCase, repository, time);
+    }
+
+    // Consulta de asignaciones de perfil: no existía ningún GET (el frontend las guardaba solo en
+    // memoria de sesión del navegador) — mismo patrón que ListAssignmentsUseCase/Interactor.
+    @Bean
+    ListProfileAssignmentsUseCase listProfileAssignmentsUseCase(ProfileAssignmentRepository repository) {
+        return new ListProfileAssignmentsUseCaseImpl(repository);
+    }
+
+    @Bean
+    ListProfileAssignmentsInteractor listProfileAssignmentsInteractor(ListProfileAssignmentsUseCase useCase) {
+        return new ListProfileAssignmentsInteractorImpl(useCase);
     }
 
     // HU-015 — administración del catálogo de aplicaciones: alta del primer administrador y backfill
