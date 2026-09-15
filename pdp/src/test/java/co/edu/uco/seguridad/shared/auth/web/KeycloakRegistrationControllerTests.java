@@ -2,6 +2,8 @@ package co.edu.uco.seguridad.shared.auth.web;
 
 import co.edu.uco.seguridad.shared.auth.service.OidcAuthorizationFlowService;
 import co.edu.uco.seguridad.shared.auth.service.OidcFlowStateService;
+import co.edu.uco.seguridad.shared.auth.service.OidcReturnTargetPolicy;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
@@ -20,7 +22,7 @@ class KeycloakRegistrationControllerTests {
     void delegates_to_the_authorization_flow_service_in_registration_mode() {
         var controller = new KeycloakRegistrationController(new OidcAuthorizationFlowService(
                 clientRegistrations(), new WebSessionOAuth2ServerAuthorizationRequestRepository(),
-                new OidcFlowStateService()));
+                new OidcFlowStateService(), new OidcReturnTargetPolicy(List.of())));
         var exchange = MockServerWebExchange.from(
                 MockServerHttpRequest.get("/oauth2/authorization/keycloak/register").build());
 

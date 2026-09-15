@@ -54,6 +54,22 @@ class OidcAuthenticationSuccessHandlerTests {
     }
 
     @Test
+    void login_flow_returns_to_the_allowed_application_saved_in_the_flow() {
+        OidcFlowStateService flowState = new OidcFlowStateService();
+        OidcAuthenticationSuccessHandler handler = new OidcAuthenticationSuccessHandler(provisioner(new AtomicReference<>()),
+                flowState, new OidcRedirectPolicy("http://localhost:5173"), new KeycloakOidcSessionService(clientRegistrations()));
+        MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/login/oauth2/code/keycloak").build());
+        var session = exchange.getSession().block();
+        session.getAttributes().put(OidcFlowStateService.FLOW_INTENT_ATTRIBUTE, OidcFlowIntent.LOGIN.name());
+        session.getAttributes().put(OidcFlowStateService.RETURN_TARGET_ATTRIBUTE, "http://localhost:5174/grades");
+
+        handler.onAuthenticationSuccess(webFilterExchange(exchange), new TestingAuthenticationToken(oidcUser(), null)).block();
+
+        assertThat(exchange.getResponse().getHeaders().getLocation()).hasToString("http://localhost:5174/grades");
+        assertThat((Object) session.getAttribute(OidcFlowStateService.RETURN_TARGET_ATTRIBUTE)).isNull();
+    }
+
+    @Test
     void registration_flow_invalidates_the_session_and_restarts_at_login() {
         OidcFlowStateService flowState = new OidcFlowStateService();
         OidcAuthenticationSuccessHandler handler = new OidcAuthenticationSuccessHandler(provisioner(new AtomicReference<>()),

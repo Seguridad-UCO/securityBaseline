@@ -47,10 +47,12 @@ public final class OidcAuthenticationSuccessHandler implements ServerAuthenticat
         return flowState.current(exchange.getExchange())
                 .flatMap(intent -> intent == OidcFlowIntent.REGISTER
                         ? restartAtKeycloakLogin(exchange.getExchange(), oidcUser.getIdToken().getTokenValue())
-                        : startLocalSession(exchange.getExchange(), oidcUser));
+                        : flowState.returnTarget(exchange.getExchange())
+                                .defaultIfEmpty(redirectPolicy.frontendHome())
+                                .flatMap(returnTarget -> startLocalSession(exchange.getExchange(), oidcUser, returnTarget)));
     }
 
-    private Mono<Void> startLocalSession(ServerWebExchange exchange, OidcUser oidc) {
+    private Mono<Void> startLocalSession(ServerWebExchange exchange, OidcUser oidc, String returnTarget) {
         String email = oidc.getEmail();
         if (email == null || email.isBlank()) {
             return Mono.error(new IllegalArgumentException("Keycloak no entregó un correo verificable."));
@@ -62,7 +64,7 @@ public final class OidcAuthenticationSuccessHandler implements ServerAuthenticat
         return provisionIdentity.execute(request)
                 .flatMap(localUser -> saveLocalSession(exchange, localUser, oidc.getIdToken().getTokenValue()))
                 .then(flowState.clear(exchange))
-                .then(redirect(exchange, redirectPolicy.frontendHome()));
+                .then(redirect(exchange, returnTarget));
     }
 
     private Mono<Void> restartAtKeycloakLogin(ServerWebExchange exchange, String idToken) {

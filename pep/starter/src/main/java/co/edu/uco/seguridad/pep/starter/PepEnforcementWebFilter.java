@@ -10,6 +10,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
+import org.springframework.web.cors.reactive.CorsUtils;
 import org.springframework.web.util.pattern.PathPattern;
 import org.springframework.web.util.pattern.PathPatternParser;
 import reactor.core.publisher.Mono;
@@ -23,7 +24,9 @@ import java.util.UUID;
  * Filtro fail-closed instalado dentro de la aplicación protegida. Si el PEP, PDP o una política no
  * puede confirmar un ALLOW, la ruta no llega al handler de negocio.
  */
-@Order(Ordered.HIGHEST_PRECEDENCE)
+// Deja que CorsWebFilter (HIGHEST_PRECEDENCE) resuelva el preflight y agregue los encabezados
+// incluso cuando esta capa vaya a responder 401/403.
+@Order(Ordered.HIGHEST_PRECEDENCE + 100)
 final class PepEnforcementWebFilter implements WebFilter {
     private final PepEnforcementProperties properties;
     private final WebClient client;
@@ -38,13 +41,16 @@ final class PepEnforcementWebFilter implements WebFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+        if (CorsUtils.isPreFlightRequest(exchange.getRequest())) return chain.filter(exchange);
         if (publicPaths.stream().anyMatch(pattern -> pattern.matches(exchange.getRequest().getPath()))) {
             return chain.filter(exchange);
         }
         String authorization = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-        if (exchange.getRequest().getHeaders().getOrEmpty(HttpHeaders.AUTHORIZATION).size() != 1
-                || authorization == null || !authorization.startsWith("Bearer ") || authorization.length() == 7
-                || authorization.substring(7).isBlank()) {
+        String session = exchange.getRequest().getHeaders().getFirst(HttpHeaders.COOKIE);
+        boolean bearer = exchange.getRequest().getHeaders().getOrEmpty(HttpHeaders.AUTHORIZATION).size() == 1
+                && authorization != null && authorization.startsWith("Bearer ") && authorization.length() > 7
+                && !authorization.substring(7).isBlank();
+        if (!bearer && (session == null || !session.contains("SECURITY_BASELINE_SESSION="))) {
             return write(exchange, HttpStatus.UNAUTHORIZED, "TOKEN_INVALID");
         }
         String requestId = UUID.randomUUID().toString();
@@ -54,7 +60,8 @@ final class PepEnforcementWebFilter implements WebFilter {
         return client.post().uri("/internal/v1/embedded-access-decisions")
                 .contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
                 .headers(headers -> {
-                    headers.set(HttpHeaders.AUTHORIZATION, authorization);
+                    if (bearer) headers.set(HttpHeaders.AUTHORIZATION, authorization);
+                    if (session != null) headers.set(HttpHeaders.COOKIE, session);
                     headers.set("X-Application-Credential", properties.applicationCredential());
                     headers.set("X-Request-Id", requestId);
                     headers.set("X-Correlation-Id", finalCorrelationId);

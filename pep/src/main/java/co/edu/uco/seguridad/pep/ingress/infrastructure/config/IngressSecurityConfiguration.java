@@ -80,7 +80,7 @@ class IngressSecurityConfiguration {
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"));
                     config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Correlation-Id", "traceparent", "tracestate"));
                     config.setExposedHeaders(List.of("X-Request-Id", "X-Correlation-Id", "X-Decision-Id"));
-                    config.setAllowCredentials(false);
+                    config.setAllowCredentials(true);
                     config.setMaxAge(600L);
                     return config;
                 }))
@@ -90,6 +90,7 @@ class IngressSecurityConfiguration {
                         // El endpoint embebido valida por separado la credencial de la aplicación y delega
                         // la validación del Bearer al PDP. No puede usar RouteResolver: no es un proxy.
                         .pathMatchers(HttpMethod.POST, "/internal/v1/embedded-access-decisions").permitAll()
+                        .pathMatchers("/apps/**").permitAll()
                         .pathMatchers("/actuator/**").denyAll()
                         .anyExchange().access((authentication, context) -> authentication
                                 .<org.springframework.security.authorization.AuthorizationResult>map(auth -> {
