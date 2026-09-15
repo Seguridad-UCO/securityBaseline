@@ -3,8 +3,8 @@
 > Generado por `.claude/tools/mapa.ps1`. **No editar a mano** - se regenera desde el codigo.
 > Es el nivel 0 del grafo de conocimiento: responde "que existe y donde va lo nuevo".
 
-- Clases de produccion: **692**
-- Clases de prueba: **224**
+- Clases de produccion: **704**
+- Clases de prueba: **230**
 - Slices de negocio: **9** (applications, assignments, authorization, commons, identity, profiles, resources, roles, tenants)
 
 ---
@@ -42,7 +42,7 @@
 | Cableado (@Bean) | `ApplicationsConfiguration` |
 | Propiedades | `ApplicationCatalogProperties` |
 
-### `assignments` - 111 clases
+### `assignments` - 121 clases
 
 | Rol | Clases |
 |---|---|
@@ -52,20 +52,20 @@
 | Regla de dominio (impl) | `AssignmentMustExistForTenantRuleImpl`, `AssignmentMustNotDuplicateActiveRuleImpl`, `LastAdministratorMustNotBeRevokedRuleImpl`, `ProfileAssignmentMustExistForTenantRuleImpl`, `ProfileAssignmentMustNotDuplicateActiveRuleImpl` |
 | Dato de regla (hecho resuelto) | `ActiveAssignmentAvailability`, `ActiveProfileAssignmentAvailability`, `AdministratorRevocationEligibility`, `AssignmentExistence`, `ProfileAssignmentExistence` |
 | Regla de dominio (contrato) | `AssignmentMustExistForTenantRule`, `AssignmentMustNotDuplicateActiveRule`, `LastAdministratorMustNotBeRevokedRule`, `ProfileAssignmentMustExistForTenantRule`, `ProfileAssignmentMustNotDuplicateActiveRule` |
-| Dominio (agregado / criteria) | `Assignment`, `AssignmentCriteria`, `ProfileAssignment` |
-| Caso de uso (impl) | `AssignApplicationAdministratorUseCaseImpl`, `AssignProfileUseCaseImpl`, `AssignRoleUseCaseImpl`, `ListApplicationAdministratorsUseCaseImpl`, `ListAssignmentsUseCaseImpl`, `RegisterApplicationWithFirstAdministratorUseCaseImpl`, `RemoveApplicationAdministratorUseCaseImpl`, `ResolveActiveRolesUseCaseImpl`, `ResolveAuthorizationSubjectFactsUseCaseImpl`, `RevokeAssignmentUseCaseImpl`, `RevokeProfileAssignmentUseCaseImpl` |
-| Caso de uso (contrato) | `AssignApplicationAdministratorUseCase`, `AssignProfileUseCase`, `AssignRoleUseCase`, `ListApplicationAdministratorsUseCase`, `ListAssignmentsUseCase`, `RegisterApplicationWithFirstAdministratorUseCase`, `RemoveApplicationAdministratorUseCase`, `ResolveActiveRolesUseCase`, `ResolveAuthorizationSubjectFactsUseCase`, `RevokeAssignmentUseCase`, `RevokeProfileAssignmentUseCase` |
+| Dominio (agregado / criteria) | `Assignment`, `AssignmentCriteria`, `ProfileAssignment`, `ProfileAssignmentCriteria` |
+| Caso de uso (impl) | `AssignApplicationAdministratorUseCaseImpl`, `AssignProfileUseCaseImpl`, `AssignRoleUseCaseImpl`, `ListApplicationAdministratorsUseCaseImpl`, `ListAssignmentsUseCaseImpl`, `ListProfileAssignmentsUseCaseImpl`, `RegisterApplicationWithFirstAdministratorUseCaseImpl`, `RemoveApplicationAdministratorUseCaseImpl`, `ResolveActiveRolesUseCaseImpl`, `ResolveAuthorizationSubjectFactsUseCaseImpl`, `RevokeAssignmentUseCaseImpl`, `RevokeProfileAssignmentUseCaseImpl` |
+| Caso de uso (contrato) | `AssignApplicationAdministratorUseCase`, `AssignProfileUseCase`, `AssignRoleUseCase`, `ListApplicationAdministratorsUseCase`, `ListAssignmentsUseCase`, `ListProfileAssignmentsUseCase`, `RegisterApplicationWithFirstAdministratorUseCase`, `RemoveApplicationAdministratorUseCase`, `ResolveActiveRolesUseCase`, `ResolveAuthorizationSubjectFactsUseCase`, `RevokeAssignmentUseCase`, `RevokeProfileAssignmentUseCase` |
 | Validador de reglas (impl) | `AssignmentApplicationLookupValidatorImpl`, `AssignProfileRulesValidatorImpl`, `AssignRoleRulesValidatorImpl`, `ProfileAssignmentApplicationLookupValidatorImpl`, `RevokeAssignmentRulesValidatorImpl`, `RevokeProfileAssignmentRulesValidatorImpl` |
 | Validador de reglas (contrato) | `AssignmentApplicationLookupValidator`, `AssignProfileRulesValidator`, `AssignRoleRulesValidator`, `ProfileAssignmentApplicationLookupValidator`, `RevokeAssignmentRulesValidator`, `RevokeProfileAssignmentRulesValidator` |
 | Puerto de salida | `AssignmentRepository`, `ProfileAssignmentRepository` |
-| DTO de entrada al nucleo | `AssignApplicationAdministratorRequest`, `AssignmentOwnershipQuery`, `AssignProfileRequest`, `AssignRoleRequest`, `ListApplicationAdministratorsRequest`, `ListAssignmentsRequest`, `ProfileAssignmentOwnershipQuery`, `RegisterApplicationWithFirstAdministratorRequest`, `RemoveApplicationAdministratorRequest`, `ResolveActiveRolesRequest`, `ResolveAuthorizationSubjectFactsRequest`, `RevokeAssignmentRequest`, `RevokeProfileAssignmentRequest` |
+| DTO de entrada al nucleo | `AssignApplicationAdministratorRequest`, `AssignmentOwnershipQuery`, `AssignProfileRequest`, `AssignRoleRequest`, `ListApplicationAdministratorsRequest`, `ListAssignmentsRequest`, `ListProfileAssignmentsRequest`, `ProfileAssignmentOwnershipQuery`, `RegisterApplicationWithFirstAdministratorRequest`, `RemoveApplicationAdministratorRequest`, `ResolveActiveRolesRequest`, `ResolveAuthorizationSubjectFactsRequest`, `RevokeAssignmentRequest`, `RevokeProfileAssignmentRequest` |
 | DTO de salida del nucleo | `ActiveRolesResponse`, `AssignmentResponse`, `AuthorizationSubjectFactsResponse`, `ProfileAssignmentResponse` |
-| Controller | `ApplicationRegistrationController`, `AssignmentController`, `InternalApplicationAdministratorController` |
-| DTO crudo HTTP | `AssignApplicationAdministratorRawRequest`, `ListAssignmentsRawRequest`, `RegisterApplicationWithFirstAdministratorRawRequest` |
+| Controller | `ApplicationRegistrationController`, `AssignmentController`, `InternalApplicationAdministratorController`, `ProfileAssignmentController` |
+| DTO crudo HTTP | `AssignApplicationAdministratorRawRequest`, `ListAssignmentsRawRequest`, `ListProfileAssignmentsRawRequest`, `RegisterApplicationWithFirstAdministratorRawRequest` |
 | DTO de respuesta HTTP | `ApplicationRegisteredWebResponse`, `AssignmentWebResponse`, `ProfileAssignmentWebResponse` |
-| Interactor (impl) | `AssignApplicationAdministratorInteractorImpl`, `ListAssignmentsInteractorImpl`, `RegisterApplicationWithFirstAdministratorInteractorImpl` |
-| Interactor (contrato) | `AssignApplicationAdministratorInteractor`, `ListAssignmentsInteractor`, `RegisterApplicationWithFirstAdministratorInteractor` |
-| Mapper web | `ApplicationRegisteredResponseMapper`, `AssignmentResponseMapper`, `ListAssignmentsRequestMapper`, `RegisterApplicationWithFirstAdministratorRequestMapper` |
+| Interactor (impl) | `AssignApplicationAdministratorInteractorImpl`, `ListAssignmentsInteractorImpl`, `ListProfileAssignmentsInteractorImpl`, `RegisterApplicationWithFirstAdministratorInteractorImpl` |
+| Interactor (contrato) | `AssignApplicationAdministratorInteractor`, `ListAssignmentsInteractor`, `ListProfileAssignmentsInteractor`, `RegisterApplicationWithFirstAdministratorInteractor` |
+| Mapper web | `ApplicationRegisteredResponseMapper`, `AssignmentResponseMapper`, `ListAssignmentsRequestMapper`, `ListProfileAssignmentsRequestMapper`, `ProfileAssignmentResponseMapper`, `RegisterApplicationWithFirstAdministratorRequestMapper` |
 | Entidad de persistencia | `AssignmentEntity`, `ProfileAssignmentEntity` |
 | Mapper de persistencia | `AssignmentPersistenceMapper`, `ProfileAssignmentPersistenceMapper` |
 | Adaptador de repositorio | `SurrealAssignmentRepository`, `SurrealProfileAssignmentRepository` |
@@ -272,7 +272,7 @@
 |---|---|
 | `audit` | `AdministrationAuditRepository`, `AdministrationEvent`, `AdministrationOperation`, `AdministrationOutcome` |
 | `auth/model` | `OidcFlowIntent` |
-| `auth/service` | `KeycloakOidcSessionService`, `OidcAuthenticationFailureHandler`, `OidcAuthenticationSuccessHandler`, `OidcAuthorizationFlowService`, `OidcFlowStateService`, `OidcRedirectPolicy` |
+| `auth/service` | `KeycloakOidcSessionService`, `OidcAuthenticationFailureHandler`, `OidcAuthenticationSuccessHandler`, `OidcAuthorizationFlowService`, `OidcFlowStateService`, `OidcRedirectPolicy`, `OidcReturnTargetPolicy` |
 | `auth/web` | `KeycloakLoginController`, `KeycloakRegistrationController` |
 | `config` | `EventPublisherConfiguration`, `InternalSecurityConfiguration`, `KeycloakSecurityConfiguration`, `ProjectPackages`, `SecurityConfiguration`, `SharedPortsConfiguration`, `SurrealDbConfiguration`, `TelemetryConfiguration` |
 | `contract` | `Operation`, `OperationWithoutResult`, `ReactiveOperation`, `ReactiveOperationWithoutInput`, `ReactiveOperationWithoutResult`, `ReactiveStreamOperation` |
@@ -286,7 +286,7 @@
 | `web/exception` | `ConflictingRequestParametersException`, `MalformedRequestFieldException`, `MissingRequestFieldException`, `RequestContractException` |
 | `web/exceptionhandler` | `ApiErrorHandler` |
 | `web/message` | `WebContractMessages` |
-| `web/session` | `KeycloakLogoutController`, `SessionController`, `SessionResponse` |
+| `web/session` | `InternalBffSessionTokenController`, `KeycloakLogoutController`, `SessionController`, `SessionResponse` |
 
 ---
 
@@ -325,6 +325,7 @@
 | POST | `/api/v1/authorize` | `AuthorizationController` |
 | GET | `/api/v1/profiles` | `ProfileController` |
 | POST | `/api/v1/profiles` | `ProfileAdministrationController` |
+| GET | `/api/v1/profiles/{profileId}/assignments` | `ProfileAssignmentController` |
 | POST | `/api/v1/profiles/{profileId}/assignments` | `ProfileAssignmentAdministrationController` |
 | DELETE | `/api/v1/profiles/{profileId}/assignments/{profileAssignmentId}` | `ProfileAssignmentAdministrationController` |
 | POST | `/api/v1/profiles/{profileId}/roles` | `ProfileAdministrationController` |
@@ -343,6 +344,7 @@
 | POST | `/internal/v1/access-decisions` | `InternalAccessDecisionController` |
 | POST | `/internal/v1/applications/{applicationId}/administrators` | `InternalApplicationAdministratorController` |
 | POST | `/internal/v1/applications/{applicationId}/credential-validations` | `InternalApplicationCredentialController` |
+| GET | `/internal/v1/bff-session-token` | `InternalBffSessionTokenController` |
 | GET | `/oauth2/authorization/keycloak` | `KeycloakLoginController` |
 | GET | `/oauth2/authorization/keycloak/register` | `KeycloakRegistrationController` |
 
@@ -353,7 +355,7 @@
 | Area | Clases de prueba |
 |---|---|
 | `pdp/applications` | `ApplicationBaseUrlTests`, `ApplicationCatalogPropertiesTests`, `ApplicationControllerTests`, `ApplicationCredentialHashTests`, `ApplicationCredentialMustBeValidRuleImplTests`, `ApplicationCredentialValidationResponseMapperTests`, `ApplicationCriteriaTests`, `ApplicationHttpTests`, `ApplicationMustExistForTenantValidatorTests`, `ApplicationOwnerLookupValidatorImplTests`, `ApplicationPersistenceMapperTests`, `ApplicationResponseMapperTests`, `ApplicationRuleTests`, `ApplicationTests`, `InternalApplicationCredentialControllerTests`, `ListApplicationsRequestMapperTests`, `ListApplicationsUseCaseImplTests`, `RegisterApplicationRulesValidatorTests`, `RegisterApplicationUseCaseImplTests`, `RemoveApplicationUseCaseImplTests`, `RotateApplicationCredentialUseCaseImplTests`, `ValidateApplicationCredentialInteractorImplTests`, `ValidateApplicationCredentialRequestMapperTests`, `ValidateApplicationCredentialUseCaseImplTests` |
-| `pdp/assignments` | `ApplicationRegistrationControllerTests`, `AssignApplicationAdministratorInteractorImplTests`, `AssignApplicationAdministratorUseCaseImplTests`, `AssignmentApplicationLookupValidatorImplTests`, `AssignmentControllerTests`, `AssignmentCriteriaTests`, `AssignmentHttpTests`, `AssignmentMustExistForTenantRuleImplTests`, `AssignmentMustNotDuplicateActiveRuleImplTests`, `AssignmentPersistenceMapperTests`, `AssignmentResponseMapperTests`, `AssignmentTests`, `AssignProfileUseCaseImplTests`, `AssignRoleRulesValidatorImplTests`, `AssignRoleUseCaseImplTests`, `InternalApplicationAdministratorControllerTests`, `LastAdministratorMustNotBeRevokedRuleImplTests`, `ListApplicationAdministratorsUseCaseImplTests`, `ListAssignmentsRequestMapperTests`, `ListAssignmentsUseCaseImplTests`, `ProfileAssignmentApplicationLookupValidatorImplTests`, `ProfileAssignmentHttpTests`, `ProfileAssignmentMustExistForTenantRuleImplTests`, `ProfileAssignmentMustNotDuplicateActiveRuleImplTests`, `ProfileAssignmentPersistenceMapperTests`, `ProfileAssignmentRepositoryTests`, `ProfileAssignmentTests`, `RegisterApplicationWithFirstAdministratorRequestMapperTests`, `RegisterApplicationWithFirstAdministratorUseCaseImplTests`, `RemoveApplicationAdministratorUseCaseImplTests`, `ResolveActiveRolesUseCaseImplTests`, `RevokeAssignmentRulesValidatorImplTests`, `RevokeAssignmentUseCaseImplTests`, `RevokeProfileAssignmentUseCaseImplTests`, `ValidityTests` |
+| `pdp/assignments` | `ApplicationRegistrationControllerTests`, `AssignApplicationAdministratorInteractorImplTests`, `AssignApplicationAdministratorUseCaseImplTests`, `AssignmentApplicationLookupValidatorImplTests`, `AssignmentControllerTests`, `AssignmentCriteriaTests`, `AssignmentHttpTests`, `AssignmentMustExistForTenantRuleImplTests`, `AssignmentMustNotDuplicateActiveRuleImplTests`, `AssignmentPersistenceMapperTests`, `AssignmentResponseMapperTests`, `AssignmentTests`, `AssignProfileUseCaseImplTests`, `AssignRoleRulesValidatorImplTests`, `AssignRoleUseCaseImplTests`, `InternalApplicationAdministratorControllerTests`, `LastAdministratorMustNotBeRevokedRuleImplTests`, `ListApplicationAdministratorsUseCaseImplTests`, `ListAssignmentsRequestMapperTests`, `ListAssignmentsUseCaseImplTests`, `ListProfileAssignmentsRequestMapperTests`, `ListProfileAssignmentsUseCaseImplTests`, `ProfileAssignmentApplicationLookupValidatorImplTests`, `ProfileAssignmentControllerTests`, `ProfileAssignmentCriteriaTests`, `ProfileAssignmentHttpTests`, `ProfileAssignmentMustExistForTenantRuleImplTests`, `ProfileAssignmentMustNotDuplicateActiveRuleImplTests`, `ProfileAssignmentPersistenceMapperTests`, `ProfileAssignmentRepositoryTests`, `ProfileAssignmentResponseMapperTests`, `ProfileAssignmentTests`, `RegisterApplicationWithFirstAdministratorRequestMapperTests`, `RegisterApplicationWithFirstAdministratorUseCaseImplTests`, `RemoveApplicationAdministratorUseCaseImplTests`, `ResolveActiveRolesUseCaseImplTests`, `RevokeAssignmentRulesValidatorImplTests`, `RevokeAssignmentUseCaseImplTests`, `RevokeProfileAssignmentUseCaseImplTests`, `ValidityTests` |
 | `pdp/authorization` | `AccessDecisionInternalResponseMapperTests`, `AccessDecisionRawRequestMapperTests`, `AccessDecisionResponseMapperTests`, `AccessEventPersistenceMapperTests`, `AccessEventTests`, `ActiveRoleNamesLookupValidatorImplTests`, `AdministerApplicationAdministratorAssignmentInteractorImplTests`, `AdministerApplicationAdministratorAssignmentUseCaseImplTests`, `AdministerApplicationAdministratorListInteractorImplTests`, `AdministerApplicationAdministratorListUseCaseImplTests`, `AdministerApplicationAdministratorRemovalInteractorImplTests`, `AdministerApplicationAdministratorRemovalUseCaseImplTests`, `AdministerApplicationCredentialRotationUseCaseImplTests`, `AdministerApplicationRemovalUseCaseImplTests`, `AdministerAssignmentCreationInteractorImplTests`, `AdministerAssignmentCreationUseCaseImplTests`, `AdministerAssignmentRevocationInteractorImplTests`, `AdministerAssignmentRevocationUseCaseImplTests`, `AdministerProfileAssignmentCreationInteractorImplTests`, `AdministerProfileAssignmentCreationUseCaseImplTests`, `AdministerProfileAssignmentRevocationInteractorImplTests`, `AdministerProfileAssignmentRevocationUseCaseImplTests`, `AdministerProfileDefinitionInteractorImplTests`, `AdministerProfileDefinitionUseCaseImplTests`, `AdministerProfileRoleAdditionInteractorImplTests`, `AdministerProfileRoleAdditionUseCaseImplTests`, `AdministerResourceGrantInteractorImplTests`, `AdministerResourceGrantUseCaseImplTests`, `AdministerResourceRegistrationInteractorImplTests`, `AdministerResourceRegistrationUseCaseImplTests`, `AdministerRoleDefinitionInteractorImplTests`, `AdministerRoleDefinitionUseCaseImplTests`, `ApplicationAdministrationControllerTests`, `ApplicationAdministrationRequestMapperTests`, `ApplicationAdministratorControllerTests`, `AssignmentAdministrationControllerTests`, `AuthorizationControllerTests`, `AuthorizationHttpTests`, `AuthorizeAdministrationUseCaseImplTests`, `AuthorizeRequestMapperTests`, `AuthorizeUseCaseImplTests`, `DecisionStateTests`, `DefineRoleRequestMapperTests`, `EvaluateInternalAccessUseCaseImplTests`, `GrantResourceRequestMapperTests`, `InternalAccessDecisionControllerTests`, `InternalAccessDecisionInteractorImplTests`, `InternalSecurityChainIntegrationTests`, `ObservedAccessAuditRepositoryTests`, `OpaAdministrationDecisionAdapterTests`, `OpaFixtureServer`, `OpaPolicyDecisionAdapterTests`, `PrincipalMustBeApplicationAdministratorValidatorImplTests`, `ProfileAdministrationControllerTests`, `ProfileAssignmentAdministrationControllerTests`, `RegisterProtectedResourceRequestMapperTests`, `ResourceAdministrationControllerTests`, `RoleAdministrationControllerTests` |
 | `pdp/commons` | `PageWindowTests`, `ResultPageTests`, `ValueObjectTests` |
 | `pdp/identity` | `AssignTenantRequestMapperTests`, `AssignTenantUseCaseImplTests`, `EmailTests`, `ProvisionIdentityUseCaseImplTests`, `SecurityUserPersistenceMapperTests`, `SubjectUserIdLookupValidatorImplTests`, `UserControllerTests`, `UserMustExistRuleTests`, `UserMustExistValidatorImplTests`, `UserResponseMapperTests` |
@@ -363,7 +365,7 @@
 | `pdp/tenants` | `CreateTenantRequestMapperTests`, `CreateTenantUseCaseImplTests`, `ListTenantsUseCaseImplTests`, `TenantCatalogPropertiesTests`, `TenantControllerTests`, `TenantMustBeActiveValidatorTests`, `TenantNameTests`, `TenantResponseMapperTests`, `TenantRuleTests` |
 | `raiz` | `AbstractSurrealDbIntegrationTest`, `LayeredArchitectureTests`, `ModulithStructureTests`, `PdpApplicationTests` |
 | `shared/audit` | `TestAdministrationAuditRepositories` |
-| `shared/auth` | `KeycloakLoginControllerTests`, `KeycloakOidcSessionServiceTests`, `KeycloakRegistrationControllerTests`, `OidcAuthenticationFailureHandlerTests`, `OidcAuthenticationSuccessHandlerTests`, `OidcAuthorizationFlowServiceTests` |
+| `shared/auth` | `KeycloakLoginControllerTests`, `KeycloakOidcSessionServiceTests`, `KeycloakRegistrationControllerTests`, `OidcAuthenticationFailureHandlerTests`, `OidcAuthenticationSuccessHandlerTests`, `OidcAuthorizationFlowServiceTests`, `OidcReturnTargetPolicyTests` |
 | `shared/config` | `CorsConfigurationTests`, `KeycloakSecurityConfigurationTests`, `SecurityConfigurationTests` |
 | `shared/persistence` | `SurrealDbClientTests`, `SurrealRecordIdTests`, `SurrealRepositoryIntegrationTests` |
 | `shared/security` | `ApiAccessDeniedHandlerTests`, `ApiAuthenticationEntryPointTests`, `CorsPropertiesTests`, `InternalMtlsWebFilterTests`, `JwtSecurityPropertiesTests`, `PdpPrincipalSecurityContextTests`, `SecurityWebFilterChainTests`, `TestJwtSupport` |
