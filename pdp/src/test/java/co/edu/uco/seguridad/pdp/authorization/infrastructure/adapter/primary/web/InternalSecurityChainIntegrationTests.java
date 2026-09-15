@@ -188,7 +188,7 @@ class InternalSecurityChainIntegrationTests extends AbstractSurrealDbIntegration
     private String requestBody(String applicationId, String requestId, String correlationId) {
         return """
                 {"version":"1","requestId":"%s","correlationId":"%s","timestamp":"%s",
-                 "application":{"id":"%s","environment":"prod"},
+                 "application":{"name":"%s","environment":"prod"},
                  "resource":{"path":"/estudiantes","action":"GET"},
                  "context":{"method":"GET","channel":"HTTP"}}
                 """.formatted(requestId, correlationId, Instant.now(), applicationId);

@@ -1,6 +1,7 @@
 package co.edu.uco.seguridad.pdp.authorization.application.usecase.impl;
 
-import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationOwnerLookupValidator;
+import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationNameLookupValidator;
+import co.edu.uco.seguridad.pdp.applications.domain.exception.AmbiguousApplicationNameException;
 import co.edu.uco.seguridad.pdp.applications.domain.exception.ApplicationNotFoundException;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AccessRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.InternalAccessRequest;
@@ -28,14 +29,14 @@ import java.util.Set;
  */
 public final class EvaluateInternalAccessUseCaseImpl implements EvaluateInternalAccessUseCase {
 
-    private final ApplicationOwnerLookupValidator ownerLookup;
+    private final ApplicationNameLookupValidator applicationLookup;
     private final AuthorizeUseCase authorizeUseCase;
     private final IdentifierGenerator identifiers;
     private final TimeProvider time;
 
-    public EvaluateInternalAccessUseCaseImpl(ApplicationOwnerLookupValidator ownerLookup,
+    public EvaluateInternalAccessUseCaseImpl(ApplicationNameLookupValidator applicationLookup,
             AuthorizeUseCase authorizeUseCase, IdentifierGenerator identifiers, TimeProvider time) {
-        this.ownerLookup = Objects.requireNonNull(ownerLookup, RequiredArgumentMessages.APPLICATION_OWNER_LOOKUP_VALIDATOR);
+        this.applicationLookup = Objects.requireNonNull(applicationLookup, RequiredArgumentMessages.APPLICATION_OWNER_LOOKUP_VALIDATOR);
         this.authorizeUseCase = Objects.requireNonNull(authorizeUseCase, RequiredArgumentMessages.AUTHORIZE_USE_CASE);
         this.identifiers = Objects.requireNonNull(identifiers, RequiredArgumentMessages.IDENTIFIER_GENERATOR);
         this.time = Objects.requireNonNull(time, RequiredArgumentMessages.TIME_PROVIDER);
@@ -43,13 +44,14 @@ public final class EvaluateInternalAccessUseCaseImpl implements EvaluateInternal
 
     @Override
     public Mono<AccessDecision> execute(InternalAccessRequest input) {
-        return ownerLookup.execute(input.applicationId())
-                .map(tenantId -> new AccessRequest(tenantId, input.subject(), input.applicationId(),
+        return applicationLookup.execute(input.applicationName())
+                .map(application -> new AccessRequest(application.tenantId(), input.subject(), application.id(),
                         input.resourcePath(), input.action(), input.requestId(), input.correlationId(),
                         input.subjectUserId(), Set.of(), input.facts().timestamp(), input.facts().environment(),
                         input.facts().method(), input.facts().channel()))
                 .flatMap(authorizeUseCase::execute)
-                .onErrorResume(ApplicationNotFoundException.class,
+                .onErrorResume(error -> error instanceof ApplicationNotFoundException
+                                || error instanceof AmbiguousApplicationNameException,
                         error -> Mono.just(deny(input, ReasonCode.TENANT_MISMATCH)));
     }
 

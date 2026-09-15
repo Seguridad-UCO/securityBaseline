@@ -2,7 +2,7 @@ package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.we
 
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.InternalAccessRequest;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.AccessDecisionRawRequest;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
+import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
 import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
@@ -37,7 +37,7 @@ public final class AccessDecisionRawRequestMapper {
             throw new MalformedRequestFieldException("version", WebContractMessages.mustBeVersion1());
         }
 
-        ApplicationId applicationId = RequestFieldParser.parse("applicationId", raw.application().id(), ApplicationId::of);
+        ApplicationName applicationName = RequestFieldParser.parse("applicationName", raw.application().name(), ApplicationName::new);
         ResourcePath resourcePath = RequestFieldParser.parse("resourcePath", raw.resource().path(), ResourcePath::new);
         HttpVerb action = RequestFieldParser.parse("action", raw.resource().action(), HttpVerb::parse);
 
@@ -48,7 +48,7 @@ public final class AccessDecisionRawRequestMapper {
             throw new MalformedRequestFieldException("timestamp", WebContractMessages.mustBeIso8601());
         }
 
-        return new InternalAccessRequest(subject, subjectUserId, applicationId, resourcePath, action, raw.requestId(), raw.correlationId(),
+        return new InternalAccessRequest(subject, subjectUserId, applicationName, resourcePath, action, raw.requestId(), raw.correlationId(),
                 new InternalAccessRequest.RequestFacts(Instant.parse(timestamp), raw.application().environment(),
                         RequestFieldParser.parse("context.method", raw.context().method(), HttpVerb::parse), raw.context().channel()));
     }

@@ -3,6 +3,7 @@ package co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.p
 import co.edu.uco.seguridad.pdp.applications.application.secondaryport.repository.ApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
 import co.edu.uco.seguridad.pdp.applications.domain.ApplicationCriteria;
+import co.edu.uco.seguridad.pdp.applications.domain.exception.AmbiguousApplicationNameException;
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash;
 import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
 import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
@@ -63,6 +64,20 @@ public final class SurrealApplicationRepository implements ApplicationRepository
                 .flatMap(results -> {
                     JsonNode rows = results.get(0);
                     return rows.isEmpty() ? Mono.empty() : Mono.just(new TenantId(rows.get(0).path("tenantId").asString()));
+                });
+    }
+
+    @Override
+    public Mono<Application> findUniqueByName(ApplicationName name) {
+        return client.execute(
+                        "SELECT * FROM %s WHERE string::lowercase(name) = string::lowercase($name) LIMIT 2;"
+                                .formatted(ApplicationSchema.TABLE),
+                        Map.of("name", name.value()))
+                .flatMap(results -> {
+                    JsonNode rows = results.get(0);
+                    if (rows.isEmpty()) return Mono.empty();
+                    if (rows.size() > 1) return Mono.error(new AmbiguousApplicationNameException(name));
+                    return Mono.just(toDomain(rows.get(0)));
                 });
     }
 

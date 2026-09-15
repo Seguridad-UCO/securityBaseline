@@ -6,6 +6,7 @@ import co.edu.uco.seguridad.pdp.applications.domain.Application;
 import co.edu.uco.seguridad.pdp.applications.domain.ApplicationCriteria;
 import co.edu.uco.seguridad.pdp.applications.domain.exception.InvalidApplicationCredentialException;
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash;
+import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationCredentialMustBeValidRule;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationCredentialMustBeValidRuleImpl;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
@@ -27,6 +28,7 @@ import java.util.UUID;
 class ValidateApplicationCredentialUseCaseImplTests {
 
     private static final ApplicationId APPLICATION = new ApplicationId(UUID.randomUUID());
+    private static final ApplicationName APPLICATION_NAME = new ApplicationName("notas");
     private static final TenantId TENANT = new TenantId("universidad-uco");
     private static final String CORRECT_SECRET = "secreto-correcto";
     private static final ApplicationCredentialHash HASH = new ApplicationCredentialHash("hash-guardado");
@@ -37,7 +39,7 @@ class ValidateApplicationCredentialUseCaseImplTests {
         ValidateApplicationCredentialUseCaseImpl useCase = new ValidateApplicationCredentialUseCaseImpl(
                 rule, repository(Mono.just(HASH), Mono.just(TENANT)), hasher(true));
 
-        StepVerifier.create(useCase.execute(new ValidateApplicationCredentialRequest(APPLICATION, CORRECT_SECRET)))
+        StepVerifier.create(useCase.execute(new ValidateApplicationCredentialRequest(APPLICATION_NAME, CORRECT_SECRET)))
                 .expectNext(TENANT)
                 .verifyComplete();
     }
@@ -48,7 +50,7 @@ class ValidateApplicationCredentialUseCaseImplTests {
         ValidateApplicationCredentialUseCaseImpl useCase = new ValidateApplicationCredentialUseCaseImpl(
                 rule, repository(Mono.just(HASH), Mono.just(TENANT)), hasher(false));
 
-        StepVerifier.create(useCase.execute(new ValidateApplicationCredentialRequest(APPLICATION, "secreto-incorrecto")))
+        StepVerifier.create(useCase.execute(new ValidateApplicationCredentialRequest(APPLICATION_NAME, "secreto-incorrecto")))
                 .expectError(InvalidApplicationCredentialException.class)
                 .verify();
     }
@@ -70,7 +72,7 @@ class ValidateApplicationCredentialUseCaseImplTests {
         ValidateApplicationCredentialUseCaseImpl useCase = new ValidateApplicationCredentialUseCaseImpl(
                 rule, repository(Mono.empty(), Mono.empty()), poisonPill);
 
-        StepVerifier.create(useCase.execute(new ValidateApplicationCredentialRequest(APPLICATION, CORRECT_SECRET)))
+        StepVerifier.create(useCase.execute(new ValidateApplicationCredentialRequest(APPLICATION_NAME, CORRECT_SECRET)))
                 .expectError(InvalidApplicationCredentialException.class)
                 .verify();
     }
@@ -95,6 +97,12 @@ class ValidateApplicationCredentialUseCaseImplTests {
             @Override
             public Mono<ApplicationCredentialHash> findCredentialHashById(ApplicationId applicationId) {
                 return hash;
+            }
+
+            @Override
+            public Mono<Application> findUniqueByName(ApplicationName applicationName) {
+                return hash.map(value -> Application.register(APPLICATION, TENANT, APPLICATION_NAME, "",
+                        new ApplicationBaseUrl("https://notas.example.test"), value, java.time.Instant.EPOCH));
             }
 
             @Override

@@ -1,6 +1,7 @@
 package co.edu.uco.seguridad.pdp.authorization.infrastructure.config;
 
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationMustExistForTenantValidator;
+import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationNameLookupValidator;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationOwnerLookupValidator;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RemoveApplicationUseCase;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RotateApplicationCredentialUseCase;
@@ -188,9 +189,9 @@ public class AuthorizationConfiguration {
 
     // HU-003 — canal interno para el PEP (D1: mismo AuthorizeUseCase, segundo adaptador primario).
     @Bean
-    EvaluateInternalAccessUseCase evaluateInternalAccessUseCase(ApplicationOwnerLookupValidator ownerLookup,
+    EvaluateInternalAccessUseCase evaluateInternalAccessUseCase(ApplicationNameLookupValidator applicationLookup,
             AuthorizeUseCase authorizeUseCase, IdentifierGenerator identifiers, TimeProvider time) {
-        return new EvaluateInternalAccessUseCaseImpl(ownerLookup, authorizeUseCase, identifiers, time);
+        return new EvaluateInternalAccessUseCaseImpl(applicationLookup, authorizeUseCase, identifiers, time);
     }
 
     @Bean

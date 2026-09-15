@@ -30,7 +30,7 @@ class InternalApplicationCredentialControllerTests {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isEqualTo(EXPECTED);
         assertThat(received).hasSize(1);
-        assertThat(received.get(0).applicationId()).isEqualTo("app-from-route");
+        assertThat(received.get(0).applicationName()).isEqualTo("app-from-route");
         assertThat(received.get(0).secret()).isEqualTo("secreto");
     }
 }

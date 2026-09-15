@@ -24,7 +24,7 @@ class ValidateApplicationCredentialInteractorImplTests {
 
     @Test
     void maps_the_raw_request_delegates_to_the_use_case_and_maps_the_response() {
-        String applicationId = UUID.randomUUID().toString();
+        String applicationName = "notas";
         TenantId tenant = new TenantId("universidad-uco");
         List<ValidateApplicationCredentialRequest> received = new ArrayList<>();
         ValidateApplicationCredentialUseCase useCase = request -> {
@@ -33,12 +33,12 @@ class ValidateApplicationCredentialInteractorImplTests {
         };
         ValidateApplicationCredentialInteractorImpl interactor = new ValidateApplicationCredentialInteractorImpl(useCase);
 
-        StepVerifier.create(interactor.execute(new ValidateApplicationCredentialRawRequest(applicationId, "secreto")))
+        StepVerifier.create(interactor.execute(new ValidateApplicationCredentialRawRequest(applicationName, "secreto")))
                 .assertNext(response -> assertThat(response.tenantId()).isEqualTo("universidad-uco"))
                 .verifyComplete();
 
         assertThat(received).hasSize(1);
-        assertThat(received.get(0).applicationId()).isEqualTo(ApplicationId.of(applicationId));
+        assertThat(received.get(0).applicationName().value()).isEqualTo(applicationName);
         assertThat(received.get(0).secret()).isEqualTo("secreto");
     }
 }

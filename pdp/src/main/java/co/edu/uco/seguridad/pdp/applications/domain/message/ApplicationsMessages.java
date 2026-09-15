@@ -21,6 +21,14 @@ public final class ApplicationsMessages {
         return "La aplicación no existe en tu inquilino: " + applicationId;
     }
 
+    public static String applicationNotFoundByName(String name) {
+        return "No existe una aplicación registrada con el nombre: " + name;
+    }
+
+    public static String ambiguousApplicationName(String name) {
+        return "El nombre de aplicación corresponde a más de un tenant: " + name;
+    }
+
     // HU-013 — validación de credencial de aplicación.
     public static String invalidApplicationCredential() {
         return "La aplicación o la credencial no son válidas";

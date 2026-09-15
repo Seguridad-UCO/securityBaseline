@@ -66,7 +66,7 @@ final class PepEnforcementWebFilter implements WebFilter {
                     headers.set("X-Request-Id", requestId);
                     headers.set("X-Correlation-Id", finalCorrelationId);
                 })
-                .bodyValue(Map.of("applicationId", properties.applicationId(), "environment", properties.environment(),
+                .bodyValue(Map.of("applicationName", properties.applicationName(), "environment", properties.environment(),
                         "path", exchange.getRequest().getURI().getRawPath(), "method", exchange.getRequest().getMethod().name()))
                 .exchangeToMono(response -> {
                     if (response.statusCode().is2xxSuccessful()) {

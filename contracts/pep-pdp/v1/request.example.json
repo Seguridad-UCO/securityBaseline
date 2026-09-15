@@ -4,7 +4,7 @@
   "correlationId": "example-correlation",
   "timestamp": "2026-09-06T10:00:00Z",
   "application": {
-    "id": "demo-app",
+    "name": "demo-app",
     "environment": "local"
   },
   "resource": {
@@ -16,4 +16,3 @@
     "channel": "HTTP"
   }
 }
-

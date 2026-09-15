@@ -19,7 +19,7 @@ class PdpApplicationCredentialValidationAdapterTests {
     @Test
     void accepts_a_credential_only_when_the_pdp_confirms_it() {
         ExchangeFunction exchange = request -> {
-            assertThat(request.url().getPath()).isEqualTo("/internal/v1/applications/app-1/credential-validations");
+            assertThat(request.url().getPath()).isEqualTo("/internal/v1/applications/names/app-1/credential-validations");
             assertThat(request.headers().getFirst("Authorization")).isEqualTo("Bearer pep-evidence-jwt");
             return Mono.just(ClientResponse.create(HttpStatus.OK).header("Content-Type", "application/json").body("{}").build());
         };

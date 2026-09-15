@@ -32,6 +32,15 @@ public interface ApplicationRepository {
     Mono<TenantId> findTenantIdById(ApplicationId applicationId);
 
     /**
+     * Resuelve una aplicación desde el nombre que expone el canal interno del PEP. El resultado
+     * queda vacío si no existe y falla si el nombre corresponde a más de un tenant: sin un tenant
+     * en el contrato no sería seguro elegir una de ellas arbitrariamente.
+     */
+    default Mono<Application> findUniqueByName(ApplicationName name) {
+        return Mono.error(() -> new UnsupportedOperationException("La búsqueda por nombre no está implementada"));
+    }
+
+    /**
      * Resuelve el hash guardado de una aplicación, a partir solo de su identificador. Vacío si la
      * aplicación no existe (HU-013, canal interno de validación de credenciales). Responde solo el
      * hash, nunca la aplicación completa.

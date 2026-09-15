@@ -9,7 +9,7 @@ public final class NormalizeAccessRequestMustBeCompleteRuleImpl implements Norma
     @Override
     public void execute(NormalizeAccessRequest input) {
         if (input == null || blank(input.requestId()) || blank(input.correlationId()) || input.timestamp() == null
-                || blank(input.applicationId()) || blank(input.environment()) || blank(input.path()) || blank(input.method())) {
+                || blank(input.applicationName()) || blank(input.environment()) || blank(input.path()) || blank(input.method())) {
             throw new EnforcementFailure(EnforcementFailure.Kind.INVALID_REQUEST, "INVALID_ACCESS_REQUEST");
         }
     }
