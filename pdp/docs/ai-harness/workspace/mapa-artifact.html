@@ -1,0 +1,431 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Mapa de la Plataforma de Seguridad</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #f3f5f8;
+    --surface: #ffffff;
+    --surface-2: #eaeef4;
+    --text: #171c24;
+    --muted: #5b6574;
+    --border: #d7dde6;
+    --accent: #2456c8;
+    --accent-soft: #e3eafc;
+    --ok: #1c7c45;
+    --ok-soft: #e1f3e8;
+    --part: #a6620a;
+    --part-soft: #fbedd6;
+    --no: #667085;
+    --no-soft: #e9ecf1;
+    --new: #7a3fc0;
+    --new-soft: #f0e7fb;
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0e1116; --surface: #161b22; --surface-2: #1d2430; --text: #e4e8ee; --muted: #98a2b3;
+      --border: #283040; --accent: #7ea0ff; --accent-soft: #1b2745; --ok: #43b872; --ok-soft: #12301f;
+      --part: #e2a53e; --part-soft: #3a2a0f; --no: #9aa3b2; --no-soft: #232a36;
+      --new: #b48af0; --new-soft: #2a1f3d;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0e1116; --surface: #161b22; --surface-2: #1d2430; --text: #e4e8ee; --muted: #98a2b3;
+    --border: #283040; --accent: #7ea0ff; --accent-soft: #1b2745; --ok: #43b872; --ok-soft: #12301f;
+    --part: #e2a53e; --part-soft: #3a2a0f; --no: #9aa3b2; --no-soft: #232a36;
+    --new: #b48af0; --new-soft: #2a1f3d;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 15px; line-height: 1.55; margin: 0; }
+  main { max-width: 1040px; margin: 0 auto; padding: 40px 24px 80px; display: flex; flex-direction: column; gap: 48px; }
+  h1, h2, h3 { text-wrap: balance; margin: 0; line-height: 1.2; }
+  h1 { font-size: 34px; font-weight: 700; letter-spacing: -0.01em; }
+  h2 { font-size: 22px; font-weight: 600; }
+  h3 { font-size: 16px; font-weight: 600; }
+  p { margin: 0; max-width: 70ch; }
+  code, .mono { font-family: var(--mono); font-size: 0.86em; }
+  code { background: var(--surface-2); padding: 1px 5px; border-radius: 3px; }
+  a { color: var(--accent); }
+  .eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  section { display: flex; flex-direction: column; gap: 16px; }
+  header { display: flex; flex-direction: column; gap: 14px; }
+  .lede { font-size: 17px; color: var(--muted); max-width: 72ch; }
+  .counters { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
+  .counter { border: 1px solid var(--border); background: var(--surface); border-radius: 6px; padding: 10px 16px; min-width: 150px; }
+  .counter b { display: block; font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .counter span { font-size: 12.5px; color: var(--muted); }
+  .counter.ok b { color: var(--ok); } .counter.part b { color: var(--part); } .counter.no b { color: var(--no); }
+
+  .chip { display: inline-block; font-size: 11.5px; font-weight: 600; letter-spacing: 0.02em; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+  .chip.ok { background: var(--ok-soft); color: var(--ok); }
+  .chip.part { background: var(--part-soft); color: var(--part); }
+  .chip.no { background: var(--no-soft); color: var(--no); }
+  .chip.p0 { background: var(--accent-soft); color: var(--accent); }
+  .chip.new { background: var(--new-soft); color: var(--new); }
+
+  figure { margin: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; overflow-x: auto; }
+  figure svg { display: block; max-width: 100%; height: auto; min-width: 640px; color: var(--text); }
+  figure svg text { font-family: var(--sans); font-size: 12.5px; fill: currentColor; }
+  figure svg text.small { font-size: 11px; fill: var(--muted); }
+  figure svg text.mono { font-family: var(--mono); font-size: 11px; fill: var(--muted); }
+  figure svg text.title { font-weight: 600; font-size: 13.5px; }
+  figure svg rect.node { fill: var(--surface-2); stroke: currentColor; stroke-width: 1.2; }
+  figure svg rect.node.dim { stroke-dasharray: 4 3; stroke: var(--muted); }
+  figure svg .edge { stroke: currentColor; stroke-width: 1.6; fill: none; }
+  figure svg .edge.dashed { stroke-dasharray: 8 5; stroke: var(--muted); }
+  figure svg .edge.p0 { stroke: var(--accent); stroke-dasharray: 8 5; stroke-width: 2.2; }
+  figure svg .edge.ok { stroke: var(--ok); stroke-width: 2.2; }
+  figure svg text.p0 { fill: var(--accent); font-weight: 600; }
+  figure svg text.ok { fill: var(--ok); font-weight: 600; }
+  figcaption { margin-top: 14px; font-size: 13.5px; color: var(--muted); max-width: 80ch; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 12px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; }
+  .card .row { display: flex; gap: 10px; align-items: baseline; justify-content: space-between; }
+  .card .counts { font-family: var(--mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .card p { font-size: 14px; color: var(--muted); }
+
+  .tiers { display: flex; flex-direction: column; gap: 12px; }
+  .tier { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--border); border-radius: 8px; padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; }
+  .tier.p0 { border-left-color: var(--accent); }
+  .tier.p1 { border-left-color: var(--ok); }
+  .tier.p2 { border-left-color: var(--part); }
+  .tier.p3 { border-left-color: var(--no); }
+  .tier.done { border-left-color: var(--ok); background: var(--ok-soft); }
+  .tier header { flex-direction: row; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .tier ol, .tier ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+  .tier li { max-width: 80ch; }
+  .why { color: var(--muted); font-size: 14px; }
+
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; font-size: 14px; }
+  .tablewrap { overflow-x: auto; border-radius: 8px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); background: var(--surface-2); font-weight: 600; }
+  tr:last-child td { border-bottom: none; }
+  tr.changed { background: var(--new-soft); }
+  td.st { width: 92px; white-space: nowrap; }
+  td.ev { color: var(--muted); font-size: 13.5px; }
+  td.ev code { font-size: 12px; }
+
+  .finding { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; display: flex; flex-direction: column; gap: 6px; }
+  .finding h3 { font-size: 15px; }
+  .finding p { font-size: 14px; }
+
+  .script { counter-reset: step; display: flex; flex-direction: column; gap: 10px; }
+  .step { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; }
+  .step::before { counter-increment: step; content: counter(step); font-family: var(--mono); font-weight: 500; color: var(--accent); font-size: 15px; padding-top: 2px; }
+  .step b { display: block; margin-bottom: 2px; }
+  .step p { font-size: 14px; color: var(--muted); }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .changelog { display: flex; flex-direction: column; gap: 10px; }
+  .changelog .item { display: flex; gap: 12px; align-items: baseline; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; }
+  .changelog .item p { font-size: 13.5px; color: var(--muted); }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<main>
+  <header>
+    <div class="eyebrow">securityBaseline · estado al 2026-09-13 (noche) · verificado contra <code>develop</code> (653 pruebas en verde)</div>
+    <h1>Mapa de la Plataforma de Seguridad</h1>
+    <p class="lede">La lista de la reunión, limpiada contra lo que de verdad existe en el repositorio. Desde el corte anterior se cerraron <b>HU-014</b> y <b>HU-015</b>: el PDP ya rota su propia credencial de aplicación y ya gatea quién puede borrar o rotar el catálogo — el primer administrador se asigna solo al registrar. La verificación de este corte encontró además un bug de producción real (índice único que no cubría roles/perfiles sin aplicación) escondido detrás de "fallos preexistentes y ajenos". Cada ítem tiene un estado y apunta a su evidencia; lo pendiente está ordenado por lo que desbloquea, no por lo que suena más importante.</p>
+    <div class="counters">
+      <div class="counter ok"><b>31</b><span>hechos y verificados</span></div>
+      <div class="counter part"><b>12</b><span>parciales — existe la base, falta cerrar</span></div>
+      <div class="counter no"><b>24</b><span>no empezados</span></div>
+    </div>
+    <div class="legend">
+      <span><span class="chip ok">hecho</span> existe en <code>develop</code> y se puede señalar</span>
+      <span><span class="chip part">parcial</span> hay una base real, no basta</span>
+      <span><span class="chip no">pendiente</span> no hay nada</span>
+      <span><span class="chip new">nuevo desde 2026-09-13 (noche)</span> cambió en este corte</span>
+    </div>
+  </header>
+
+  <section>
+    <div class="eyebrow">Qué cambió desde el corte anterior</div>
+    <h2>HU-014 rota la credencial; HU-015 pone dueño al catálogo</h2>
+    <div class="changelog">
+      <div class="item"><span class="chip ok">HU-014</span><p><b>Rotación de credencial de aplicación</b> (<code>pdp/applications</code>): perder un secreto ya no obliga a re-registrar la aplicación entera. <code>RotateApplicationCredentialUseCase</code> genera un secreto nuevo, lo hashea y reemplaza el anterior en una sola operación.</p></div>
+      <div class="item"><span class="chip ok">HU-015</span><p><b>Administración del catálogo de aplicaciones</b> (<code>pdp/assignments</code> + <code>pdp/authorization</code>): registrar una aplicación (<code>POST /api/v1/applications</code>, ahora orquestado desde <code>assignments</code>) ya no deja un catálogo sin dueño — se asigna de inmediato un rol <code>ADMIN</code> de alcance-aplicación a quien la registró. Borrar la aplicación o rotar su credencial ahora exige serlo: el gate valida contra OPA (el mecanismo de HU-009), no contra un <code>if</code> de rol en Java. Para aplicaciones que ya existían, un endpoint interno permite asignar el administrador a mano.</p></div>
+      <div class="item"><span class="chip new">bug real</span><p><b>Un índice único que nunca cubrió roles/perfiles sin aplicación.</b> Verificando <code>develop</code> completo (<code>clean verify</code>, no <code>-Rapido</code>), tres fallos que un reporte anterior había fichado como "preexistentes y ajenos" resultaron ser dos cosas distintas: una variable de entorno rota (<code>OPENSSL_CONF</code> apuntando a un archivo que ya no existía) y un defecto real — el índice único de roles/perfiles no indexaba ni aplicaba unicidad cuando <code>applicationId</code> está ausente (alcance <code>TENANT</code>/<code>GLOBAL</code>), porque SurrealDB no compara <code>NONE</code> contra un campo ausente vía índice. Corregido reemplazando el centinela por una cadena vacía, un valor real e indexable.</p></div>
+    </div>
+    <p class="why">HU-015 se fusionó a <code>develop</code> por PR #48, con tres bloqueantes genuinos resueltos en el camino: un ciclo de dependencias Modulith (resuelto repartiendo el registro a <code>assignments</code> y el gate a <code>authorization</code>, ambos ya dependientes de <code>applications</code>), un desajuste entre el <code>UserId</code> que trae el principal autenticado y el que usan las pruebas HTTP (resuelto resolviéndolo vía identidad en vez de exigirlo del principal), y una deriva de documentación de 6 hallazgos tras eliminar clases huérfanas (corregida antes de fusionar). <code>develop</code> queda verificado con <code>mvnw clean verify</code>: <b>653 pruebas, 0 fallos</b>, cobertura, arquitectura y consistencia en verde (8 slices), <code>drift.ps1</code> sin hallazgos nuevos.</p>
+  </section>
+
+  <section>
+    <div class="eyebrow">El mecanismo</div>
+    <h2>Lo que corre hoy y lo que solo está acordado</h2>
+    <figure>
+      <svg viewBox="0 0 940 420" role="img" aria-label="Flujo de seguridad: la aplicación integrada, el PEP, el PDP y OPA ya hablan de punta a punta. El PDP ya emite, valida y rota credenciales de aplicación, y ya gatea quién administra el catálogo, pero el PEP todavía no consume esa credencial. OPA sigue respondiendo DENY porque no hay ninguna política de aplicación publicada todavía.">
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+          </marker>
+          <marker id="arr-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--ok)"/>
+          </marker>
+          <marker id="arr-dim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/>
+          </marker>
+        </defs>
+
+        <!-- Fila A: panel -->
+        <rect class="node" x="520" y="40" width="170" height="56" rx="6"/>
+        <text class="title" x="605" y="63" text-anchor="middle">SPA / Panel</text>
+        <text class="small" x="605" y="81" text-anchor="middle">sesión con cookie (BFF)</text>
+
+        <!-- Fila B: cadena principal -->
+        <rect class="node dim" x="40" y="170" width="170" height="56" rx="6"/>
+        <text class="title" x="125" y="193" text-anchor="middle">Aplicación integrada</text>
+        <text class="mono" x="125" y="211" text-anchor="middle">pep/starter · v0, credencial propia</text>
+
+        <rect class="node" x="280" y="170" width="160" height="56" rx="6"/>
+        <text class="title" x="360" y="193" text-anchor="middle">PEP</text>
+        <text class="small" x="360" y="211" text-anchor="middle">proxy · falla cerrado</text>
+
+        <rect class="node" x="520" y="170" width="170" height="56" rx="6"/>
+        <text class="title" x="605" y="193" text-anchor="middle">PDP</text>
+        <text class="small" x="605" y="211" text-anchor="middle">emite, valida, rota y gatea</text>
+
+        <rect class="node" x="760" y="170" width="140" height="56" rx="6"/>
+        <text class="title" x="830" y="193" text-anchor="middle">OPA</text>
+        <text class="small" x="830" y="211" text-anchor="middle">sin políticas de app aún</text>
+
+        <!-- Fila C: infraestructura -->
+        <rect class="node" x="470" y="300" width="130" height="56" rx="6"/>
+        <text class="title" x="535" y="323" text-anchor="middle">Keycloak</text>
+        <text class="small" x="535" y="341" text-anchor="middle">IdP · OIDC</text>
+
+        <rect class="node" x="620" y="300" width="140" height="56" rx="6"/>
+        <text class="title" x="690" y="323" text-anchor="middle">SurrealDB</text>
+        <text class="small" x="690" y="341" text-anchor="middle">catálogo + access_event</text>
+
+        <!-- Aristas que corren hoy -->
+        <line class="edge" x1="605" y1="96" x2="605" y2="168" marker-end="url(#arr)"/>
+        <text class="mono" x="614" y="136">POST /api/v1/authorize · corre</text>
+
+        <line class="edge dashed" x1="210" y1="198" x2="278" y2="198" marker-end="url(#arr-dim)"/>
+        <text class="small" x="244" y="160" text-anchor="middle">alta técnica</text>
+        <text class="small" x="244" y="245" text-anchor="middle">credencial del PEP, no del PDP</text>
+
+        <line class="edge" x1="560" y1="226" x2="548" y2="298" marker-end="url(#arr)"/>
+        <text class="small" x="500" y="268" text-anchor="end">autentica</text>
+
+        <line class="edge ok" x1="650" y1="226" x2="672" y2="298" marker-end="url(#arr-ok)"/>
+        <text class="ok" x="700" y="268">audita cada decisión</text>
+
+        <!-- Arista HU-003: ahora corre -->
+        <line class="edge ok" x1="440" y1="198" x2="518" y2="198" marker-end="url(#arr-ok)"/>
+        <text class="ok" x="479" y="160" text-anchor="middle">HU-003 · corre</text>
+        <text class="mono" x="479" y="245" text-anchor="middle">/internal/v1/access-decisions · mTLS</text>
+
+        <!-- Arista HU-006: ahora corre, pero OPA sigue sin política -->
+        <line class="edge ok" x1="690" y1="198" x2="758" y2="198" marker-end="url(#arr-ok)"/>
+        <text class="ok" x="724" y="160" text-anchor="middle">HU-006 · corre</text>
+        <text class="mono" x="724" y="245" text-anchor="middle">POST /v1/data/.../decision</text>
+
+        <!-- Leyenda -->
+        <line class="edge ok" x1="40" y1="398" x2="80" y2="398"/>
+        <text class="small" x="88" y="402">corre hoy</text>
+        <line class="edge dashed" x1="220" y1="398" x2="260" y2="398"/>
+        <text class="small" x="268" y="402">corre, pero con la pieza vieja (no migrada)</text>
+      </svg>
+      <figcaption>El PDP ya sabe emitir (HU-012), validar (HU-013) y rotar (HU-014) una credencial de aplicación por su propio canal interno, y ya sabe quién puede administrar el catálogo (HU-015: primer administrador automático al registrar; borrar o rotar exige serlo, gateado vía OPA). Lo que <b>no</b> cambió: el PEP sigue dando de alta cada integración con su propio token, repartido a mano y guardado en <code>integrations.json</code> — no consulta todavía al PDP. Migrar el PEP para que use ese endpoint es trabajo de ese lado del sistema (ver P1). Lo que sigue sin existir del todo es una <b>política</b> de aplicación en OPA: <code>allow_candidates</code>/<code>deny_candidates</code> siguen vacíos, así que OPA responde <code>DENY</code>/<code>NO_APPLICABLE_POLICY</code> a cualquier petición — un resultado correcto, no un símbolo de que algo falte cablear.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="eyebrow">Estado por capacidad</div>
+    <h2>Seis frentes, a distinta altura</h2>
+    <div class="grid">
+      <div class="card"><div class="row"><h3>Arquitectura y contratos</h3><span class="counts">6 ✓ · 1 ~ · 1 ✗</span></div><p>Sin cambios de checklist este corte. <code>contracts/</code> con OpenAPI y JSON Schema, ejemplos validados en el build. Mapper y dominio verificados por ArchUnit, Modulith y <code>consistencia.ps1</code> sobre 8 slices.</p></div>
+      <div class="card"><div class="row"><h3>Seguridad PEP · PDP · OPA</h3><span class="counts">5 ✓ · 3 ~ · 3 ✗</span></div><p>Sin cambios en la cadena de conexión. HU-014/HU-015 tocan el catálogo de aplicaciones del PDP y su administración, no esta cadena. Lo que falta sigue siendo que exista una política de aplicación real.</p></div>
+      <div class="card"><div class="row"><h3>Librería de integración</h3><span class="counts">5 ✓ · 4 ~ · 0 ✗</span></div><p>Con HU-014, el PDP ya cubre las tres operaciones de credencial (emitir, validar, rotar). Lo que sigue igual: <code>pep/starter</code> sigue en v0 y no consume ninguna de las tres todavía.</p></div>
+      <div class="card"><div class="row"><h3>Observabilidad</h3><span class="counts">13 ✓ · 3 ~ · 3 ✗</span></div><p>Sin cambios este corte. El stack (OTel, Jaeger, Loki, Prometheus, Grafana) sigue armado y sin verificar en ejecución conjunta.</p></div>
+      <div class="card"><div class="row"><h3>Microfrontend de seguridad</h3><span class="counts">0 ✓ · 1 ~ · 11 ✗</span></div><p>Sigue sin empezar como proyecto — <code>securityBaseline-fr</code> sigue en dos archivos fuente. Ya no bloqueado por falta de datos: roles, perfiles y ahora administración por aplicación existen.</p></div>
+      <div class="card"><div class="row"><h3>Administración por aplicación</h3><span class="counts">2 ✓ · 1 ~ · 5 ✗</span></div><p><b>Cambió este corte.</b> HU-015 resolvió el caso concreto de una aplicación: alta automática del primer administrador y gate en borrar/rotar. Sigue faltando delegar, listar/quitar administradores por HTTP público, y el ADR general.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Lo que falta ahora</div>
+    <h2>Pendientes por prioridad — recalculado tras HU-015</h2>
+    <p class="why">HU-003 a HU-015 salieron de esta lista: están hechas y en <code>develop</code>. El PDP ya cubre credenciales de punta a punta (emitir, validar, rotar) y ya sabe quién administra cada aplicación. Lo que falta para cerrar el ciclo completo es del lado del PEP (migrar su alta técnica), y lo que falta para un <code>ALLOW</code> real sigue sin ser código del PDP — es una política.</p>
+    <div class="tiers">
+      <div class="tier done">
+        <header><span class="chip ok">hecho este corte</span><h3>HU-003 → HU-004 → HU-005 → HU-006 → HU-008 → HU-007 → HU-011 → HU-012 → HU-013 → HU-014 → HU-015</h3></header>
+        <p class="why">La cadena completa PEP↔PDP↔OPA sigue fusionada, verde en <code>mvnw clean verify</code> (653 pruebas) y en <code>develop</code>. Desde HU-014/HU-015, el catálogo de aplicaciones del PDP no solo emite credenciales: las rota sin re-registrar, y no queda sin dueño — el primer administrador se asigna solo al registrar, y borrar o rotar exige serlo.</p>
+      </div>
+      <div class="tier p1">
+        <header><span class="chip p0">P1 · cierra el ciclo de la credencial</span><h3>Migrar <code>pep/starter</code> para consumir la credencial del PDP</h3></header>
+        <p class="why">El PDP ya puede emitir, validar y rotar; el PEP sigue sin preguntarle. Es una historia del lado del PEP (no del PDP): cambiar <code>PepRegistrationAutoConfiguration</code> para que, en vez de (o además de) su token manual, valide la credencial que el PDP emitió al registrar la aplicación. No es parte de HU-012/013/014 a propósito — todas la dejaron fuera de alcance explícitamente.</p>
+      </div>
+      <div class="tier p0">
+        <header><span class="chip p0">P0 · desbloquea el primer <code>ALLOW</code> real</span><h3>Una política de aplicación en <code>policies/applications/</code></h3></header>
+        <p class="why">Sigue sin ser una historia del PDP: <code>allow_candidates</code>/<code>deny_candidates</code> en <code>composition.rego</code> son <em>extension points</em> a propósito, vacíos hasta que alguien publique un módulo real bajo ese paquete (es el trabajo de Laura, dueña de <code>security-policy-engine/</code>). Sigue faltando la política en sí.</p>
+      </div>
+      <div class="tier p2">
+        <header><span class="chip part">P2 · cerrar lo que ya se armó</span><h3>Observabilidad — de config a operación</h3></header>
+        <p class="why">El código y el compose ya existen, y la auditoría de decisiones de acceso ya no falta. Lo que falta no es escribir más YAML, es verificarlo y documentarlo:</p>
+        <ol>
+          <li><b>Levantar <code>observability/compose.yml</code> con tráfico real</b> del PDP y el PEP, y confirmar que Grafana muestra algo.</li>
+          <li><b>Convención de telemetría escrita.</b> El parser del collector ya asume una forma exacta de los logs, sin documentar.</li>
+          <li><b>El perfil <code>observability</code> es opt-in</b>, no el default.</li>
+          <li><b>Exponer <code>access_event</code> a la pila de observabilidad</b> — trabajo de config, no de dominio.</li>
+        </ol>
+      </div>
+      <div class="tier p3">
+        <header><span class="chip no">P3 · decidir antes de construir</span><h3>Microfrontend y el resto de administración por aplicación</h3></header>
+        <p class="why">Ya no están bloqueados por falta de datos de dominio — roles, perfiles, asignaciones, auditoría, credenciales y ahora administración por aplicación existen. Siguen bloqueados por decisión:</p>
+        <ul>
+          <li>El ADR formal de "qué administra cada aplicación" y "quién puede administrarla" a nivel general: ¿rol global, rol por aplicación, perfil, delegación? HU-015 resolvió el caso concreto (gate en borrar/rotar); la decisión general sigue sin escribirse. Entra al repo de arquitectura como ADR, no como código.</li>
+          <li>Delegar la administración a otro usuario, y listar/quitar administradores por un endpoint HTTP público (hoy solo existe el backfill interno vía mTLS).</li>
+          <li>Cómo el microfrontend identifica la aplicación que lo invoca — con HU-012/013/014 ya existe un mecanismo de credencial que podría reutilizarse para esto, pendiente de decidir.</li>
+        </ul>
+      </div>
+      <div class="tier p3">
+        <header><span class="chip no">P4 · evaluar, no construir</span><h3>Serverless, MFA, cache distribuida, Zero Trust como postura escrita</h3></header>
+        <ul>
+          <li><b>Zero Trust</b> ya se practica — falta escribirlo como postura en un documento.</li>
+          <li><b>MFA</b> es configuración de Keycloak, no código nuestro.</li>
+          <li><b>Cache distribuida</b> ahora sí tiene bastante que cachear — pero sigue sin ser prioridad.</li>
+          <li><b>Serverless</b> no se ha evaluado.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Hallazgos</div>
+    <h2>Lo que esta pasada de verificación encontró</h2>
+    <div class="grid">
+      <div class="finding"><h3>"Preexistente y ajeno" es una conclusión, no una excusa para no investigar</h3><p>Un reporte de validación anterior había fichado 3 fallos de prueba como preexistentes y ajenos a la historia, sin investigar la causa. Investigarlos mostró que dos de los tres eran síntoma de un defecto real: el índice único de roles/perfiles no cubre el alcance sin aplicación, y una variable de entorno rota (<code>OPENSSL_CONF</code>) hacía parecer que faltaba una herramienta que sí estaba instalada.</p></div>
+      <div class="finding"><h3>"Quién administra" ya es una decisión de OPA, no de Java</h3><p>El gate de HU-015 en borrar/rotar una aplicación no es un <code>if (rol == ADMIN)</code> dentro del caso de uso: valida contra el mismo mecanismo de HU-009, que a su vez resuelve la decisión vía OPA. Es la regla que ya regía para autorización de negocio, aplicada ahora a operaciones administrativas — sin inventar una segunda forma de decidir.</p></div>
+      <div class="finding"><h3>Un índice único puede pasar todos los tests existentes y aun así no cubrir un caso real</h3><p>El índice sobre <code>(level, tenantId, applicationId, name)</code> llevaba roto desde que se definió: ningún test anterior a HU-015 creaba un rol o perfil de alcance <code>TENANT</code>/<code>GLOBAL</code> después de que el índice existiera — todos usaban alcance <code>APPLICATION</code>, donde el campo nunca falta. SurrealDB no compara <code>NONE</code> contra un campo ausente vía índice; una cadena vacía sí.</p></div>
+      <div class="finding"><h3>Criterio 10 (transacciones/saga) sigue siendo el único no cumplido</h3><p><code>RemoveApplicationUseCase</code> existe como compensación (ahora gateada por HU-015) y ningún caso de uso automático la invoca fuera de la compensación manual de HU-010.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">La lista original, limpia</div>
+    <h2>Ítem por ítem, con su evidencia</h2>
+
+    <h3>A · Observabilidad</h3>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Estado</th><th>Ítem</th><th>Evidencia / qué falta</th></tr></thead>
+      <tbody>
+        <tr><td class="st"><span class="chip ok">hecho</span></td><td>Correlation ID</td><td class="ev"><code>shared/web/CorrelationWebFilter</code>: genera o propaga <code>X-Request-Id</code> y <code>X-Correlation-Id</code>, los devuelve en la respuesta, los publica en el contexto de Reactor y en el MDC del log. El PEP los envía por contrato.</td></tr>
+        <tr><td class="st"><span class="chip ok">hecho</span></td><td>Timestamps ISO 8601</td><td class="ev"><code>%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX}</code> en <code>application.properties</code></td></tr>
+        <tr><td class="st"><span class="chip ok">hecho</span></td><td>Nombre estándar de logger</td><td class="ev"><code>logger=%logger{36}</code></td></tr>
+        <tr><td class="st"><span class="chip ok">hecho</span></td><td>Filtros HTTP / interceptores</td><td class="ev"><code>CorrelationWebFilter</code> (PDP, primero de la cadena) e <code>IngressLimitsFilter</code> (PEP)</td></tr>
+        <tr><td class="st"><span class="chip part">parcial</span></td><td>Estrategia de trazabilidad distribuida</td><td class="ev">El eslabón PEP → PDP ya propaga los IDs por contrato y ahora exporta trazas OTLP hacia Jaeger. Falta el frontend, y falta escribirla como estrategia.</td></tr>
+        <tr><td class="st"><span class="chip ok">hecho</span></td><td>Trace ID y Span ID</td><td class="ev"><code>TelemetryConfiguration</code> + <code>management.opentelemetry.tracing.export.otlp.enabled=true</code> en PDP y PEP, con <code>propagation.type=w3c</code>. El collector recibe por OTLP y exporta a Jaeger.</td></tr>
+        <tr><td class="st"><span class="chip ok">hecho</span></td><td>Estructura estándar de logs</td><td class="ev"><code>logging.structured.format.file=logstash</code> en PDP y PEP (perfil <code>observability</code>), con rolling policy compartida. JSON, no clave=valor.</td></tr>
+        <tr><td class="st"><span class="chip part">parcial</span></td><td>Eventos de error</td><td class="ev">Un solo <code>ApiErrorHandler</code> (<code>@RestControllerAdvice</code>) da forma uniforme a las respuestas. No hay evento de log definido más allá del log de la excepción.</td></tr>
+        <tr><td class="st"><span class="chip part">parcial</span></td><td>Eventos de procesos de negocio</td><td class="ev"><code>DomainEventPublisher</code> + eventos de dominio existen (in-process, Spring). El de auditoría (<code>AccessEvent</code>) ya se persiste, pero no como telemetría de proceso de negocio en general.</td></tr>
+        <tr><td class="st"><span class="chip ok">hecho</span></td><td>Integrar OpenTelemetry</td><td class="ev"><code>spring-boot-starter-opentelemetry</code> + <code>micrometer-registry-prometheus</code> en el POM del PDP y del PEP, con exportador OTLP real hacia el collector.</td></tr>
+        <tr><td class="st"><span class="chip ok">hecho</span></td><td>Reconstruir una transacción por Correlation ID</td><td class="ev">Con logs JSON en Loki y trazas en Jaeger correlacionadas por <code>traceId</code>/<code>spanId</code> (parseados en <code>collector.yml</code>), ya hay almacén centralizado.</td></tr>
+        <tr><td class="st"><span class="chip ok">hecho</span></td><td>Eventos de auditoría</td><td class="ev"><b>HU-007</b>: <code>AccessEvent</code> + <code>AccessAuditRepository</code> — cada decisión (<code>ALLOW</code>/<code>DENY</code>/<code>INDETERMINATE</code>) queda persistida en <code>access_event</code> (SurrealDB), consultable por <code>correlationId</code>. Sin panel en Grafana todavía — la evidencia existe, falta exponerla ahí (P2).</td></tr>
+        <tr><td class="st"><span class="chip no">pendiente</span></td><td>Identificar eventos críticos</td><td class="ev">Parte de la convención de telemetría a escribir (P2)</td></tr>
+        <tr><td class="st"><span class="chip part">parcial</span></td><td>Convenciones semánticas OTel</td><td class="ev">Existe una convención de facto en el <code>filelog</code> de <code>collector.yml</code>. No está escrita como documento.</td></tr>
+        <tr><td class="st"><span class="chip no">pendiente</span></td><td>Librería transversal de instrumentación</td><td class="ev">El starter del PEP no instala filtros a propósito</td></tr>
+        <tr><td class="st"><span class="chip ok">hecho</span></td><td>Prometheus</td><td class="ev"><code>micrometer-registry-prometheus</code> + collector con job de scrape para PDP y PEP + <code>observability/prometheus.yml</code> + servicio en <code>compose.yml</code></td></tr>
+        <tr><td class="st"><span class="chip ok">hecho</span></td><td>Loki</td><td class="ev"><code>observability/loki.yml</code> + exportador <code>otlphttp/loki</code> en el collector + servicio en <code>compose.yml</code></td></tr>
+        <tr><td class="st"><span class="chip ok">hecho</span></td><td>Jaeger</td><td class="ev"><code>observability/jaeger.yml</code> (backend Badger) + exportador <code>otlphttp/jaeger</code> + servicio en <code>compose.yml</code></td></tr>
+        <tr><td class="st"><span class="chip ok">hecho</span></td><td>Grafana</td><td class="ev"><code>observability/grafana/provisioning/</code> (datasources + dashboards) y el dashboard <code>security-platform.json</code> provisionado, servicio en <code>compose.yml</code></td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>B · Seguridad</h3>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Estado</th><th>Ítem</th><th>Evidencia / qué falta</th></tr></thead>
+      <tbody>
+        <tr><td class="st"><span class="chip ok">hecho</span></td><td>Documentar arquitectura PEP/PDP/OPA</td><td class="ev"><code>docs/PLATAFORMA.md</code> (diagramas, flujos hoy y objetivo, prioridades), <code>contracts/README.md</code></td></tr>
+        <tr><td class="st"><span class="chip ok">hecho</span></td><td>PEP, PDP y OPA independientes</td><td class="ev">Tres árboles (<code>pdp/</code>, <code>pep/</code>, <code>security-policy-engine/</code>), tres builds, cero código compartido. Solo se tocan en <code>contracts/</code>.</td></tr>
+        <tr><td class="st"><span class="chip part">parcial</span></td><td>Integración Aplicación → PEP</td><td class="ev">El starter hace el alta (<code>PUT /internal/v1/integrations/{app}/{env}</code>). No protege endpoints locales; no consume todavía ninguna de las tres operaciones de credencial que el PDP ya expone (HU-012/013/014).</td></tr>
+        <tr><td class="st"><span class="chip ok">hecho</span></td><td>Integración PEP → PDP</td><td class="ev"><b>HU-003</b>: <code>InternalAccessDecisionController</code> en el PDP + mTLS con <code>client-auth=want</code> + evidencia JWT. El PEP ya apunta por defecto a <code>https://localhost:8080</code>, no al simulador. Probado con <code>InternalSecurityChainIntegrationTests</code>.</td></tr>
+        <tr><td class="st"><span class="chip ok">hecho</span></td><td>Integración PDP → OPA</td><td class="ev"><b>HU-006</b>: <code>OpaPolicyDecisionAdapter</code> reemplaza a <code>DenyByDefaultPolicyDecisionAdapter</code>, llamada HTTP real a <code>POST /v1/data/security/authorization/decision</code>. La respuesta sigue siendo <code>DENY</code>: falta la política de aplicación (ver P0), no la conexión.</td></tr>
+        <tr><td class="st"><span class="chip part">parcial</span></td><td>Zero Trust</td><td class="ev">Se practica (ADR-018, fallo cerrado, mTLS decidido, nada por cabecera). No está escrito como postura.</td></tr>
+        <tr class="changed"><td class="st"><span class="chip ok">hecho</span> <span class="chip new">nuevo</span></td><td>Manejo de claves</td><td class="ev"><b>HU-012/013/014</b>: el PDP genera un secreto de aplicación de alta entropía, guarda solo su hash (BCrypt), lo valida por un canal interno mTLS, y ahora lo <b>rota</b> sin re-registrar la aplicación. Secretos de despliegue siguen por Key Vault y service connections, sin cambio.</td></tr>
+        <tr><td class="st"><span class="chip no">pendiente</span></td><td>MFA</td><td class="ev">Capacidad de Keycloak, no configurada ni decidida</td></tr>
+        <tr class="changed"><td class="st"><span class="chip part">parcial</span> <span class="chip new">nuevo</span></td><td>Auditoría de operaciones de seguridad</td><td class="ev"><b>HU-007</b>: toda decisión de autorización (BFF e interno/PEP) queda auditada. <b>HU-015</b> gatea quién administra el catálogo vía OPA, pero esa operación administrativa (crear/borrar/rotar aplicación) todavía no emite su propio evento de auditoría — solo la respuesta HTTP.</td></tr>
+        <tr><td class="st"><span class="chip no">pendiente</span></td><td>Cache distribuida</td><td class="ev">Ya hay roles, perfiles y asignaciones que cachear. Único gancho de código: <code>jti</code> validado «para una futura revocación por Redis». Sigue sin ser prioridad.</td></tr>
+        <tr><td class="st"><span class="chip no">pendiente</span></td><td>Invalidación / actualización de seguridad</td><td class="ev">Depende de la cache</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>C · Librería</h3>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Estado</th><th>Ítem</th><th>Evidencia / qué falta</th></tr></thead>
+      <tbody>
+        <tr><td class="st"><span class="chip ok">hecho</span></td><td>Agregarla como dependencia</td><td class="ev"><code>pep/starter/pom.xml</code> + <code>AutoConfiguration.imports</code>: es un starter de Spring Boot de verdad</td></tr>
+        <tr><td class="st"><span class="chip ok">hecho</span></td><td>Configurar desde <code>application.properties</code></td><td class="ev"><code>security.pep.registration.*</code> (<code>PepRegistrationProperties</code>, en <code>pep/starter</code>)</td></tr>
+        <tr><td class="st"><span class="chip ok">hecho</span></td><td>URL del PEP</td><td class="ev"><code>security.pep.registration.pep-url</code>, HTTPS obligatorio salvo <code>allow-insecure-http</code></td></tr>
+        <tr><td class="st"><span class="chip part">parcial</span></td><td>Crear librería transversal</td><td class="ev">v0: solo registro técnico, con validación y reintentos con backoff. No consume todavía ninguna credencial del PDP.</td></tr>
+        <tr class="changed"><td class="st"><span class="chip ok">hecho</span> <span class="chip new">nuevo</span></td><td>Credenciales / claves</td><td class="ev"><b>HU-012/013/014</b>: el PDP genera y devuelve el secreto una sola vez al registrar, lo valida por <code>/internal/v1/applications/{id}/credential-validations</code>, y lo rota sin re-registrar. El PEP sigue usando su propio token manual — migrarlo es trabajo aparte (P1).</td></tr>
+        <tr><td class="st"><span class="chip part">parcial</span></td><td>Automatizar configuración</td><td class="ev">Validación al arrancar; sin descubrimiento</td></tr>
+        <tr><td class="st"><span class="chip part">parcial</span></td><td>Evitar implementación manual</td><td class="ev">Cubre el alta. El enforcement lo hace el PEP como proxy, no la librería.</td></tr>
+        <tr><td class="st"><span class="chip part">parcial</span></td><td>Ejecución en segundo plano</td><td class="ev"><code>DomainEventPublisher</code> in-process para eventos de dominio en general. La auditoría de decisiones (HU-007) decidió explícitamente <b>no</b> usar ese canal.</td></tr>
+        <tr><td class="st"><span class="chip ok">hecho</span></td><td>Clave privada generada por el PDP</td><td class="ev"><b>HU-012</b>: el PDP genera el secreto de aplicación al registrar — ya no falta ninguna pieza de este lado. Ver hallazgos: el PEP todavía no la consume.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>D · Arquitectura</h3>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Estado</th><th>Ítem</th><th>Evidencia / qué falta</th></tr></thead>
+      <tbody>
+        <tr><td class="st"><span class="chip ok">hecho</span></td><td>API First</td><td class="ev"><code>contracts/pep-pdp/v1/openapi.yaml</code> antes que el código. Regla 1 de <code>contracts/README.md</code>: «un cambio de contrato se acuerda antes de implementarse».</td></tr>
+        <tr><td class="st"><span class="chip ok">hecho</span></td><td>Contract First</td><td class="ev">Las cuatro decisiones de unificación (D-U1..D-U4) son la prueba: tres equipos, un contrato, ejemplos validados en el build.</td></tr>
+        <tr><td class="st"><span class="chip ok">hecho</span></td><td>Mapper</td><td class="ev">Criterios 13 y 14: DTO crudo → mapper con <code>RequestFieldParser</code> → record con VOs y <code>requireNonNull</code>. <code>consistencia.ps1</code> verifica la forma en los 8 slices.</td></tr>
+        <tr><td class="st"><span class="chip ok">hecho</span></td><td>Domain Context</td><td class="ev">Modulith con <code>allowedDependencies</code> explícitos. HU-015 amplió varios de forma documentada (<code>applications :: model</code>, <code>roles :: model/usecase</code>, <code>identity :: rule</code> en <code>authorization</code>) — nunca relajados a ciegas para que compile.</td></tr>
+        <tr><td class="st"><span class="chip ok">hecho</span></td><td>Componentes transversales del ecosistema</td><td class="ev">Seguridad: sí (<code>contracts/</code>, <code>PLATAFORMA.md</code>)</td></tr>
+        <tr><td class="st"><span class="chip part">parcial</span></td><td>Información transversal (parámetros, mensajes, notificaciones)</td><td class="ev">Solo seguridad está resuelta como transversal. El resto no existe ni está decidido.</td></tr>
+        <tr><td class="st"><span class="chip no">pendiente</span></td><td>Serverless</td><td class="ev">No evaluado. Hoy: contenedor en App Service.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>E · Microfrontend de seguridad</h3>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Estado</th><th>Ítem</th><th>Evidencia / qué falta</th></tr></thead>
+      <tbody>
+        <tr><td class="st"><span class="chip part">parcial</span></td><td>Modelar la relación en el dominio</td><td class="ev">Existen <code>tenants</code>, <code>applications</code> (con credencial y administración propia desde HU-012/015), <code>resources</code>, <code>identity</code>, <code>roles</code>, <code>assignments</code> y <code>profiles</code>. El ADR general de "qué administra cada aplicación" sigue sin escribirse.</td></tr>
+        <tr><td class="st"><span class="chip no">pendiente</span></td><td>POC del microfrontend y los 10 ítems restantes</td><td class="ev">Ya no bloqueado por falta de datos. <code>securityBaseline-fr</code> sigue con dos archivos fuente. Falta el ADR de administración (P3) y arrancar el proyecto.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>F · Administración de seguridad por aplicación</h3>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Estado</th><th>Ítem</th><th>Evidencia / qué falta</th></tr></thead>
+      <tbody>
+        <tr class="changed"><td class="st"><span class="chip ok">hecho</span> <span class="chip new">nuevo</span></td><td>Alta automática del primer administrador</td><td class="ev"><b>HU-015</b>: <code>RegisterApplicationWithFirstAdministratorUseCaseImpl</code> asigna el rol <code>ADMIN</code> de alcance-aplicación a quien registra, en la misma operación de registro. Nadie tiene que pedirlo después.</td></tr>
+        <tr class="changed"><td class="st"><span class="chip ok">hecho</span> <span class="chip new">nuevo</span></td><td>Borrar/rotar credencial exige ser administrador</td><td class="ev"><b>HU-015</b>: <code>AdministerApplicationRemovalUseCaseImpl</code>/<code>AdministerApplicationCredentialRotationUseCaseImpl</code> gatean vía el mecanismo de HU-009 (OPA), no un <code>if</code> de rol en Java.</td></tr>
+        <tr class="changed"><td class="st"><span class="chip part">parcial</span> <span class="chip new">nuevo</span></td><td>Backfill de administrador para aplicaciones preexistentes</td><td class="ev"><code>InternalApplicationAdministratorController</code> (mTLS) existe; es manual, sin flujo de descubrimiento de "aplicaciones sin administrador".</td></tr>
+        <tr><td class="st"><span class="chip no">pendiente</span></td><td>Delegar administración a otro usuario</td><td class="ev">No modelado</td></tr>
+        <tr><td class="st"><span class="chip no">pendiente</span></td><td>Listar/quitar administradores por HTTP público</td><td class="ev">No existe endpoint</td></tr>
+        <tr><td class="st"><span class="chip no">pendiente</span></td><td>ADR formal: rol global vs. por aplicación vs. perfil</td><td class="ev">Sigue sin escribirse — HU-015 resolvió el caso concreto (aplicación) sin cerrar la decisión general</td></tr>
+        <tr><td class="st"><span class="chip no">pendiente</span></td><td>Auditoría de operaciones administrativas</td><td class="ev">Las operaciones de HU-015 no emiten <code>AccessEvent</code> propio, solo la respuesta HTTP</td></tr>
+        <tr><td class="st"><span class="chip no">pendiente</span></td><td>Panel/UI de administración</td><td class="ev">Depende del microfrontend (sección E)</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Para la explicación</div>
+    <h2>El guion de la reunión, con lo que es real marcado</h2>
+    <div class="script">
+      <div class="step"><div><b>Problema</b><p>Las aplicaciones necesitan seguridad común sin implementarla cada una. <span class="chip ok">se sostiene</span> — es la tesis del repo entero.</p></div></div>
+      <div class="step"><div><b>Arquitectura</b><p>PEP, PDP y OPA independientes. <span class="chip ok">hecho</span> — tres árboles, y el primer salto entre ellos corre de verdad, no solo el contrato.</p></div></div>
+      <div class="step"><div><b>Librería</b><p>La aplicación instala un starter y configura. <span class="chip part">parcial</span> — el PDP ya sabe emitir, validar y rotar la credencial (HU-012/013/014); el starter todavía no la consume, y el enforcement lo sigue haciendo el PEP como proxy.</p></div></div>
+      <div class="step"><div><b>Microfrontend</b><p>Gestión de seguridad centralizada. <span class="chip no">pendiente</span> — ya no bloqueado por falta de datos, sigue bloqueado por decisión de administración y por arrancar el proyecto.</p></div></div>
+      <div class="step"><div><b>Modelo de dominio</b><p>Aplicaciones, roles, usuarios, permisos. <span class="chip ok">hecho en su mayoría</span> — tenants, aplicaciones (con credencial y administración propia desde HU-012/015), recursos, usuarios, roles, asignaciones y perfiles existen y están probados (653 pruebas).</p></div></div>
+      <div class="step"><div><b>Administradores</b><p>Quién administra la seguridad de cada aplicación. <span class="chip part">parcial</span> — HU-015 resolvió el caso concreto de una aplicación (alta automática, gate vía OPA); sigue sin ADR general ni delegación.</p></div></div>
+      <div class="step"><div><b>Observabilidad</b><p>Correlation ID, trazas, logs, métricas, auditoría. <span class="chip ok">config completa + auditoría real</span> — todo el stack está armado y cableado, y cada decisión de acceso queda como evidencia durable en SurrealDB. Falta encender el stack con tráfico real y mirar el dashboard.</p></div></div>
+      <div class="step"><div><b>Resultado esperado</b><p>Registrar la app → credencial → administrador → librería → PEP → PDP → roles/perfiles → OPA → decisión → auditoría. <span class="chip ok">toda la cadena de código corre, con datos reales, y queda registrada</span> — salvo que la librería del PEP todavía usa su propia credencial en vez de la que el PDP ya emite, valida y rota. Lo único que falta para un <code>ALLOW</code> real no es más código de conexión: es que alguien publique una política de aplicación en Rego.</p></div></div>
+    </div>
+  </section>
+</main>
+
+</body></html>

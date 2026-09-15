@@ -2,18 +2,23 @@ package co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web;
 
 import co.edu.uco.seguridad.AbstractSurrealDbIntegrationTest;
 import co.edu.uco.seguridad.pdp.PdpApplication;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.OpaFixtureServer;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.SecurityUserRepository;
 import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;
 import co.edu.uco.seguridad.pdp.identity.domain.model.Email;
 import co.edu.uco.seguridad.shared.security.TestJwtSupport;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -23,14 +28,24 @@ import java.util.UUID;
 
 /**
  * Flujo HTTP completo sobre Netty, autenticado y contra una SurrealDB real — mismo patrón que
- * AssignmentHttpTests (HU-005). Toda la cadena es esqueleto todavía: se espera rojo por 500
- * (UnsupportedOperationException en el servidor), no los códigos de éxito que se afirman aquí.
+ * AssignmentHttpTests (HU-005).
+ *
+ * <p>HU-019: {@code assignProfile} ahora pasa por el gate de administración de HU-018/019
+ * (incondicional: toda asignación de perfil exige ser administrador de la aplicación) — mismo
+ * {@link OpaFixtureServer} embebido que {@code AssignmentHttpTests} ya usa, respondiendo
+ * {@code ALLOW}. Como {@code registerApplication()} deja al mismo sujeto como primer administrador
+ * (HU-015), esta clase no prueba el rechazo del gate — eso vive en
+ * {@code AdministerProfileAssignmentCreationUseCaseImplTests}.</p>
  */
 @SpringBootTest(classes = PdpApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ProfileAssignmentHttpTests extends AbstractSurrealDbIntegrationTest {
 
     private static final String UCO = "universidad-uco";
     private static final ObjectMapper JSON = new ObjectMapper();
+    private static final String OPA_ALLOW_BODY =
+            "{\"result\":{\"effect\":\"ALLOW\",\"reasonCode\":\"POLICY_ALLOWED\",\"policyReferences\":[],\"obligations\":[]}}";
+
+    private static OpaFixtureServer opa;
 
     @LocalServerPort
     int port;
@@ -39,6 +54,22 @@ class ProfileAssignmentHttpTests extends AbstractSurrealDbIntegrationTest {
     SecurityUserRepository userRepository;
 
     private String prefix;
+
+    @BeforeAll
+    static void startOpaFixture() throws Exception {
+        opa = OpaFixtureServer.start();
+        opa.respondWith(200, OPA_ALLOW_BODY);
+    }
+
+    @AfterAll
+    static void stopOpaFixture() {
+        opa.stop();
+    }
+
+    @DynamicPropertySource
+    static void opaConnectionProperties(DynamicPropertyRegistry registry) {
+        registry.add("pdp.opa.base-url", () -> opa.baseUrl());
+    }
 
     @BeforeEach
     void freshPrefix() {

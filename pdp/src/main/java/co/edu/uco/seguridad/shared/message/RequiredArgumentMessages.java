@@ -103,6 +103,9 @@ public final class RequiredArgumentMessages {
     public static final String ASSIGNMENT_REPOSITORY = "se requiere el repositorio de asignaciones";
     public static final String ASSIGNMENT_NOT_DUPLICATE_RULE = "se requiere la regla de no duplicidad de asignación activa";
     public static final String ASSIGNMENT_EXISTS_RULE = "se requiere la regla de existencia de asignación";
+    public static final String ASSIGNMENT_APPLICATION_LOOKUP_VALIDATOR = "se requiere el validador de aplicación de la asignación";
+    public static final String ADMINISTER_ASSIGNMENT_CREATION_USE_CASE = "se requiere el caso de uso de administración de creación de asignación";
+    public static final String ADMINISTER_ASSIGNMENT_REVOCATION_USE_CASE = "se requiere el caso de uso de administración de revocación de asignación";
     public static final String VALIDITY = "se requiere la vigencia";
     public static final String VALID_FROM = "se requiere el inicio de vigencia";
     public static final String VALID_UNTIL = "se requiere el fin de vigencia";
@@ -187,6 +190,12 @@ public final class RequiredArgumentMessages {
     public static final String REGISTER_PROTECTED_RESOURCE_REQUEST =
             "se requiere la solicitud de registro de recurso protegido";
     public static final String ADMINISTRATION_REQUEST = "se requiere la solicitud de administración";
+    public static final String ASSIGN_ROLE_REQUEST = "se requiere la solicitud de asignación de rol";
+    public static final String REVOKE_ASSIGNMENT_REQUEST = "se requiere la solicitud de revocación de asignación";
+    public static final String DEFINE_PROFILE_REQUEST = "se requiere la solicitud de definición de perfil";
+    public static final String ADD_ROLE_TO_PROFILE_REQUEST = "se requiere la solicitud de adición de rol a perfil";
+    public static final String ASSIGN_PROFILE_REQUEST = "se requiere la solicitud de asignación de perfil";
+    public static final String REVOKE_PROFILE_ASSIGNMENT_REQUEST = "se requiere la solicitud de revocación de asignación de perfil";
 
     // Saga de registro de aplicación con recurso inicial (HU-010).
     public static final String REGISTER_APPLICATION_USE_CASE = "se requiere el caso de uso de registro de aplicación";
@@ -229,6 +238,9 @@ public final class RequiredArgumentMessages {
     public static final String PROFILE_REPOSITORY = "se requiere el repositorio de perfiles";
     public static final String PROFILE_NAME_UNIQUE_RULE = "se requiere la regla de nombre de perfil único";
     public static final String PROFILE_EXISTS_RULE = "se requiere la regla de existencia de perfil";
+    public static final String PROFILE_APPLICATION_LOOKUP_VALIDATOR = "se requiere el validador de aplicación del perfil";
+    public static final String ADMINISTER_PROFILE_DEFINITION_USE_CASE = "se requiere el caso de uso de administración de definición de perfil";
+    public static final String ADMINISTER_PROFILE_ROLE_ADDITION_USE_CASE = "se requiere el caso de uso de administración de adición de rol a perfil";
     public static final String DEFINE_PROFILE_RULES_VALIDATOR = "se requiere el validador de definición de perfil";
     public static final String ADD_ROLE_TO_PROFILE_RULES_VALIDATOR = "se requiere el validador de agregar rol a perfil";
     public static final String PROFILE_ROLES_LOOKUP_VALIDATOR = "se requiere el validador de roles de perfil";
@@ -248,6 +260,9 @@ public final class RequiredArgumentMessages {
     public static final String PROFILE_ASSIGNMENT_NOT_DUPLICATE_RULE =
             "se requiere la regla de no duplicidad de asignación de perfil activa";
     public static final String PROFILE_ASSIGNMENT_EXISTS_RULE = "se requiere la regla de existencia de asignación de perfil";
+    public static final String PROFILE_ASSIGNMENT_APPLICATION_LOOKUP_VALIDATOR = "se requiere el validador de aplicación de la asignación de perfil";
+    public static final String ADMINISTER_PROFILE_ASSIGNMENT_CREATION_USE_CASE = "se requiere el caso de uso de administración de asignación de perfil";
+    public static final String ADMINISTER_PROFILE_ASSIGNMENT_REVOCATION_USE_CASE = "se requiere el caso de uso de administración de revocación de asignación de perfil";
     public static final String ASSIGN_PROFILE_RULES_VALIDATOR = "se requiere el validador de asignación de perfil";
     public static final String REVOKE_PROFILE_ASSIGNMENT_RULES_VALIDATOR =
             "se requiere el validador de revocación de asignación de perfil";

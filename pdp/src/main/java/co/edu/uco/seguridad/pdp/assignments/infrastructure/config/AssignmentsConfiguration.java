@@ -5,10 +5,14 @@ import co.edu.uco.seguridad.pdp.applications.application.rule.validator.Applicat
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RegisterApplicationUseCase;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.AssignProfileRulesValidator;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.AssignRoleRulesValidator;
+import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.AssignmentApplicationLookupValidator;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.RevokeAssignmentRulesValidator;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.RevokeProfileAssignmentRulesValidator;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.impl.AssignProfileRulesValidatorImpl;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.impl.AssignRoleRulesValidatorImpl;
+import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.ProfileAssignmentApplicationLookupValidator;
+import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.impl.AssignmentApplicationLookupValidatorImpl;
+import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.impl.ProfileAssignmentApplicationLookupValidatorImpl;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.impl.RevokeAssignmentRulesValidatorImpl;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.impl.RevokeProfileAssignmentRulesValidatorImpl;
 import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository.AssignmentRepository;
@@ -40,19 +44,11 @@ import co.edu.uco.seguridad.pdp.assignments.domain.rule.impl.AssignmentMustNotDu
 import co.edu.uco.seguridad.pdp.assignments.domain.rule.impl.ProfileAssignmentMustExistForTenantRuleImpl;
 import co.edu.uco.seguridad.pdp.assignments.domain.rule.impl.ProfileAssignmentMustNotDuplicateActiveRuleImpl;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.interactor.AssignApplicationAdministratorInteractor;
-import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.interactor.AssignProfileInteractor;
-import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.interactor.AssignRoleInteractor;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.interactor.ListAssignmentsInteractor;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.interactor.RegisterApplicationWithFirstAdministratorInteractor;
-import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.interactor.RevokeAssignmentInteractor;
-import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.interactor.RevokeProfileAssignmentInteractor;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.interactor.impl.AssignApplicationAdministratorInteractorImpl;
-import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.interactor.impl.AssignProfileInteractorImpl;
-import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.interactor.impl.AssignRoleInteractorImpl;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.interactor.impl.ListAssignmentsInteractorImpl;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.interactor.impl.RegisterApplicationWithFirstAdministratorInteractorImpl;
-import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.interactor.impl.RevokeAssignmentInteractorImpl;
-import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.interactor.impl.RevokeProfileAssignmentInteractorImpl;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.repository.SurrealAssignmentRepository;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.repository.SurrealProfileAssignmentRepository;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.schema.SurrealAssignmentSchemaInitializer;
@@ -112,6 +108,14 @@ public class AssignmentsConfiguration {
         return new RevokeAssignmentRulesValidatorImpl(repository, mustExist);
     }
 
+    // HU-018 — administración del catálogo de asignaciones: resuelve la aplicación de una asignación
+    // para que "authorization" pueda gatear su revocación sin conocer AssignmentRepository.
+    @Bean
+    AssignmentApplicationLookupValidator assignmentApplicationLookupValidator(AssignmentRepository repository,
+            AssignmentMustExistForTenantRule mustExist) {
+        return new AssignmentApplicationLookupValidatorImpl(repository, mustExist);
+    }
+
     @Bean
     AssignRoleUseCase assignRoleUseCase(AssignRoleRulesValidator rules, AssignmentRepository repository,
             IdentifierGenerator identifiers, TimeProvider time) {
@@ -139,16 +143,6 @@ public class AssignmentsConfiguration {
             ProfileAssignmentRepository profiles, ProfileRolesLookupValidator profileRoles, ProfileNamesLookupValidator profileNames,
             RoleNamesLookupValidator roleNames, RoleResourcesLookupValidator resources, TimeProvider time) {
         return new ResolveAuthorizationSubjectFactsUseCaseImpl(assignments, profiles, profileRoles, profileNames, roleNames, resources, time);
-    }
-
-    @Bean
-    AssignRoleInteractor assignRoleInteractor(AssignRoleUseCase useCase) {
-        return new AssignRoleInteractorImpl(useCase);
-    }
-
-    @Bean
-    RevokeAssignmentInteractor revokeAssignmentInteractor(RevokeAssignmentUseCase useCase) {
-        return new RevokeAssignmentInteractorImpl(useCase);
     }
 
     @Bean
@@ -190,6 +184,14 @@ public class AssignmentsConfiguration {
         return new RevokeProfileAssignmentRulesValidatorImpl(repository, mustExist);
     }
 
+    // HU-019 — administración del catálogo de perfiles: resuelve la aplicación de una asignación de
+    // perfil para que "authorization" pueda gatear su revocación.
+    @Bean
+    ProfileAssignmentApplicationLookupValidator profileAssignmentApplicationLookupValidator(
+            ProfileAssignmentRepository repository, ProfileAssignmentMustExistForTenantRule mustExist) {
+        return new ProfileAssignmentApplicationLookupValidatorImpl(repository, mustExist);
+    }
+
     @Bean
     AssignProfileUseCase assignProfileUseCase(AssignProfileRulesValidator rules, AssignRoleUseCase assignRoleUseCase,
             ProfileAssignmentRepository repository, IdentifierGenerator identifiers, TimeProvider time) {
@@ -200,16 +202,6 @@ public class AssignmentsConfiguration {
     RevokeProfileAssignmentUseCase revokeProfileAssignmentUseCase(RevokeProfileAssignmentRulesValidator rules,
             RevokeAssignmentUseCase revokeAssignmentUseCase, ProfileAssignmentRepository repository, TimeProvider time) {
         return new RevokeProfileAssignmentUseCaseImpl(rules, revokeAssignmentUseCase, repository, time);
-    }
-
-    @Bean
-    AssignProfileInteractor assignProfileInteractor(AssignProfileUseCase useCase) {
-        return new AssignProfileInteractorImpl(useCase);
-    }
-
-    @Bean
-    RevokeProfileAssignmentInteractor revokeProfileAssignmentInteractor(RevokeProfileAssignmentUseCase useCase) {
-        return new RevokeProfileAssignmentInteractorImpl(useCase);
     }
 
     // HU-015 — administración del catálogo de aplicaciones: alta del primer administrador y backfill

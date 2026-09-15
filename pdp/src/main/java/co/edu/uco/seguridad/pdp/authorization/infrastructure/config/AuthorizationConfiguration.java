@@ -60,6 +60,39 @@ import co.edu.uco.seguridad.pdp.authorization.application.usecase.impl.Administe
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.AdministerResourceRegistrationInteractor;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.AdministerResourceRegistrationInteractorImpl;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleNamesLookupValidator;
+import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.AssignmentApplicationLookupValidator;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.AssignRoleUseCase;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.RevokeAssignmentUseCase;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerAssignmentCreationUseCase;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerAssignmentRevocationUseCase;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.impl.AdministerAssignmentCreationUseCaseImpl;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.impl.AdministerAssignmentRevocationUseCaseImpl;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.AdministerAssignmentCreationInteractor;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.AdministerAssignmentRevocationInteractor;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.AdministerAssignmentCreationInteractorImpl;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.AdministerAssignmentRevocationInteractorImpl;
+import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.ProfileAssignmentApplicationLookupValidator;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.AssignProfileUseCase;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.RevokeProfileAssignmentUseCase;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerProfileDefinitionUseCase;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerProfileRoleAdditionUseCase;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerProfileAssignmentCreationUseCase;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerProfileAssignmentRevocationUseCase;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.impl.AdministerProfileDefinitionUseCaseImpl;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.impl.AdministerProfileRoleAdditionUseCaseImpl;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.impl.AdministerProfileAssignmentCreationUseCaseImpl;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.impl.AdministerProfileAssignmentRevocationUseCaseImpl;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.AdministerProfileDefinitionInteractor;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.AdministerProfileRoleAdditionInteractor;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.AdministerProfileAssignmentCreationInteractor;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.AdministerProfileAssignmentRevocationInteractor;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.AdministerProfileDefinitionInteractorImpl;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.AdministerProfileRoleAdditionInteractorImpl;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.AdministerProfileAssignmentCreationInteractorImpl;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.AdministerProfileAssignmentRevocationInteractorImpl;
+import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileApplicationLookupValidator;
+import co.edu.uco.seguridad.pdp.profiles.application.usecase.AddRoleToProfileUseCase;
+import co.edu.uco.seguridad.pdp.profiles.application.usecase.DefineProfileUseCase;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
@@ -234,5 +267,92 @@ public class AuthorizationConfiguration {
     AdministerResourceRegistrationInteractor administerResourceRegistrationInteractor(
             AdministerResourceRegistrationUseCase useCase, SubjectUserIdLookupValidator subjectUserIdLookup) {
         return new AdministerResourceRegistrationInteractorImpl(useCase, subjectUserIdLookup);
+    }
+
+    // HU-018 — gatea AssignRoleUseCase/RevokeAssignmentUseCase (slice assignments), mismo motivo que
+    // HU-015/016/017. El controller (AssignmentAdministrationController) y la baja de
+    // AssignmentController.assign()/revoke() son [M] del implementador (PLAN-HU-018.md §8) — de
+    // momento estos beans no quedan enrutados.
+    @Bean
+    AdministerAssignmentCreationUseCase administerAssignmentCreationUseCase(
+            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator, AssignRoleUseCase assignRole) {
+        return new AdministerAssignmentCreationUseCaseImpl(mustBeAdministrator, assignRole);
+    }
+
+    @Bean
+    AdministerAssignmentCreationInteractor administerAssignmentCreationInteractor(
+            AdministerAssignmentCreationUseCase useCase, SubjectUserIdLookupValidator subjectUserIdLookup) {
+        return new AdministerAssignmentCreationInteractorImpl(useCase, subjectUserIdLookup);
+    }
+
+    @Bean
+    AdministerAssignmentRevocationUseCase administerAssignmentRevocationUseCase(
+            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator, RevokeAssignmentUseCase revokeAssignment) {
+        return new AdministerAssignmentRevocationUseCaseImpl(mustBeAdministrator, revokeAssignment);
+    }
+
+    @Bean
+    AdministerAssignmentRevocationInteractor administerAssignmentRevocationInteractor(
+            AdministerAssignmentRevocationUseCase useCase, SubjectUserIdLookupValidator subjectUserIdLookup,
+            AssignmentApplicationLookupValidator assignmentApplicationLookup) {
+        return new AdministerAssignmentRevocationInteractorImpl(useCase, subjectUserIdLookup, assignmentApplicationLookup);
+    }
+
+    // HU-019 — gatea DefineProfileUseCase/AddRoleToProfileUseCase (slice profiles) y
+    // AssignProfileUseCase/RevokeProfileAssignmentUseCase (slice assignments), mismo motivo que
+    // HU-015/016/017/018. Los dos controllers (ProfileAdministrationController,
+    // ProfileAssignmentAdministrationController) y la baja de las escrituras movidas en
+    // ProfileController/ProfileAssignmentController son [M] del implementador (PLAN-HU-019.md §8) —
+    // de momento estos beans no quedan enrutados.
+    @Bean
+    AdministerProfileDefinitionUseCase administerProfileDefinitionUseCase(
+            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator, DefineProfileUseCase defineProfile) {
+        return new AdministerProfileDefinitionUseCaseImpl(mustBeAdministrator, defineProfile);
+    }
+
+    @Bean
+    AdministerProfileDefinitionInteractor administerProfileDefinitionInteractor(
+            AdministerProfileDefinitionUseCase useCase, SubjectUserIdLookupValidator subjectUserIdLookup) {
+        return new AdministerProfileDefinitionInteractorImpl(useCase, subjectUserIdLookup);
+    }
+
+    @Bean
+    AdministerProfileRoleAdditionUseCase administerProfileRoleAdditionUseCase(
+            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator, AddRoleToProfileUseCase addRoleToProfile) {
+        return new AdministerProfileRoleAdditionUseCaseImpl(mustBeAdministrator, addRoleToProfile);
+    }
+
+    @Bean
+    AdministerProfileRoleAdditionInteractor administerProfileRoleAdditionInteractor(
+            AdministerProfileRoleAdditionUseCase useCase, SubjectUserIdLookupValidator subjectUserIdLookup,
+            ProfileApplicationLookupValidator profileApplicationLookup) {
+        return new AdministerProfileRoleAdditionInteractorImpl(useCase, subjectUserIdLookup, profileApplicationLookup);
+    }
+
+    @Bean
+    AdministerProfileAssignmentCreationUseCase administerProfileAssignmentCreationUseCase(
+            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator, AssignProfileUseCase assignProfile) {
+        return new AdministerProfileAssignmentCreationUseCaseImpl(mustBeAdministrator, assignProfile);
+    }
+
+    @Bean
+    AdministerProfileAssignmentCreationInteractor administerProfileAssignmentCreationInteractor(
+            AdministerProfileAssignmentCreationUseCase useCase, SubjectUserIdLookupValidator subjectUserIdLookup) {
+        return new AdministerProfileAssignmentCreationInteractorImpl(useCase, subjectUserIdLookup);
+    }
+
+    @Bean
+    AdministerProfileAssignmentRevocationUseCase administerProfileAssignmentRevocationUseCase(
+            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator,
+            RevokeProfileAssignmentUseCase revokeProfileAssignment) {
+        return new AdministerProfileAssignmentRevocationUseCaseImpl(mustBeAdministrator, revokeProfileAssignment);
+    }
+
+    @Bean
+    AdministerProfileAssignmentRevocationInteractor administerProfileAssignmentRevocationInteractor(
+            AdministerProfileAssignmentRevocationUseCase useCase, SubjectUserIdLookupValidator subjectUserIdLookup,
+            ProfileAssignmentApplicationLookupValidator profileAssignmentApplicationLookup) {
+        return new AdministerProfileAssignmentRevocationInteractorImpl(useCase, subjectUserIdLookup,
+                profileAssignmentApplicationLookup);
     }
 }

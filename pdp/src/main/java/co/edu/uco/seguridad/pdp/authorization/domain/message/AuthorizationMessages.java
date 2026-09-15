@@ -21,4 +21,14 @@ public final class AuthorizationMessages {
     public static String applicationIdNotApplicableForTenantScope() {
         return "un rol de alcance TENANT no admite applicationId";
     }
+
+    // HU-019 — DefineProfile se gatea desde este módulo (ProfileAdministrationController); el
+    // perfil espeja las mismas dos barreras de alcance que el rol.
+    public static String globalProfileScopeNotAdministrableYet() {
+        return "los perfiles globales no se administran por este canal todavía";
+    }
+
+    public static String applicationIdNotApplicableForProfileTenantScope() {
+        return "un perfil de alcance TENANT no admite applicationId";
+    }
 }

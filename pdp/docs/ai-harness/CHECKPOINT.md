@@ -21,41 +21,47 @@ Estado del trabajo para retomarlo en cualquier máquina. Se actualiza al cerrar 
 | HU-002 → HU-011 | Endpoint interno PEP↔PDP (mTLS), roles, asignaciones, `OpaPolicyDecisionAdapter` real, auditoría de decisiones (`AccessEvent`), perfiles, administración de aplicaciones (HU-009), saga de compensación (criterio 10) | ✅ |
 | HU-012 → HU-014 | El PDP emite (HU-012), valida (HU-013) y rota (HU-014) su propia credencial de aplicación | ✅ |
 | HU-015 | Administración del catálogo: alta automática del primer administrador al registrar; borrar/rotar credencial exige serlo (gate vía OPA, mecanismo de HU-009); backfill manual para aplicaciones preexistentes | ✅ — fusionada a `develop`, PR #48 |
+| HU-016 | Gatea `DefineRole`/`GrantResourceToRole` (slice `roles`) por administración de aplicación | ✅ — fusionada a `develop`, PR #50 |
+| HU-017 | Gatea `RegisterProtectedResourceUseCase` (slice `resources`) por administración de aplicación | ✅ — fusionada a `develop`, PR #51 |
+| HU-018 | Gatea `AssignRoleUseCase`/`RevokeAssignmentUseCase` (slice `assignments`) por administración de aplicación | ✅ — validada, pendiente commit/push (gate 2) |
+| HU-019 | Gatea `DefineProfileUseCase`/`AddRoleToProfileUseCase`/`AssignProfileUseCase`/`RevokeProfileAssignmentUseCase` por administración de aplicación | ✅ — validada, pendiente commit/push (gate 2) |
 
-**Estado de `develop` verificado el 2026-09-13 (noche):** `mvnw clean verify` → **653 pruebas, 0
-fallos, 0 errores**, cobertura ≥ 50 % por paquete, `LayeredArchitectureTests`/`ModulithStructureTests`
-en verde, `consistencia.ps1` CONSISTENTE (8 slices), `drift.ps1` SIN DERIVA. Detalle completo, con lo
-que sigue pendiente por prioridad, en
+**Estado verificado el 2026-09-15 (working tree, sobre `develop` + HU-018/HU-019 sin comitear):**
+`mvnw clean verify` → **675 pruebas, 0 fallos, 0 errores**, cobertura ≥ 50 % por paquete,
+`LayeredArchitectureTests`/`ModulithStructureTests` en verde, `consistencia.ps1` CONSISTENTE
+(8 slices), `drift.ps1` SIN DERIVA. Detalle completo, con lo que sigue pendiente por prioridad, en
 [`workspace/MAPA-PLATAFORMA-SEGURIDAD.md`](workspace/MAPA-PLATAFORMA-SEGURIDAD.md).
 
 **Lo siguiente:** backlog ordenado de 9 historias (HU-016 a HU-024), todas del lado del PDP — ver
 `workspace/HU-016.md` a `workspace/HU-024.md` y `ADR-023` a `ADR-028` en
 `security-platform-architecture` (`docs/01-governance/adr/`). Reorganizado el 2026-09-13 al decidir
 que caché distribuida, revocación de tokens y MFA sí se construyen ahora (ya no "sin prioridad" —
-decisión explícita de Sebastián), y no solo se evalúan. Orden de planificación:
+decisión explícita de Sebastián), y no solo se evalúan. **HU-016 a HU-019 ya se cerraron** (filas
+arriba, gatean todo el catálogo de escritura: roles, recursos, asignaciones y perfiles) — quedan:
 
-1. **HU-016, HU-017, HU-018, HU-019** — gatear roles, recursos, asignaciones y perfiles (pueden
-   planificarse en paralelo entre sí; cierran una brecha de mínimo privilegio activa hoy).
-2. **HU-022** — infraestructura Redis + revocación de tokens. Sin dependencia de las anteriores
-   (slice distinto: `shared/security`, no administración) — cierra otra brecha de seguridad real y
-   ya señalada en el código (`jti` validado desde HU-002 sin usarse). Puede planificarse en paralelo
-   con el bloque 1.
-3. **HU-020** — autoservicio de administradores (agregar/quitar/listar por HTTP público). Depende de
-   que HU-016 a HU-019 estén cerradas.
-4. **HU-021** — auditoría de operaciones administrativas (evento propio, no `AccessEvent`). Depende
-   de que HU-015 y HU-016 a HU-020 estén cerradas, para auditar toda la superficie de una vez.
-5. **HU-023** — caché distribuida de roles activos vía Redis. Depende de HU-022 (infraestructura ya
-   desplegada) y de que HU-016 a HU-020 estén cerradas (superficie completa de invalidación a
-   cablear de una vez, mismo criterio que HU-021).
-6. **HU-024** — MFA como step-up para operaciones administrativas. Depende de HU-016 a HU-021
-   (superficie administrativa completa y auditada) y de un prerrequisito externo: el realm de
-   Keycloak con el flujo de MFA configurado.
+1. **HU-020** — autoservicio de administradores (agregar/quitar/listar por HTTP público). Ya
+   desbloqueada: HU-016 a HU-019 están cerradas. **Siguiente paso natural.**
+2. **HU-022** — infraestructura Redis + revocación de tokens. Sin dependencia de HU-020 (slice
+   distinto: `shared/security`, no administración) — puede planificarse en paralelo con HU-020.
+3. **HU-021** — auditoría de operaciones administrativas (evento propio, no `AccessEvent`). Depende
+   de que HU-020 esté cerrada, para auditar toda la superficie de una vez.
+4. **HU-023** — caché distribuida de roles activos vía Redis. Depende de HU-022 (infraestructura ya
+   desplegada) y de HU-020 (superficie completa de invalidación a cablear de una vez, mismo criterio
+   que HU-021).
+5. **HU-024** — MFA como step-up para operaciones administrativas. Depende de HU-021 (superficie
+   administrativa completa y auditada) y de un prerrequisito externo: el realm de Keycloak con el
+   flujo de MFA configurado.
 
 Cada una entra al ciclo normal del harness: `@1-planificador` primero (cada HU-XXX.md ya trae "Lo que
 ya está decidido" para no reabrir nada, y "Lo que hay que decidir antes de planificarla" para lo que
 sigue genuinamente abierto). Administrador global (`ADR-024`) queda fuera de este backlog — diferido
 hasta que exista un caso de uso concreto. Serverless quedó evaluado y **no** adoptado (`ADR-028`) —
 no genera ninguna historia de este backlog.
+
+**Desde esta sesión (2026-09-14), `@4-validador` marca cada historia aprobada directamente en esta
+tabla y en su `HU-{ID}.md`** — ver la sección nueva en `.claude/agents/4-validador.md` ("Si APROBADO:
+marca la historia como terminada"). Antes de esto, HU-016/HU-017 se aprobaron y fusionaron sin que
+nadie actualizara este archivo — la brecha que motivó la regla nueva.
 
 ---
 

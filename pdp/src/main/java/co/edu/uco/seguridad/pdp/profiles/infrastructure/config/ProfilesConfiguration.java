@@ -3,10 +3,12 @@ package co.edu.uco.seguridad.pdp.profiles.infrastructure.config;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationMustExistForTenantValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.AddRoleToProfileRulesValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.DefineProfileRulesValidator;
+import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileApplicationLookupValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileRolesLookupValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileNamesLookupValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.impl.AddRoleToProfileRulesValidatorImpl;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.impl.DefineProfileRulesValidatorImpl;
+import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.impl.ProfileApplicationLookupValidatorImpl;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.impl.ProfileRolesLookupValidatorImpl;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.impl.ProfileNamesLookupValidatorImpl;
 import co.edu.uco.seguridad.pdp.profiles.application.secondaryport.repository.ProfileRepository;
@@ -20,11 +22,7 @@ import co.edu.uco.seguridad.pdp.profiles.domain.rule.ProfileMustExistForTenantRu
 import co.edu.uco.seguridad.pdp.profiles.domain.rule.ProfileNameMustBeUniqueInScopeRule;
 import co.edu.uco.seguridad.pdp.profiles.domain.rule.impl.ProfileMustExistForTenantRuleImpl;
 import co.edu.uco.seguridad.pdp.profiles.domain.rule.impl.ProfileNameMustBeUniqueInScopeRuleImpl;
-import co.edu.uco.seguridad.pdp.profiles.infrastructure.adapter.primary.web.interactor.AddRoleToProfileInteractor;
-import co.edu.uco.seguridad.pdp.profiles.infrastructure.adapter.primary.web.interactor.DefineProfileInteractor;
 import co.edu.uco.seguridad.pdp.profiles.infrastructure.adapter.primary.web.interactor.ListProfilesInteractor;
-import co.edu.uco.seguridad.pdp.profiles.infrastructure.adapter.primary.web.interactor.impl.AddRoleToProfileInteractorImpl;
-import co.edu.uco.seguridad.pdp.profiles.infrastructure.adapter.primary.web.interactor.impl.DefineProfileInteractorImpl;
 import co.edu.uco.seguridad.pdp.profiles.infrastructure.adapter.primary.web.interactor.impl.ListProfilesInteractorImpl;
 import co.edu.uco.seguridad.pdp.profiles.infrastructure.adapter.secondary.persistence.repository.SurrealProfileRepository;
 import co.edu.uco.seguridad.pdp.profiles.infrastructure.adapter.secondary.persistence.schema.SurrealProfileSchemaInitializer;
@@ -83,6 +81,14 @@ public class ProfilesConfiguration {
         return new ProfileNamesLookupValidatorImpl(repository);
     }
 
+    // HU-019 — administración del catálogo de perfiles: resuelve la aplicación de un perfil para
+    // que "authorization" pueda gatear definir/agregar-rol sin conocer ProfileRepository.
+    @Bean
+    ProfileApplicationLookupValidator profileApplicationLookupValidator(ProfileRepository repository,
+            ProfileMustExistForTenantRule mustExist) {
+        return new ProfileApplicationLookupValidatorImpl(repository, mustExist);
+    }
+
     @Bean
     DefineProfileUseCase defineProfileUseCase(DefineProfileRulesValidator rules, ProfileRepository repository,
             IdentifierGenerator identifiers, TimeProvider time) {
@@ -97,16 +103,6 @@ public class ProfilesConfiguration {
     @Bean
     ListProfilesUseCase listProfilesUseCase(ProfileRepository repository) {
         return new ListProfilesUseCaseImpl(repository);
-    }
-
-    @Bean
-    DefineProfileInteractor defineProfileInteractor(DefineProfileUseCase useCase) {
-        return new DefineProfileInteractorImpl(useCase);
-    }
-
-    @Bean
-    AddRoleToProfileInteractor addRoleToProfileInteractor(AddRoleToProfileUseCase useCase) {
-        return new AddRoleToProfileInteractorImpl(useCase);
     }
 
     @Bean
