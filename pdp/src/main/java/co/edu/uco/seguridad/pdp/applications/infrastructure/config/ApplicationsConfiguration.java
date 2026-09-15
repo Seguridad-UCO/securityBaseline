@@ -8,8 +8,10 @@ import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationMustExi
 import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationNameMustBeUniqueForTenantRuleImpl;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationNameMustNotBeReservedRuleImpl;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationMustExistForTenantValidator;
+import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationNameLookupValidator;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationOwnerLookupValidator;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.impl.ApplicationMustExistForTenantValidatorImpl;
+import co.edu.uco.seguridad.pdp.applications.application.rule.validator.impl.ApplicationNameLookupValidatorImpl;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.impl.ApplicationOwnerLookupValidatorImpl;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.RegisterApplicationRulesValidator;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.impl.RegisterApplicationRulesValidatorImpl;
@@ -117,10 +119,16 @@ public class ApplicationsConfiguration {
         return new ApplicationMustExistForTenantValidatorImpl(repository, mustExist);
     }
 
-    // HU-003 — canal interno para el PEP: resuelve el tenant dueño a partir solo del applicationId.
+    // Flujos de administración: resuelven el tenant dueño desde el UUID de la aplicación.
     @Bean
     ApplicationOwnerLookupValidator applicationOwnerLookupValidator(ApplicationRepository repository) {
         return new ApplicationOwnerLookupValidatorImpl(repository);
+    }
+
+    // Canal interno del PEP: resuelve el UUID interno desde el nombre configurable de la aplicación.
+    @Bean
+    ApplicationNameLookupValidator applicationNameLookupValidator(ApplicationRepository repository) {
+        return new ApplicationNameLookupValidatorImpl(repository);
     }
 
     // HU-013 — canal interno de validación de credenciales.

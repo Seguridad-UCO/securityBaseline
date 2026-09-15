@@ -67,7 +67,7 @@ Fuente de verdad: `contracts/pep-pdp/v1/` en la rama `feature/pep` — `openapi.
 |---|---|
 | `version` (const `"1"`) | `decision` (`ALLOW`/`DENY`/`INDETERMINATE`) |
 | `requestId` (uuid), `correlationId`, `timestamp` | `decisionId`, `reasonCode` |
-| `application.id`, `application.environment` | `policyReferences[]` (`id` + `version`) |
+| `application.name`, `application.environment` | `policyReferences[]` (`id` + `version`) |
 | `resource.path`, `resource.action` | `requestId`, `correlationId` (deben coincidir con la petición) |
 | `context.method`, `context.channel` (const `"HTTP"`) | `obligations` — ausente/null/vacío en v1 |
 | Headers `X-Request-Id`, `X-Correlation-Id` | Mismos headers de vuelta |
@@ -115,14 +115,16 @@ El certificado se lee de `ServerHttpRequest.getSslInfo()`. **No** de un header.
 
 ### D3 — El tenant sale del catálogo de aplicaciones, no del token
 
-Esta es la decisión con más consecuencias. El PEP manda `application.id`; el PDP resuelve a partir
-de ahí **qué tenant es dueño de esa aplicación**, y el `subject` sale del claim `sub` del JWT de
+Esta es la decisión con más consecuencias. El PEP manda `application.name`; el PDP resuelve a partir
+de ahí **qué aplicación y qué tenant es dueño de ella**, y el `subject` sale del claim `sub` del JWT de
 evidencia. Ni el tenant ni el sujeto se leen del cuerpo.
 
 *Por qué:* el slice `applications` ya guarda el tenant dueño de cada aplicación. Es la única fuente
 confiable disponible, y la guía del PEP lo exige explícitamente.
 
-*Consecuencia:* hace falta un puerto/consulta que devuelva el tenant dueño de un `ApplicationId`.
+*Consecuencia:* hace falta un puerto/consulta que devuelva la aplicación por su nombre. Como el
+nombre es único por tenant, si existe en más de un tenant la petición se rechaza: el contrato no
+lleva tenant y no puede seleccionar una aplicación de forma segura.
 Hoy no existe — existe `ApplicationOwnershipQuery(tenantId, applicationId)`, que **verifica** una
 pertenencia que ya conoces, no la **resuelve**. Es trabajo nuevo de HU-003.
 
@@ -147,7 +149,7 @@ HU-003 se valida firma, `exp`/`nbf`, `iss` y `aud` contra un conjunto configurad
 **Aplazado a una historia propia de credenciales por aplicación** (sin número aún — ver
 `ROADMAP-PDP.md`): que cada aplicación registrada declare su propio issuer/JWKS/audiencia y que la
 validación sea *por aplicación*. Es lo correcto a futuro y lo pide la guía ("audiencia para
-`application.id`"), pero exige extender el catálogo de aplicaciones. Cuando se escribió este handoff
+`application.name`"), pero exige extender el catálogo de aplicaciones. Cuando se escribió este handoff
 eso cabía en «HU-004: roles y catálogo»; al partir roles/asignaciones el 2026-09-11 quedó fuera de
 ambas, emparentado con HU-009 (administración por aplicación).
 

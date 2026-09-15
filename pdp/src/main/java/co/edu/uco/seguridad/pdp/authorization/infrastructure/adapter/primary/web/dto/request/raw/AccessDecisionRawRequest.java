@@ -7,7 +7,7 @@ package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.we
 public record AccessDecisionRawRequest(String version, String requestId, String correlationId,
         String timestamp, RawApplication application, RawResource resource, RawContext context) {
 
-    public record RawApplication(String id, String environment) {
+    public record RawApplication(String name, String environment) {
     }
 
     public record RawResource(String path, String action) {

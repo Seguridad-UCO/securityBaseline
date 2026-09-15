@@ -33,10 +33,10 @@ final class InternalApplicationCredentialController {
                 RequiredArgumentMessages.VALIDATE_APPLICATION_CREDENTIAL_INTERACTOR);
     }
 
-    @PostMapping("/{applicationId}/credential-validations")
-    Mono<ResponseEntity<ApplicationCredentialValidationWebResponse>> validate(@PathVariable String applicationId,
+    @PostMapping("/names/{applicationName}/credential-validations")
+    Mono<ResponseEntity<ApplicationCredentialValidationWebResponse>> validate(@PathVariable String applicationName,
             @RequestBody ValidateApplicationCredentialRawRequest body) {
-        return interactor.execute(new ValidateApplicationCredentialRawRequest(applicationId, body.secret()))
+        return interactor.execute(new ValidateApplicationCredentialRawRequest(applicationName, body.secret()))
                 .map(ResponseEntity::ok);
     }
 }

@@ -83,7 +83,7 @@ encajan** — y hay cuatro puntos donde no.
 | `subject.type` | **no existe** — no hay noción de tipo de sujeto | ⛔ |
 | `subject.tenantId` | `tenantId` | ✅ |
 | `tenant.id` | `tenantId` (el mismo) | ✅ |
-| `application.id` | `applicationId` | ✅ |
+| `application.name` | nombre configurado de la aplicación; el PDP resuelve su UUID interno | ✅ |
 | `resource.type` | `resourcePath` — una **ruta**, no un tipo | ⛔ |
 | `action` | `action` (`HttpVerb`) | ✅ |
 

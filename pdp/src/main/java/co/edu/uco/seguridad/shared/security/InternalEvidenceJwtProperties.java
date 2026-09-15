@@ -10,7 +10,7 @@ import java.util.Objects;
  * el mismo Keycloak del BFF, solo JWKS — sin el modo HMAC de {@link JwtSecurityProperties}, y sin
  * exigir el claim {@code tenant} que {@link PdpPrincipal} sí exige, T1). Deuda consciente: cuando
  * HU-004 traiga issuer/JWKS por aplicación, este decoder se reemplaza por uno resuelto por
- * {@code application.id}, no por configuración estática.
+ * {@code application.name}, no por configuración estática.
  */
 @ConfigurationProperties(prefix = "pdp.security.internal.evidence")
 public record InternalEvidenceJwtProperties(String jwkSetUri, String issuer, String audience) {

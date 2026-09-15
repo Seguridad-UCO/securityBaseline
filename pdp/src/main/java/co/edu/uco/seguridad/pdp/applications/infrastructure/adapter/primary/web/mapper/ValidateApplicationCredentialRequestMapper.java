@@ -2,7 +2,7 @@ package co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web
 
 import co.edu.uco.seguridad.pdp.applications.application.primaryport.request.ValidateApplicationCredentialRequest;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.request.raw.ValidateApplicationCredentialRawRequest;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
+import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
 import co.edu.uco.seguridad.shared.web.RequestFieldParser;
 
 /**
@@ -16,6 +16,6 @@ public final class ValidateApplicationCredentialRequestMapper {
 
     public static ValidateApplicationCredentialRequest toRequest(ValidateApplicationCredentialRawRequest raw) {
         return new ValidateApplicationCredentialRequest(
-                RequestFieldParser.parse("applicationId", raw.applicationId(), ApplicationId::of), raw.secret());
+                RequestFieldParser.parse("applicationName", raw.applicationName(), ApplicationName::new), raw.secret());
     }
 }

@@ -3,6 +3,8 @@ package co.edu.uco.seguridad.pdp.applications.application.usecase.impl;
 import co.edu.uco.seguridad.pdp.applications.application.primaryport.request.ValidateApplicationCredentialRequest;
 import co.edu.uco.seguridad.pdp.applications.application.secondaryport.repository.ApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.ValidateApplicationCredentialUseCase;
+import co.edu.uco.seguridad.pdp.applications.domain.exception.AmbiguousApplicationNameException;
+import co.edu.uco.seguridad.pdp.applications.domain.exception.InvalidApplicationCredentialException;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationCredentialMustBeValidRule;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.model.ApplicationCredentialValidity;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
@@ -32,10 +34,13 @@ public final class ValidateApplicationCredentialUseCaseImpl implements ValidateA
 
     @Override
     public Mono<TenantId> execute(ValidateApplicationCredentialRequest input) {
-        return repository.findCredentialHashById(input.applicationId())
-                .map(credentialHash -> hasher.matches(input.secret(), credentialHash.value()))
-                .defaultIfEmpty(false)
-                .doOnNext(valid -> rule.execute(new ApplicationCredentialValidity(input.applicationId(), valid)))
-                .then(Mono.defer(() -> repository.findTenantIdById(input.applicationId())));
+        return repository.findUniqueByName(input.applicationName())
+                .flatMap(application -> Mono.fromCallable(() -> {
+                    rule.execute(new ApplicationCredentialValidity(application.id(),
+                            hasher.matches(input.secret(), application.credentialHash().value())));
+                    return application.tenantId();
+                }))
+                .onErrorMap(AmbiguousApplicationNameException.class, error -> new InvalidApplicationCredentialException())
+                .switchIfEmpty(Mono.error(new InvalidApplicationCredentialException()));
     }
 }

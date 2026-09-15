@@ -1,6 +1,9 @@
 package co.edu.uco.seguridad.pdp.authorization.application.usecase.impl;
 
 import co.edu.uco.seguridad.pdp.applications.domain.exception.ApplicationNotFoundException;
+import co.edu.uco.seguridad.pdp.applications.domain.Application;
+import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
+import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AccessRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.InternalAccessRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.response.AccessDecision;
@@ -8,6 +11,7 @@ import co.edu.uco.seguridad.pdp.authorization.application.usecase.AuthorizeUseCa
 import co.edu.uco.seguridad.pdp.authorization.domain.model.DecisionState;
 import co.edu.uco.seguridad.pdp.authorization.domain.model.ReasonCode;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
+import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
@@ -31,11 +35,14 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class EvaluateInternalAccessUseCaseImplTests {
 
-    private static final ApplicationId APPLICATION = new ApplicationId(UUID.randomUUID());
+    private static final ApplicationId APPLICATION_ID = new ApplicationId(UUID.randomUUID());
+    private static final ApplicationName APPLICATION_NAME = new ApplicationName("notas");
     private static final TenantId OWNER = new TenantId("universidad-uco");
+    private static final Application APPLICATION = Application.register(APPLICATION_ID, OWNER, APPLICATION_NAME, "",
+            new ApplicationBaseUrl("https://notas.example.test"), new ApplicationCredentialHash("hash"), Instant.EPOCH);
     private static final ResourcePath PATH = new ResourcePath("/estudiantes");
     private static final InternalAccessRequest REQUEST = new InternalAccessRequest("evidence-subject",
-            Optional.of(new co.edu.uco.seguridad.pdp.commons.model.UserId(UUID.randomUUID())), APPLICATION, PATH,
+            Optional.of(new co.edu.uco.seguridad.pdp.commons.model.UserId(UUID.randomUUID())), APPLICATION_NAME, PATH,
             HttpVerb.GET, "req-1", "corr-1", new InternalAccessRequest.RequestFacts(Instant.EPOCH, "", HttpVerb.GET, "HTTP"));
     private static final UUID DECISION_ID = UUID.randomUUID();
     private static final Instant DECIDED_AT = Instant.parse("2026-09-06T00:00:00Z");
@@ -46,7 +53,7 @@ class EvaluateInternalAccessUseCaseImplTests {
                 ReasonCode.NO_APPLICABLE_POLICY, List.of(), "req-1", "corr-1", Instant.parse("2026-09-06T00:00:00Z"));
         List<AccessRequest> received = new ArrayList<>();
         EvaluateInternalAccessUseCaseImpl useCase = new EvaluateInternalAccessUseCaseImpl(
-                applicationId -> Mono.just(OWNER),
+                applicationName -> Mono.just(APPLICATION),
                 request -> {
                     received.add(request);
                     return Mono.just(expected);
@@ -63,7 +70,7 @@ class EvaluateInternalAccessUseCaseImplTests {
         assertThat(built.tenantId()).isEqualTo(OWNER);
         assertThat(built.subject()).isEqualTo("evidence-subject");
         assertThat(built.subjectUserId()).isEqualTo(REQUEST.subjectUserId());
-        assertThat(built.applicationId()).isEqualTo(APPLICATION);
+        assertThat(built.applicationId()).isEqualTo(APPLICATION_ID);
         assertThat(built.resourcePath()).isEqualTo(PATH);
         assertThat(built.action()).isEqualTo(HttpVerb.GET);
         assertThat(built.requestId()).isEqualTo("req-1");
@@ -73,7 +80,7 @@ class EvaluateInternalAccessUseCaseImplTests {
     @Test
     void reports_tenant_mismatch_and_never_reaches_authorize_use_case_when_the_application_does_not_exist() {
         EvaluateInternalAccessUseCaseImpl useCase = new EvaluateInternalAccessUseCaseImpl(
-                applicationId -> Mono.error(new ApplicationNotFoundException(applicationId)),
+                applicationName -> Mono.error(new ApplicationNotFoundException(applicationName)),
                 request -> {
                     throw new AssertionError("must not reach AuthorizeUseCase: the tenant never resolved");
                 },
