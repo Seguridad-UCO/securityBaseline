@@ -2,12 +2,15 @@ package co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.pe
 
 import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository.ProfileAssignmentRepository;
 import co.edu.uco.seguridad.pdp.assignments.domain.ProfileAssignment;
+import co.edu.uco.seguridad.pdp.assignments.domain.ProfileAssignmentCriteria;
 import co.edu.uco.seguridad.pdp.assignments.domain.model.ProfileAssignmentId;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.entity.ProfileAssignmentEntity;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.mapper.ProfileAssignmentPersistenceMapper;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.schema.ProfileAssignmentSchema;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
+import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
 import co.edu.uco.seguridad.pdp.commons.model.ProfileId;
+import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
@@ -18,6 +21,7 @@ import tools.jackson.databind.JsonNode;
 
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -56,6 +60,31 @@ public final class SurrealProfileAssignmentRepository implements ProfileAssignme
                     JsonNode rows = results.get(0);
                     return rows.isEmpty() ? Mono.empty() : Mono.just(toDomain(rows.get(0)));
                 });
+    }
+
+    @Override
+    public Mono<ResultPage<ProfileAssignment>> findBy(ProfileAssignmentCriteria criteria, PageWindow window) {
+        String query = """
+                SELECT * FROM %1$s WHERE profileId = $profileId AND tenantId = $tenantId \
+                ORDER BY validFrom DESC LIMIT %2$d START %3$d;
+                SELECT count() FROM %1$s WHERE profileId = $profileId AND tenantId = $tenantId GROUP ALL;\
+                """.formatted(ProfileAssignmentSchema.TABLE, window.limit(), window.offset());
+
+        return client.execute(query, Map.of("profileId", criteria.profileId().value().toString(), "tenantId",
+                        criteria.tenantId().value()))
+                .map(results -> {
+                    List<ProfileAssignment> content = results.get(0).valueStream()
+                            .map(SurrealProfileAssignmentRepository::toDomain)
+                            .toList();
+                    return ResultPage.of(content, totalOf(results.get(1)), window);
+                });
+    }
+
+    private static long totalOf(JsonNode countResult) {
+        if (countResult.isEmpty()) {
+            return 0L;
+        }
+        return countResult.get(0).path("count").asLong(0L);
     }
 
     @Override

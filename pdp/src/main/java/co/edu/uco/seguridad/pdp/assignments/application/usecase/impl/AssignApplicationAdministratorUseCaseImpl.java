@@ -18,14 +18,12 @@ import reactor.core.publisher.Mono;
 import java.util.Objects;
 
 /**
- * Implementación de {@link AssignApplicationAdministratorUseCase} (HU-015). Pendiente:
- * {@code roleLookup.execute(new RoleNameInScopeQuery(new RoleName("ADMIN"), RoleScope.ofApplication(tenantId, applicationId)))}
- * — si está vacío, {@code defineRole.execute(...)} lo crea; si no, se reutiliza el existente (caso
- * documentado en la política: "cualquier tenant puede hoy crear un rol llamado ADMIN sin intención
- * administrativa" — este backfill debe adoptarlo, no duplicarlo). Con el {@code RoleId} resuelto,
- * {@code assignRole.execute} lo asigna al {@code userId} recibido. Consume el rol ajeno como
- * validador publicado, nunca consultando {@code RoleRepository} directamente (sb-arquitectura,
- * regla invariante 11 — descubierto por {@code ModulithStructureTests} en la FASE 3 de pruebas).
+ * Implementación de {@link AssignApplicationAdministratorUseCase} (HU-015). Encuentra o crea el
+ * rol {@code ADMIN} de la aplicación y lo asigna. No audita (HU-021): su request no trae
+ * {@code subject}, y ya se invoca exclusivamente detrás de
+ * {@code AdministerApplicationAdministratorAssignmentUseCaseImpl} (HU-020), que sí tiene el
+ * {@code AdministrationRequest} completo y ya audita {@code ADMINISTRATOR_ASSIGNED} — auditar
+ * aquí también duplicaría el evento (ver PLAN-HU-021.md, nota de retrofit).
  */
 public final class AssignApplicationAdministratorUseCaseImpl implements AssignApplicationAdministratorUseCase {
 

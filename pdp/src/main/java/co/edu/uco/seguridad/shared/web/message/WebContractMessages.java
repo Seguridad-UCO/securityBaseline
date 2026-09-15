@@ -93,6 +93,10 @@ public final class WebContractMessages {
         return "Asignación de perfil revocada";
     }
 
+    public static String successProfileAssignmentsListed() {
+        return "Asignaciones del perfil consultadas";
+    }
+
     public static String mustBeInteger() {
         return "debe ser un número entero";
     }
@@ -134,6 +138,15 @@ public final class WebContractMessages {
 
     public static String successApplicationAdministratorAssigned() {
         return "El administrador de la aplicación se asignó correctamente";
+    }
+
+    // HU-020 — autoservicio de administradores.
+    public static String successApplicationAdministratorRemoved() {
+        return "El administrador de la aplicación se quitó correctamente";
+    }
+
+    public static String successApplicationAdministratorsListed() {
+        return "Los administradores de la aplicación se listaron correctamente";
     }
 
     private WebContractMessages() {

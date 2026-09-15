@@ -13,6 +13,10 @@ import co.edu.uco.seguridad.pdp.resources.application.primaryport.response.Regis
 import co.edu.uco.seguridad.pdp.resources.application.usecase.RegisterProtectedResourceUseCase;
 import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
+import co.edu.uco.seguridad.shared.audit.AdministrationEvent;
+import co.edu.uco.seguridad.shared.audit.AdministrationOperation;
+import co.edu.uco.seguridad.shared.audit.AdministrationOutcome;
+import co.edu.uco.seguridad.shared.audit.TestAdministrationAuditRepositories;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -41,30 +45,53 @@ class AdministerResourceRegistrationUseCaseImplTests {
     private static final RegisteredProtectedResourceResponse RESPONSE = new RegisteredProtectedResourceResponse(
             new ResourceId(UUID.randomUUID()), APPLICATION, TENANT, new ResourcePath("/estudiantes"), HttpVerb.GET,
             Instant.parse("2026-09-14T00:00:00Z"));
+    private static final UUID FIXED_UUID = UUID.randomUUID();
+    private static final Instant FIXED_INSTANT = Instant.parse("2026-09-15T00:00:00Z");
 
     @Test
-    void registers_the_resource_when_the_principal_administers_the_application() {
+    void registers_the_resource_when_the_principal_administers_the_application_and_audits_allowed() {
         List<RegisterProtectedResourceRequest> received = new ArrayList<>();
+        List<AdministrationEvent> audited = new ArrayList<>();
         AdministerResourceRegistrationUseCaseImpl useCase = new AdministerResourceRegistrationUseCaseImpl(
-                allows(), registerResourceCapturing(received));
+                allows(), registerResourceCapturing(received), TestAdministrationAuditRepositories.capturing(audited),
+                () -> FIXED_UUID, () -> FIXED_INSTANT);
 
         StepVerifier.create(useCase.execute(new AdministerResourceRegistrationRequest(ADMINISTRATION, RESOURCE)))
                 .assertNext(response -> assertThat(response).isEqualTo(RESPONSE))
                 .verifyComplete();
         assertThat(received).containsExactly(RESOURCE);
+        assertThat(audited).hasSize(1);
+        assertThat(audited.getFirst().operation()).isEqualTo(AdministrationOperation.RESOURCE_REGISTERED);
+        assertThat(audited.getFirst().outcome()).isEqualTo(AdministrationOutcome.ALLOWED);
     }
 
     @Test
-    void never_registers_the_resource_when_the_principal_does_not_administer_the_application() {
+    void never_registers_the_resource_when_the_principal_does_not_administer_the_application_and_audits_denied() {
         RegisterProtectedResourceUseCase registerResource = input -> {
             throw new AssertionError("must not reach RegisterProtectedResourceUseCase");
         };
+        List<AdministrationEvent> audited = new ArrayList<>();
         AdministerResourceRegistrationUseCaseImpl useCase = new AdministerResourceRegistrationUseCaseImpl(
-                denies(), registerResource);
+                denies(), registerResource, TestAdministrationAuditRepositories.capturing(audited), () -> FIXED_UUID,
+                () -> FIXED_INSTANT);
 
         StepVerifier.create(useCase.execute(new AdministerResourceRegistrationRequest(ADMINISTRATION, RESOURCE)))
                 .expectError(NotAuthorizedToAdministerException.class)
                 .verify();
+        assertThat(audited).hasSize(1);
+        assertThat(audited.getFirst().outcome()).isEqualTo(AdministrationOutcome.DENIED);
+    }
+
+    @Test
+    void does_not_block_the_result_when_the_audit_repository_fails() {
+        List<RegisterProtectedResourceRequest> received = new ArrayList<>();
+        AdministerResourceRegistrationUseCaseImpl useCase = new AdministerResourceRegistrationUseCaseImpl(
+                allows(), registerResourceCapturing(received), TestAdministrationAuditRepositories.failing(),
+                () -> FIXED_UUID, () -> FIXED_INSTANT);
+
+        StepVerifier.create(useCase.execute(new AdministerResourceRegistrationRequest(ADMINISTRATION, RESOURCE)))
+                .assertNext(response -> assertThat(response).isEqualTo(RESPONSE))
+                .verifyComplete();
     }
 
     private static PrincipalMustBeApplicationAdministratorValidator allows() {

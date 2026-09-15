@@ -13,6 +13,10 @@ import co.edu.uco.seguridad.pdp.profiles.application.primaryport.response.Profil
 import co.edu.uco.seguridad.pdp.profiles.application.usecase.DefineProfileUseCase;
 import co.edu.uco.seguridad.pdp.profiles.domain.model.ProfileName;
 import co.edu.uco.seguridad.pdp.roles.domain.model.RoleScope;
+import co.edu.uco.seguridad.shared.audit.AdministrationEvent;
+import co.edu.uco.seguridad.shared.audit.AdministrationOperation;
+import co.edu.uco.seguridad.shared.audit.AdministrationOutcome;
+import co.edu.uco.seguridad.shared.audit.TestAdministrationAuditRepositories;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -44,44 +48,68 @@ class AdministerProfileDefinitionUseCaseImplTests {
     private static final ProfileResponse RESPONSE = new ProfileResponse(new ProfileId(UUID.randomUUID()),
             new ProfileName("Docentes de matematicas"), RoleScope.ofApplication(TENANT, APPLICATION), Set.of(),
             Instant.parse("2026-09-15T00:00:00Z"));
+    private static final UUID FIXED_UUID = UUID.randomUUID();
+    private static final Instant FIXED_INSTANT = Instant.parse("2026-09-15T00:00:00Z");
 
     @Test
-    void defines_the_profile_when_the_principal_administers_the_application() {
+    void defines_the_profile_when_the_principal_administers_the_application_and_audits_allowed() {
         List<DefineProfileRequest> received = new ArrayList<>();
+        List<AdministrationEvent> audited = new ArrayList<>();
         AdministerProfileDefinitionUseCaseImpl useCase = new AdministerProfileDefinitionUseCaseImpl(
-                allows(), defineProfileCapturing(received));
+                allows(), defineProfileCapturing(received), TestAdministrationAuditRepositories.capturing(audited),
+                () -> FIXED_UUID, () -> FIXED_INSTANT);
 
         StepVerifier.create(useCase.execute(new AdministerProfileDefinitionRequest(Optional.of(ADMINISTRATION), APPLICATION_SCOPED_PROFILE)))
                 .assertNext(response -> assertThat(response).isEqualTo(RESPONSE))
                 .verifyComplete();
         assertThat(received).containsExactly(APPLICATION_SCOPED_PROFILE);
+        assertThat(audited).hasSize(1);
+        assertThat(audited.getFirst().operation()).isEqualTo(AdministrationOperation.PROFILE_DEFINED);
+        assertThat(audited.getFirst().outcome()).isEqualTo(AdministrationOutcome.ALLOWED);
     }
 
     @Test
-    void never_defines_the_profile_when_the_principal_does_not_administer_the_application() {
+    void never_defines_the_profile_when_the_principal_does_not_administer_the_application_and_audits_denied() {
         DefineProfileUseCase defineProfile = input -> {
             throw new AssertionError("must not reach DefineProfileUseCase");
         };
-        AdministerProfileDefinitionUseCaseImpl useCase = new AdministerProfileDefinitionUseCaseImpl(denies(), defineProfile);
+        List<AdministrationEvent> audited = new ArrayList<>();
+        AdministerProfileDefinitionUseCaseImpl useCase = new AdministerProfileDefinitionUseCaseImpl(denies(), defineProfile,
+                TestAdministrationAuditRepositories.capturing(audited), () -> FIXED_UUID, () -> FIXED_INSTANT);
 
         StepVerifier.create(useCase.execute(new AdministerProfileDefinitionRequest(Optional.of(ADMINISTRATION), APPLICATION_SCOPED_PROFILE)))
                 .expectError(NotAuthorizedToAdministerException.class)
                 .verify();
+        assertThat(audited).hasSize(1);
+        assertThat(audited.getFirst().outcome()).isEqualTo(AdministrationOutcome.DENIED);
     }
 
     @Test
-    void defines_a_tenant_scoped_profile_without_gating_when_administration_is_empty() {
+    void defines_a_tenant_scoped_profile_without_gating_or_auditing_when_administration_is_empty() {
         List<DefineProfileRequest> received = new ArrayList<>();
         PrincipalMustBeApplicationAdministratorValidator neverCalled = request -> {
             throw new AssertionError("must not reach the administration gate");
         };
         AdministerProfileDefinitionUseCaseImpl useCase = new AdministerProfileDefinitionUseCaseImpl(
-                neverCalled, defineProfileCapturing(received));
+                neverCalled, defineProfileCapturing(received), TestAdministrationAuditRepositories.unreachable(),
+                () -> FIXED_UUID, () -> FIXED_INSTANT);
 
         StepVerifier.create(useCase.execute(new AdministerProfileDefinitionRequest(Optional.empty(), TENANT_SCOPED_PROFILE)))
                 .assertNext(response -> assertThat(response).isEqualTo(RESPONSE))
                 .verifyComplete();
         assertThat(received).containsExactly(TENANT_SCOPED_PROFILE);
+    }
+
+    @Test
+    void does_not_block_the_result_when_the_audit_repository_fails() {
+        List<DefineProfileRequest> received = new ArrayList<>();
+        AdministerProfileDefinitionUseCaseImpl useCase = new AdministerProfileDefinitionUseCaseImpl(
+                allows(), defineProfileCapturing(received), TestAdministrationAuditRepositories.failing(),
+                () -> FIXED_UUID, () -> FIXED_INSTANT);
+
+        StepVerifier.create(useCase.execute(new AdministerProfileDefinitionRequest(Optional.of(ADMINISTRATION), APPLICATION_SCOPED_PROFILE)))
+                .assertNext(response -> assertThat(response).isEqualTo(RESPONSE))
+                .verifyComplete();
     }
 
     private static PrincipalMustBeApplicationAdministratorValidator allows() {

@@ -23,8 +23,10 @@ Estado del trabajo para retomarlo en cualquier máquina. Se actualiza al cerrar 
 | HU-015 | Administración del catálogo: alta automática del primer administrador al registrar; borrar/rotar credencial exige serlo (gate vía OPA, mecanismo de HU-009); backfill manual para aplicaciones preexistentes | ✅ — fusionada a `develop`, PR #48 |
 | HU-016 | Gatea `DefineRole`/`GrantResourceToRole` (slice `roles`) por administración de aplicación | ✅ — fusionada a `develop`, PR #50 |
 | HU-017 | Gatea `RegisterProtectedResourceUseCase` (slice `resources`) por administración de aplicación | ✅ — fusionada a `develop`, PR #51 |
-| HU-018 | Gatea `AssignRoleUseCase`/`RevokeAssignmentUseCase` (slice `assignments`) por administración de aplicación | ✅ — validada, pendiente commit/push (gate 2) |
-| HU-019 | Gatea `DefineProfileUseCase`/`AddRoleToProfileUseCase`/`AssignProfileUseCase`/`RevokeProfileAssignmentUseCase` por administración de aplicación | ✅ — validada, pendiente commit/push (gate 2) |
+| HU-018 | Gatea `AssignRoleUseCase`/`RevokeAssignmentUseCase` (slice `assignments`) por administración de aplicación | ✅ — comiteada (`92585ab`), pendiente push (gate 2) |
+| HU-019 | Gatea `DefineProfileUseCase`/`AddRoleToProfileUseCase`/`AssignProfileUseCase`/`RevokeProfileAssignmentUseCase` por administración de aplicación | ✅ — comiteada (`92585ab`), pendiente push (gate 2) |
+| HU-020 | Autoservicio de administradores: agregar/quitar/listar administradores de aplicación por HTTP público, sin pasar por el canal interno mTLS | ✅ — validada, ver REPORTE-HU-020.md, pendiente commit/push (gate 2) |
+| HU-021 | Auditoría de operaciones administrativas (`AdministrationEvent`, retrofit de 13 `Administer*UseCaseImpl`) | 🟡 — validación RECHAZADA (3 bloqueantes: persistencia SurrealDB y observabilidad Prometheus/logs sin implementar), ver REPORTE-HU-021.md |
 
 **Estado verificado el 2026-09-15 (working tree, sobre `develop` + HU-018/HU-019 sin comitear):**
 `mvnw clean verify` → **675 pruebas, 0 fallos, 0 errores**, cobertura ≥ 50 % por paquete,
@@ -36,21 +38,22 @@ Estado del trabajo para retomarlo en cualquier máquina. Se actualiza al cerrar 
 `workspace/HU-016.md` a `workspace/HU-024.md` y `ADR-023` a `ADR-028` en
 `security-platform-architecture` (`docs/01-governance/adr/`). Reorganizado el 2026-09-13 al decidir
 que caché distribuida, revocación de tokens y MFA sí se construyen ahora (ya no "sin prioridad" —
-decisión explícita de Sebastián), y no solo se evalúan. **HU-016 a HU-019 ya se cerraron** (filas
-arriba, gatean todo el catálogo de escritura: roles, recursos, asignaciones y perfiles) — quedan:
+decisión explícita de Sebastián), y no solo se evalúan. **HU-016 a HU-020 ya se cerraron** (filas
+arriba, gatean todo el catálogo de escritura y cierran el autoservicio de administradores) — queda:
 
-1. **HU-020** — autoservicio de administradores (agregar/quitar/listar por HTTP público). Ya
-   desbloqueada: HU-016 a HU-019 están cerradas. **Siguiente paso natural.**
-2. **HU-022** — infraestructura Redis + revocación de tokens. Sin dependencia de HU-020 (slice
-   distinto: `shared/security`, no administración) — puede planificarse en paralelo con HU-020.
-3. **HU-021** — auditoría de operaciones administrativas (evento propio, no `AccessEvent`). Depende
-   de que HU-020 esté cerrada, para auditar toda la superficie de una vez.
-4. **HU-023** — caché distribuida de roles activos vía Redis. Depende de HU-022 (infraestructura ya
-   desplegada) y de HU-020 (superficie completa de invalidación a cablear de una vez, mismo criterio
-   que HU-021).
-5. **HU-024** — MFA como step-up para operaciones administrativas. Depende de HU-021 (superficie
-   administrativa completa y auditada) y de un prerrequisito externo: el realm de Keycloak con el
-   flujo de MFA configurado.
+1. **HU-021** — auditoría de operaciones administrativas (evento propio, no `AccessEvent`). Plan
+   aprobado, retrofit de los 13 casos de uso implementado y probado, **validación rechazada** —
+   falta implementar la persistencia real en SurrealDB (`SurrealAdministrationAuditRepository`,
+   `AdministrationEventEntity`/`Mapper`, `SurrealAdministrationEventSchemaInitializer`) y la
+   observabilidad (`ObservedAdministrationAuditRepository`, contador Prometheus + log estructurado).
+   Ver REPORTE-HU-021.md antes de retomarla — **no volver a planificar, solo terminar de implementar**.
+2. **HU-022** — infraestructura Redis + revocación de tokens. Sin dependencia de HU-020/HU-021 (slice
+   distinto: `shared/security`, no administración) — puede planificarse en paralelo.
+3. **HU-023** — caché distribuida de roles activos vía Redis. Depende de HU-022 (infraestructura ya
+   desplegada) y de HU-020 (ya cerrada — superficie completa de invalidación a cablear de una vez).
+4. **HU-024** — MFA como step-up para operaciones administrativas. Depende de HU-021 (superficie
+   administrativa completa y auditada — todavía no, ver arriba) y de un prerrequisito externo: el
+   realm de Keycloak con el flujo de MFA configurado.
 
 Cada una entra al ciclo normal del harness: `@1-planificador` primero (cada HU-XXX.md ya trae "Lo que
 ya está decidido" para no reabrir nada, y "Lo que hay que decidir antes de planificarla" para lo que
