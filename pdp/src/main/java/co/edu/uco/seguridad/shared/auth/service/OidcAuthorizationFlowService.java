@@ -30,12 +30,14 @@ public final class OidcAuthorizationFlowService {
     private final DefaultServerOAuth2AuthorizationRequestResolver registerResolver;
     private final ServerAuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository;
     private final OidcFlowStateService flowState;
+    private final OidcReturnTargetPolicy returnTargetPolicy;
 
     public OidcAuthorizationFlowService(ReactiveClientRegistrationRepository clientRegistrations,
             ServerAuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository,
-            OidcFlowStateService flowState) {
+            OidcFlowStateService flowState, OidcReturnTargetPolicy returnTargetPolicy) {
         this.authorizationRequestRepository = authorizationRequestRepository;
         this.flowState = flowState;
+        this.returnTargetPolicy = returnTargetPolicy;
         this.loginResolver = new DefaultServerOAuth2AuthorizationRequestResolver(clientRegistrations,
                 new PathPatternParserServerWebExchangeMatcher("/oauth2/authorization/{registrationId}", HttpMethod.GET));
         this.registerResolver = new DefaultServerOAuth2AuthorizationRequestResolver(clientRegistrations,
@@ -55,9 +57,14 @@ public final class OidcAuthorizationFlowService {
         return authorizationRequestMono
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Client registration not found")))
                 .map(request -> customize(request, intent, exchange))
-                .flatMap(request -> flowState.remember(exchange, intent)
+                .flatMap(request -> flowState.remember(exchange, intent, returnTarget(exchange))
                         .then(authorizationRequestRepository.saveAuthorizationRequest(request, exchange))
                         .then(redirect(exchange, request.getAuthorizationRequestUri())));
+    }
+
+    private String returnTarget(ServerWebExchange exchange) {
+        String value = exchange.getRequest().getQueryParams().getFirst("return_to");
+        return value == null || value.isBlank() ? null : returnTargetPolicy.validate(value);
     }
 
     private OAuth2AuthorizationRequest customize(OAuth2AuthorizationRequest request, OidcFlowIntent intent,

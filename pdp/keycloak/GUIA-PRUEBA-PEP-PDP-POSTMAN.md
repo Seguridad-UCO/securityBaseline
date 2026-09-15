@@ -154,3 +154,10 @@ El frontend usa un BFF: el navegador conserva una cookie de sesión y el backend
 token de Keycloak a JavaScript. Eso limita el impacto de XSS y evita que un token reutilizable quede
 en el navegador. El cliente `security-postman-test` usa su propio flujo Authorization Code + PKCE
 solo para pruebas de API y entrega un access token directamente a Postman.
+
+## Frontend con BFF
+
+El flujo de esta guía usa Bearer para Postman. Para el patrón de sesión BFF del navegador, CORS,
+redirección segura y configuración central de Keycloak, consulte
+[GUIA-INTEGRACION-FRONT-BFF-PEP.md](GUIA-INTEGRACION-FRONT-BFF-PEP.md). No fabrique ni comparta la
+cookie `SECURITY_BASELINE_SESSION` para sustituir un Bearer de Postman.

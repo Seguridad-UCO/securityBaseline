@@ -12,6 +12,7 @@ import co.edu.uco.seguridad.pep.ingress.application.usecase.RegisterIntegrationU
 import co.edu.uco.seguridad.pep.ingress.application.usecase.impl.RegisterIntegrationUseCaseImpl;
 import co.edu.uco.seguridad.pep.ingress.infrastructure.adapter.secondary.http.PdpApplicationCredentialValidationAdapter;
 import co.edu.uco.seguridad.pep.ingress.infrastructure.adapter.secondary.http.KeycloakClientCredentialsTokenProvider;
+import co.edu.uco.seguridad.pep.ingress.infrastructure.adapter.secondary.http.BffSessionTokenResolver;
 import co.edu.uco.seguridad.pep.ingress.application.port.secondary.PdpServiceTokenProvider;
 import co.edu.uco.seguridad.pep.ingress.infrastructure.properties.PdpServiceIdentityProperties;
 import co.edu.uco.seguridad.pep.ingress.infrastructure.adapter.primary.web.interactor.RegisterIntegrationInteractor;
@@ -34,6 +35,10 @@ class IntegrationConfiguration {
     PdpServiceTokenProvider pdpServiceTokenProvider(PdpServiceIdentityProperties properties) {
         return new KeycloakClientCredentialsTokenProvider(properties, WebClient.builder().build());
     }
+
+    @Bean
+    BffSessionTokenResolver bffSessionTokenResolver(@Qualifier("pdpWebClient") WebClient client,
+            PdpServiceTokenProvider serviceToken) { return new BffSessionTokenResolver(client, serviceToken); }
 
     @Bean
     ApplicationCredentialValidationPort applicationCredentialValidationPort(@Qualifier("pdpWebClient") WebClient client,

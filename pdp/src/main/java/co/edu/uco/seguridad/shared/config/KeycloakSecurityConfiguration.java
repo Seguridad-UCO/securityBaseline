@@ -13,6 +13,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.server.ServerOAuth2AuthorizedClientRepository;
+import org.springframework.security.oauth2.client.web.server.WebSessionServerOAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.client.web.server.ServerAuthorizationRequestRepository;
 import org.springframework.security.oauth2.client.web.server.DefaultServerOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.server.WebSessionOAuth2ServerAuthorizationRequestRepository;
@@ -43,13 +45,19 @@ import java.util.List;
 class KeycloakSecurityConfiguration {
 
     @Bean
+    ServerOAuth2AuthorizedClientRepository keycloakAuthorizedClientRepository() {
+        return new WebSessionServerOAuth2AuthorizedClientRepository();
+    }
+
+    @Bean
     SecurityWebFilterChain keycloakSecurityWebFilterChain(ServerHttpSecurity http,
             ApiAuthenticationEntryPoint entryPoint, ApiAccessDeniedHandler deniedHandler,
             CorsConfigurationSource corsConfigurationSource,
             OidcAuthenticationSuccessHandler successHandler,
             OidcAuthenticationFailureHandler failureHandler,
             ReactiveClientRegistrationRepository clientRegistrations,
-            ServerAuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository) {
+            ServerAuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository,
+            ServerOAuth2AuthorizedClientRepository authorizedClientRepository) {
         CookieServerCsrfTokenRepository csrf = CookieServerCsrfTokenRepository.withHttpOnlyFalse();
         csrf.setCookiePath("/");
         return http
@@ -74,6 +82,7 @@ class KeycloakSecurityConfiguration {
                         .authorizationRequestResolver(new DefaultServerOAuth2AuthorizationRequestResolver(clientRegistrations,
                                 new PathPatternParserServerWebExchangeMatcher("/internal/oauth2/authorization/{registrationId}")))
                         .authorizationRequestRepository(authorizationRequestRepository)
+                        .authorizedClientRepository(authorizedClientRepository)
                         .authenticationSuccessHandler(successHandler)
                         .authenticationFailureHandler(failureHandler))
                 .build();
@@ -91,7 +100,7 @@ class KeycloakSecurityConfiguration {
         configuration.setAllowedOrigins(properties.allowedOrigins());
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Content-Type", "X-XSRF-TOKEN", "X-Correlation-Id", "traceparent", "tracestate"));
-        configuration.setExposedHeaders(List.of("X-Request-Id", "X-Correlation-Id"));
+        configuration.setExposedHeaders(List.of("X-Request-Id", "X-Correlation-Id", "X-Decision-Id"));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

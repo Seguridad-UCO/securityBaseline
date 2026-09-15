@@ -67,9 +67,21 @@ Notas:
 - El valor `http://localhost:5173?registered=success` es obligatorio para que el logout automatico post-registro no falle con `invalid uri`.
 - Si falta ese URI, Keycloak no completa el cierre de sesion despues del registro y el usuario puede quedar autenticado por error.
 
-### 4. Mapper del cliente `security-baseline-bff-dedicated`
+### 4. Scope y mapper de audiencia del cliente BFF
 
-- Conservar el claim `identity_provider`.
+En **Clients → security-baseline-bff → Client scopes**, el scope que contiene el mapper debe
+aparecer en **Default client scopes**. Crear un scope desde el menú global **Client scopes** no lo
+asocia automáticamente al cliente: hay que agregarlo desde la pantalla del BFF como scope por
+defecto.
+
+En ese scope, conservar el claim `identity_provider` y agregar un mapper **Audience** con:
+  - **Name**: `audience-security-baseline-bff`.
+  - **Included Client Audience**: `security-baseline-bff`.
+  - **Add to access token**: activado.
+
+El BFF entrega el `access_token` de esta sesión únicamente por el canal interno PEP→PDP; por eso
+ese token debe llevar `security-baseline-bff` en el claim `aud`. Que el valor aparezca solo en
+`azp` no es suficiente: el PDP rechaza correctamente esa evidencia con `401`.
 
 Ese claim se usa en el backend para distinguir si el acceso vino de `keycloak-local`, `google` u otro broker configurado.
 
