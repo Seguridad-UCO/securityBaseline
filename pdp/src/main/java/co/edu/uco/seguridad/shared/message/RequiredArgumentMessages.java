@@ -175,6 +175,15 @@ public final class RequiredArgumentMessages {
     public static final String REVOCATION_RETENTION = "se requiere la retención de revocación (pdp.security.revocation.retention)";
     public static final String REACTIVE_JWT_DECODER_DELEGATE = "se requiere el ReactiveJwtDecoder delegado";
 
+    // Caché distribuida de roles activos (HU-023, ADR-026).
+    public static final String DISTRIBUTED_CACHE_PORT = "se requiere el puerto de caché distribuida de roles activos";
+    public static final String ACTIVE_ROLES_CACHE_RETENTION_PROPERTIES =
+            "se requieren las propiedades de retención de la caché de roles activos";
+    public static final String ACTIVE_ROLES_CACHE_RETENTION =
+            "se requiere la retención de la caché de roles activos (pdp.cache.active-roles.retention)";
+    public static final String DISTRIBUTED_CACHE_PORT_DELEGATE = "se requiere el DistributedCachePort delegado";
+    public static final String METER_REGISTRY = "se requiere el MeterRegistry";
+
     // Mecanismo de administración por aplicación (HU-009).
     public static final String ADMINISTRATION_DECISION_PORT = "se requiere el puerto de decisión de administración";
     public static final String AUTHORIZE_ADMINISTRATION_USE_CASE =
