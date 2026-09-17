@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web;
 
+import co.edu.uco.seguridad.AbstractRedisIntegrationTest;
 import co.edu.uco.seguridad.AbstractSurrealDbIntegrationTest;
 import co.edu.uco.seguridad.pdp.PdpApplication;
 import co.edu.uco.seguridad.pdp.assignments.application.primaryport.request.ResolveActiveRolesRequest;
@@ -44,6 +45,12 @@ import static org.assertj.core.api.Assertions.assertThat;
  * embebido que {@code ApplicationHttpTests} ya usa para HU-015, respondiendo {@code ALLOW} — esta
  * clase no prueba el rechazo del gate (eso vive en {@code AdministerRoleDefinitionUseCaseImplTests}),
  * solo necesita que la fixture de "aplicación con su primer administrador" funcione.</p>
+ *
+ * <p>HU-022: revocar una asignación ahora invoca {@code TokenRevocationPort} de verdad (efecto
+ * secundario de {@code RevokeAssignmentUseCaseImpl}) — {@code revoking_removes_the_role_from_the_active_context}
+ * necesita Redis alcanzable. No puede extender {@code AbstractRedisIntegrationTest} (herencia simple,
+ * ya extiende {@link AbstractSurrealDbIntegrationTest}): referencia su contenedor estático
+ * directamente, igual que ya hace con {@link OpaFixtureServer} por composición.</p>
  */
 @SpringBootTest(classes = PdpApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class AssignmentHttpTests extends AbstractSurrealDbIntegrationTest {
@@ -81,6 +88,12 @@ class AssignmentHttpTests extends AbstractSurrealDbIntegrationTest {
     @DynamicPropertySource
     static void opaConnectionProperties(DynamicPropertyRegistry registry) {
         registry.add("pdp.opa.base-url", () -> opa.baseUrl());
+    }
+
+    @DynamicPropertySource
+    static void redisConnectionProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.data.redis.host", AbstractRedisIntegrationTest.REDIS::getHost);
+        registry.add("spring.data.redis.port", () -> AbstractRedisIntegrationTest.REDIS.getMappedPort(6379));
     }
 
     @BeforeEach

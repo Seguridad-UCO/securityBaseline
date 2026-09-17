@@ -1,7 +1,9 @@
 package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web;
 
+import co.edu.uco.seguridad.AbstractRedisIntegrationTest;
 import co.edu.uco.seguridad.AbstractSurrealDbIntegrationTest;
 import co.edu.uco.seguridad.pdp.PdpApplication;
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.RSASSASigner;
@@ -56,6 +58,13 @@ import static org.assertj.core.api.Assertions.assertThat;
  * {@code AuthorizationHttpTests.reports_tenant_mismatch_for_an_application_that_does_not_belong_to_the_tenant}
  * (200, nunca 403). Esta prueba sigue el contrato y el precedente: 200 con
  * {@code decision=DENY}/{@code reasonCode=TENANT_MISMATCH} para una aplicación que no existe.</p>
+ *
+ * <p>HU-022: {@code internalEvidenceJwtDecoder} ahora es un {@code RevocationAwareJwtDecoder} real —
+ * fail-closed si el {@code subject} del JWT de evidencia no tiene una identidad vinculada (no hay con
+ * qué consultar su revocación, PLAN-HU-022.md §11 punto 4) o si Redis no responde. Por eso
+ * {@code "evidence-subject"} se vincula en {@link #generateCertificatesAndJwks()} y esta clase
+ * también referencia el contenedor estático de {@link AbstractRedisIntegrationTest} — no puede
+ * extenderlo (herencia simple, ya extiende {@link AbstractSurrealDbIntegrationTest}).</p>
  */
 @SpringBootTest(classes = PdpApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class InternalSecurityChainIntegrationTests extends AbstractSurrealDbIntegrationTest {
@@ -102,6 +111,9 @@ class InternalSecurityChainIntegrationTests extends AbstractSurrealDbIntegration
             exchange.close();
         });
         jwksServer.start();
+
+        // HU-022: RevocationAwareJwtDecoder rechaza (fail-closed) un subject sin UserId resuelto.
+        linkTestIdentity(new TenantId("universidad-uco"), "evidence-subject");
     }
 
     @AfterAll
@@ -125,6 +137,8 @@ class InternalSecurityChainIntegrationTests extends AbstractSurrealDbIntegration
                 () -> "http://127.0.0.1:" + jwksServer.getAddress().getPort() + "/jwks");
         registry.add("pdp.security.internal.evidence.issuer", () -> ISSUER);
         registry.add("pdp.security.internal.evidence.audience", () -> AUDIENCE);
+        registry.add("spring.data.redis.host", AbstractRedisIntegrationTest.REDIS::getHost);
+        registry.add("spring.data.redis.port", () -> AbstractRedisIntegrationTest.REDIS.getMappedPort(6379));
     }
 
     @Test

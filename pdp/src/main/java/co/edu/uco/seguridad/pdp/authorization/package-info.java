@@ -46,7 +46,7 @@
 @org.springframework.modulith.ApplicationModule(allowedDependencies = {
         "commons",
         "applications", "applications :: rule", "applications :: dto", "applications :: exception",
-        "applications :: usecase", "applications :: model",
+        "applications :: usecase", "applications :: model", "applications :: aggregate",
         "resources", "resources :: rule", "resources :: dto", "resources :: model", "resources :: exception",
         "resources :: usecase",
         "assignments :: usecase", "assignments :: dto", "assignments :: rule", "assignments :: model",

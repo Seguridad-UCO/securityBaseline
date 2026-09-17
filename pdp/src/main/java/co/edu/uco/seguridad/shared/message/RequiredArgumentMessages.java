@@ -168,6 +168,13 @@ public final class RequiredArgumentMessages {
     public static final String OPA_ADMINISTRATION_DECISION_PATH =
             "se requiere la ruta de decisión de administración de OPA (pdp.opa.administration-decision-path)";
 
+    // Revocación de tokens (HU-022, ADR-026).
+    public static final String REACTIVE_REDIS_TEMPLATE = "se requiere el ReactiveRedisTemplate de revocación";
+    public static final String TOKEN_REVOCATION_PORT = "se requiere el puerto de revocación de tokens";
+    public static final String REVOCATION_RETENTION_PROPERTIES = "se requieren las propiedades de retención de revocación";
+    public static final String REVOCATION_RETENTION = "se requiere la retención de revocación (pdp.security.revocation.retention)";
+    public static final String REACTIVE_JWT_DECODER_DELEGATE = "se requiere el ReactiveJwtDecoder delegado";
+
     // Mecanismo de administración por aplicación (HU-009).
     public static final String ADMINISTRATION_DECISION_PORT = "se requiere el puerto de decisión de administración";
     public static final String AUTHORIZE_ADMINISTRATION_USE_CASE =

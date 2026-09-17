@@ -75,6 +75,7 @@ import co.edu.uco.seguridad.pdp.roles.application.usecase.DefineRoleUseCase;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
+import co.edu.uco.seguridad.shared.security.revocation.TokenRevocationPort;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -134,8 +135,8 @@ public class AssignmentsConfiguration {
 
     @Bean
     RevokeAssignmentUseCase revokeAssignmentUseCase(RevokeAssignmentRulesValidator rules, AssignmentRepository repository,
-            TimeProvider time) {
-        return new RevokeAssignmentUseCaseImpl(rules, repository, time);
+            TimeProvider time, TokenRevocationPort revocation) {
+        return new RevokeAssignmentUseCaseImpl(rules, repository, time, revocation);
     }
 
     @Bean
@@ -264,9 +265,9 @@ public class AssignmentsConfiguration {
     RemoveApplicationAdministratorUseCase removeApplicationAdministratorUseCase(
             RoleLookupByNameInScopeValidator roleLookup, AssignmentRepository repository,
             LastAdministratorMustNotBeRevokedRule mustNotBeLastAdministrator, RevokeAssignmentUseCase revokeAssignment,
-            TimeProvider time) {
+            TimeProvider time, TokenRevocationPort revocation) {
         return new RemoveApplicationAdministratorUseCaseImpl(roleLookup, repository, mustNotBeLastAdministrator,
-                revokeAssignment, time);
+                revokeAssignment, time, revocation);
     }
 
     @Bean
