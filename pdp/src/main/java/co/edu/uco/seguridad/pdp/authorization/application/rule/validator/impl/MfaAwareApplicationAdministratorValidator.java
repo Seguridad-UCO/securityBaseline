@@ -32,6 +32,9 @@ public final class MfaAwareApplicationAdministratorValidator implements Principa
 
     @Override
     public Mono<Void> execute(AdministrationRequest input) {
-        throw new UnsupportedOperationException("pendiente: HU-024");
+        return delegate.execute(input)
+                .then(Mono.defer(() -> mfaProperties.satisfiedBy(input.authenticationContext())
+                        ? Mono.<Void>empty()
+                        : Mono.error(new MfaEvidenceRequiredException(input.tenantId(), input.applicationId()))));
     }
 }

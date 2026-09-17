@@ -20,6 +20,13 @@ import java.util.Set;
 public record MfaEvidenceProperties(String claim, Set<String> acceptedValues) {
 
     public boolean satisfiedBy(AuthenticationContextEvidence evidence) {
-        throw new UnsupportedOperationException("pendiente: HU-024");
+        if (claim == null || claim.isBlank() || acceptedValues == null || acceptedValues.isEmpty()) {
+            return false;
+        }
+        return switch (claim) {
+            case "acr" -> evidence.acr().filter(acceptedValues::contains).isPresent();
+            case "amr" -> evidence.amr().stream().anyMatch(acceptedValues::contains);
+            default -> false;
+        };
     }
 }

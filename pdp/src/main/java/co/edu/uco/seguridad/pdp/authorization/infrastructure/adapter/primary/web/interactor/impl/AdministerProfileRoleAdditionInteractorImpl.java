@@ -56,7 +56,8 @@ public final class AdministerProfileRoleAdditionInteractorImpl implements Admini
                             profileApplicationLookup.execute(new ProfileOwnershipQuery(principal.tenantId(), profileId)))
                             .map(tuple -> new AdministerProfileRoleAdditionRequest(
                                     tuple.getT2().map(applicationId -> new AdministrationRequest(principal.tenantId(),
-                                            applicationId, tuple.getT1(), principal.subject(), Set.of())),
+                                            applicationId, tuple.getT1(), principal.subject(), Set.of(),
+                                            principal.authenticationContext())),
                                     addition));
                 })
                 .flatMap(useCase::execute)

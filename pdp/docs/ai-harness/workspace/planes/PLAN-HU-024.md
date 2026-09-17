@@ -308,11 +308,11 @@ No se toca `identity` (salvo el success handler, que ya vive en `shared/auth`, n
 | Fase | Estado | Fecha |
 |---|---|---|
 | Plan | ✅ Generado | 2026-09-16 |
-| Contrato aprobado (gate 1) | ⏳ Pendiente | |
-| Pruebas en rojo | ⏳ Pendiente | |
-| Implementación en verde | ⏳ Pendiente | |
-| Validación | ⏳ Pendiente | |
-| Entrega (gate 2) | ⏳ Pendiente | |
+| Contrato aprobado (gate 1) | ✅ Aprobado | 2026-09-17 |
+| Pruebas en rojo | ✅ Confirmado (9 casos, `UnsupportedOperationException`) | 2026-09-17 |
+| Implementación en verde | ✅ Verde en las pruebas de la historia | 2026-09-17 |
+| Validación | ✅ Aprobada — ver REPORTE-HU-024.md | 2026-09-17 |
+| Entrega (gate 2) | ⏳ Pendiente — confirmación humana para commit/push | |
 
 ## 11. Ambigüedades pendientes
 

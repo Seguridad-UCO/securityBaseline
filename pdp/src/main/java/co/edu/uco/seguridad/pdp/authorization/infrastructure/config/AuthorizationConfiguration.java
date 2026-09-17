@@ -24,6 +24,7 @@ import co.edu.uco.seguridad.pdp.assignments.application.usecase.ResolveAuthoriza
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.ActiveRoleNamesLookupValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.PrincipalMustBeApplicationAdministratorValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.impl.ActiveRoleNamesLookupValidatorImpl;
+import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.impl.MfaAwareApplicationAdministratorValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.impl.PrincipalMustBeApplicationAdministratorValidatorImpl;
 import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.AccessAuditRepository;
 import co.edu.uco.seguridad.shared.audit.AdministrationAuditRepository;
@@ -214,10 +215,14 @@ public class AuthorizationConfiguration {
         return new AuthorizeAdministrationUseCaseImpl(rolesLookup, administrationDecisionPort);
     }
 
+    // HU-024 — MFA como step-up: decora la implementación de producción con el gate de evidencia,
+    // sin que ninguno de los 12 Administer*UseCaseImpl (todos inyectan la interfaz, nunca la clase
+    // concreta) necesite cambiar (PLAN-HU-024.md §1.2).
     @Bean
     PrincipalMustBeApplicationAdministratorValidator principalMustBeApplicationAdministratorValidator(
-            AuthorizeAdministrationUseCase useCase) {
-        return new PrincipalMustBeApplicationAdministratorValidatorImpl(useCase);
+            AuthorizeAdministrationUseCase useCase, MfaEvidenceProperties mfaProperties) {
+        return new MfaAwareApplicationAdministratorValidator(
+                new PrincipalMustBeApplicationAdministratorValidatorImpl(useCase), mfaProperties);
     }
 
     // HU-015 — endpoints administrativos gateados. Viven aquí, no en "applications": es el módulo

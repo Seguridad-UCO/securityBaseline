@@ -44,7 +44,7 @@ public final class AdministerApplicationAdministratorRemovalInteractorImpl
                 .flatMap(principal -> Mono.zip(ownerLookup.execute(applicationId), resolveUserId(principal))
                         .map(tuple -> new AdministerApplicationAdministratorRemovalRequest(
                                 new AdministrationRequest(tuple.getT1(), applicationId, tuple.getT2(), principal.subject(),
-                                        Set.of()),
+                                        Set.of(), principal.authenticationContext()),
                                 new RemoveApplicationAdministratorRequest(tuple.getT1(), applicationId, targetUserId))))
                 .flatMap(useCase::execute);
     }

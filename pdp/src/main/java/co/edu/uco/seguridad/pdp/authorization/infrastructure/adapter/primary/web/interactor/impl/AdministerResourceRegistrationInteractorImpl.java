@@ -52,7 +52,7 @@ public final class AdministerResourceRegistrationInteractorImpl implements Admin
         RegisterProtectedResourceRequest resource = RegisterProtectedResourceRequestMapper.toRequest(raw,
                 principal.tenantId());
         AdministrationRequest administration = new AdministrationRequest(principal.tenantId(),
-                resource.applicationId(), userId, principal.subject(), Set.of());
+                resource.applicationId(), userId, principal.subject(), Set.of(), principal.authenticationContext());
         return new AdministerResourceRegistrationRequest(administration, resource);
     }
 

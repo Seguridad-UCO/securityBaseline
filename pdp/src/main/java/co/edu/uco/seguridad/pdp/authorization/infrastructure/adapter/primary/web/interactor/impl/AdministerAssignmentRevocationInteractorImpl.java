@@ -50,7 +50,7 @@ public final class AdministerAssignmentRevocationInteractorImpl implements Admin
                             applicationLookup.execute(new AssignmentOwnershipQuery(assignmentId, principal.tenantId())))
                             .map(tuple -> new AdministerAssignmentRevocationRequest(
                                     new AdministrationRequest(principal.tenantId(), tuple.getT2(), tuple.getT1(),
-                                            principal.subject(), Set.of()),
+                                            principal.subject(), Set.of(), principal.authenticationContext()),
                                     revocation));
                 })
                 .flatMap(useCase::execute);

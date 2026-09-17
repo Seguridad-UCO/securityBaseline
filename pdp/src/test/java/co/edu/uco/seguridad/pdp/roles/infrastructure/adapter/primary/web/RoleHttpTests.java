@@ -62,6 +62,14 @@ class RoleHttpTests extends AbstractSurrealDbIntegrationTest {
         registry.add("pdp.opa.base-url", () -> opa.baseUrl());
     }
 
+    // HU-024: registrar recursos (siempre gateado) y conceder un recurso a un rol APPLICATION
+    // (gateado solo en ese alcance) pasan por MfaAwareApplicationAdministratorValidator.
+    @DynamicPropertySource
+    static void mfaEvidenceProperties(DynamicPropertyRegistry registry) {
+        registry.add("pdp.security.mfa.claim", () -> "acr");
+        registry.add("pdp.security.mfa.accepted-values", () -> TestJwtSupport.MFA_ACCEPTED_ACR);
+    }
+
     @BeforeEach
     void freshPrefix() {
         prefix = "hu004-" + UUID.randomUUID().toString().substring(0, 8);
@@ -109,7 +117,7 @@ class RoleHttpTests extends AbstractSurrealDbIntegrationTest {
         String roleId = defineApplicationScopedRole(UCO, ownApplicationId, prefix + "-rol-app");
 
         client().post().uri("/api/v1/roles/" + roleId + "/resources")
-                .header("Authorization", "Bearer " + TestJwtSupport.signedToken(UCO, "test-subject"))
+                .header("Authorization", "Bearer " + TestJwtSupport.signedTokenWithMfaEvidence(UCO, "test-subject"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("""
                         {"resourceId":"%s"}""".formatted(foreignResourceId))
@@ -146,7 +154,7 @@ class RoleHttpTests extends AbstractSurrealDbIntegrationTest {
 
     private String defineApplicationScopedRole(String tenant, String applicationId, String name) {
         byte[] body = client().post().uri("/api/v1/roles")
-                .header("Authorization", "Bearer " + TestJwtSupport.signedToken(tenant, "test-subject"))
+                .header("Authorization", "Bearer " + TestJwtSupport.signedTokenWithMfaEvidence(tenant, "test-subject"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("""
                         {"name":"%s","scope":"APPLICATION","applicationId":"%s"}""".formatted(name, applicationId))
@@ -171,7 +179,7 @@ class RoleHttpTests extends AbstractSurrealDbIntegrationTest {
 
     private void registerResource(String tenant, String applicationId, String path, String method) {
         client().post().uri("/api/v1/applications/" + applicationId + "/resources")
-                .header("Authorization", "Bearer " + TestJwtSupport.signedToken(tenant, "test-subject"))
+                .header("Authorization", "Bearer " + TestJwtSupport.signedTokenWithMfaEvidence(tenant, "test-subject"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("""
                         {"path":"%s","method":"%s"}""".formatted(path, method))

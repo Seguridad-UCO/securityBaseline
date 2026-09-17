@@ -67,6 +67,14 @@ class ApplicationHttpTests extends AbstractSurrealDbIntegrationTest {
         registry.add("pdp.opa.base-url", () -> opa.baseUrl());
     }
 
+    // HU-024: la rotación de credencial pasa por MfaAwareApplicationAdministratorValidator — el
+    // registrador (ya administrador por HU-015) necesita evidencia de MFA aceptada además del rol.
+    @DynamicPropertySource
+    static void mfaEvidenceProperties(DynamicPropertyRegistry registry) {
+        registry.add("pdp.security.mfa.claim", () -> "acr");
+        registry.add("pdp.security.mfa.accepted-values", () -> TestJwtSupport.MFA_ACCEPTED_ACR);
+    }
+
     @BeforeEach
     void registerApplications() {
         // Cada ejecución usa nombres únicos: la base es compartida entre pruebas y no se limpia.
@@ -189,7 +197,7 @@ class ApplicationHttpTests extends AbstractSurrealDbIntegrationTest {
         String originalCredential = JSON.readTree(registrationBody).path("data").path("credential").asString();
 
         byte[] rotationBody = client().post().uri(PATH + "/" + applicationId + "/credential-rotations")
-                .header("Authorization", "Bearer " + TestJwtSupport.signedToken(UCO, "test-subject"))
+                .header("Authorization", "Bearer " + TestJwtSupport.signedTokenWithMfaEvidence(UCO, "test-subject"))
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody()

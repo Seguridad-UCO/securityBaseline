@@ -45,7 +45,7 @@ public final class AdministerApplicationAdministratorListInteractorImpl
                 .flatMap(principal -> Mono.zip(ownerLookup.execute(applicationId), resolveUserId(principal))
                         .map(tuple -> new AdministerApplicationAdministratorListRequest(
                                 new AdministrationRequest(tuple.getT1(), applicationId, tuple.getT2(), principal.subject(),
-                                        Set.of()),
+                                        Set.of(), principal.authenticationContext()),
                                 new ListApplicationAdministratorsRequest(tuple.getT1(), applicationId))))
                 .flatMap(useCase::execute)
                 .map(responses -> responses.stream()

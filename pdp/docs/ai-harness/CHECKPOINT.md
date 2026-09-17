@@ -29,6 +29,7 @@ Estado del trabajo para retomarlo en cualquier máquina. Se actualiza al cerrar 
 | HU-021 | Auditoría de operaciones administrativas (`AdministrationEvent`, retrofit de 13 `Administer*UseCaseImpl`) | 🟡 — validación RECHAZADA (3 bloqueantes: persistencia SurrealDB y observabilidad Prometheus/logs sin implementar), ver REPORTE-HU-021.md |
 | HU-022 | Revocación de tokens con Redis: `TokenRevocationPort`/`RedisTokenRevocationAdapter`, `RevocationAwareJwtDecoder` decora `internalEvidenceJwtDecoder` (canal interno PEP→PDP), efecto secundario automático desde `RevokeAssignmentUseCase`/`RemoveApplicationAdministratorUseCase`, fail-closed | ✅ — validada, ver REPORTE-HU-022.md, pendiente commit/push (gate 2) |
 | HU-023 | Caché distribuida de roles activos: `DistributedCachePort`/`RedisDistributedCachePort` (fail-open, TTL de respaldo), `ObservedDistributedCachePort` (métrica), lectura caché-aside en `ResolveActiveRolesUseCaseImpl`, invalidación desde los dos puntos raíz de escritura (`AssignRoleUseCase`/`RevokeAssignmentUseCase` — cubren las 7 rutas de mutación de HU-015 a HU-020 sin tocar `roles`/`profiles`) | ✅ — validada, ver REPORTE-HU-023.md, pendiente commit/push (gate 2) |
+| HU-024 | MFA como step-up para operaciones administrativas: `AuthenticationContextEvidence`/`MfaEvidenceProperties` (`shared/security/mfa`), `MfaAwareApplicationAdministratorValidator` decora `PrincipalMustBeApplicationAdministratorValidator` en `AuthorizationConfiguration` (fail-closed mientras el realm de Keycloak no tenga MFA configurado), evidencia transportada desde el login (`OidcAuthenticationSuccessHandler`) hasta los 12 flujos administrativos gateados | ✅ — validada, ver REPORTE-HU-024.md, pendiente commit/push (gate 2) |
 
 **Estado verificado el 2026-09-15 (working tree, sobre `develop` + HU-018/HU-019 sin comitear):**
 `mvnw clean verify` → **675 pruebas, 0 fallos, 0 errores**, cobertura ≥ 50 % por paquete,
@@ -40,8 +41,8 @@ Estado del trabajo para retomarlo en cualquier máquina. Se actualiza al cerrar 
 `workspace/HU-016.md` a `workspace/HU-024.md` y `ADR-023` a `ADR-028` en
 `security-platform-architecture` (`docs/01-governance/adr/`). Reorganizado el 2026-09-13 al decidir
 que caché distribuida, revocación de tokens y MFA sí se construyen ahora (ya no "sin prioridad" —
-decisión explícita de Sebastián), y no solo se evalúan. **HU-016 a HU-020 ya se cerraron** (filas
-arriba, gatean todo el catálogo de escritura y cierran el autoservicio de administradores) — queda:
+decisión explícita de Sebastián), y no solo se evalúan. **HU-016 a HU-020, HU-022, HU-023 y HU-024
+ya se cerraron** (filas arriba) — queda:
 
 1. **HU-021** — auditoría de operaciones administrativas (evento propio, no `AccessEvent`). Plan
    aprobado, retrofit de los 13 casos de uso implementado y probado, **validación rechazada** —
@@ -49,9 +50,15 @@ arriba, gatean todo el catálogo de escritura y cierran el autoservicio de admin
    `AdministrationEventEntity`/`Mapper`, `SurrealAdministrationEventSchemaInitializer`) y la
    observabilidad (`ObservedAdministrationAuditRepository`, contador Prometheus + log estructurado).
    Ver REPORTE-HU-021.md antes de retomarla — **no volver a planificar, solo terminar de implementar**.
-2. **HU-024** — MFA como step-up para operaciones administrativas. Depende de HU-021 (superficie
-   administrativa completa y auditada — todavía no, ver arriba) y de un prerrequisito externo: el
-   realm de Keycloak con el flujo de MFA configurado.
+
+**HU-024 cerrada (2026-09-17):** MFA como step-up para operaciones administrativas — ver fila arriba
+y REPORTE-HU-024.md. Se implementó **sin esperar HU-021**: la dependencia que este mismo archivo
+anotaba el 2026-09-13 ("superficie administrativa completa y auditada") no bloqueaba el contrato
+real — el decorador se aplica ortogonalmente a los 12 flujos administrativos ya existentes, con o
+sin auditoría real detrás. El realm de Keycloak con el flujo de MFA sigue sin configurarse
+(prerrequisito externo, documentado en `PLAN-HU-024.md` §7): `pdp.security.mfa.claim`/
+`accepted-values` quedan vacíos, así que toda operación administrativa queda fail-closed hasta que
+se configure — consecuencia esperada, no un defecto.
 
 **HU-023 cerrada (2026-09-16):** caché distribuida de roles activos vía Redis — ver fila arriba y
 REPORTE-HU-023.md.

@@ -55,7 +55,7 @@ public final class AdministerAssignmentCreationInteractorImpl implements Adminis
         ApplicationId applicationId = RequestFieldParser.parse("applicationId", raw.applicationId(), ApplicationId::of);
         AssignRoleRequest assignment = new AssignRoleRequest(principal.tenantId(), userId, applicationId, roleId);
         AdministrationRequest administration = new AdministrationRequest(principal.tenantId(), applicationId,
-                subjectUserId, principal.subject(), Set.of());
+                subjectUserId, principal.subject(), Set.of(), principal.authenticationContext());
         return new AdministerAssignmentCreationRequest(administration, assignment);
     }
 

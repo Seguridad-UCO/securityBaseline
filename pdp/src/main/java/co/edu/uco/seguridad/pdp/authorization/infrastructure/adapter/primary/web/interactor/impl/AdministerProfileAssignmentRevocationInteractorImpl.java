@@ -53,7 +53,7 @@ public final class AdministerProfileAssignmentRevocationInteractorImpl implement
                                     new ProfileAssignmentOwnershipQuery(profileAssignmentId, principal.tenantId())))
                             .map(tuple -> new AdministerProfileAssignmentRevocationRequest(
                                     new AdministrationRequest(principal.tenantId(), tuple.getT2(), tuple.getT1(),
-                                            principal.subject(), Set.of()),
+                                            principal.subject(), Set.of(), principal.authenticationContext()),
                                     revocation));
                 })
                 .flatMap(useCase::execute);

@@ -24,7 +24,7 @@ public final class SecurityContext {
                 .map(org.springframework.security.core.context.SecurityContext::getAuthentication)
                 .map(Authentication::getPrincipal)
                 .flatMap(principal -> {
-                    if (principal instanceof LocalUserPrincipal user) return Mono.just(new PdpPrincipal(user.tenantId(), user.subject(), user.userId(), Optional.of(UserId.of(user.userId()))));
+                    if (principal instanceof LocalUserPrincipal user) return Mono.just(new PdpPrincipal(user.tenantId(), user.subject(), user.userId(), Optional.of(UserId.of(user.userId())), user.authenticationContext()));
                     if (principal instanceof Jwt jwt) return Mono.just(PdpPrincipal.from(jwt));
                     if (principal instanceof OidcUser user) return Mono.just(PdpPrincipal.from(user));
                     return Mono.error(new IllegalStateException("principal de seguridad no soportado"));

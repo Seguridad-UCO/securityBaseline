@@ -188,6 +188,7 @@ public final class RequiredArgumentMessages {
     public static final String MFA_AWARE_VALIDATOR_DELEGATE =
             "se requiere el validador de administrador de aplicación delegado";
     public static final String MFA_EVIDENCE_PROPERTIES = "se requieren las propiedades de evidencia de MFA";
+    public static final String AUTHENTICATION_CONTEXT_EVIDENCE = "se requiere la evidencia de contexto de autenticación (puede estar vacía)";
 
     // Mecanismo de administración por aplicación (HU-009).
     public static final String ADMINISTRATION_DECISION_PORT = "se requiere el puerto de decisión de administración";

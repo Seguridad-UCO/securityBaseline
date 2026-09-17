@@ -51,7 +51,7 @@ public final class AdministerApplicationAdministratorAssignmentInteractorImpl
                 .flatMap(principal -> Mono.zip(ownerLookup.execute(applicationId), resolveUserId(principal))
                         .map(tuple -> new AdministerApplicationAdministratorAssignmentRequest(
                                 new AdministrationRequest(tuple.getT1(), applicationId, tuple.getT2(), principal.subject(),
-                                        Set.of()),
+                                        Set.of(), principal.authenticationContext()),
                                 new AssignApplicationAdministratorRequest(tuple.getT1(), applicationId, newAdministratorId))))
                 .flatMap(useCase::execute)
                 .map(AdministerApplicationAdministratorAssignmentInteractorImpl::toWebResponse);
