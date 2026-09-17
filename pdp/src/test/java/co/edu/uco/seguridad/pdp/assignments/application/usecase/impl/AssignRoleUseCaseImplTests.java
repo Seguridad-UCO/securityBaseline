@@ -12,6 +12,7 @@ import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
 import co.edu.uco.seguridad.pdp.commons.model.RoleId;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.commons.model.UserId;
+import co.edu.uco.seguridad.shared.cache.DistributedCachePort;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -24,7 +25,13 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Con las reglas sustituidas por un dummy que siempre aprueba: aquí se prueba la construcción y la persistencia, no las reglas. */
+/**
+ * Con las reglas sustituidas por un dummy que siempre aprueba: aquí se prueba la construcción y la
+ * persistencia, no las reglas.
+ *
+ * <p>HU-023 (PLAN-HU-023.md §9): tras guardar, debe invocar {@code DistributedCachePort.evict} con
+ * el {@code userId}/{@code applicationId} de la respuesta.</p>
+ */
 class AssignRoleUseCaseImplTests {
 
     private static final TenantId TENANT = new TenantId("universidad-uco");
@@ -38,7 +45,7 @@ class AssignRoleUseCaseImplTests {
         List<Assignment> saved = new ArrayList<>();
         UUID fixedId = UUID.randomUUID();
         AssignRoleUseCaseImpl useCase = new AssignRoleUseCaseImpl(
-                dto -> Mono.empty(), repositoryCapturing(saved), () -> fixedId, () -> NOW);
+                dto -> Mono.empty(), repositoryCapturing(saved), () -> fixedId, () -> NOW, noOpCache());
 
         StepVerifier.create(useCase.execute(new AssignRoleRequest(TENANT, USER, APPLICATION, ROLE)))
                 .assertNext(response -> {
@@ -60,11 +67,26 @@ class AssignRoleUseCaseImplTests {
         RuntimeException rejection = new RuntimeException("usuario inexistente");
         AssignRoleRulesValidator alwaysRejects = dto -> Mono.error(rejection);
         AssignRoleUseCaseImpl useCase = new AssignRoleUseCaseImpl(
-                alwaysRejects, unreachableRepository(), UUID::randomUUID, () -> NOW);
+                alwaysRejects, unreachableRepository(), UUID::randomUUID, () -> NOW, unreachableCache());
 
         StepVerifier.create(useCase.execute(new AssignRoleRequest(TENANT, USER, APPLICATION, ROLE)))
                 .expectErrorMessage("usuario inexistente")
                 .verify();
+    }
+
+    @Test
+    void evicts_the_cache_for_the_user_and_application_after_assigning() {
+        List<Assignment> saved = new ArrayList<>();
+        List<Object[]> evicted = new ArrayList<>();
+        AssignRoleUseCaseImpl useCase = new AssignRoleUseCaseImpl(
+                dto -> Mono.empty(), repositoryCapturing(saved), UUID::randomUUID, () -> NOW, cacheCapturingEvict(evicted));
+
+        StepVerifier.create(useCase.execute(new AssignRoleRequest(TENANT, USER, APPLICATION, ROLE)))
+                .assertNext(response -> { })
+                .verifyComplete();
+
+        assertThat(evicted).hasSize(1);
+        assertThat(evicted.get(0)).containsExactly(USER, APPLICATION);
     }
 
     private static AssignmentRepository repositoryCapturing(List<Assignment> saved) {
@@ -124,6 +146,64 @@ class AssignRoleUseCaseImplTests {
             @Override
             public Mono<Assignment> save(Assignment assignment) {
                 throw new AssertionError("must not save when the rules reject the request");
+            }
+        };
+    }
+
+    private static DistributedCachePort noOpCache() {
+        return new DistributedCachePort() {
+            @Override
+            public Mono<Set<RoleId>> get(UserId subject, ApplicationId applicationId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Void> put(UserId subject, ApplicationId applicationId, Set<RoleId> roleIds) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Void> evict(UserId subject, ApplicationId applicationId) {
+                return Mono.empty();
+            }
+        };
+    }
+
+    private static DistributedCachePort unreachableCache() {
+        return new DistributedCachePort() {
+            @Override
+            public Mono<Set<RoleId>> get(UserId subject, ApplicationId applicationId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Void> put(UserId subject, ApplicationId applicationId, Set<RoleId> roleIds) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Void> evict(UserId subject, ApplicationId applicationId) {
+                throw new AssertionError("must not evict when the rules reject the request");
+            }
+        };
+    }
+
+    private static DistributedCachePort cacheCapturingEvict(List<Object[]> evicted) {
+        return new DistributedCachePort() {
+            @Override
+            public Mono<Set<RoleId>> get(UserId subject, ApplicationId applicationId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Void> put(UserId subject, ApplicationId applicationId, Set<RoleId> roleIds) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Void> evict(UserId subject, ApplicationId applicationId) {
+                evicted.add(new Object[] {subject, applicationId});
+                return Mono.empty();
             }
         };
     }

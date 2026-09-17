@@ -12,6 +12,7 @@ import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
 import co.edu.uco.seguridad.pdp.commons.model.RoleId;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.commons.model.UserId;
+import co.edu.uco.seguridad.shared.cache.DistributedCachePort;
 import co.edu.uco.seguridad.shared.security.revocation.TokenRevocationPort;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
@@ -32,21 +33,26 @@ import static org.assertj.core.api.Assertions.assertThat;
  * <p>HU-022 (PLAN-HU-022.md §9): tras guardar, invoca {@code TokenRevocationPort.revokeAllSince}
  * con el {@code userId} de la asignación revocada — fail-closed también en escritura, así que si la
  * revocación falla, la operación completa falla.</p>
+ *
+ * <p>HU-023 (PLAN-HU-023.md §9): tras revocar, debe invocar además
+ * {@code DistributedCachePort.evict} con el {@code userId}/{@code applicationId} de la asignación
+ * revocada.</p>
  */
 class RevokeAssignmentUseCaseImplTests {
 
     private static final AssignmentId ID = new AssignmentId(UUID.randomUUID());
     private static final TenantId TENANT = new TenantId("universidad-uco");
     private static final UserId USER = new UserId(UUID.randomUUID());
+    private static final ApplicationId APPLICATION = new ApplicationId(UUID.randomUUID());
     private static final Assignment ASSIGNMENT = Assignment.assign(ID, USER, TENANT,
-            new ApplicationId(UUID.randomUUID()), new RoleId(UUID.randomUUID()), Instant.parse("2026-09-11T00:00:00Z"));
+            APPLICATION, new RoleId(UUID.randomUUID()), Instant.parse("2026-09-11T00:00:00Z"));
     private static final Instant NOW = Instant.parse("2026-09-12T00:00:00Z");
 
     @Test
     void saves_the_assignment_with_the_end_fixed_and_completes() {
         List<Assignment> saved = new ArrayList<>();
         RevokeAssignmentUseCaseImpl useCase = new RevokeAssignmentUseCaseImpl(
-                request -> Mono.just(ASSIGNMENT), repositoryCapturing(saved), () -> NOW, noOpRevocation());
+                request -> Mono.just(ASSIGNMENT), repositoryCapturing(saved), () -> NOW, noOpRevocation(), noOpCache());
 
         StepVerifier.create(useCase.execute(new RevokeAssignmentRequest(ID, TENANT))).verifyComplete();
 
@@ -59,7 +65,7 @@ class RevokeAssignmentUseCaseImplTests {
         RuntimeException rejection = new RuntimeException("asignación no encontrada");
         RevokeAssignmentRulesValidator alwaysRejects = request -> Mono.error(rejection);
         RevokeAssignmentUseCaseImpl useCase = new RevokeAssignmentUseCaseImpl(alwaysRejects, unreachableRepository(), () -> NOW,
-                unreachableRevocation());
+                unreachableRevocation(), unreachableCache());
 
         StepVerifier.create(useCase.execute(new RevokeAssignmentRequest(ID, TENANT)))
                 .expectErrorMessage("asignación no encontrada")
@@ -71,7 +77,8 @@ class RevokeAssignmentUseCaseImplTests {
         List<Assignment> saved = new ArrayList<>();
         List<UserId> revokedSubjects = new ArrayList<>();
         RevokeAssignmentUseCaseImpl useCase = new RevokeAssignmentUseCaseImpl(
-                request -> Mono.just(ASSIGNMENT), repositoryCapturing(saved), () -> NOW, revocationCapturing(revokedSubjects));
+                request -> Mono.just(ASSIGNMENT), repositoryCapturing(saved), () -> NOW, revocationCapturing(revokedSubjects),
+                noOpCache());
 
         StepVerifier.create(useCase.execute(new RevokeAssignmentRequest(ID, TENANT))).verifyComplete();
 
@@ -83,11 +90,25 @@ class RevokeAssignmentUseCaseImplTests {
         List<Assignment> saved = new ArrayList<>();
         RuntimeException redisDown = new RuntimeException("redis no disponible");
         RevokeAssignmentUseCaseImpl useCase = new RevokeAssignmentUseCaseImpl(
-                request -> Mono.just(ASSIGNMENT), repositoryCapturing(saved), () -> NOW, failingRevocation(redisDown));
+                request -> Mono.just(ASSIGNMENT), repositoryCapturing(saved), () -> NOW, failingRevocation(redisDown), noOpCache());
 
         StepVerifier.create(useCase.execute(new RevokeAssignmentRequest(ID, TENANT)))
                 .expectErrorMessage("redis no disponible")
                 .verify();
+    }
+
+    @Test
+    void evicts_the_cache_for_the_user_and_application_after_revoking() {
+        List<Assignment> saved = new ArrayList<>();
+        List<Object[]> evicted = new ArrayList<>();
+        RevokeAssignmentUseCaseImpl useCase = new RevokeAssignmentUseCaseImpl(
+                request -> Mono.just(ASSIGNMENT), repositoryCapturing(saved), () -> NOW, noOpRevocation(),
+                cacheCapturingEvict(evicted));
+
+        StepVerifier.create(useCase.execute(new RevokeAssignmentRequest(ID, TENANT))).verifyComplete();
+
+        assertThat(evicted).hasSize(1);
+        assertThat(evicted.get(0)).containsExactly(USER, APPLICATION);
     }
 
     private static AssignmentRepository repositoryCapturing(List<Assignment> saved) {
@@ -204,6 +225,64 @@ class RevokeAssignmentUseCaseImplTests {
             @Override
             public Mono<Boolean> isRevoked(UserId subject, Instant issuedAt) {
                 throw new UnsupportedOperationException();
+            }
+        };
+    }
+
+    private static DistributedCachePort noOpCache() {
+        return new DistributedCachePort() {
+            @Override
+            public Mono<Set<RoleId>> get(UserId subject, ApplicationId applicationId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Void> put(UserId subject, ApplicationId applicationId, Set<RoleId> roleIds) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Void> evict(UserId subject, ApplicationId applicationId) {
+                return Mono.empty();
+            }
+        };
+    }
+
+    private static DistributedCachePort unreachableCache() {
+        return new DistributedCachePort() {
+            @Override
+            public Mono<Set<RoleId>> get(UserId subject, ApplicationId applicationId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Void> put(UserId subject, ApplicationId applicationId, Set<RoleId> roleIds) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Void> evict(UserId subject, ApplicationId applicationId) {
+                throw new AssertionError("must not evict when the rules reject the request");
+            }
+        };
+    }
+
+    private static DistributedCachePort cacheCapturingEvict(List<Object[]> evicted) {
+        return new DistributedCachePort() {
+            @Override
+            public Mono<Set<RoleId>> get(UserId subject, ApplicationId applicationId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Void> put(UserId subject, ApplicationId applicationId, Set<RoleId> roleIds) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Void> evict(UserId subject, ApplicationId applicationId) {
+                evicted.add(new Object[] {subject, applicationId});
+                return Mono.empty();
             }
         };
     }

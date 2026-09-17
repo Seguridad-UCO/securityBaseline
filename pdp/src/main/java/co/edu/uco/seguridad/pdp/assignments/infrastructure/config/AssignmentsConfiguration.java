@@ -72,6 +72,7 @@ import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleScopeMustCo
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleNamesLookupValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleResourcesLookupValidator;
 import co.edu.uco.seguridad.pdp.roles.application.usecase.DefineRoleUseCase;
+import co.edu.uco.seguridad.shared.cache.DistributedCachePort;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
@@ -129,14 +130,14 @@ public class AssignmentsConfiguration {
 
     @Bean
     AssignRoleUseCase assignRoleUseCase(AssignRoleRulesValidator rules, AssignmentRepository repository,
-            IdentifierGenerator identifiers, TimeProvider time) {
-        return new AssignRoleUseCaseImpl(rules, repository, identifiers, time);
+            IdentifierGenerator identifiers, TimeProvider time, DistributedCachePort cache) {
+        return new AssignRoleUseCaseImpl(rules, repository, identifiers, time, cache);
     }
 
     @Bean
     RevokeAssignmentUseCase revokeAssignmentUseCase(RevokeAssignmentRulesValidator rules, AssignmentRepository repository,
-            TimeProvider time, TokenRevocationPort revocation) {
-        return new RevokeAssignmentUseCaseImpl(rules, repository, time, revocation);
+            TimeProvider time, TokenRevocationPort revocation, DistributedCachePort cache) {
+        return new RevokeAssignmentUseCaseImpl(rules, repository, time, revocation, cache);
     }
 
     @Bean
@@ -145,8 +146,9 @@ public class AssignmentsConfiguration {
     }
 
     @Bean
-    ResolveActiveRolesUseCase resolveActiveRolesUseCase(AssignmentRepository repository, TimeProvider time) {
-        return new ResolveActiveRolesUseCaseImpl(repository, time);
+    ResolveActiveRolesUseCase resolveActiveRolesUseCase(AssignmentRepository repository, TimeProvider time,
+            DistributedCachePort cache) {
+        return new ResolveActiveRolesUseCaseImpl(repository, time, cache);
     }
 
     @Bean
