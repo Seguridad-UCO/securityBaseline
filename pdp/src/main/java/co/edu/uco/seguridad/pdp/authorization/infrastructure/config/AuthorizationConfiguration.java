@@ -116,6 +116,7 @@ import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
 import co.edu.uco.seguridad.shared.observability.ReactiveTelemetry;
+import co.edu.uco.seguridad.shared.security.mfa.MfaEvidenceProperties;
 import io.micrometer.observation.ObservationRegistry;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.ApplicationRunner;
@@ -127,7 +128,7 @@ import tools.jackson.databind.ObjectMapper;
 
 /** La unica clase consciente de Spring del modulo. */
 @Configuration
-@EnableConfigurationProperties(OpaProperties.class)
+@EnableConfigurationProperties({OpaProperties.class, MfaEvidenceProperties.class})
 public class AuthorizationConfiguration {
 
     // HU-006 (D9 del handoff PDP-PEP-OPA): reemplaza a DenyByDefaultPolicyDecisionAdapter, que se

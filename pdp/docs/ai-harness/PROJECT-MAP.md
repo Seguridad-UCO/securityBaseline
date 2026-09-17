@@ -3,7 +3,7 @@
 > Generado por `.claude/tools/mapa.ps1`. **No editar a mano** - se regenera desde el codigo.
 > Es el nivel 0 del grafo de conocimiento: responde "que existe y donde va lo nuevo".
 
-- Clases de produccion: **716**
+- Clases de produccion: **720**
 - Clases de prueba: **236**
 - Slices de negocio: **9** (applications, assignments, authorization, commons, identity, profiles, resources, roles, tenants)
 
@@ -72,17 +72,17 @@
 | Esquema de tabla | `AssignmentSchema`, `ProfileAssignmentSchema`, `SurrealAssignmentSchemaInitializer`, `SurrealProfileAssignmentSchemaInitializer` |
 | Cableado (@Bean) | `AssignmentsConfiguration` |
 
-### `authorization` - 171 clases
+### `authorization` - 173 clases
 
 | Rol | Clases |
 |---|---|
-| Excepcion de dominio | `NotAuthorizedToAdministerException` |
+| Excepcion de dominio | `MfaEvidenceRequiredException`, `NotAuthorizedToAdministerException` |
 | Catalogo de mensajes | `AuthorizationMessages` |
 | Value object | `DecisionState`, `PolicyReference`, `ReasonCode` |
 | Evento de dominio | `AccessEvent` |
 | Caso de uso (impl) | `AdministerApplicationAdministratorAssignmentUseCaseImpl`, `AdministerApplicationAdministratorListUseCaseImpl`, `AdministerApplicationAdministratorRemovalUseCaseImpl`, `AdministerApplicationCredentialRotationUseCaseImpl`, `AdministerApplicationRemovalUseCaseImpl`, `AdministerAssignmentCreationUseCaseImpl`, `AdministerAssignmentRevocationUseCaseImpl`, `AdministerProfileAssignmentCreationUseCaseImpl`, `AdministerProfileAssignmentRevocationUseCaseImpl`, `AdministerProfileDefinitionUseCaseImpl`, `AdministerProfileRoleAdditionUseCaseImpl`, `AdministerResourceGrantUseCaseImpl`, `AdministerResourceRegistrationUseCaseImpl`, `AdministerRoleDefinitionUseCaseImpl`, `AuthorizeAdministrationUseCaseImpl`, `AuthorizeUseCaseImpl`, `EvaluateInternalAccessUseCaseImpl` |
 | Caso de uso (contrato) | `AdministerApplicationAdministratorAssignmentUseCase`, `AdministerApplicationAdministratorListUseCase`, `AdministerApplicationAdministratorRemovalUseCase`, `AdministerApplicationCredentialRotationUseCase`, `AdministerApplicationRemovalUseCase`, `AdministerAssignmentCreationUseCase`, `AdministerAssignmentRevocationUseCase`, `AdministerProfileAssignmentCreationUseCase`, `AdministerProfileAssignmentRevocationUseCase`, `AdministerProfileDefinitionUseCase`, `AdministerProfileRoleAdditionUseCase`, `AdministerResourceGrantUseCase`, `AdministerResourceRegistrationUseCase`, `AdministerRoleDefinitionUseCase`, `AuthorizeAdministrationUseCase`, `AuthorizeUseCase`, `EvaluateInternalAccessUseCase` |
-| Validador de reglas (impl) | `ActiveRoleNamesLookupValidatorImpl`, `PrincipalMustBeApplicationAdministratorValidatorImpl` |
+| Validador de reglas (impl) | `ActiveRoleNamesLookupValidatorImpl`, `MfaAwareApplicationAdministratorValidator`, `PrincipalMustBeApplicationAdministratorValidatorImpl` |
 | Validador de reglas (contrato) | `ActiveRoleNamesLookupValidator`, `PrincipalMustBeApplicationAdministratorValidator` |
 | Puerto de salida | `AccessAuditRepository`, `AdministrationDecisionPort`, `PolicyDecisionPort` |
 | DTO de entrada al nucleo | `AccessRequest`, `AdministerApplicationAdministratorAssignmentRequest`, `AdministerApplicationAdministratorListRequest`, `AdministerApplicationAdministratorRemovalRequest`, `AdministerAssignmentCreationRequest`, `AdministerAssignmentRevocationRequest`, `AdministerProfileAssignmentCreationRequest`, `AdministerProfileAssignmentRevocationRequest`, `AdministerProfileDefinitionRequest`, `AdministerProfileRoleAdditionRequest`, `AdministerResourceGrantRequest`, `AdministerResourceRegistrationRequest`, `AdministerRoleDefinitionRequest`, `AdministrationRequest`, `InternalAccessRequest`, `PolicyEvaluationInput` |
@@ -283,6 +283,7 @@
 | `persistence/surrealdb` | `SurrealDbClient`, `SurrealDbException`, `SurrealDbHealthIndicator`, `SurrealDbProperties`, `SurrealRecordId`, `SurrealSchemaInitializer` |
 | `port` | `CredentialHasher`, `IdentifierGenerator`, `SecretGenerator`, `TimeProvider` |
 | `security` | `ApiAccessDeniedHandler`, `ApiAuthenticationEntryPoint`, `CorsProperties`, `InternalEvidenceJwtProperties`, `InternalMtlsProperties`, `InternalMtlsWebFilter`, `JwtSecurityProperties`, `KeycloakSessionProperties`, `LocalUserPrincipal`, `PdpPrincipal`, `RevocationRetentionProperties`, `SecurityContext` |
+| `security/mfa` | `AuthenticationContextEvidence`, `MfaEvidenceProperties` |
 | `security/revocation` | `RedisTokenRevocationAdapter`, `RevocationAwareJwtDecoder`, `TokenRevocationPort` |
 | `web` | `ApiResponse`, `CorrelationWebFilter`, `PageResponse`, `RequestContext`, `RequestFieldParser` |
 | `web/exception` | `ConflictingRequestParametersException`, `MalformedRequestFieldException`, `MissingRequestFieldException`, `RequestContractException` |
