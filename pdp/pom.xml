@@ -96,6 +96,14 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-opentelemetry</artifactId>
 		</dependency>
+		<!--
+			HU-022/ADR-026: revocación de tokens. Trae Lettuce (cliente reactivo) por defecto, coherente
+			con WebFlux (ADR-002) — mismo criterio que ya llevó a SurrealDB a su cliente reactivo propio.
+		-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-redis-reactive</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>io.micrometer</groupId>
 			<artifactId>micrometer-registry-prometheus</artifactId>

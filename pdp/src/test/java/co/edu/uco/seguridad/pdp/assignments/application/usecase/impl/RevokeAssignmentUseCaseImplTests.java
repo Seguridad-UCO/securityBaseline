@@ -12,6 +12,7 @@ import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
 import co.edu.uco.seguridad.pdp.commons.model.RoleId;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.commons.model.UserId;
+import co.edu.uco.seguridad.shared.security.revocation.TokenRevocationPort;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -27,12 +28,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * El validador ya encontró y validó la asignación (R5) — este caso de uso solo la transforma
  * (Assignment.revoke) y la guarda. No vuelve a consultar ni a decidir nada.
+ *
+ * <p>HU-022 (PLAN-HU-022.md §9): tras guardar, invoca {@code TokenRevocationPort.revokeAllSince}
+ * con el {@code userId} de la asignación revocada — fail-closed también en escritura, así que si la
+ * revocación falla, la operación completa falla.</p>
  */
 class RevokeAssignmentUseCaseImplTests {
 
     private static final AssignmentId ID = new AssignmentId(UUID.randomUUID());
     private static final TenantId TENANT = new TenantId("universidad-uco");
-    private static final Assignment ASSIGNMENT = Assignment.assign(ID, new UserId(UUID.randomUUID()), TENANT,
+    private static final UserId USER = new UserId(UUID.randomUUID());
+    private static final Assignment ASSIGNMENT = Assignment.assign(ID, USER, TENANT,
             new ApplicationId(UUID.randomUUID()), new RoleId(UUID.randomUUID()), Instant.parse("2026-09-11T00:00:00Z"));
     private static final Instant NOW = Instant.parse("2026-09-12T00:00:00Z");
 
@@ -40,7 +46,7 @@ class RevokeAssignmentUseCaseImplTests {
     void saves_the_assignment_with_the_end_fixed_and_completes() {
         List<Assignment> saved = new ArrayList<>();
         RevokeAssignmentUseCaseImpl useCase = new RevokeAssignmentUseCaseImpl(
-                request -> Mono.just(ASSIGNMENT), repositoryCapturing(saved), () -> NOW);
+                request -> Mono.just(ASSIGNMENT), repositoryCapturing(saved), () -> NOW, noOpRevocation());
 
         StepVerifier.create(useCase.execute(new RevokeAssignmentRequest(ID, TENANT))).verifyComplete();
 
@@ -52,10 +58,35 @@ class RevokeAssignmentUseCaseImplTests {
     void never_saves_when_the_rules_validator_rejects_the_request() {
         RuntimeException rejection = new RuntimeException("asignación no encontrada");
         RevokeAssignmentRulesValidator alwaysRejects = request -> Mono.error(rejection);
-        RevokeAssignmentUseCaseImpl useCase = new RevokeAssignmentUseCaseImpl(alwaysRejects, unreachableRepository(), () -> NOW);
+        RevokeAssignmentUseCaseImpl useCase = new RevokeAssignmentUseCaseImpl(alwaysRejects, unreachableRepository(), () -> NOW,
+                unreachableRevocation());
 
         StepVerifier.create(useCase.execute(new RevokeAssignmentRequest(ID, TENANT)))
                 .expectErrorMessage("asignación no encontrada")
+                .verify();
+    }
+
+    @Test
+    void revokes_the_subjects_tokens_since_now_after_saving() {
+        List<Assignment> saved = new ArrayList<>();
+        List<UserId> revokedSubjects = new ArrayList<>();
+        RevokeAssignmentUseCaseImpl useCase = new RevokeAssignmentUseCaseImpl(
+                request -> Mono.just(ASSIGNMENT), repositoryCapturing(saved), () -> NOW, revocationCapturing(revokedSubjects));
+
+        StepVerifier.create(useCase.execute(new RevokeAssignmentRequest(ID, TENANT))).verifyComplete();
+
+        assertThat(revokedSubjects).containsExactly(USER);
+    }
+
+    @Test
+    void fails_the_whole_operation_when_revocation_fails() {
+        List<Assignment> saved = new ArrayList<>();
+        RuntimeException redisDown = new RuntimeException("redis no disponible");
+        RevokeAssignmentUseCaseImpl useCase = new RevokeAssignmentUseCaseImpl(
+                request -> Mono.just(ASSIGNMENT), repositoryCapturing(saved), () -> NOW, failingRevocation(redisDown));
+
+        StepVerifier.create(useCase.execute(new RevokeAssignmentRequest(ID, TENANT)))
+                .expectErrorMessage("redis no disponible")
                 .verify();
     }
 
@@ -116,6 +147,63 @@ class RevokeAssignmentUseCaseImplTests {
             @Override
             public Mono<Assignment> save(Assignment assignment) {
                 throw new AssertionError("must not save when the rules reject the request");
+            }
+        };
+    }
+
+    private static TokenRevocationPort noOpRevocation() {
+        return new TokenRevocationPort() {
+            @Override
+            public Mono<Void> revokeAllSince(UserId subject, Instant since) {
+                return Mono.empty();
+            }
+
+            @Override
+            public Mono<Boolean> isRevoked(UserId subject, Instant issuedAt) {
+                throw new UnsupportedOperationException();
+            }
+        };
+    }
+
+    private static TokenRevocationPort unreachableRevocation() {
+        return new TokenRevocationPort() {
+            @Override
+            public Mono<Void> revokeAllSince(UserId subject, Instant since) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Boolean> isRevoked(UserId subject, Instant issuedAt) {
+                throw new UnsupportedOperationException();
+            }
+        };
+    }
+
+    private static TokenRevocationPort revocationCapturing(List<UserId> revokedSubjects) {
+        return new TokenRevocationPort() {
+            @Override
+            public Mono<Void> revokeAllSince(UserId subject, Instant since) {
+                revokedSubjects.add(subject);
+                return Mono.empty();
+            }
+
+            @Override
+            public Mono<Boolean> isRevoked(UserId subject, Instant issuedAt) {
+                throw new UnsupportedOperationException();
+            }
+        };
+    }
+
+    private static TokenRevocationPort failingRevocation(RuntimeException failure) {
+        return new TokenRevocationPort() {
+            @Override
+            public Mono<Void> revokeAllSince(UserId subject, Instant since) {
+                return Mono.error(failure);
+            }
+
+            @Override
+            public Mono<Boolean> isRevoked(UserId subject, Instant issuedAt) {
+                throw new UnsupportedOperationException();
             }
         };
     }

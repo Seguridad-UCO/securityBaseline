@@ -17,13 +17,23 @@ import co.edu.uco.seguridad.pdp.roles.domain.model.RoleName;
 import co.edu.uco.seguridad.pdp.roles.domain.model.RoleScope;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
+import co.edu.uco.seguridad.shared.security.revocation.TokenRevocationPort;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
-/** Revoca la asignación del rol ADMIN de un usuario, rechazando si es el único administrador activo (HU-020). */
+/**
+ * Revoca la asignación del rol ADMIN de un usuario, rechazando si es el único administrador activo (HU-020).
+ *
+ * <p>HU-022 (PLAN-HU-022.md §7): tras revocar, invoca {@code revocation.revokeAllSince}. Esta clase
+ * ya delega la revocación de la asignación en {@code revokeAssignment} ({@link RevokeAssignmentUseCase}),
+ * cuya propia implementación (HU-022) también invoca la revocación de tokens — así que en producción
+ * esta segunda llamada es redundante (la clave Redis usa semántica `SET`, nunca acumula, así que
+ * duplicarla es inocua, no incorrecta). Se implementa igual por fidelidad literal a la SPEC del plan;
+ * reportado como observación de diseño, no corregido aquí porque no es una firma de la SPEC.</p>
+ */
 public final class RemoveApplicationAdministratorUseCaseImpl implements RemoveApplicationAdministratorUseCase {
 
     private static final RoleName ADMIN_ROLE_NAME = new RoleName("ADMIN");
@@ -33,16 +43,18 @@ public final class RemoveApplicationAdministratorUseCaseImpl implements RemoveAp
     private final LastAdministratorMustNotBeRevokedRule mustNotBeLastAdministrator;
     private final RevokeAssignmentUseCase revokeAssignment;
     private final TimeProvider time;
+    private final TokenRevocationPort revocation;
 
     public RemoveApplicationAdministratorUseCaseImpl(RoleLookupByNameInScopeValidator roleLookup,
             AssignmentRepository repository, LastAdministratorMustNotBeRevokedRule mustNotBeLastAdministrator,
-            RevokeAssignmentUseCase revokeAssignment, TimeProvider time) {
+            RevokeAssignmentUseCase revokeAssignment, TimeProvider time, TokenRevocationPort revocation) {
         this.roleLookup = Objects.requireNonNull(roleLookup, RequiredArgumentMessages.ROLE_LOOKUP_BY_NAME_IN_SCOPE_VALIDATOR);
         this.repository = Objects.requireNonNull(repository, RequiredArgumentMessages.ASSIGNMENT_REPOSITORY);
         this.mustNotBeLastAdministrator = Objects.requireNonNull(mustNotBeLastAdministrator,
                 RequiredArgumentMessages.LAST_ADMINISTRATOR_MUST_NOT_BE_REVOKED_RULE);
         this.revokeAssignment = Objects.requireNonNull(revokeAssignment, RequiredArgumentMessages.REVOKE_ASSIGNMENT_USE_CASE);
         this.time = Objects.requireNonNull(time, RequiredArgumentMessages.TIME_PROVIDER);
+        this.revocation = Objects.requireNonNull(revocation, RequiredArgumentMessages.TOKEN_REVOCATION_PORT);
     }
 
     @Override
@@ -67,7 +79,8 @@ public final class RemoveApplicationAdministratorUseCaseImpl implements RemoveAp
         return activeAdministrators.stream()
                 .filter(assignment -> assignment.userId().equals(input.userId()))
                 .findFirst()
-                .map(target -> revokeAssignment.execute(new RevokeAssignmentRequest(target.id(), input.tenantId())))
+                .map(target -> revokeAssignment.execute(new RevokeAssignmentRequest(target.id(), input.tenantId()))
+                        .then(Mono.defer(() -> revocation.revokeAllSince(target.userId(), time.now()))))
                 .orElseGet(Mono::empty);
     }
 }

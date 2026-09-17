@@ -1,10 +1,13 @@
 package co.edu.uco.seguridad.shared.config;
 
+import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserIdLookupValidator;
 import co.edu.uco.seguridad.shared.security.ApiAccessDeniedHandler;
 import co.edu.uco.seguridad.shared.security.ApiAuthenticationEntryPoint;
 import co.edu.uco.seguridad.shared.security.InternalEvidenceJwtProperties;
 import co.edu.uco.seguridad.shared.security.InternalMtlsProperties;
 import co.edu.uco.seguridad.shared.security.InternalMtlsWebFilter;
+import co.edu.uco.seguridad.shared.security.revocation.RevocationAwareJwtDecoder;
+import co.edu.uco.seguridad.shared.security.revocation.TokenRevocationPort;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -82,9 +85,16 @@ class InternalSecurityConfiguration {
      * hace de forma perezosa en el primer {@code decode()}— así que un valor por defecto que no
      * resuelve nada (ver {@code application.properties}) no impide arrancar el contexto; solo hace
      * que cualquier evidencia falle al validar, que es exactamente fallar cerrado.
+     *
+     * <p>HU-022 (PLAN-HU-022.md §1, §7): el decoder Nimbus queda como {@code delegate}, sin cambios —
+     * {@link RevocationAwareJwtDecoder} lo envuelve para rechazar (fail-closed) un JWT criptográfica
+     * y temporalmente válido pero emitido antes de la última revocación de su sujeto. Este es el
+     * canal real que protege el flujo BFF (el modo dev/HMAC de {@code SecurityConfiguration} queda
+     * fuera de esta historia).</p>
      */
     @Bean
-    ReactiveJwtDecoder internalEvidenceJwtDecoder(InternalEvidenceJwtProperties properties) {
+    ReactiveJwtDecoder internalEvidenceJwtDecoder(InternalEvidenceJwtProperties properties,
+            TokenRevocationPort revocation, SubjectUserIdLookupValidator subjectUserIdLookup) {
         NimbusReactiveJwtDecoder decoder = NimbusReactiveJwtDecoder.withJwkSetUri(properties.jwkSetUri()).build();
         OAuth2TokenValidator<Jwt> validator = new DelegatingOAuth2TokenValidator<>(List.of(
                 new JwtTimestampValidator(),
@@ -93,6 +103,6 @@ class InternalSecurityConfiguration {
                 new JwtClaimValidator<List<String>>("aud",
                         audiences -> audiences != null && audiences.contains(properties.audience()))));
         decoder.setJwtValidator(validator);
-        return decoder;
+        return new RevocationAwareJwtDecoder(decoder, revocation, subjectUserIdLookup);
     }
 }
