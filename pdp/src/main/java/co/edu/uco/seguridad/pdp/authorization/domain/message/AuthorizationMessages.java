@@ -31,4 +31,10 @@ public final class AuthorizationMessages {
     public static String applicationIdNotApplicableForProfileTenantScope() {
         return "un perfil de alcance TENANT no admite applicationId";
     }
+
+    // HU-024 — MFA como step-up: distinguible de notAuthorizedToAdminister (rol insuficiente vs.
+    // sesión sin segundo factor).
+    public static String mfaEvidenceRequired(ApplicationId applicationId) {
+        return "El sujeto no tiene evidencia de MFA para administrar la aplicación " + applicationId.value();
+    }
 }

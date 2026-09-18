@@ -6,10 +6,12 @@ import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.shared.security.PdpPrincipal;
+import co.edu.uco.seguridad.shared.security.mfa.AuthenticationContextEvidence;
 import co.edu.uco.seguridad.shared.web.exception.MalformedRequestFieldException;
 import co.edu.uco.seguridad.shared.web.exception.MissingRequestFieldException;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,7 +28,10 @@ class ApplicationAdministrationRequestMapperTests {
     private static final TenantId TENANT = new TenantId("universidad-uco");
     private static final UserId USER = new UserId(UUID.randomUUID());
     private static final ApplicationId APPLICATION = new ApplicationId(UUID.randomUUID());
-    private static final PdpPrincipal PRINCIPAL = new PdpPrincipal(TENANT, "test-subject", "jwt-1", Optional.of(USER));
+    private static final AuthenticationContextEvidence AUTHENTICATION_CONTEXT =
+            new AuthenticationContextEvidence(Optional.of("urn:mfa:otp"), List.of("otp"));
+    private static final PdpPrincipal PRINCIPAL = new PdpPrincipal(TENANT, "test-subject", "jwt-1", Optional.of(USER),
+            AUTHENTICATION_CONTEXT);
 
     @Test
     void builds_the_administration_request_from_the_route_the_principal_and_the_resolved_user_id() {
@@ -38,6 +43,14 @@ class ApplicationAdministrationRequestMapperTests {
         assertThat(request.subjectUserId()).isEqualTo(USER);
         assertThat(request.subject()).isEqualTo("test-subject");
         assertThat(request.subjectRoles()).isEmpty();
+    }
+
+    @Test
+    void carries_the_principal_authentication_context_into_the_administration_request_unchanged() {
+        AdministrationRequest request = ApplicationAdministrationRequestMapper.toAdministrationRequest(
+                new ApplicationAdministrationRawRequest(APPLICATION.value().toString()), PRINCIPAL, USER);
+
+        assertThat(request.authenticationContext()).isEqualTo(AUTHENTICATION_CONTEXT);
     }
 
     @Test

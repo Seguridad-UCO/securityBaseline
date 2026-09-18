@@ -6,6 +6,7 @@ import co.edu.uco.seguridad.pdp.identity.application.usecase.ProvisionIdentityUs
 import co.edu.uco.seguridad.shared.auth.model.OidcFlowIntent;
 import co.edu.uco.seguridad.shared.security.LocalUserPrincipal;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.security.authentication.TestingAuthenticationToken;
@@ -86,6 +87,23 @@ class OidcAuthenticationSuccessHandlerTests {
                 "http://localhost:9090/realms/security-baseline/protocol/openid-connect/logout?client_id=security-baseline-bff&post_logout_redirect_uri=http://localhost:5173?registered%3Dsuccess&id_token_hint=id-token");
     }
 
+    @Test
+    void login_flow_persists_the_authentication_context_evidence_extracted_from_the_id_token() {
+        OidcFlowStateService flowState = new OidcFlowStateService();
+        OidcAuthenticationSuccessHandler handler = new OidcAuthenticationSuccessHandler(provisioner(new AtomicReference<>()),
+                flowState, new OidcRedirectPolicy("http://localhost:5173"), new KeycloakOidcSessionService(clientRegistrations()));
+        MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/login/oauth2/code/keycloak").build());
+        exchange.getSession().block().getAttributes().put(OidcFlowStateService.FLOW_INTENT_ATTRIBUTE, OidcFlowIntent.LOGIN.name());
+
+        handler.onAuthenticationSuccess(webFilterExchange(exchange), new TestingAuthenticationToken(
+                oidcUserWithAuthenticationContext("urn:mfa:otp", List.of("otp", "pwd")), null)).block();
+
+        var securityContext = (SecurityContext) exchange.getSession().block().getAttribute("SPRING_SECURITY_CONTEXT");
+        var persistedUser = (LocalUserPrincipal) securityContext.getAuthentication().getPrincipal();
+        assertThat(persistedUser.authenticationContext().acr()).contains("urn:mfa:otp");
+        assertThat(persistedUser.authenticationContext().amr()).containsExactly("otp", "pwd");
+    }
+
     private static ProvisionIdentityUseCase provisioner(AtomicReference<String> provider) {
         return (ProvisionIdentityRequest dto) -> {
             provider.set(dto.provider());
@@ -107,6 +125,22 @@ class OidcAuthenticationSuccessHandlerTests {
                 StandardClaimNames.EMAIL, "david@uco.edu",
                 StandardClaimNames.GIVEN_NAME, "David",
                 StandardClaimNames.NAME, "David Alzate"));
+        return new DefaultOidcUser(List.of(new OidcUserAuthority(idToken, new OidcUserInfo(Map.of(
+                StandardClaimNames.EMAIL, "david@uco.edu",
+                StandardClaimNames.NAME, "David Alzate",
+                StandardClaimNames.GIVEN_NAME, "David")))), idToken, StandardClaimNames.SUB);
+    }
+
+    private static OidcUser oidcUserWithAuthenticationContext(String acr, List<String> amr) {
+        OidcIdToken idToken = new OidcIdToken("id-token", Instant.now(), Instant.now().plusSeconds(300), Map.of(
+                IdTokenClaimNames.ISS, "http://localhost:9090/realms/security-baseline",
+                IdTokenClaimNames.SUB, "subject-1",
+                "identity_provider", "google",
+                StandardClaimNames.EMAIL, "david@uco.edu",
+                StandardClaimNames.GIVEN_NAME, "David",
+                StandardClaimNames.NAME, "David Alzate",
+                "acr", acr,
+                "amr", amr));
         return new DefaultOidcUser(List.of(new OidcUserAuthority(idToken, new OidcUserInfo(Map.of(
                 StandardClaimNames.EMAIL, "david@uco.edu",
                 StandardClaimNames.NAME, "David Alzate",

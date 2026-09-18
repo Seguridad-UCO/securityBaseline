@@ -25,6 +25,6 @@ public final class ApplicationAdministrationRequestMapper {
             PdpPrincipal principal, UserId resolvedUserId) {
         ApplicationId applicationId = RequestFieldParser.parse("applicationId", raw.applicationId(), ApplicationId::of);
         return new AdministrationRequest(principal.tenantId(), applicationId, resolvedUserId, principal.subject(),
-                Set.of());
+                Set.of(), principal.authenticationContext());
     }
 }

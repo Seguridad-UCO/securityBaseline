@@ -72,7 +72,7 @@ public final class AdministerProfileDefinitionInteractorImpl implements Administ
         DefineProfileRequest profile = new DefineProfileRequest(name, scope);
         Optional<AdministrationRequest> administration = scope.applicationId()
                 .map(applicationId -> new AdministrationRequest(principal.tenantId(), applicationId, subjectUserId,
-                        principal.subject(), Set.of()));
+                        principal.subject(), Set.of(), principal.authenticationContext()));
         return new AdministerProfileDefinitionRequest(administration, profile);
     }
 

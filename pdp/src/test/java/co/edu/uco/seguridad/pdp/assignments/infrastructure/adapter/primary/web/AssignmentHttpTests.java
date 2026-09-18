@@ -90,6 +90,13 @@ class AssignmentHttpTests extends AbstractSurrealDbIntegrationTest {
         registry.add("pdp.opa.base-url", () -> opa.baseUrl());
     }
 
+    // HU-024: definir roles y crear/revocar asignaciones pasan por MfaAwareApplicationAdministratorValidator.
+    @DynamicPropertySource
+    static void mfaEvidenceProperties(DynamicPropertyRegistry registry) {
+        registry.add("pdp.security.mfa.claim", () -> "acr");
+        registry.add("pdp.security.mfa.accepted-values", () -> TestJwtSupport.MFA_ACCEPTED_ACR);
+    }
+
     @DynamicPropertySource
     static void redisConnectionProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.data.redis.host", AbstractRedisIntegrationTest.REDIS::getHost);
@@ -156,7 +163,7 @@ class AssignmentHttpTests extends AbstractSurrealDbIntegrationTest {
         String assignmentId = JSON.readTree(body).path("data").path("id").asString();
 
         client().delete().uri("/api/v1/roles/" + roleId + "/assignments/" + assignmentId)
-                .header("Authorization", "Bearer " + TestJwtSupport.signedToken(UCO, "test-subject"))
+                .header("Authorization", "Bearer " + TestJwtSupport.signedTokenWithMfaEvidence(UCO, "test-subject"))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -185,7 +192,7 @@ class AssignmentHttpTests extends AbstractSurrealDbIntegrationTest {
 
     private WebTestClient.ResponseSpec assignRole(String tenant, String roleId, UserId userId, String applicationId) {
         return client().post().uri("/api/v1/roles/" + roleId + "/assignments")
-                .header("Authorization", "Bearer " + TestJwtSupport.signedToken(tenant, "test-subject"))
+                .header("Authorization", "Bearer " + TestJwtSupport.signedTokenWithMfaEvidence(tenant, "test-subject"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("""
                         {"userId":"%s","applicationId":"%s"}""".formatted(userId.value(), applicationId))
@@ -201,7 +208,7 @@ class AssignmentHttpTests extends AbstractSurrealDbIntegrationTest {
 
     private String defineTenantScopedRole(String tenant, String name) {
         byte[] body = client().post().uri("/api/v1/roles")
-                .header("Authorization", "Bearer " + TestJwtSupport.signedToken(tenant, "test-subject"))
+                .header("Authorization", "Bearer " + TestJwtSupport.signedTokenWithMfaEvidence(tenant, "test-subject"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("""
                         {"name":"%s","scope":"TENANT"}""".formatted(name))
@@ -213,7 +220,7 @@ class AssignmentHttpTests extends AbstractSurrealDbIntegrationTest {
 
     private String defineApplicationScopedRole(String tenant, String applicationId, String name) {
         byte[] body = client().post().uri("/api/v1/roles")
-                .header("Authorization", "Bearer " + TestJwtSupport.signedToken(tenant, "test-subject"))
+                .header("Authorization", "Bearer " + TestJwtSupport.signedTokenWithMfaEvidence(tenant, "test-subject"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("""
                         {"name":"%s","scope":"APPLICATION","applicationId":"%s"}""".formatted(name, applicationId))

@@ -5,11 +5,13 @@ import co.edu.uco.seguridad.pdp.identity.application.usecase.ProvisionIdentityUs
 import co.edu.uco.seguridad.pdp.identity.domain.model.Email;
 import co.edu.uco.seguridad.shared.auth.model.OidcFlowIntent;
 import co.edu.uco.seguridad.shared.security.LocalUserPrincipal;
+import co.edu.uco.seguridad.shared.security.mfa.AuthenticationContextEvidence;
 import co.edu.uco.seguridad.shared.web.session.KeycloakLogoutController;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextImpl;
+import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.web.server.WebFilterExchange;
 import org.springframework.security.web.server.authentication.ServerAuthenticationSuccessHandler;
@@ -62,7 +64,7 @@ public final class OidcAuthenticationSuccessHandler implements ServerAuthenticat
         ProvisionIdentityRequest request = new ProvisionIdentityRequest(oidc.getIdToken().getIssuer().toString(),
                 oidc.getSubject(), new Email(email), name, provider);
         return provisionIdentity.execute(request)
-                .flatMap(localUser -> saveLocalSession(exchange, localUser, oidc.getIdToken().getTokenValue()))
+                .flatMap(localUser -> saveLocalSession(exchange, localUser, oidc.getIdToken()))
                 .then(flowState.clear(exchange))
                 .then(redirect(exchange, returnTarget));
     }
@@ -74,10 +76,13 @@ public final class OidcAuthenticationSuccessHandler implements ServerAuthenticat
                 .flatMap(location -> redirect(exchange, location));
     }
 
-    private Mono<Void> saveLocalSession(ServerWebExchange exchange, LocalUserPrincipal user, String idToken) {
-        var authentication = new UsernamePasswordAuthenticationToken(user, null, List.of());
+    private Mono<Void> saveLocalSession(ServerWebExchange exchange, LocalUserPrincipal user, OidcIdToken idToken) {
+        LocalUserPrincipal withAuthenticationContext = new LocalUserPrincipal(user.userId(), user.subject(),
+                user.tenantId(), user.email(), user.name(), AuthenticationContextEvidence.from(idToken));
+        var authentication = new UsernamePasswordAuthenticationToken(withAuthenticationContext, null, List.of());
         return exchange.getSession()
-                .doOnNext(session -> session.getAttributes().put(KeycloakLogoutController.KEYCLOAK_ID_TOKEN_ATTRIBUTE, idToken))
+                .doOnNext(session -> session.getAttributes().put(KeycloakLogoutController.KEYCLOAK_ID_TOKEN_ATTRIBUTE,
+                        idToken.getTokenValue()))
                 .then(securityContextRepository.save(exchange, new SecurityContextImpl(authentication)));
     }
 

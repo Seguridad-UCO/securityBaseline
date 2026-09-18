@@ -58,7 +58,7 @@ public final class AdministerResourceGrantInteractorImpl implements AdministerRe
         return roleApplicationLookup.execute(new RoleOwnershipQuery(grant.roleId(), principal.tenantId()))
                 .map(maybeApplicationId -> maybeApplicationId
                         .map(applicationId -> new AdministrationRequest(principal.tenantId(), applicationId, userId,
-                                principal.subject(), Set.<String>of())))
+                                principal.subject(), Set.<String>of(), principal.authenticationContext())))
                 .map(administration -> new AdministerResourceGrantRequest(administration, grant));
     }
 

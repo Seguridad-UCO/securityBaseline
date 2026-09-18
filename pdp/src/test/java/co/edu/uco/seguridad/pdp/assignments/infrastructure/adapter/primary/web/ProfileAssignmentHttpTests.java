@@ -71,6 +71,14 @@ class ProfileAssignmentHttpTests extends AbstractSurrealDbIntegrationTest {
         registry.add("pdp.opa.base-url", () -> opa.baseUrl());
     }
 
+    // HU-024: assignProfile es incondicional (toda asignación de perfil exige ser administrador de
+    // la aplicación) y pasa por MfaAwareApplicationAdministratorValidator.
+    @DynamicPropertySource
+    static void mfaEvidenceProperties(DynamicPropertyRegistry registry) {
+        registry.add("pdp.security.mfa.claim", () -> "acr");
+        registry.add("pdp.security.mfa.accepted-values", () -> TestJwtSupport.MFA_ACCEPTED_ACR);
+    }
+
     @BeforeEach
     void freshPrefix() {
         prefix = "hu011-" + UUID.randomUUID().toString().substring(0, 8);
@@ -112,7 +120,7 @@ class ProfileAssignmentHttpTests extends AbstractSurrealDbIntegrationTest {
 
     private WebTestClient.ResponseSpec assignProfile(String tenant, String profileId, UserId userId, String applicationId) {
         return client().post().uri("/api/v1/profiles/" + profileId + "/assignments")
-                .header("Authorization", "Bearer " + TestJwtSupport.signedToken(tenant, "test-subject"))
+                .header("Authorization", "Bearer " + TestJwtSupport.signedTokenWithMfaEvidence(tenant, "test-subject"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("""
                         {"userId":"%s","applicationId":"%s"}""".formatted(userId.value(), applicationId))

@@ -69,6 +69,13 @@ class AuthorizationHttpTests extends AbstractSurrealDbIntegrationTest {
         registry.add("pdp.opa.base-url", () -> opa.baseUrl());
     }
 
+    // HU-024: registerResource (fixture del @BeforeEach) pasa por MfaAwareApplicationAdministratorValidator.
+    @DynamicPropertySource
+    static void mfaEvidenceProperties(DynamicPropertyRegistry registry) {
+        registry.add("pdp.security.mfa.claim", () -> "acr");
+        registry.add("pdp.security.mfa.accepted-values", () -> TestJwtSupport.MFA_ACCEPTED_ACR);
+    }
+
     @BeforeEach
     void registerApplicationAndResource() {
         prefix = "hu002-" + UUID.randomUUID().toString().substring(0, 8);
@@ -170,7 +177,7 @@ class AuthorizationHttpTests extends AbstractSurrealDbIntegrationTest {
 
     private void registerResource(String tenant, String appId, String path, String method) {
         client().post().uri("/api/v1/applications/" + appId + "/resources")
-                .header("Authorization", "Bearer " + TestJwtSupport.signedToken(tenant, "test-subject"))
+                .header("Authorization", "Bearer " + TestJwtSupport.signedTokenWithMfaEvidence(tenant, "test-subject"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("""
                         {"path":"%s","method":"%s"}""".formatted(path, method))

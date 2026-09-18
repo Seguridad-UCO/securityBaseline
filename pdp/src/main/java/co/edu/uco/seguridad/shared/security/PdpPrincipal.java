@@ -3,6 +3,7 @@ package co.edu.uco.seguridad.shared.security;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
+import co.edu.uco.seguridad.shared.security.mfa.AuthenticationContextEvidence;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 
@@ -18,18 +19,20 @@ import java.util.Optional;
  * resuelto por el BFF en el primer login — presente solo para {@link LocalUserPrincipal}; los
  * caminos {@code Jwt}/{@code OidcUser} son compatibilidad temporal y no lo tienen todavía.
  */
-public record PdpPrincipal(TenantId tenantId, String subject, String tokenId, Optional<UserId> userId) {
+public record PdpPrincipal(TenantId tenantId, String subject, String tokenId, Optional<UserId> userId,
+        AuthenticationContextEvidence authenticationContext) {
 
     public PdpPrincipal {
         Objects.requireNonNull(tenantId, RequiredArgumentMessages.TENANT_ID);
         Objects.requireNonNull(subject, RequiredArgumentMessages.SUBJECT);
         Objects.requireNonNull(tokenId, RequiredArgumentMessages.JWT_ID);
         Objects.requireNonNull(userId, RequiredArgumentMessages.PRINCIPAL_USER_ID);
+        Objects.requireNonNull(authenticationContext, RequiredArgumentMessages.AUTHENTICATION_CONTEXT_EVIDENCE);
     }
 
     public static PdpPrincipal from(Jwt jwt) {
         return new PdpPrincipal(new TenantId(jwt.getClaimAsString("tenant")), jwt.getSubject(), jwt.getId(),
-                Optional.empty());
+                Optional.empty(), AuthenticationContextEvidence.from(jwt));
     }
 
     /**
@@ -41,6 +44,6 @@ public record PdpPrincipal(TenantId tenantId, String subject, String tokenId, Op
         String sessionId = user.getClaimAsString("sid");
         if (sessionId == null || sessionId.isBlank()) sessionId = user.getClaimAsString("jti");
         return new PdpPrincipal(new TenantId(user.getClaimAsString("tenant")), user.getSubject(), sessionId,
-                Optional.empty());
+                Optional.empty(), AuthenticationContextEvidence.from(user));
     }
 }

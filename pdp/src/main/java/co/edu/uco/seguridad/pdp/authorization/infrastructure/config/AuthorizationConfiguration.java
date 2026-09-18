@@ -24,6 +24,7 @@ import co.edu.uco.seguridad.pdp.assignments.application.usecase.ResolveAuthoriza
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.ActiveRoleNamesLookupValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.PrincipalMustBeApplicationAdministratorValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.impl.ActiveRoleNamesLookupValidatorImpl;
+import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.impl.MfaAwareApplicationAdministratorValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.impl.PrincipalMustBeApplicationAdministratorValidatorImpl;
 import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.AccessAuditRepository;
 import co.edu.uco.seguridad.shared.audit.AdministrationAuditRepository;
@@ -116,6 +117,7 @@ import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
 import co.edu.uco.seguridad.shared.observability.ReactiveTelemetry;
+import co.edu.uco.seguridad.shared.security.mfa.MfaEvidenceProperties;
 import io.micrometer.observation.ObservationRegistry;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.ApplicationRunner;
@@ -127,7 +129,7 @@ import tools.jackson.databind.ObjectMapper;
 
 /** La unica clase consciente de Spring del modulo. */
 @Configuration
-@EnableConfigurationProperties(OpaProperties.class)
+@EnableConfigurationProperties({OpaProperties.class, MfaEvidenceProperties.class})
 public class AuthorizationConfiguration {
 
     // HU-006 (D9 del handoff PDP-PEP-OPA): reemplaza a DenyByDefaultPolicyDecisionAdapter, que se
@@ -213,10 +215,14 @@ public class AuthorizationConfiguration {
         return new AuthorizeAdministrationUseCaseImpl(rolesLookup, administrationDecisionPort);
     }
 
+    // HU-024 — MFA como step-up: decora la implementación de producción con el gate de evidencia,
+    // sin que ninguno de los 12 Administer*UseCaseImpl (todos inyectan la interfaz, nunca la clase
+    // concreta) necesite cambiar (PLAN-HU-024.md §1.2).
     @Bean
     PrincipalMustBeApplicationAdministratorValidator principalMustBeApplicationAdministratorValidator(
-            AuthorizeAdministrationUseCase useCase) {
-        return new PrincipalMustBeApplicationAdministratorValidatorImpl(useCase);
+            AuthorizeAdministrationUseCase useCase, MfaEvidenceProperties mfaProperties) {
+        return new MfaAwareApplicationAdministratorValidator(
+                new PrincipalMustBeApplicationAdministratorValidatorImpl(useCase), mfaProperties);
     }
 
     // HU-015 — endpoints administrativos gateados. Viven aquí, no en "applications": es el módulo

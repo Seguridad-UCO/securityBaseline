@@ -184,6 +184,12 @@ public final class RequiredArgumentMessages {
     public static final String DISTRIBUTED_CACHE_PORT_DELEGATE = "se requiere el DistributedCachePort delegado";
     public static final String METER_REGISTRY = "se requiere el MeterRegistry";
 
+    // MFA como step-up para operaciones administrativas (HU-024, ADR-027).
+    public static final String MFA_AWARE_VALIDATOR_DELEGATE =
+            "se requiere el validador de administrador de aplicación delegado";
+    public static final String MFA_EVIDENCE_PROPERTIES = "se requieren las propiedades de evidencia de MFA";
+    public static final String AUTHENTICATION_CONTEXT_EVIDENCE = "se requiere la evidencia de contexto de autenticación (puede estar vacía)";
+
     // Mecanismo de administración por aplicación (HU-009).
     public static final String ADMINISTRATION_DECISION_PORT = "se requiere el puerto de decisión de administración";
     public static final String AUTHORIZE_ADMINISTRATION_USE_CASE =

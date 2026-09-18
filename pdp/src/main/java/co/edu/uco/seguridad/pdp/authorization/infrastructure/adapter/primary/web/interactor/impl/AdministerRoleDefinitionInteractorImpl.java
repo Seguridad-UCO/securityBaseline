@@ -53,7 +53,7 @@ public final class AdministerRoleDefinitionInteractorImpl implements AdministerR
         DefineRoleRequest role = DefineRoleRequestMapper.toRequest(raw, principal.tenantId());
         var administration = role.scope().applicationId()
                 .map(applicationId -> new AdministrationRequest(principal.tenantId(), applicationId, userId,
-                        principal.subject(), Set.<String>of()));
+                        principal.subject(), Set.<String>of(), principal.authenticationContext()));
         return new AdministerRoleDefinitionRequest(administration, role);
     }
 

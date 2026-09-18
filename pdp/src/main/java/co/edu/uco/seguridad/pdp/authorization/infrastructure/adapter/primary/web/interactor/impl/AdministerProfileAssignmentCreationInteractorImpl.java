@@ -55,7 +55,7 @@ public final class AdministerProfileAssignmentCreationInteractorImpl implements 
         ApplicationId applicationId = RequestFieldParser.parse("applicationId", raw.applicationId(), ApplicationId::of);
         AssignProfileRequest assignment = new AssignProfileRequest(principal.tenantId(), userId, applicationId, profileId);
         AdministrationRequest administration = new AdministrationRequest(principal.tenantId(), applicationId,
-                subjectUserId, principal.subject(), Set.of());
+                subjectUserId, principal.subject(), Set.of(), principal.authenticationContext());
         return new AdministerProfileAssignmentCreationRequest(administration, assignment);
     }
 
