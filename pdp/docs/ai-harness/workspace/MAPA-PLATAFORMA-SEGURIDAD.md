@@ -17,6 +17,13 @@
 > tienen ADR (`ADR-026`, `ADR-027`) e historias listas (`HU-022` a `HU-024`, ver §4). Serverless se
 > evaluó y no se adopta (`ADR-028`). El balance numérico de arriba no se recalculó — sigue
 > reflejando el corte original de la reunión; §4 tiene el estado vigente del backlog.
+>
+> **Actualización 2026-09-18:** el microfrontend de seguridad dejó de estar "bloqueado por decisión"
+> (§4 P3, §6 E): `ADR-029` (aislamiento por Shadow DOM, integración por design tokens), `ADR-030`
+> (contrato de montaje agnóstico de framework; Module Federation y ESM como canales) y `ADR-031` (el
+> host provee el bearer) lo deciden, y `HU-025` (PoC, repo nuevo `security-ui`) + `HU-026` (canal
+> bearer en el perfil `keycloak`, este repo) lo arrancan. La hipótesis de "fijar Tailwind como base
+> común antes de integrar" se evaluó y **se descartó** — ver ADR-029.
 
 ---
 
@@ -53,7 +60,7 @@ consultar la credencial que el PDP ya sabe emitir, validar y rotar.
 | Seguridad PEP · PDP · OPA | 5 | 3 | 3 | Los tres saltos de código corren y cada decisión queda auditada. Falta la política de aplicación en OPA y migrar el PEP a la credencial del PDP |
 | Librería de integración | 5 | 4 | 0 | El PDP ya emite (HU-012), valida (HU-013) y rota (HU-014) una credencial de aplicación. El starter del PEP (v0) sigue sin consumirla |
 | Observabilidad | 13 | 3 | 3 | Todo el stack (OTel, Jaeger, Loki, Prometheus, Grafana) armado y cableado, con auditoría de decisiones real (HU-007). Falta encenderlo con tráfico real y documentar la convención |
-| Microfrontend de seguridad | 0 | 1 | 11 | Ya no bloqueado por falta de datos de dominio (roles, perfiles, asignaciones, credenciales existen). Sigue sin arrancar como proyecto y sin el ADR de administración |
+| Microfrontend de seguridad | 0 | 1 | 11 | Ya no bloqueado por falta de datos de dominio ni por decisión (ADR-029/030/031, 2026-09-18). Sigue sin arrancar como proyecto — lo arrancan HU-025 y HU-026 |
 | Administración por aplicación | 2 | 1 | 5 | **HU-015**: el registro ya da de alta al primer administrador automáticamente, y borrar/rotar la credencial de una aplicación exige serlo (gateado vía OPA, mecanismo de HU-009). Falta el resto: delegar, listar/quitar administradores por HTTP público, y el ADR formal de "rol global vs. por aplicación" |
 
 ---
@@ -110,10 +117,25 @@ El código y el compose ya existen y la auditoría de decisiones ya no falta. Fa
 ejecución conjunta, escribir la convención de telemetría, exponer `access_event` a la pila de
 observabilidad, y mover el perfil `observability` de opt-in a default.
 
-### P3 — decidir antes de construir
+### P3 — microfrontend de seguridad: decidido el 2026-09-18, listo para arrancar
 
-Microfrontend de seguridad. Ya no bloqueado por falta de datos de dominio — sí por decisión y por
-arrancar el proyecto.
+Ya no está bloqueado ni por datos de dominio ni por decisión. Tres ADRs lo cierran y dos historias
+lo arrancan:
+
+| ADR | Qué decide |
+|---|---|
+| `ADR-029` | Aislamiento por Shadow DOM abierto; lo único que cruza la frontera visual son design tokens. **No** se exige Tailwind ni ninguna base de estilos a las aplicaciones — la hipótesis original del equipo, evaluada y descartada: Tailwind genera clases globales y no aísla del preflight, la herencia ni los selectores de elemento del host |
+| `ADR-030` | El contrato es `mount(container, options)` / custom element, no un componente Vue. Module Federation **y** un bundle ESM como canales sobre el mismo artefacto. Sin `shared` en v1 |
+| `ADR-031` | El host es dueño de la sesión y entrega `getAccessToken()`; el componente no hace login propio |
+
+| # | Historia | Dónde |
+|---|---|---|
+| HU-026 | Canal bearer en el perfil `keycloak` + aprovisionamiento perezoso de identidad | Este repo, ciclo normal del harness. **Prerrequisito de HU-025** |
+| HU-025 | PoC: un componente real en tres hosts hostiles (React+Webpack, Vue+Vite, HTML plano), 12 criterios verificados en CI | Repo nuevo `security-ui`, a mano |
+
+Queda **una** decisión abierta y es de producto, no técnica: el modelo de marca (PD-16) — si
+Seguridad manda o si el host manda dentro de la lista cerrada de tokens. HU-025 prueba ambos y la
+cierra con evidencia, antes de publicar la lista de tokens v1.
 
 **Ya no está bloqueado por decisión el resto de administración por aplicación** — se resolvió con
 `ADR-023-application-administration-model.md` y `ADR-024-global-application-administrator.md`
@@ -198,9 +220,12 @@ documentados en `PLAN-HU-015.md` §0/§13/§14.
 
 ### E · Microfrontend de seguridad
 
-Sin cambios de código. Ya no bloqueado por falta de datos — roles, perfiles, asignaciones y ahora
-administración por aplicación existen. Sigue bloqueado por el ADR de administración y por arrancar
-el proyecto (`securityBaseline-fr` sigue en dos archivos fuente).
+Sin cambios de código todavía, pero **desbloqueado el 2026-09-18**: `ADR-029`, `ADR-030` y `ADR-031`
+deciden aislamiento, contrato/distribución e identidad; `HU-025` (PoC en el repo nuevo `security-ui`)
+y `HU-026` (canal bearer en este repo) lo arrancan. Ver §4 P3. El panel propio ya no está "en dos
+archivos fuente": migró a `securityBaseline-vue` (Vue 3 + TS + Pinia) el 2026-09-13 — pero es el
+panel **de** Seguridad, no el componente embebible que las aplicaciones incrustan; son dos cosas
+distintas y el componente sigue sin existir.
 
 ### F · Administración de seguridad por aplicación
 
@@ -225,8 +250,9 @@ el proyecto (`securityBaseline-fr` sigue en dos archivos fuente).
    punta a punta.
 3. **Librería** — la aplicación instala un starter y configura. 🟡 el PDP ya sabe emitir, validar y
    rotar la credencial; el starter todavía no la consume.
-4. **Microfrontend** — gestión de seguridad centralizada. ⬜ pendiente, ya no bloqueado por datos,
-   bloqueado por decisión y por arrancar el proyecto.
+4. **Microfrontend** — gestión de seguridad centralizada. ⬜ pendiente de construir, pero ya **no
+   bloqueado**: decidido en `ADR-029`/`ADR-030`/`ADR-031` (2026-09-18) y arrancado por `HU-025` y
+   `HU-026`.
 5. **Modelo de dominio** — aplicaciones, roles, usuarios, permisos. ✅ hecho en su mayoría: tenants,
    aplicaciones (con credencial y administración propia desde HU-012/015), recursos, usuarios,
    roles, asignaciones y perfiles existen y están probados (653 pruebas).
