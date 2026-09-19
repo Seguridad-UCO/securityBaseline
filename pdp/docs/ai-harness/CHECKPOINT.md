@@ -37,8 +37,8 @@ Estado del trabajo para retomarlo en cualquier máquina. Se actualiza al cerrar 
 (8 slices), `drift.ps1` SIN DERIVA. Detalle completo, con lo que sigue pendiente por prioridad, en
 [`workspace/MAPA-PLATAFORMA-SEGURIDAD.md`](workspace/MAPA-PLATAFORMA-SEGURIDAD.md).
 
-**Lo siguiente:** backlog ordenado de 9 historias (HU-016 a HU-024), todas del lado del PDP — ver
-`workspace/HU-016.md` a `workspace/HU-024.md` y `ADR-023` a `ADR-028` en
+**Lo siguiente:** backlog ordenado de 11 historias (HU-016 a HU-026) — ver
+`workspace/HU-016.md` a `workspace/HU-026.md` y `ADR-023` a `ADR-031` en
 `security-platform-architecture` (`docs/01-governance/adr/`). Reorganizado el 2026-09-13 al decidir
 que caché distribuida, revocación de tokens y MFA sí se construyen ahora (ya no "sin prioridad" —
 decisión explícita de Sebastián), y no solo se evalúan. **HU-016 a HU-020, HU-022, HU-023 y HU-024
@@ -50,6 +50,28 @@ ya se cerraron** (filas arriba) — queda:
    `AdministrationEventEntity`/`Mapper`, `SurrealAdministrationEventSchemaInitializer`) y la
    observabilidad (`ObservedAdministrationAuditRepository`, contador Prometheus + log estructurado).
    Ver REPORTE-HU-021.md antes de retomarla — **no volver a planificar, solo terminar de implementar**.
+
+2. **HU-026** — canal bearer en el perfil `keycloak` (+ aprovisionamiento perezoso de identidad).
+   Nueva (2026-09-18), del lado del PDP, ciclo normal del harness. Deriva de `ADR-031`. Hoy el perfil
+   real solo acepta sesión BFF por cookie: ningún cliente de otro origen puede hablar con `/api/v1/**`.
+   Ver `workspace/HU-026.md`.
+
+3. **HU-025** — PoC del microfrontend de seguridad. Nueva (2026-09-18). **No se implementa en este
+   repositorio**: vive en un repo nuevo `security-ui` (Vue 3 + Vite) más tres hosts de prueba, y se
+   ejecuta a mano — el harness está afinado para el backend Java. Depende de HU-026. Deriva de
+   `ADR-029` (aislamiento por Shadow DOM y design tokens), `ADR-030` (contrato de montaje agnóstico de
+   framework; Module Federation y ESM como canales) y `ADR-031` (el host provee el bearer).
+   Ver `workspace/HU-025.md`.
+
+**Microfrontend de seguridad — desbloqueado por decisión (2026-09-18).** Era el ítem P3 del mapa
+("bloqueado por decisión y por arrancar el proyecto"). Se evaluó la hipótesis del equipo —fijar una
+base común de estilos, posiblemente Tailwind, antes de integrar el componente— y **se descartó**:
+Tailwind genera clases globales y no aísla nada (ni preflight, ni herencia, ni selectores de elemento
+del host), y exigirlo a las aplicaciones invierte la dependencia. Lo que sí se fija antes de integrar
+es un contrato de design tokens, con Shadow DOM como mecanismo de aislamiento real. Queda una sola
+decisión abierta, de producto y no técnica: el modelo de marca (**PD-16** en
+`security-platform-architecture/docs/08-baseline/pending-decisions.md`) — si Seguridad manda o si el
+host manda dentro de la lista de tokens. HU-025 prueba ambos y la cierra con evidencia.
 
 **HU-024 cerrada (2026-09-17):** MFA como step-up para operaciones administrativas — ver fila arriba
 y REPORTE-HU-024.md. Se implementó **sin esperar HU-021**: la dependencia que este mismo archivo
