@@ -37,8 +37,8 @@ Estado del trabajo para retomarlo en cualquier máquina. Se actualiza al cerrar 
 (8 slices), `drift.ps1` SIN DERIVA. Detalle completo, con lo que sigue pendiente por prioridad, en
 [`workspace/MAPA-PLATAFORMA-SEGURIDAD.md`](workspace/MAPA-PLATAFORMA-SEGURIDAD.md).
 
-**Lo siguiente:** backlog ordenado de 11 historias (HU-016 a HU-026) — ver
-`workspace/HU-016.md` a `workspace/HU-026.md` y `ADR-023` a `ADR-031` en
+**Lo siguiente:** backlog ordenado de 12 historias (HU-016 a HU-027) — ver
+`workspace/HU-016.md` a `workspace/HU-027.md` y `ADR-023` a `ADR-032` en
 `security-platform-architecture` (`docs/01-governance/adr/`). Reorganizado el 2026-09-13 al decidir
 que caché distribuida, revocación de tokens y MFA sí se construyen ahora (ya no "sin prioridad" —
 decisión explícita de Sebastián), y no solo se evalúan. **HU-016 a HU-020, HU-022, HU-023 y HU-024
@@ -62,6 +62,12 @@ ya se cerraron** (filas arriba) — queda:
    `ADR-029` (aislamiento por Shadow DOM y design tokens), `ADR-030` (contrato de montaje agnóstico de
    framework; Module Federation y ESM como canales) y `ADR-031` (el host provee el bearer).
    Ver `workspace/HU-025.md`.
+
+4. **HU-027** — edge con WAF (OWASP CRS) delante del PEP y del PDP. Nueva (2026-09-20), deriva de
+   `ADR-032`. **Independiente de todo lo anterior** — protege lo que ya está desplegado hoy. No toca
+   código Java: topología Compose, pila de observabilidad, despliegue a Azure (sidecar en App
+   Service, a validar) y las primeras filas reales de `threat-model.md`. El paso que importa no es
+   instalar el WAF sino llevarlo de detección a bloqueo con exclusiones probadas. Ver `workspace/HU-027.md`.
 
 **Microfrontend de seguridad — desbloqueado por decisión (2026-09-18).** Era el ítem P3 del mapa
 ("bloqueado por decisión y por arrancar el proyecto"). Se evaluó la hipótesis del equipo —fijar una

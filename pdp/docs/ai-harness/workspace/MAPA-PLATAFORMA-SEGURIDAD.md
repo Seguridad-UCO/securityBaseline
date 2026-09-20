@@ -24,6 +24,11 @@
 > host provee el bearer) lo deciden, y `HU-025` (PoC, repo nuevo `security-ui`) + `HU-026` (canal
 > bearer en el perfil `keycloak`, este repo) lo arrancan. La hipótesis de "fijar Tailwind como base
 > común antes de integrar" se evaluó y **se descartó** — ver ADR-029.
+>
+> **Actualización 2026-09-20:** `ADR-032` decide un edge con WAF (OWASP CRS) delante del PEP y del
+> PDP — el único punto de la plataforma que hoy no tiene ningún control es la capa sintáctica HTTP,
+> y las aplicaciones detrás del PEP (Django, PHP, .NET, Java) son exactamente lo que un WAF protege.
+> `HU-027` lo construye y lo lleva de detección a bloqueo con evidencia. Ver §4 P5.
 
 ---
 
@@ -157,6 +162,21 @@ de agentes:
 Administrador global (`ADR-024`): decisión de diseño tomada y documentada, construcción diferida
 hasta que exista un caso de uso concreto (candidato: abrir `POST /api/v1/roles` para alcance
 `GLOBAL`, hoy en `400` a propósito) — no es una historia de este backlog.
+
+### P5 — capa sintáctica HTTP: decidido el 2026-09-20 (`ADR-032`, `HU-027`)
+
+Hallazgo de la revisión de WAF: ningún componente inspecciona **qué** lleva una petición. El PEP
+decide si el sujeto pasa, el PDP valida identidad y autorización, SurrealQL va con variables ligadas
+— pero una SQLi contra la aplicación PHP protegida, con token válido, atraviesa el PEP intacta.
+`ADR-032` pone un edge con OWASP CRS delante del PEP (primero) y del PDP (después), autoalojado
+porque los WAF administrados de Azure no caben en Azure for Students, con exclusiones escritas
+portables para el día que sí quepan. `HU-027` lo construye; su valor está en llevarlo de detección a
+bloqueo con cada exclusión justificada por una prueba. Deja además las primeras filas reales en
+`06-security/threat-model.md`, stub desde la Fase 0.
+
+Dos cosas que la HU debe verificar y que hoy son supuestos: que Keycloak esté o no expuesto al
+navegador (ADR-020 dice NSG restringido; el login OIDC necesita que el navegador llegue) y que un
+sidecar quepa en App Service B1 junto a la JVM del PDP.
 
 ### P4 — decidido (2026-09-13)
 
