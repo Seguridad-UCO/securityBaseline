@@ -37,4 +37,11 @@ public record Profile(ProfileId id, ProfileName name, RoleScope scope, Set<RoleI
         withNewRole.add(roleId);
         return new Profile(id, name, scope, Set.copyOf(withNewRole), registeredAt);
     }
+
+    /** Nuevo perfil sin el rol. Es idempotente para que DELETE sea seguro al repetirlo. */
+    public Profile withoutRole(RoleId roleId) {
+        Set<RoleId> remaining = new HashSet<>(roles);
+        remaining.remove(roleId);
+        return new Profile(id, name, scope, Set.copyOf(remaining), registeredAt);
+    }
 }

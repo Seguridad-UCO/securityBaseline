@@ -15,9 +15,11 @@ import co.edu.uco.seguridad.pdp.profiles.application.secondaryport.repository.Pr
 import co.edu.uco.seguridad.pdp.profiles.application.usecase.AddRoleToProfileUseCase;
 import co.edu.uco.seguridad.pdp.profiles.application.usecase.DefineProfileUseCase;
 import co.edu.uco.seguridad.pdp.profiles.application.usecase.ListProfilesUseCase;
+import co.edu.uco.seguridad.pdp.profiles.application.usecase.RemoveRoleFromProfileUseCase;
 import co.edu.uco.seguridad.pdp.profiles.application.usecase.impl.AddRoleToProfileUseCaseImpl;
 import co.edu.uco.seguridad.pdp.profiles.application.usecase.impl.DefineProfileUseCaseImpl;
 import co.edu.uco.seguridad.pdp.profiles.application.usecase.impl.ListProfilesUseCaseImpl;
+import co.edu.uco.seguridad.pdp.profiles.application.usecase.impl.RemoveRoleFromProfileUseCaseImpl;
 import co.edu.uco.seguridad.pdp.profiles.domain.rule.ProfileMustExistForTenantRule;
 import co.edu.uco.seguridad.pdp.profiles.domain.rule.ProfileNameMustBeUniqueInScopeRule;
 import co.edu.uco.seguridad.pdp.profiles.domain.rule.impl.ProfileMustExistForTenantRuleImpl;
@@ -98,6 +100,12 @@ public class ProfilesConfiguration {
     @Bean
     AddRoleToProfileUseCase addRoleToProfileUseCase(AddRoleToProfileRulesValidator rules, ProfileRepository repository) {
         return new AddRoleToProfileUseCaseImpl(rules, repository);
+    }
+
+    @Bean
+    RemoveRoleFromProfileUseCase removeRoleFromProfileUseCase(AddRoleToProfileRulesValidator rules,
+            ProfileRepository repository) {
+        return new RemoveRoleFromProfileUseCaseImpl(rules, repository);
     }
 
     @Bean

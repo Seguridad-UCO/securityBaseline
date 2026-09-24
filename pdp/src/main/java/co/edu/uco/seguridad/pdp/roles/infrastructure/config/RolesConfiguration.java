@@ -22,9 +22,11 @@ import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.RoleScopeM
 import co.edu.uco.seguridad.pdp.roles.application.secondaryport.repository.RoleRepository;
 import co.edu.uco.seguridad.pdp.roles.application.usecase.DefineRoleUseCase;
 import co.edu.uco.seguridad.pdp.roles.application.usecase.GrantResourceToRoleUseCase;
+import co.edu.uco.seguridad.pdp.roles.application.usecase.RevokeResourceFromRoleUseCase;
 import co.edu.uco.seguridad.pdp.roles.application.usecase.ListRolesUseCase;
 import co.edu.uco.seguridad.pdp.roles.application.usecase.impl.DefineRoleUseCaseImpl;
 import co.edu.uco.seguridad.pdp.roles.application.usecase.impl.GrantResourceToRoleUseCaseImpl;
+import co.edu.uco.seguridad.pdp.roles.application.usecase.impl.RevokeResourceFromRoleUseCaseImpl;
 import co.edu.uco.seguridad.pdp.roles.application.usecase.impl.ListRolesUseCaseImpl;
 import co.edu.uco.seguridad.pdp.roles.domain.rule.RoleMustExistForTenantRule;
 import co.edu.uco.seguridad.pdp.roles.domain.rule.RoleNameMustBeUniqueInScopeRule;
@@ -96,6 +98,12 @@ public class RolesConfiguration {
     @Bean
     GrantResourceToRoleUseCase grantResourceToRoleUseCase(GrantResourceRulesValidator rules, RoleRepository repository) {
         return new GrantResourceToRoleUseCaseImpl(rules, repository);
+    }
+
+    @Bean
+    RevokeResourceFromRoleUseCase revokeResourceFromRoleUseCase(GrantResourceRulesValidator rules,
+            RoleRepository repository) {
+        return new RevokeResourceFromRoleUseCaseImpl(rules, repository);
     }
 
     @Bean
