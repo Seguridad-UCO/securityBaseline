@@ -136,6 +136,20 @@ public final class SurrealRoleRepository implements RoleRepository {
         return client.execute(query, parameters).thenReturn(role);
     }
 
+    @Override
+    public Mono<Void> deleteById(RoleId roleId) {
+        return client.execute("DELETE type::record('%s', $id);".formatted(RoleSchema.TABLE),
+                        Map.of("id", roleId.value().toString()))
+                .then();
+    }
+
+    @Override
+    public Mono<Boolean> existsByResourceId(co.edu.uco.seguridad.pdp.commons.model.ResourceId resourceId) {
+        return client.execute("SELECT id FROM %s WHERE $resourceId INSIDE resources LIMIT 1;".formatted(RoleSchema.TABLE),
+                        Map.of("resourceId", resourceId.value().toString()))
+                .map(results -> !results.get(0).isEmpty());
+    }
+
     /**
      * Une un componente opcional del alcance como parámetro ligado, con cadena vacía como centinela
      * de ausencia. {@code NONE} no sirve: el índice único {@code role_scope_name} no indexa ni

@@ -43,4 +43,8 @@ public record Role(RoleId id, RoleName name, RoleScope scope, Set<ResourceId> re
         remaining.remove(resourceId);
         return new Role(id, name, scope, Set.copyOf(remaining), registeredAt);
     }
+
+    public Role withName(RoleName name) {
+        return new Role(id, name, scope, resources, registeredAt);
+    }
 }

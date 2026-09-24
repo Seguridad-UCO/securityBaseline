@@ -44,4 +44,9 @@ public record Application(ApplicationId id, TenantId tenantId, ApplicationName n
     public Application withCredentialHash(ApplicationCredentialHash credentialHash) {
         return new Application(id, tenantId, name, description, baseUrl, credentialHash, registeredAt);
     }
+
+    /** Conserva identidad, credencial y fecha de registro al editar el catálogo. */
+    public Application withDetails(ApplicationName name, String description, ApplicationBaseUrl baseUrl) {
+        return new Application(id, tenantId, name, description, baseUrl, credentialHash, registeredAt);
+    }
 }

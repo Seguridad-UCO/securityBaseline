@@ -20,6 +20,7 @@ import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleApplicationLookupValidator;
 import co.edu.uco.seguridad.pdp.roles.application.usecase.DefineRoleUseCase;
 import co.edu.uco.seguridad.pdp.roles.application.usecase.GrantResourceToRoleUseCase;
+import co.edu.uco.seguridad.pdp.roles.application.usecase.RevokeResourceFromRoleUseCase;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.ResolveAuthorizationSubjectFactsUseCase;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.ActiveRoleNamesLookupValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.PrincipalMustBeApplicationAdministratorValidator;
@@ -112,6 +113,7 @@ import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.AdministerApplicationAdministratorListInteractorImpl;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileApplicationLookupValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.usecase.AddRoleToProfileUseCase;
+import co.edu.uco.seguridad.pdp.profiles.application.usecase.RemoveRoleFromProfileUseCase;
 import co.edu.uco.seguridad.pdp.profiles.application.usecase.DefineProfileUseCase;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
@@ -278,8 +280,9 @@ public class AuthorizationConfiguration {
     @Bean
     AdministerResourceGrantUseCase administerResourceGrantUseCase(
             PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator, GrantResourceToRoleUseCase grantResource,
+            RevokeResourceFromRoleUseCase revokeResource,
             AdministrationAuditRepository audit, IdentifierGenerator identifiers, TimeProvider time) {
-        return new AdministerResourceGrantUseCaseImpl(mustBeAdministrator, grantResource, audit, identifiers, time);
+        return new AdministerResourceGrantUseCaseImpl(mustBeAdministrator, grantResource, revokeResource, audit, identifiers, time);
     }
 
     @Bean
@@ -359,8 +362,9 @@ public class AuthorizationConfiguration {
     @Bean
     AdministerProfileRoleAdditionUseCase administerProfileRoleAdditionUseCase(
             PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator, AddRoleToProfileUseCase addRoleToProfile,
+            RemoveRoleFromProfileUseCase removeRoleFromProfile,
             AdministrationAuditRepository audit, IdentifierGenerator identifiers, TimeProvider time) {
-        return new AdministerProfileRoleAdditionUseCaseImpl(mustBeAdministrator, addRoleToProfile, audit, identifiers, time);
+        return new AdministerProfileRoleAdditionUseCaseImpl(mustBeAdministrator, addRoleToProfile, removeRoleFromProfile, audit, identifiers, time);
     }
 
     @Bean

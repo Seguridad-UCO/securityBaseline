@@ -8,6 +8,8 @@ import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.AssignRol
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.AssignmentApplicationLookupValidator;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.RevokeAssignmentRulesValidator;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.RevokeProfileAssignmentRulesValidator;
+import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.RoleDeletionDependencyValidator;
+import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.ProfileDeletionDependencyValidator;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.impl.AssignProfileRulesValidatorImpl;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.impl.AssignRoleRulesValidatorImpl;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.ProfileAssignmentApplicationLookupValidator;
@@ -15,6 +17,8 @@ import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.impl.Assi
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.impl.ProfileAssignmentApplicationLookupValidatorImpl;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.impl.RevokeAssignmentRulesValidatorImpl;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.impl.RevokeProfileAssignmentRulesValidatorImpl;
+import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.impl.RoleDeletionDependencyValidatorImpl;
+import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.impl.ProfileDeletionDependencyValidatorImpl;
 import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository.AssignmentRepository;
 import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository.ProfileAssignmentRepository;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.AssignApplicationAdministratorUseCase;
@@ -88,6 +92,11 @@ public class AssignmentsConfiguration {
     @Bean
     AssignmentRepository assignmentRepository(SurrealDbClient client) {
         return new SurrealAssignmentRepository(client);
+    }
+
+    @Bean
+    RoleDeletionDependencyValidator roleDeletionDependencyValidator(AssignmentRepository repository, TimeProvider time) {
+        return new RoleDeletionDependencyValidatorImpl(repository, time);
     }
 
     @Bean
@@ -167,6 +176,12 @@ public class AssignmentsConfiguration {
     @Bean
     ProfileAssignmentRepository profileAssignmentRepository(SurrealDbClient client) {
         return new SurrealProfileAssignmentRepository(client);
+    }
+
+    @Bean
+    ProfileDeletionDependencyValidator profileDeletionDependencyValidator(ProfileAssignmentRepository repository,
+            TimeProvider time) {
+        return new ProfileDeletionDependencyValidatorImpl(repository, time);
     }
 
     @Bean

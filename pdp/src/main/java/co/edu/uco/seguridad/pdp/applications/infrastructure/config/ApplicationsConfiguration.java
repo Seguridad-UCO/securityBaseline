@@ -20,11 +20,13 @@ import co.edu.uco.seguridad.pdp.applications.application.usecase.RegisterApplica
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RemoveApplicationUseCase;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RotateApplicationCredentialUseCase;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.ValidateApplicationCredentialUseCase;
+import co.edu.uco.seguridad.pdp.applications.application.usecase.UpdateApplicationUseCase;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.ListApplicationsUseCaseImpl;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.RegisterApplicationUseCaseImpl;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.RemoveApplicationUseCaseImpl;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.RotateApplicationCredentialUseCaseImpl;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.ValidateApplicationCredentialUseCaseImpl;
+import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.UpdateApplicationUseCaseImpl;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationCredentialMustBeValidRule;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationCredentialMustBeValidRuleImpl;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.ListApplicationsInteractor;
@@ -101,6 +103,11 @@ public class ApplicationsConfiguration {
     @Bean
     RemoveApplicationUseCase removeApplicationUseCase(ApplicationRepository repository) {
         return new RemoveApplicationUseCaseImpl(repository);
+    }
+
+    @Bean
+    UpdateApplicationUseCase updateApplicationUseCase(ApplicationRepository repository) {
+        return new UpdateApplicationUseCaseImpl(repository);
     }
 
     @Bean

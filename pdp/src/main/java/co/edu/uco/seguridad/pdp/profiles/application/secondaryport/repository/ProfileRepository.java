@@ -2,6 +2,7 @@ package co.edu.uco.seguridad.pdp.profiles.application.secondaryport.repository;
 
 import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
 import co.edu.uco.seguridad.pdp.commons.model.ProfileId;
+import co.edu.uco.seguridad.pdp.commons.model.RoleId;
 import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.profiles.domain.Profile;
@@ -25,4 +26,9 @@ public interface ProfileRepository {
     Mono<ResultPage<Profile>> findBy(ProfileCriteria criteria, PageWindow window);
 
     Mono<Profile> save(Profile profile);
+
+    default Mono<Void> deleteById(ProfileId profileId) { return Mono.error(new UnsupportedOperationException()); }
+
+    /** True si algún perfil aún contiene el rol; protege su borrado. */
+    default Mono<Boolean> existsByRoleId(RoleId roleId) { return Mono.just(false); }
 }

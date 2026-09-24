@@ -169,6 +169,16 @@ public final class SurrealApplicationRepository implements ApplicationRepository
     }
 
     @Override
+    public Mono<Application> update(Application application) {
+        return client.execute(
+                        "UPDATE type::record('%s', $id) SET name = $name, description = $description, baseUrl = $baseUrl;"
+                                .formatted(ApplicationSchema.TABLE),
+                        Map.of("id", application.id().value().toString(), "name", application.name().value(),
+                                "description", application.description(), "baseUrl", application.baseUrl().value()))
+                .thenReturn(application);
+    }
+
+    @Override
     public Mono<Void> updateCredentialHash(ApplicationId applicationId, ApplicationCredentialHash credentialHash) {
         return client.execute(
                         "UPDATE type::record('%s', $id) SET credentialHash = $credentialHash;"

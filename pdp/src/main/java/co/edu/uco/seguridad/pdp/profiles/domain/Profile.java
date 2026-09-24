@@ -44,4 +44,8 @@ public record Profile(ProfileId id, ProfileName name, RoleScope scope, Set<RoleI
         remaining.remove(roleId);
         return new Profile(id, name, scope, Set.copyOf(remaining), registeredAt);
     }
+
+    public Profile withName(ProfileName name) {
+        return new Profile(id, name, scope, roles, registeredAt);
+    }
 }

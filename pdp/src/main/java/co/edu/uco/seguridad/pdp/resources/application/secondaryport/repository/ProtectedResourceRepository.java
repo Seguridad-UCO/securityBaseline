@@ -2,6 +2,7 @@ package co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository;
 
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.ResourceId;
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.ProtectedResource;
 import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
@@ -16,6 +17,10 @@ public interface ProtectedResourceRepository {
     Flux<ProtectedResource> findAllByApplication(ApplicationId applicationId);
 
     Mono<ProtectedResource> save(ProtectedResource resource);
+
+    default Mono<ProtectedResource> findByIdForTenant(ResourceId resourceId, TenantId tenantId) { return Mono.empty(); }
+
+    default Mono<ProtectedResource> update(ProtectedResource resource) { return Mono.error(new UnsupportedOperationException()); }
 
     Mono<Void> deleteById(ResourceId resourceId);
 

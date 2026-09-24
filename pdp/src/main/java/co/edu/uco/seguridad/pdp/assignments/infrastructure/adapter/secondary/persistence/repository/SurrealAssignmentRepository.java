@@ -122,6 +122,16 @@ public final class SurrealAssignmentRepository implements AssignmentRepository {
         return client.execute(query, parameters).thenReturn(assignment);
     }
 
+    @Override
+    public Mono<Boolean> existsActiveByRoleId(RoleId roleId, Instant now) {
+        return client.execute("""
+                        SELECT id FROM %s WHERE roleId = $roleId AND validFrom <= <datetime>$now \
+                        AND (validUntil = NONE OR validUntil > <datetime>$now) LIMIT 1;
+                        """.formatted(AssignmentSchema.TABLE),
+                        Map.of("roleId", roleId.value().toString(), "now", now.toString()))
+                .map(results -> !results.get(0).isEmpty());
+    }
+
     private static Assignment toDomain(JsonNode row) {
         AssignmentEntity entity = new AssignmentEntity(
                 SurrealRecordId.idPart(row.path("id").asString()),
