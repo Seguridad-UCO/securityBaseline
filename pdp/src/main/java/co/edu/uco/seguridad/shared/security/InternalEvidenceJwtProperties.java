@@ -13,11 +13,12 @@ import java.util.Objects;
  * {@code application.name}, no por configuración estática.
  */
 @ConfigurationProperties(prefix = "pdp.security.internal.evidence")
-public record InternalEvidenceJwtProperties(String jwkSetUri, String issuer, String audience) {
+public record InternalEvidenceJwtProperties(String jwkSetUri, String issuer, String audience, String technicalClientId) {
 
     public InternalEvidenceJwtProperties {
         Objects.requireNonNull(jwkSetUri, RequiredArgumentMessages.INTERNAL_EVIDENCE_JWK_SET_URI);
         Objects.requireNonNull(issuer, RequiredArgumentMessages.INTERNAL_EVIDENCE_ISSUER);
         Objects.requireNonNull(audience, RequiredArgumentMessages.INTERNAL_EVIDENCE_AUDIENCE);
+        Objects.requireNonNull(technicalClientId, "technicalClientId");
     }
 }

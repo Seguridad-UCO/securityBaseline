@@ -103,6 +103,6 @@ class InternalSecurityConfiguration {
                 new JwtClaimValidator<List<String>>("aud",
                         audiences -> audiences != null && audiences.contains(properties.audience()))));
         decoder.setJwtValidator(validator);
-        return new RevocationAwareJwtDecoder(decoder, revocation, subjectUserIdLookup);
+        return new RevocationAwareJwtDecoder(decoder, revocation, subjectUserIdLookup, properties.technicalClientId());
     }
 }
