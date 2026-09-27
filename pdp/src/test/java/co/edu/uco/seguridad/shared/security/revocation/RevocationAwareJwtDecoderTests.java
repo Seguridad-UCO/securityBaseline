@@ -25,6 +25,7 @@ import java.util.UUID;
 class RevocationAwareJwtDecoderTests {
 
     private static final String SUBJECT = "test-subject";
+    private static final String TECHNICAL_CLIENT = "security-pep-internal";
     private static final Jwt VALID_JWT = TestJwtSupport.jwt("universidad-uco", SUBJECT);
     private static final UserId SUBJECT_USER_ID = new UserId(UUID.randomUUID());
 
@@ -78,6 +79,25 @@ class RevocationAwareJwtDecoderTests {
         StepVerifier.create(decoder.decode("token"))
                 .expectErrorMessage("firma inválida")
                 .verify();
+    }
+
+    @Test
+    void passes_a_valid_technical_pep_token_without_requiring_a_human_identity() {
+        Jwt technicalToken = Jwt.withTokenValue("technical-token")
+                .header("alg", "RS256")
+                .subject("service-account-security-pep-internal")
+                .issuer(TestJwtSupport.ISSUER)
+                .audience(java.util.List.of(TestJwtSupport.AUDIENCE))
+                .claim("azp", TECHNICAL_CLIENT)
+                .issuedAt(Instant.now())
+                .expiresAt(Instant.now().plusSeconds(300))
+                .build();
+        RevocationAwareJwtDecoder decoder = new RevocationAwareJwtDecoder(
+                delegateReturning(technicalToken), unreachableRevocation(), unreachableSubjectLookup(), TECHNICAL_CLIENT);
+
+        StepVerifier.create(decoder.decode("token"))
+                .expectNext(technicalToken)
+                .verifyComplete();
     }
 
     private static ReactiveJwtDecoder delegateReturning(Jwt jwt) {
