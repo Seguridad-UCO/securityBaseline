@@ -4,8 +4,9 @@ Esta guía define el patrón para las aplicaciones web que usan la plataforma de
 aplicación de ejemplo es `../../../notes-security-demo`, que consume el backend
 `../../../pep-webflux-sample`.
 
-El navegador nunca recibe ni almacena el access token de Keycloak. Solo conserva la cookie
-HttpOnly de sesión del BFF; el backend protegido usa la librería PEP y el PEP consulta al PDP/OPA.
+El canal BFF conserva una cookie HttpOnly y nunca expone su token. Todas las aplicaciones web
+integradas reutilizan esa sesión central: el navegador manda la cookie con `credentials: include`;
+el PEP intercambia la evidencia solo por su canal técnico con el PDP.
 
 ```text
 SPA nueva ──cookie──> backend de la aplicación ──canal técnico──> PEP ──> PDP/OPA
@@ -21,10 +22,10 @@ SPA nueva ──cookie──> backend de la aplicación ──canal técnico─�
 | PEP | Identidad técnica `security-pep-internal` | Una vez por entorno; ver la guía de Postman |
 | PDP/OPA | Aplicación, recursos, roles, perfiles y asignaciones | Una vez por aplicación y recurso |
 | Backend integrado | Starter PEP, identificador/credencial de la aplicación y CORS | Por aplicación |
-| Frontend integrado | Chequeo de sesión, redirección al login y llamadas con cookie | Por frontend |
+| Frontend integrado | Chequeo de sesión BFF y llamadas con `credentials: include` | Por frontend |
 
-Una aplicación nueva **no** crea un cliente Keycloak propio ni un mapper de audiencia. Reutiliza el
-BFF central. Si se crea otro BFF, su cliente debe recibir el mismo scope de audiencia una única vez.
+No se crea un cliente Keycloak por aplicación ni por microfrontend. Cada frontend solo registra su
+origen y retorno exactos en la configuración del BFF.
 
 ## 2. Configuración única de Keycloak para el BFF
 
@@ -98,17 +99,19 @@ async function session() {
 }
 ```
 
-Las peticiones al backend propio también usan `credentials: "include"`; no agregan `Authorization`
-ni leen JWTs desde JavaScript:
+Las peticiones del host al backend propio y del microfrontend al PDP envían credenciales de navegador.
+El token de Keycloak nunca llega al frontend:
 
 ```ts
-fetch("http://localhost:18081/api/notes", { credentials: "include" });
+fetch("http://localhost:18081/api/notes", {
+  credentials: "include",
+});
 ```
 
 El token de sesión `SECURITY_BASELINE_SESSION` es HttpOnly y no debe leerse ni copiarse desde
 JavaScript. Si una SPA invoca un endpoint mutante **del BFF** directamente, debe aplicar el CSRF
-del BFF (`XSRF-TOKEN` y header `X-XSRF-TOKEN`). La demo de notas invoca su propio backend en
-`18081`, por lo que su `POST /api/notes` solo envía la cookie de sesión al starter PEP.
+del BFF (`XSRF-TOKEN` y header `X-XSRF-TOKEN`). CORS permite únicamente los orígenes explícitos
+configurados.
 
 Mapee las respuestas de seguridad a mensajes funcionales. Por ejemplo:
 
@@ -132,9 +135,9 @@ security.pep.enforcement.application-credential=<credencial de la aplicación>
 security.pep.enforcement.public-paths=/health
 ```
 
-El Bearer enviado por Postman conserva prioridad. Cuando no hay Bearer y llega una cookie BFF, el
-starter solicita al PEP la decisión; el PEP, con su identidad técnica, recupera internamente el
-access token de la sesión BFF en PDP. El navegador no participa en ese intercambio.
+Cuando llega una cookie BFF, el starter solicita al PEP la decisión; el PEP, con su identidad
+técnica, recupera internamente el access token de la sesión BFF en PDP. El navegador no participa
+en ese intercambio. El Bearer se reserva para clientes no navegadores como Postman.
 
 ### CORS del backend
 
@@ -148,7 +151,7 @@ CorsWebFilter corsWebFilter() {
     CorsConfiguration cors = new CorsConfiguration();
     cors.setAllowedOrigins(List.of("http://localhost:5174"));
     cors.setAllowedMethods(List.of("GET", "POST", "OPTIONS"));
-    cors.setAllowedHeaders(List.of("Content-Type", "X-XSRF-TOKEN", "X-Correlation-Id"));
+    cors.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-XSRF-TOKEN", "X-Correlation-Id"));
     cors.setAllowCredentials(true);
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", cors);
@@ -174,7 +177,8 @@ La asignación del perfil pertenece al PDP. Los roles de Keycloak no sustituyen 
 
 1. Levante Keycloak en `9090`.
 2. Levante PDP con el perfil `keycloak` en `8080`.
-3. Levante PEP en `8081` con `PEP_KEYCLOAK_CLIENT_SECRET` de `security-pep-internal`.
+3. Levante PEP en `8081`; la credencial local de `security-pep-internal` ya está configurada para
+   la demostración.
 4. Instale el starter localmente: `./mvnw -f pep/starter/pom.xml install`.
 5. Levante `pep-webflux-sample` en `18081`.
 6. Ejecute `npm run dev` en `../../../notes-security-demo` y abra `http://localhost:5174`.

@@ -85,6 +85,21 @@ ese token debe llevar `security-baseline-bff` en el claim `aud`. Que el valor ap
 
 Ese claim se usa en el backend para distinguir si el acceso vino de `keycloak-local`, `google` u otro broker configurado.
 
+### 4.1 MFA para la administración del microfrontend
+
+Las rutas administrativas del PDP exigen evidencia MFA. Configure OTP o WebAuthn en el realm y
+para el usuario administrador; luego arranque el PDP con la regla que corresponde al claim emitido:
+
+```sh
+PDP_SECURITY_MFA_CLAIM=amr \
+PDP_SECURITY_MFA_ACCEPTED_VALUES=otp \
+SPRING_PROFILES_ACTIVE=keycloak \
+./mvnw -f pdp/pom.xml spring-boot:run
+```
+
+Compruebe que el access token contiene `"amr": ["pwd", "otp"]` (o el valor que configure). Una
+configuración MFA vacía falla cerrada y devuelve `MFA_REQUIRED` en vez de permitir administración.
+
 ### 5. Identity provider `google`
 
 - Mantenerlo activo para login federado.
@@ -118,6 +133,9 @@ Estos endpoints no se configuran dentro de Keycloak, pero conviene validarlos en
   - formulario local `user/password`
   - boton `Google`
 - Si el login es exitoso, el backend crea o actualiza la sesion local y redirige a `http://localhost:5173`.
+- Al abrir `http://localhost:5174`, la demo reutiliza la cookie BFF central. El PEP recupera la
+  evidencia del usuario por el canal servidor a servidor y el microfrontend llama al PDP con la
+  misma sesión; Keycloak no recibe un segundo login ni se expone ningún token al navegador.
 
 #### Registro local
 

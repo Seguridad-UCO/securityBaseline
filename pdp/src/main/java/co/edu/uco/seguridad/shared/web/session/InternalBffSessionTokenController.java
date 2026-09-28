@@ -4,7 +4,10 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.oauth2.client.web.server.ServerOAuth2AuthorizedClientRepository;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.web.server.context.WebSessionServerSecurityContextRepository;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,10 +26,19 @@ import reactor.core.publisher.Mono;
 @Profile("keycloak")
 final class InternalBffSessionTokenController {
     private final ServerOAuth2AuthorizedClientRepository clients;
+    private final WebSessionServerSecurityContextRepository bffSecurityContext =
+            new WebSessionServerSecurityContextRepository();
     InternalBffSessionTokenController(ServerOAuth2AuthorizedClientRepository clients) { this.clients = clients; }
     @GetMapping
-    Mono<ResponseEntity<TokenResponse>> token(ServerWebExchange exchange, Authentication technicalIdentity) {
-        return clients.loadAuthorizedClient("keycloak", technicalIdentity, exchange)
+    Mono<ResponseEntity<TokenResponse>> token(ServerWebExchange exchange) {
+        // Esta ruta se autentica con la identidad técnica del PEP, pero el cliente OIDC está
+        // asociado al principal BFF guardado en la misma WebSession. Usar el principal técnico
+        // aquí siempre daba "Sesión BFF no activa" aunque la cookie fuera válida.
+        return bffSecurityContext.load(exchange)
+                .map(SecurityContext::getAuthentication)
+                .filter(Authentication::isAuthenticated)
+                .flatMap(bffPrincipal -> clients.<OAuth2AuthorizedClient>loadAuthorizedClient(
+                        "keycloak", bffPrincipal, exchange))
                 .map(client -> ResponseEntity.ok().body(new TokenResponse(client.getAccessToken().getTokenValue())))
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sesión BFF no activa.")));
     }

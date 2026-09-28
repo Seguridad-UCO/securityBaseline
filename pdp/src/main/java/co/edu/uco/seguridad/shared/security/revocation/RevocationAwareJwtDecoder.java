@@ -32,24 +32,40 @@ public final class RevocationAwareJwtDecoder implements ReactiveJwtDecoder {
     private final ReactiveJwtDecoder delegate;
     private final TokenRevocationPort revocation;
     private final SubjectUserIdLookupValidator subjectUserIdLookup;
+    private final String technicalClientId;
 
     public RevocationAwareJwtDecoder(ReactiveJwtDecoder delegate, TokenRevocationPort revocation,
             SubjectUserIdLookupValidator subjectUserIdLookup) {
+        this(delegate, revocation, subjectUserIdLookup, "");
+    }
+
+    /**
+     * El token de client-credentials del PEP solo autentica el canal técnico: ya pasó firma,
+     * emisor y audiencia en {@code delegate}, pero no representa a una persona del catálogo de
+     * identidades y por eso no participa en su lista de revocación.
+     */
+    public RevocationAwareJwtDecoder(ReactiveJwtDecoder delegate, TokenRevocationPort revocation,
+            SubjectUserIdLookupValidator subjectUserIdLookup, String technicalClientId) {
         this.delegate = Objects.requireNonNull(delegate, RequiredArgumentMessages.REACTIVE_JWT_DECODER_DELEGATE);
         this.revocation = Objects.requireNonNull(revocation, RequiredArgumentMessages.TOKEN_REVOCATION_PORT);
         this.subjectUserIdLookup = Objects.requireNonNull(subjectUserIdLookup,
                 RequiredArgumentMessages.SUBJECT_USER_ID_LOOKUP_VALIDATOR);
+        this.technicalClientId = Objects.requireNonNull(technicalClientId, "technicalClientId");
     }
 
     @Override
     public Mono<Jwt> decode(String token) {
-        return delegate.decode(token).flatMap(jwt -> subjectUserIdLookup.execute(jwt.getSubject())
+        return delegate.decode(token).flatMap(jwt -> isTechnicalPepToken(jwt) ? Mono.just(jwt) : subjectUserIdLookup.execute(jwt.getSubject())
                 .switchIfEmpty(Mono.error(() -> revocationCheckFailedException(
                         "no existe una identidad registrada para el subject del token; no se puede verificar su revocación")))
                 .flatMap(userId -> revocation.isRevoked(userId, jwt.getIssuedAt()))
                 .onErrorMap(error -> !(error instanceof JwtException), error -> revocationCheckFailedException(
                         "no se pudo verificar el estado de revocación del token"))
                 .flatMap(revoked -> revoked ? Mono.<Jwt>error(revokedException()) : Mono.just(jwt)));
+    }
+
+    private boolean isTechnicalPepToken(Jwt jwt) {
+        return !technicalClientId.isBlank() && technicalClientId.equals(jwt.getClaimAsString("azp"));
     }
 
     private static JwtValidationException revocationCheckFailedException(String reason) {
