@@ -150,6 +150,13 @@ public final class SurrealRoleRepository implements RoleRepository {
                 .map(results -> !results.get(0).isEmpty());
     }
 
+    @Override
+    public Mono<Boolean> existsByApplicationId(co.edu.uco.seguridad.pdp.commons.model.ApplicationId applicationId) {
+        return client.execute("SELECT id FROM %s WHERE applicationId = $applicationId LIMIT 1;".formatted(RoleSchema.TABLE),
+                        Map.of("applicationId", applicationId.value().toString()))
+                .map(results -> !results.get(0).isEmpty());
+    }
+
     /**
      * Une un componente opcional del alcance como parámetro ligado, con cadena vacía como centinela
      * de ausencia. {@code NONE} no sirve: el índice único {@code role_scope_name} no indexa ni

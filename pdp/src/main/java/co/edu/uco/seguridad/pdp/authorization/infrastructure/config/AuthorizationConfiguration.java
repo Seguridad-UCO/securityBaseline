@@ -231,9 +231,15 @@ public class AuthorizationConfiguration {
     // que ya depende de ella (ver PLAN-HU-015.md §0).
     @Bean
     AdministerApplicationRemovalUseCase administerApplicationRemovalUseCase(
-            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator, RemoveApplicationUseCase removeApplication,
+            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator,
+            co.edu.uco.seguridad.pdp.resources.application.rule.validator.ApplicationDeletionDependencyValidator resourceDependencies,
+            co.edu.uco.seguridad.pdp.roles.application.rule.validator.ApplicationDeletionDependencyValidator roleDependencies,
+            co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ApplicationDeletionDependencyValidator profileDependencies,
+            co.edu.uco.seguridad.pdp.assignments.application.rule.validator.ApplicationDeletionDependencyValidator assignmentDependencies,
+            RemoveApplicationUseCase removeApplication,
             AdministrationAuditRepository audit, IdentifierGenerator identifiers, TimeProvider time) {
-        return new AdministerApplicationRemovalUseCaseImpl(mustBeAdministrator, removeApplication, audit, identifiers, time);
+        return new AdministerApplicationRemovalUseCaseImpl(mustBeAdministrator, resourceDependencies, roleDependencies,
+                profileDependencies, assignmentDependencies, removeApplication, audit, identifiers, time);
     }
 
     @Bean

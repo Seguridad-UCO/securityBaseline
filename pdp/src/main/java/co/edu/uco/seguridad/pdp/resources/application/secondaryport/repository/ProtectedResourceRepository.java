@@ -14,6 +14,9 @@ public interface ProtectedResourceRepository {
 
     Mono<Boolean> existsByApplicationPathAndMethod(ApplicationId applicationId, ResourcePath path, HttpVerb method);
 
+    /** True si la aplicación aún conserva recursos protegidos. */
+    default Mono<Boolean> existsByApplicationId(ApplicationId applicationId) { return Mono.just(false); }
+
     Flux<ProtectedResource> findAllByApplication(ApplicationId applicationId);
 
     Mono<ProtectedResource> save(ProtectedResource resource);

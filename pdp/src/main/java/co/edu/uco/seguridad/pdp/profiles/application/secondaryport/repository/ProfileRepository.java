@@ -1,6 +1,7 @@
 package co.edu.uco.seguridad.pdp.profiles.application.secondaryport.repository;
 
 import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
+import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.ProfileId;
 import co.edu.uco.seguridad.pdp.commons.model.RoleId;
 import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
@@ -31,4 +32,7 @@ public interface ProfileRepository {
 
     /** True si algún perfil aún contiene el rol; protege su borrado. */
     default Mono<Boolean> existsByRoleId(RoleId roleId) { return Mono.just(false); }
+
+    /** True si existen perfiles cuyo alcance pertenece a la aplicación. */
+    default Mono<Boolean> existsByApplicationId(ApplicationId applicationId) { return Mono.just(false); }
 }

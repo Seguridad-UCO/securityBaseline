@@ -128,6 +128,13 @@ public final class SurrealProfileRepository implements ProfileRepository {
                 .map(results -> !results.get(0).isEmpty());
     }
 
+    @Override
+    public Mono<Boolean> existsByApplicationId(ApplicationId applicationId) {
+        return client.execute("SELECT id FROM %s WHERE applicationId = $applicationId LIMIT 1;".formatted(ProfileSchema.TABLE),
+                        Map.of("applicationId", applicationId.value().toString()))
+                .map(results -> !results.get(0).isEmpty());
+    }
+
     /**
      * Une un componente opcional del alcance como parámetro ligado, con cadena vacía como centinela
      * de ausencia. {@code NONE} no sirve: el índice único {@code profile_scope_name} no indexa ni

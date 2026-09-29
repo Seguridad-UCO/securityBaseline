@@ -25,16 +25,28 @@ import java.util.UUID;
 public final class AdministerApplicationRemovalUseCaseImpl implements AdministerApplicationRemovalUseCase {
 
     private final PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator;
+    private final co.edu.uco.seguridad.pdp.resources.application.rule.validator.ApplicationDeletionDependencyValidator resourceDependencies;
+    private final co.edu.uco.seguridad.pdp.roles.application.rule.validator.ApplicationDeletionDependencyValidator roleDependencies;
+    private final co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ApplicationDeletionDependencyValidator profileDependencies;
+    private final co.edu.uco.seguridad.pdp.assignments.application.rule.validator.ApplicationDeletionDependencyValidator assignmentDependencies;
     private final RemoveApplicationUseCase removeApplication;
     private final AdministrationAuditRepository audit;
     private final IdentifierGenerator identifiers;
     private final TimeProvider time;
 
     public AdministerApplicationRemovalUseCaseImpl(PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator,
+            co.edu.uco.seguridad.pdp.resources.application.rule.validator.ApplicationDeletionDependencyValidator resourceDependencies,
+            co.edu.uco.seguridad.pdp.roles.application.rule.validator.ApplicationDeletionDependencyValidator roleDependencies,
+            co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ApplicationDeletionDependencyValidator profileDependencies,
+            co.edu.uco.seguridad.pdp.assignments.application.rule.validator.ApplicationDeletionDependencyValidator assignmentDependencies,
             RemoveApplicationUseCase removeApplication, AdministrationAuditRepository audit,
             IdentifierGenerator identifiers, TimeProvider time) {
         this.mustBeAdministrator = Objects.requireNonNull(mustBeAdministrator,
                 RequiredArgumentMessages.PRINCIPAL_MUST_BE_APPLICATION_ADMINISTRATOR_VALIDATOR);
+        this.resourceDependencies = Objects.requireNonNull(resourceDependencies);
+        this.roleDependencies = Objects.requireNonNull(roleDependencies);
+        this.profileDependencies = Objects.requireNonNull(profileDependencies);
+        this.assignmentDependencies = Objects.requireNonNull(assignmentDependencies);
         this.removeApplication = Objects.requireNonNull(removeApplication, RequiredArgumentMessages.REMOVE_APPLICATION_USE_CASE);
         this.audit = Objects.requireNonNull(audit, RequiredArgumentMessages.ADMINISTRATION_AUDIT_REPOSITORY);
         this.identifiers = Objects.requireNonNull(identifiers, RequiredArgumentMessages.IDENTIFIER_GENERATOR);
@@ -44,6 +56,10 @@ public final class AdministerApplicationRemovalUseCaseImpl implements Administer
     @Override
     public Mono<Void> execute(AdministrationRequest input) {
         return mustBeAdministrator.execute(input)
+                .then(resourceDependencies.execute(input.applicationId()))
+                .then(roleDependencies.execute(input.applicationId()))
+                .then(profileDependencies.execute(input.applicationId()))
+                .then(assignmentDependencies.execute(input.applicationId()))
                 .then(Mono.defer(() -> removeApplication.execute(input.applicationId())))
                 .then(Mono.defer(() -> recordAudit(input, AdministrationOutcome.ALLOWED)))
                 .onErrorResume(NotAuthorizedToAdministerException.class,

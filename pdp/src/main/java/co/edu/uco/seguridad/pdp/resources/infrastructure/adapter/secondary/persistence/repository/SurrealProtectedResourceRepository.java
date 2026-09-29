@@ -44,6 +44,14 @@ public final class SurrealProtectedResourceRepository implements ProtectedResour
     }
 
     @Override
+    public Mono<Boolean> existsByApplicationId(ApplicationId applicationId) {
+        return client.execute("SELECT id FROM %s WHERE applicationId = $applicationId LIMIT 1;"
+                        .formatted(ProtectedResourceSchema.TABLE),
+                        Map.of("applicationId", applicationId.value().toString()))
+                .map(results -> !results.get(0).isEmpty());
+    }
+
+    @Override
     public Flux<ProtectedResource> findAllByApplication(ApplicationId applicationId) {
         return client.execute(
                         "SELECT * FROM %s WHERE applicationId = $applicationId ORDER BY registeredAt DESC;"

@@ -135,6 +135,14 @@ public final class SurrealProfileAssignmentRepository implements ProfileAssignme
                 .map(results -> !results.get(0).isEmpty());
     }
 
+    @Override
+    public Mono<Boolean> existsByApplicationId(ApplicationId applicationId) {
+        return client.execute("SELECT id FROM %s WHERE applicationId = $applicationId LIMIT 1;"
+                        .formatted(ProfileAssignmentSchema.TABLE),
+                        Map.of("applicationId", applicationId.value().toString()))
+                .map(results -> !results.get(0).isEmpty());
+    }
+
     private static ProfileAssignment toDomain(JsonNode row) {
         ProfileAssignmentEntity entity = new ProfileAssignmentEntity(
                 SurrealRecordId.idPart(row.path("id").asString()),

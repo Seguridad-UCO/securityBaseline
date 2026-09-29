@@ -4,6 +4,7 @@ import co.edu.uco.seguridad.pdp.applications.application.rule.validator.Applicat
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationOwnerLookupValidator;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RegisterApplicationUseCase;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.AssignProfileRulesValidator;
+import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.ApplicationDeletionDependencyValidator;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.AssignRoleRulesValidator;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.AssignmentApplicationLookupValidator;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.RevokeAssignmentRulesValidator;
@@ -11,6 +12,7 @@ import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.RevokePro
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.RoleDeletionDependencyValidator;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.ProfileDeletionDependencyValidator;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.impl.AssignProfileRulesValidatorImpl;
+import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.impl.ApplicationDeletionDependencyValidatorImpl;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.impl.AssignRoleRulesValidatorImpl;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.ProfileAssignmentApplicationLookupValidator;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.impl.AssignmentApplicationLookupValidatorImpl;
@@ -92,6 +94,12 @@ public class AssignmentsConfiguration {
     @Bean
     AssignmentRepository assignmentRepository(SurrealDbClient client) {
         return new SurrealAssignmentRepository(client);
+    }
+
+    @Bean
+    ApplicationDeletionDependencyValidator assignmentApplicationDeletionDependencyValidator(
+            AssignmentRepository assignments, ProfileAssignmentRepository profileAssignments) {
+        return new ApplicationDeletionDependencyValidatorImpl(assignments, profileAssignments);
     }
 
     @Bean

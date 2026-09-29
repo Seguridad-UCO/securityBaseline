@@ -9,9 +9,11 @@ import co.edu.uco.seguridad.pdp.resources.domain.rule.ProtectedResourceMustExist
 import co.edu.uco.seguridad.pdp.resources.domain.rule.impl.ProtectedResourceMustBeUniqueRuleImpl;
 import co.edu.uco.seguridad.pdp.resources.domain.rule.impl.ProtectedResourceMustExistRuleImpl;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceMustExistValidator;
+import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ApplicationDeletionDependencyValidator;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceOwnerLookupValidator;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceIdLookupValidator;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.ProtectedResourceMustExistValidatorImpl;
+import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.ApplicationDeletionDependencyValidatorImpl;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.ProtectedResourceOwnerLookupValidatorImpl;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.ProtectedResourceIdLookupValidatorImpl;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.RegisterProtectedResourceRulesValidator;
@@ -51,6 +53,12 @@ public class ResourcesConfiguration {
     @Bean
     ProtectedResourceRepository protectedResourceRepository(SurrealDbClient client) {
         return new SurrealProtectedResourceRepository(client);
+    }
+
+    @Bean
+    ApplicationDeletionDependencyValidator resourceApplicationDeletionDependencyValidator(
+            ProtectedResourceRepository repository) {
+        return new ApplicationDeletionDependencyValidatorImpl(repository);
     }
 
     @Bean

@@ -4,6 +4,7 @@ import co.edu.uco.seguridad.pdp.applications.application.rule.validator.Applicat
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationOwnerLookupValidator;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceOwnerLookupValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.DefineRoleRulesValidator;
+import co.edu.uco.seguridad.pdp.roles.application.rule.validator.ApplicationDeletionDependencyValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.GrantResourceRulesValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleApplicationLookupValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleLookupByNameInScopeValidator;
@@ -13,6 +14,7 @@ import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleResourcesLo
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.ResourceDeletionDependencyValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleScopeMustCoverApplicationValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.DefineRoleRulesValidatorImpl;
+import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.ApplicationDeletionDependencyValidatorImpl;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.GrantResourceRulesValidatorImpl;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.RoleApplicationLookupValidatorImpl;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.RoleLookupByNameInScopeValidatorImpl;
@@ -60,6 +62,11 @@ public class RolesConfiguration {
     @Bean
     RoleRepository roleRepository(SurrealDbClient client) {
         return new SurrealRoleRepository(client);
+    }
+
+    @Bean
+    ApplicationDeletionDependencyValidator roleApplicationDeletionDependencyValidator(RoleRepository repository) {
+        return new ApplicationDeletionDependencyValidatorImpl(repository);
     }
 
     @Bean

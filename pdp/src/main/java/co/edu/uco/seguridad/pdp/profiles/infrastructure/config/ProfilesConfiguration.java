@@ -2,12 +2,14 @@ package co.edu.uco.seguridad.pdp.profiles.infrastructure.config;
 
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationMustExistForTenantValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.AddRoleToProfileRulesValidator;
+import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ApplicationDeletionDependencyValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.DefineProfileRulesValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileApplicationLookupValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileRolesLookupValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileNamesLookupValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.RoleDeletionDependencyValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.impl.AddRoleToProfileRulesValidatorImpl;
+import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.impl.ApplicationDeletionDependencyValidatorImpl;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.impl.DefineProfileRulesValidatorImpl;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.impl.ProfileApplicationLookupValidatorImpl;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.impl.ProfileRolesLookupValidatorImpl;
@@ -49,6 +51,11 @@ public class ProfilesConfiguration {
     @Bean
     ProfileRepository profileRepository(SurrealDbClient client) {
         return new SurrealProfileRepository(client);
+    }
+
+    @Bean
+    ApplicationDeletionDependencyValidator profileApplicationDeletionDependencyValidator(ProfileRepository repository) {
+        return new ApplicationDeletionDependencyValidatorImpl(repository);
     }
 
     @Bean

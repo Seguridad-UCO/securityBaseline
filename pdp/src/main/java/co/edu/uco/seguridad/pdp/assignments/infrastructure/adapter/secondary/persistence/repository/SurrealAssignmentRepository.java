@@ -132,6 +132,14 @@ public final class SurrealAssignmentRepository implements AssignmentRepository {
                 .map(results -> !results.get(0).isEmpty());
     }
 
+    @Override
+    public Mono<Boolean> existsByApplicationId(ApplicationId applicationId) {
+        return client.execute("SELECT id FROM %s WHERE applicationId = $applicationId LIMIT 1;"
+                        .formatted(AssignmentSchema.TABLE),
+                        Map.of("applicationId", applicationId.value().toString()))
+                .map(results -> !results.get(0).isEmpty());
+    }
+
     private static Assignment toDomain(JsonNode row) {
         AssignmentEntity entity = new AssignmentEntity(
                 SurrealRecordId.idPart(row.path("id").asString()),
