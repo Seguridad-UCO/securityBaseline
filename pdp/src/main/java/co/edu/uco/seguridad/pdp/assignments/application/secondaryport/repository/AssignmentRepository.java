@@ -42,6 +42,9 @@ public interface AssignmentRepository {
     default Mono<Long> countActiveByRoleAndApplication(RoleId roleId, TenantId tenantId, ApplicationId applicationId,
             Instant now) { return Mono.error(new UnsupportedOperationException()); }
 
+    default Mono<ResultPage<Assignment>> findActivePageByUserAndApplication(UserId userId, TenantId tenantId,
+            ApplicationId applicationId, Instant now, PageWindow window) { return Mono.error(new UnsupportedOperationException()); }
+
     /**
      * Los identificadores de rol con asignación activa para (usuario, aplicación) a la fecha {@code now}.
      */
