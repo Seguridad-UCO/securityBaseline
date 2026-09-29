@@ -64,5 +64,7 @@ public interface ApplicationRepository {
 
     Mono<Application> save(Application application);
 
+    default Mono<Application> update(Application application) { return Mono.error(new UnsupportedOperationException()); }
+
     Mono<Void> deleteById(ApplicationId applicationId);
 }

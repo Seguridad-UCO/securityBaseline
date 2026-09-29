@@ -2,6 +2,7 @@ package co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.pers
 
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.ResourceId;
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository.ProtectedResourceRepository;
 import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.ProtectedResource;
@@ -43,6 +44,14 @@ public final class SurrealProtectedResourceRepository implements ProtectedResour
     }
 
     @Override
+    public Mono<Boolean> existsByApplicationId(ApplicationId applicationId) {
+        return client.execute("SELECT id FROM %s WHERE applicationId = $applicationId LIMIT 1;"
+                        .formatted(ProtectedResourceSchema.TABLE),
+                        Map.of("applicationId", applicationId.value().toString()))
+                .map(results -> !results.get(0).isEmpty());
+    }
+
+    @Override
     public Flux<ProtectedResource> findAllByApplication(ApplicationId applicationId) {
         return client.execute(
                         "SELECT * FROM %s WHERE applicationId = $applicationId ORDER BY registeredAt DESC;"
@@ -76,6 +85,23 @@ public final class SurrealProtectedResourceRepository implements ProtectedResour
                         "DELETE type::record('%s', $id);".formatted(ProtectedResourceSchema.TABLE),
                         Map.of("id", resourceId.value().toString()))
                 .then();
+    }
+
+    @Override
+    public Mono<ProtectedResource> findByIdForTenant(ResourceId resourceId, TenantId tenantId) {
+        return client.execute("SELECT * FROM type::record('%s', $id) WHERE tenantId = $tenantId;"
+                        .formatted(ProtectedResourceSchema.TABLE),
+                        Map.of("id", resourceId.value().toString(), "tenantId", tenantId.value()))
+                .flatMap(results -> results.get(0).isEmpty() ? Mono.empty() : Mono.just(toDomain(results.get(0).get(0))));
+    }
+
+    @Override
+    public Mono<ProtectedResource> update(ProtectedResource resource) {
+        return client.execute("UPDATE type::record('%s', $id) SET path = $path, method = $method;"
+                        .formatted(ProtectedResourceSchema.TABLE),
+                        Map.of("id", resource.id().value().toString(), "path", resource.path().value(),
+                                "method", resource.method().name()))
+                .thenReturn(resource);
     }
 
     @Override

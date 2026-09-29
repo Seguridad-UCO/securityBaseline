@@ -125,6 +125,24 @@ public final class SurrealProfileAssignmentRepository implements ProfileAssignme
         return client.execute(query, parameters).thenReturn(profileAssignment);
     }
 
+    @Override
+    public Mono<Boolean> existsActiveByProfileId(ProfileId profileId, Instant now) {
+        return client.execute("""
+                        SELECT id FROM %s WHERE profileId = $profileId AND validFrom <= <datetime>$now \
+                        AND (validUntil = NONE OR validUntil > <datetime>$now) LIMIT 1;
+                        """.formatted(ProfileAssignmentSchema.TABLE),
+                        Map.of("profileId", profileId.value().toString(), "now", now.toString()))
+                .map(results -> !results.get(0).isEmpty());
+    }
+
+    @Override
+    public Mono<Boolean> existsByApplicationId(ApplicationId applicationId) {
+        return client.execute("SELECT id FROM %s WHERE applicationId = $applicationId LIMIT 1;"
+                        .formatted(ProfileAssignmentSchema.TABLE),
+                        Map.of("applicationId", applicationId.value().toString()))
+                .map(results -> !results.get(0).isEmpty());
+    }
+
     private static ProfileAssignment toDomain(JsonNode row) {
         ProfileAssignmentEntity entity = new ProfileAssignmentEntity(
                 SurrealRecordId.idPart(row.path("id").asString()),

@@ -29,4 +29,9 @@ public interface AssignmentRepository {
     Mono<Set<RoleId>> findActiveRoleIdsFor(UserId userId, ApplicationId applicationId, Instant now);
 
     Mono<Assignment> save(Assignment assignment);
+
+    default Mono<Boolean> existsActiveByRoleId(RoleId roleId, Instant now) { return Mono.just(false); }
+
+    /** True si hay asignaciones de roles, vigentes o históricas, para la aplicación. */
+    default Mono<Boolean> existsByApplicationId(ApplicationId applicationId) { return Mono.just(false); }
 }

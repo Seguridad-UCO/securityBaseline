@@ -45,21 +45,30 @@ public final class AdministerResourceGrantInteractorImpl implements AdministerRe
 
     @Override
     public Mono<RoleAdministrationWebResponse> execute(GrantResourceRawRequest input) {
+        return execute(input, false);
+    }
+
+    @Override
+    public Mono<RoleAdministrationWebResponse> revoke(GrantResourceRawRequest input) {
+        return execute(input, true);
+    }
+
+    private Mono<RoleAdministrationWebResponse> execute(GrantResourceRawRequest input, boolean revocation) {
         return SecurityContext.currentPrincipal()
                 .flatMap(principal -> resolveUserId(principal)
-                        .flatMap(userId -> toAdministerRequest(input, principal, userId)))
+                        .flatMap(userId -> toAdministerRequest(input, principal, userId, revocation)))
                 .flatMap(useCase::execute)
                 .map(RoleAdministrationResponseMapper::toResponse);
     }
 
     private Mono<AdministerResourceGrantRequest> toAdministerRequest(GrantResourceRawRequest raw,
-            PdpPrincipal principal, UserId userId) {
+            PdpPrincipal principal, UserId userId, boolean revocation) {
         GrantResourceRequest grant = GrantResourceRequestMapper.toRequest(raw, principal.tenantId());
         return roleApplicationLookup.execute(new RoleOwnershipQuery(grant.roleId(), principal.tenantId()))
                 .map(maybeApplicationId -> maybeApplicationId
                         .map(applicationId -> new AdministrationRequest(principal.tenantId(), applicationId, userId,
                                 principal.subject(), Set.<String>of(), principal.authenticationContext())))
-                .map(administration -> new AdministerResourceGrantRequest(administration, grant));
+                .map(administration -> new AdministerResourceGrantRequest(administration, grant, revocation));
     }
 
     private Mono<UserId> resolveUserId(PdpPrincipal principal) {

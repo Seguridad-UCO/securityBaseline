@@ -47,6 +47,15 @@ public final class AdministerProfileRoleAdditionInteractorImpl implements Admini
 
     @Override
     public Mono<ProfileAdministrationWebResponse> execute(AddRoleToProfileRawRequest input) {
+        return execute(input, false);
+    }
+
+    @Override
+    public Mono<ProfileAdministrationWebResponse> remove(AddRoleToProfileRawRequest input) {
+        return execute(input, true);
+    }
+
+    private Mono<ProfileAdministrationWebResponse> execute(AddRoleToProfileRawRequest input, boolean removal) {
         return SecurityContext.currentPrincipal()
                 .flatMap(principal -> {
                     ProfileId profileId = RequestFieldParser.parse("profileId", input.profileId(), ProfileId::of);
@@ -58,7 +67,7 @@ public final class AdministerProfileRoleAdditionInteractorImpl implements Admini
                                     tuple.getT2().map(applicationId -> new AdministrationRequest(principal.tenantId(),
                                             applicationId, tuple.getT1(), principal.subject(), Set.of(),
                                             principal.authenticationContext())),
-                                    addition));
+                                    addition, removal));
                 })
                 .flatMap(useCase::execute)
                 .map(AdministerProfileRoleAdditionInteractorImpl::toWebResponse);

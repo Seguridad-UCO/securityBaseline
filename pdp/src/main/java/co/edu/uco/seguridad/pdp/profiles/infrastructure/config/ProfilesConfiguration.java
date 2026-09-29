@@ -2,22 +2,32 @@ package co.edu.uco.seguridad.pdp.profiles.infrastructure.config;
 
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationMustExistForTenantValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.AddRoleToProfileRulesValidator;
+import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ApplicationDeletionDependencyValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.DefineProfileRulesValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileApplicationLookupValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileRolesLookupValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileNamesLookupValidator;
+import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.RoleDeletionDependencyValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.impl.AddRoleToProfileRulesValidatorImpl;
+import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.impl.ApplicationDeletionDependencyValidatorImpl;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.impl.DefineProfileRulesValidatorImpl;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.impl.ProfileApplicationLookupValidatorImpl;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.impl.ProfileRolesLookupValidatorImpl;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.impl.ProfileNamesLookupValidatorImpl;
+import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.impl.RoleDeletionDependencyValidatorImpl;
 import co.edu.uco.seguridad.pdp.profiles.application.secondaryport.repository.ProfileRepository;
 import co.edu.uco.seguridad.pdp.profiles.application.usecase.AddRoleToProfileUseCase;
 import co.edu.uco.seguridad.pdp.profiles.application.usecase.DefineProfileUseCase;
 import co.edu.uco.seguridad.pdp.profiles.application.usecase.ListProfilesUseCase;
+import co.edu.uco.seguridad.pdp.profiles.application.usecase.RemoveRoleFromProfileUseCase;
+import co.edu.uco.seguridad.pdp.profiles.application.usecase.RemoveProfileUseCase;
+import co.edu.uco.seguridad.pdp.profiles.application.usecase.UpdateProfileUseCase;
 import co.edu.uco.seguridad.pdp.profiles.application.usecase.impl.AddRoleToProfileUseCaseImpl;
 import co.edu.uco.seguridad.pdp.profiles.application.usecase.impl.DefineProfileUseCaseImpl;
 import co.edu.uco.seguridad.pdp.profiles.application.usecase.impl.ListProfilesUseCaseImpl;
+import co.edu.uco.seguridad.pdp.profiles.application.usecase.impl.RemoveRoleFromProfileUseCaseImpl;
+import co.edu.uco.seguridad.pdp.profiles.application.usecase.impl.RemoveProfileUseCaseImpl;
+import co.edu.uco.seguridad.pdp.profiles.application.usecase.impl.UpdateProfileUseCaseImpl;
 import co.edu.uco.seguridad.pdp.profiles.domain.rule.ProfileMustExistForTenantRule;
 import co.edu.uco.seguridad.pdp.profiles.domain.rule.ProfileNameMustBeUniqueInScopeRule;
 import co.edu.uco.seguridad.pdp.profiles.domain.rule.impl.ProfileMustExistForTenantRuleImpl;
@@ -41,6 +51,16 @@ public class ProfilesConfiguration {
     @Bean
     ProfileRepository profileRepository(SurrealDbClient client) {
         return new SurrealProfileRepository(client);
+    }
+
+    @Bean
+    ApplicationDeletionDependencyValidator profileApplicationDeletionDependencyValidator(ProfileRepository repository) {
+        return new ApplicationDeletionDependencyValidatorImpl(repository);
+    }
+
+    @Bean
+    RoleDeletionDependencyValidator profileRoleDeletionDependencyValidator(ProfileRepository repository) {
+        return new RoleDeletionDependencyValidatorImpl(repository);
     }
 
     @Bean
@@ -101,9 +121,21 @@ public class ProfilesConfiguration {
     }
 
     @Bean
+    RemoveRoleFromProfileUseCase removeRoleFromProfileUseCase(AddRoleToProfileRulesValidator rules,
+            ProfileRepository repository) {
+        return new RemoveRoleFromProfileUseCaseImpl(rules, repository);
+    }
+
+    @Bean
     ListProfilesUseCase listProfilesUseCase(ProfileRepository repository) {
         return new ListProfilesUseCaseImpl(repository);
     }
+
+    @Bean
+    UpdateProfileUseCase updateProfileUseCase(ProfileRepository repository) { return new UpdateProfileUseCaseImpl(repository); }
+
+    @Bean
+    RemoveProfileUseCase removeProfileUseCase(ProfileRepository repository) { return new RemoveProfileUseCaseImpl(repository); }
 
     @Bean
     ListProfilesInteractor listProfilesInteractor(ListProfilesUseCase useCase) {

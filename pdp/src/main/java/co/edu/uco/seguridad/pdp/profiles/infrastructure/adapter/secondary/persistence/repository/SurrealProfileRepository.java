@@ -114,6 +114,27 @@ public final class SurrealProfileRepository implements ProfileRepository {
         return client.execute(query, parameters).thenReturn(profile);
     }
 
+    @Override
+    public Mono<Void> deleteById(ProfileId profileId) {
+        return client.execute("DELETE type::record('%s', $id);".formatted(ProfileSchema.TABLE),
+                        Map.of("id", profileId.value().toString()))
+                .then();
+    }
+
+    @Override
+    public Mono<Boolean> existsByRoleId(co.edu.uco.seguridad.pdp.commons.model.RoleId roleId) {
+        return client.execute("SELECT id FROM %s WHERE $roleId INSIDE roles LIMIT 1;".formatted(ProfileSchema.TABLE),
+                        Map.of("roleId", roleId.value().toString()))
+                .map(results -> !results.get(0).isEmpty());
+    }
+
+    @Override
+    public Mono<Boolean> existsByApplicationId(ApplicationId applicationId) {
+        return client.execute("SELECT id FROM %s WHERE applicationId = $applicationId LIMIT 1;".formatted(ProfileSchema.TABLE),
+                        Map.of("applicationId", applicationId.value().toString()))
+                .map(results -> !results.get(0).isEmpty());
+    }
+
     /**
      * Une un componente opcional del alcance como parámetro ligado, con cadena vacía como centinela
      * de ausencia. {@code NONE} no sirve: el índice único {@code profile_scope_name} no indexa ni

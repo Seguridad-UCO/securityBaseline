@@ -11,10 +11,15 @@ import java.util.Optional;
  * recurso, más la administración a gatear si el rol que la recibe es de alcance {@code APPLICATION}.
  * Misma semántica de {@code administration} vacío que {@link AdministerRoleDefinitionRequest}.
  */
-public record AdministerResourceGrantRequest(Optional<AdministrationRequest> administration, GrantResourceRequest grant) {
+public record AdministerResourceGrantRequest(Optional<AdministrationRequest> administration, GrantResourceRequest grant,
+        boolean revocation) {
 
     public AdministerResourceGrantRequest {
         Objects.requireNonNull(administration, RequiredArgumentMessages.ADMINISTRATION);
         Objects.requireNonNull(grant, RequiredArgumentMessages.GRANT_RESOURCE_REQUEST);
+    }
+
+    public AdministerResourceGrantRequest(Optional<AdministrationRequest> administration, GrantResourceRequest grant) {
+        this(administration, grant, false);
     }
 }
