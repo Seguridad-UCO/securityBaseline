@@ -71,7 +71,9 @@ public final class OpaFixtureServer {
         }
     }
 
-    /** Cambia la respuesta por defecto — la que usa cualquier ruta sin una fijada por su cuenta. */
+    /**
+     * Cambia la respuesta por defecto — la que usa cualquier ruta sin una fijada por su cuenta.
+     */
     public void respondWith(int status, String jsonBody) {
         this.defaultResponse = new Response(status, jsonBody);
         this.delayMillis = 0;

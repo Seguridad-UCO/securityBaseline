@@ -20,11 +20,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -68,7 +64,9 @@ class AssignApplicationAdministratorUseCaseImplTests {
     void reuses_an_existing_admin_role_without_defining_a_new_one() {
         RoleId existingRoleId = new RoleId(UUID.randomUUID());
         List<AssignRoleRequest> assigned = new ArrayList<>();
-        DefineRoleUseCase defineRole = request -> { throw new AssertionError("must not define a role that already exists"); };
+        DefineRoleUseCase defineRole = request -> {
+            throw new AssertionError("must not define a role that already exists");
+        };
         AssignApplicationAdministratorUseCaseImpl useCase = new AssignApplicationAdministratorUseCaseImpl(
                 roleLookupResolving(existingRoleId), defineRole, assignRoleSucceeding(assigned));
 

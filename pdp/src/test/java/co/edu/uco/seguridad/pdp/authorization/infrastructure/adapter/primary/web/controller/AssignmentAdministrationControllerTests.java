@@ -16,7 +16,9 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** HU-018: mismas rutas y códigos que el antiguo {@code AssignmentController.assign/revoke}. */
+/**
+ * HU-018: mismas rutas y códigos que el antiguo {@code AssignmentController.assign/revoke}.
+ */
 class AssignmentAdministrationControllerTests {
 
     private static final AssignmentAdministrationWebResponse EXPECTED = new AssignmentAdministrationWebResponse(

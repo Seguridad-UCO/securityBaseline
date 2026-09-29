@@ -1,10 +1,6 @@
 package co.edu.uco.seguridad.pdp.profiles.application.rule.validator;
 
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.model.ProfileId;
-import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.pdp.profiles.application.primaryport.request.ProfileOwnershipQuery;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.impl.ProfileApplicationLookupValidatorImpl;
 import co.edu.uco.seguridad.pdp.profiles.application.secondaryport.repository.ProfileRepository;
@@ -24,7 +20,9 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** HU-019: resuelve a qué aplicación pertenece un perfil, para gatear AddRoleToProfile. */
+/**
+ * HU-019: resuelve a qué aplicación pertenece un perfil, para gatear AddRoleToProfile.
+ */
 class ProfileApplicationLookupValidatorImplTests {
 
     private static final TenantId TENANT = new TenantId("universidad-uco");

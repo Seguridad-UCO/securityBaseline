@@ -1,13 +1,13 @@
 package co.edu.uco.seguridad.pdp.authorization.application.usecase.impl;
 
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministerProfileRoleAdditionRequest;
+import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministrationRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.PrincipalMustBeApplicationAdministratorValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerProfileRoleAdditionUseCase;
-import co.edu.uco.seguridad.pdp.profiles.application.primaryport.response.ProfileResponse;
-import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministrationRequest;
 import co.edu.uco.seguridad.pdp.authorization.domain.exception.NotAuthorizedToAdministerException;
-import co.edu.uco.seguridad.pdp.profiles.application.usecase.AddRoleToProfileUseCase;
 import co.edu.uco.seguridad.pdp.profiles.application.primaryport.request.RemoveRoleFromProfileRequest;
+import co.edu.uco.seguridad.pdp.profiles.application.primaryport.response.ProfileResponse;
+import co.edu.uco.seguridad.pdp.profiles.application.usecase.AddRoleToProfileUseCase;
 import co.edu.uco.seguridad.pdp.profiles.application.usecase.RemoveRoleFromProfileUseCase;
 import co.edu.uco.seguridad.shared.audit.AdministrationAuditRepository;
 import co.edu.uco.seguridad.shared.audit.AdministrationEvent;
@@ -36,8 +36,8 @@ public final class AdministerProfileRoleAdditionUseCaseImpl implements Administe
     private final TimeProvider time;
 
     public AdministerProfileRoleAdditionUseCaseImpl(PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator,
-            AddRoleToProfileUseCase addRoleToProfile, RemoveRoleFromProfileUseCase removeRoleFromProfile, AdministrationAuditRepository audit,
-            IdentifierGenerator identifiers, TimeProvider time) {
+                                                    AddRoleToProfileUseCase addRoleToProfile, RemoveRoleFromProfileUseCase removeRoleFromProfile, AdministrationAuditRepository audit,
+                                                    IdentifierGenerator identifiers, TimeProvider time) {
         this.mustBeAdministrator = Objects.requireNonNull(mustBeAdministrator,
                 RequiredArgumentMessages.PRINCIPAL_MUST_BE_APPLICATION_ADMINISTRATOR_VALIDATOR);
         this.addRoleToProfile = Objects.requireNonNull(addRoleToProfile, RequiredArgumentMessages.ADD_ROLE_TO_PROFILE_USE_CASE);
@@ -52,8 +52,8 @@ public final class AdministerProfileRoleAdditionUseCaseImpl implements Administe
      * desde el adaptador que aporta explícitamente su caso de uso.
      */
     public AdministerProfileRoleAdditionUseCaseImpl(PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator,
-            AddRoleToProfileUseCase addRoleToProfile, AdministrationAuditRepository audit,
-            IdentifierGenerator identifiers, TimeProvider time) {
+                                                    AddRoleToProfileUseCase addRoleToProfile, AdministrationAuditRepository audit,
+                                                    IdentifierGenerator identifiers, TimeProvider time) {
         this(mustBeAdministrator, addRoleToProfile,
                 input -> Mono.error(new IllegalStateException("La revocación de roles del perfil no está configurada")),
                 audit, identifiers, time);
@@ -71,7 +71,7 @@ public final class AdministerProfileRoleAdditionUseCaseImpl implements Administe
     }
 
     private Mono<ProfileResponse> audited(Mono<ProfileResponse> result, AdministrationRequest administration,
-            AdministrationOperation operation) {
+                                          AdministrationOperation operation) {
         return result
                 .flatMap(response -> recordAudit(administration, operation, AdministrationOutcome.ALLOWED).thenReturn(response))
                 .onErrorResume(NotAuthorizedToAdministerException.class,

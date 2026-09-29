@@ -1,9 +1,9 @@
 package co.edu.uco.seguridad.pdp.identity.domain.rule;
 
-import co.edu.uco.seguridad.pdp.identity.domain.rule.model.UserExistence;
 import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.pdp.identity.domain.exception.UserNotFoundException;
 import co.edu.uco.seguridad.pdp.identity.domain.rule.impl.UserMustExistRuleImpl;
+import co.edu.uco.seguridad.pdp.identity.domain.rule.model.UserExistence;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;

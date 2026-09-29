@@ -12,7 +12,9 @@ import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
 import java.time.Instant;
 import java.util.UUID;
 
-/** Fila a dominio y de vuelta. Los value objects validan aquí. */
+/**
+ * Fila a dominio y de vuelta. Los value objects validan aquí.
+ */
 public final class AccessEventPersistenceMapper {
 
     private AccessEventPersistenceMapper() {

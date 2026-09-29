@@ -5,7 +5,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.net.URI;
 import java.time.Duration;
 
-/** Credenciales OAuth2 de máquina del PEP; el access token nunca se persiste en configuración. */
+/**
+ * Credenciales OAuth2 de máquina del PEP; el access token nunca se persiste en configuración.
+ */
 @ConfigurationProperties("pep.pdp.service-identity")
 public record PdpServiceIdentityProperties(URI tokenUri, String clientId, String clientSecret,
                                            Duration timeout, Duration refreshSkew) {

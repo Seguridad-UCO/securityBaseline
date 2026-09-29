@@ -36,7 +36,7 @@ public final class OidcAuthenticationSuccessHandler implements ServerAuthenticat
             new WebSessionServerSecurityContextRepository();
 
     OidcAuthenticationSuccessHandler(ProvisionIdentityUseCase provisionIdentity, OidcFlowStateService flowState,
-            OidcRedirectPolicy redirectPolicy, KeycloakOidcSessionService oidcSessionService) {
+                                     OidcRedirectPolicy redirectPolicy, KeycloakOidcSessionService oidcSessionService) {
         this.provisionIdentity = provisionIdentity;
         this.flowState = flowState;
         this.redirectPolicy = redirectPolicy;
@@ -50,8 +50,8 @@ public final class OidcAuthenticationSuccessHandler implements ServerAuthenticat
                 .flatMap(intent -> intent == OidcFlowIntent.REGISTER
                         ? restartAtKeycloakLogin(exchange.getExchange(), oidcUser.getIdToken().getTokenValue())
                         : flowState.returnTarget(exchange.getExchange())
-                                .defaultIfEmpty(redirectPolicy.frontendHome())
-                                .flatMap(returnTarget -> startLocalSession(exchange.getExchange(), oidcUser, returnTarget)));
+                        .defaultIfEmpty(redirectPolicy.frontendHome())
+                        .flatMap(returnTarget -> startLocalSession(exchange.getExchange(), oidcUser, returnTarget)));
     }
 
     private Mono<Void> startLocalSession(ServerWebExchange exchange, OidcUser oidc, String returnTarget) {

@@ -19,7 +19,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-/** Un id que ya no existe se omite del resultado: es enriquecimiento, no una regla que rechaza. */
+/**
+ * Un id que ya no existe se omite del resultado: es enriquecimiento, no una regla que rechaza.
+ */
 class RoleNamesLookupValidatorImplTests {
 
     private static final TenantId TENANT = new TenantId("universidad-uco");

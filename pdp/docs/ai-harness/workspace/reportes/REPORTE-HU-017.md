@@ -20,15 +20,15 @@ PRUEBAS: Tests run: 671, Failures: 0, Errors: 0, Skipped: 0
 
 `jacoco-check` corrió (línea 865 del log) y no reportó ninguna violación de umbral.
 
-| Comprobación | Resultado |
-|---|---|
-| Compilación | ✅ |
-| Pruebas | ✅ 671 pruebas, 0 fallos |
+| Comprobación                       | Resultado                                        |
+|------------------------------------|--------------------------------------------------|
+| Compilación                        | ✅                                                |
+| Pruebas                            | ✅ 671 pruebas, 0 fallos                          |
 | Cobertura (≥ 80 % en código nuevo) | ✅ `jacoco-check` corrió y no reportó violaciones |
-| `LayeredArchitectureTests` | ✅ |
-| `ModulithStructureTests` | ✅ |
-| `consistencia.ps1` | ✅ CONSISTENTE — 8 slices |
-| `drift.ps1` | ✅ SIN DERIVA |
+| `LayeredArchitectureTests`         | ✅                                                |
+| `ModulithStructureTests`           | ✅                                                |
+| `consistencia.ps1`                 | ✅ CONSISTENTE — 8 slices                         |
+| `drift.ps1`                        | ✅ SIN DERIVA                                     |
 
 ## Estado final
 
@@ -63,56 +63,64 @@ Ninguno.
 
 ## Los cuatro juicios
 
-| # | Juicio | Resultado | Evidencia |
-|---|---|---|---|
-| 1 | ¿Cumple los criterios de aceptación del plan (no solo compila)? | ✅ | Ver tabla detallada abajo |
-| 2 | ¿Convención de idioma? (código en inglés, mensajes en español) | ✅ | Clases nuevas (`AdministerResourceRegistrationUseCase`, `ResourceAdministrationController`…) en inglés; Javadoc y los tres mensajes nuevos de `RequiredArgumentMessages` en español; métodos de prueba en inglés descriptivo |
-| 3 | ¿Introdujo deriva doc↔código? | ✅ | `drift.ps1` → SIN DERIVA, 16 excepciones preexistentes sin cambio. `PROJECT-MAP.md` regenerado (631 clases) |
-| 4 | ¿La lógica quedó en la capa correcta? | ✅ | Ver detalle abajo |
+| # | Juicio                                                          | Resultado | Evidencia                                                                                                                                                                                                                    |
+|---|-----------------------------------------------------------------|-----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1 | ¿Cumple los criterios de aceptación del plan (no solo compila)? | ✅         | Ver tabla detallada abajo                                                                                                                                                                                                    |
+| 2 | ¿Convención de idioma? (código en inglés, mensajes en español)  | ✅         | Clases nuevas (`AdministerResourceRegistrationUseCase`, `ResourceAdministrationController`…) en inglés; Javadoc y los tres mensajes nuevos de `RequiredArgumentMessages` en español; métodos de prueba en inglés descriptivo |
+| 3 | ¿Introdujo deriva doc↔código?                                   | ✅         | `drift.ps1` → SIN DERIVA, 16 excepciones preexistentes sin cambio. `PROJECT-MAP.md` regenerado (631 clases)                                                                                                                  |
+| 4 | ¿La lógica quedó en la capa correcta?                           | ✅         | Ver detalle abajo                                                                                                                                                                                                            |
 
 **Detalle del juicio 1 — criterios de aceptación:**
 
-| # Plan §2 | Criterio | Evidencia |
-|---|---|---|
-| 1 | Registrar recurso como admin → 201 | `AdministerResourceRegistrationUseCaseImplTests.registers_the_resource_when_the_principal_administers_the_application`; `ResourceAdministrationControllerTests.register_combines_the_path_variable_with_the_body_and_replies_with_201`; `AuthorizationHttpTests` (e2e — su propia fixture registra un recurso con éxito en las 6 pruebas de la clase) |
-| 2 | Registrar recurso sin ser admin → 400 `NOT_AUTHORIZED_TO_ADMINISTER` | `AdministerResourceRegistrationUseCaseImplTests.never_registers_the_resource_when_the_principal_does_not_administer_the_application` |
-| 3 | `RegisterApplicationWithInitialResourceUseCase` (HU-010) sin gate, cero regresión | Clase sin tocar (no aparece en el árbol de cambios); sus pruebas existentes (`RegisterApplicationWithInitialResourceUseCaseImplTests` y equivalentes HTTP) siguen en verde dentro de las 671 |
-| 4 | `GET .../resources` sin cambios | `ProtectedResourceControllerTests.list_passes_the_path_variable_through_and_replies_with_200` |
-| 5 | `verificar.ps1` en verde | ✅ 671/671, incluido `jacoco-check` |
+| # Plan §2 | Criterio                                                                          | Evidencia                                                                                                                                                                                                                                                                                                                                             |
+|-----------|-----------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1         | Registrar recurso como admin → 201                                                | `AdministerResourceRegistrationUseCaseImplTests.registers_the_resource_when_the_principal_administers_the_application`; `ResourceAdministrationControllerTests.register_combines_the_path_variable_with_the_body_and_replies_with_201`; `AuthorizationHttpTests` (e2e — su propia fixture registra un recurso con éxito en las 6 pruebas de la clase) |
+| 2         | Registrar recurso sin ser admin → 400 `NOT_AUTHORIZED_TO_ADMINISTER`              | `AdministerResourceRegistrationUseCaseImplTests.never_registers_the_resource_when_the_principal_does_not_administer_the_application`                                                                                                                                                                                                                  |
+| 3         | `RegisterApplicationWithInitialResourceUseCase` (HU-010) sin gate, cero regresión | Clase sin tocar (no aparece en el árbol de cambios); sus pruebas existentes (`RegisterApplicationWithInitialResourceUseCaseImplTests` y equivalentes HTTP) siguen en verde dentro de las 671                                                                                                                                                          |
+| 4         | `GET .../resources` sin cambios                                                   | `ProtectedResourceControllerTests.list_passes_the_path_variable_through_and_replies_with_200`                                                                                                                                                                                                                                                         |
+| 5         | `verificar.ps1` en verde                                                          | ✅ 671/671, incluido `jacoco-check`                                                                                                                                                                                                                                                                                                                    |
 
 **Detalle del juicio 4 — capa correcta:**
 
-- `AdministerResourceRegistrationUseCaseImpl`: `mustBeAdministrator.execute(input.administration()).then(Mono.defer(...))` — sin `if/throw` de negocio. A diferencia de HU-016, sin `Optional`: el gate siempre se evalúa porque un recurso protegido siempre tiene `applicationId`. Ninguna `Rule` nueva hacía falta (mismo argumento que el plan §3).
-- `ResourceAdministrationController`: solo delega al interactor y envuelve con `ApiResponse` — mismo patrón que todos los controllers del proyecto.
-- `RegisterProtectedResourceRequestMapper`: la validación de formato vive en `RequestFieldParser` + los constructores de `ResourcePath`/`HttpVerb`/`ApplicationId`, no en el mapper. Sin catálogo de mensajes propio (a diferencia de HU-016, este mapper nunca lanzó uno).
+- `AdministerResourceRegistrationUseCaseImpl`:
+  `mustBeAdministrator.execute(input.administration()).then(Mono.defer(...))` — sin `if/throw` de negocio. A diferencia
+  de HU-016, sin `Optional`: el gate siempre se evalúa porque un recurso protegido siempre tiene `applicationId`.
+  Ninguna `Rule` nueva hacía falta (mismo argumento que el plan §3).
+- `ResourceAdministrationController`: solo delega al interactor y envuelve con `ApiResponse` — mismo patrón que todos
+  los controllers del proyecto.
+- `RegisterProtectedResourceRequestMapper`: la validación de formato vive en `RequestFieldParser` + los constructores de
+  `ResourcePath`/`HttpVerb`/`ApplicationId`, no en el mapper. Sin catálogo de mensajes propio (a diferencia de HU-016,
+  este mapper nunca lanzó uno).
 - Sin anotaciones de Spring en `domain` ni `application` de ninguna pieza nueva.
-- `allowedDependencies` de `authorization` se amplió una vez (`resources :: usecase`) — ya prevista en el plan §8 como consecuencia directa del diseño aprobado en el gate 1, no una relajación ad-hoc.
+- `allowedDependencies` de `authorization` se amplió una vez (`resources :: usecase`) — ya prevista en el plan §8 como
+  consecuencia directa del diseño aprobado en el gate 1, no una relajación ad-hoc.
 
 ## Criterios de la línea base
 
 > Los que el plan declaró: 1, 2, 9, 11, 12, 21, 22.
 
-| # | Criterio | Resultado | Punto de control comprobado |
-|---|---|---|---|
-| 1 | Clean Architecture | ✅ 🤖 | `LayeredArchitectureTests` en verde; sin Spring en `domain`/`application` de las piezas nuevas |
-| 2 | Contratos de servicios | ✅ | `AdministerResourceRegistrationUseCase`/`AdministerResourceRegistrationInteractor`: interfaces vacías extendiendo `ReactiveOperation` |
-| 9 | Excepciones | ✅ | Reutiliza `NotAuthorizedToAdministerException` existente, sin excepción nueva |
-| 11 | Interacción entre capas | ✅ | Controller → interactor → use case → validador — verificado en Juicio 4 |
-| 12 | SOLID | ✅ | `AdministerResourceRegistrationUseCaseImpl` depende de interfaces (`PrincipalMustBeApplicationAdministratorValidator`, `RegisterProtectedResourceUseCase`) inyectadas por constructor |
-| 21 | Modelo refinado | ✅ | `AdministerResourceRegistrationRequest`: record inmutable con `Objects.requireNonNull` en ambos componentes (verificado con el grep de records vacíos — ninguno) |
-| 22 | Arquitectura reactiva | ✅ | `Mono` en toda la cadena nueva; sin `block()`; `Mono.defer(...)` para diferir el caso de uso real tras el gate |
+| #  | Criterio                | Resultado | Punto de control comprobado                                                                                                                                                           |
+|----|-------------------------|-----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1  | Clean Architecture      | ✅ 🤖      | `LayeredArchitectureTests` en verde; sin Spring en `domain`/`application` de las piezas nuevas                                                                                        |
+| 2  | Contratos de servicios  | ✅         | `AdministerResourceRegistrationUseCase`/`AdministerResourceRegistrationInteractor`: interfaces vacías extendiendo `ReactiveOperation`                                                 |
+| 9  | Excepciones             | ✅         | Reutiliza `NotAuthorizedToAdministerException` existente, sin excepción nueva                                                                                                         |
+| 11 | Interacción entre capas | ✅         | Controller → interactor → use case → validador — verificado en Juicio 4                                                                                                               |
+| 12 | SOLID                   | ✅         | `AdministerResourceRegistrationUseCaseImpl` depende de interfaces (`PrincipalMustBeApplicationAdministratorValidator`, `RegisterProtectedResourceUseCase`) inyectadas por constructor |
+| 21 | Modelo refinado         | ✅         | `AdministerResourceRegistrationRequest`: record inmutable con `Objects.requireNonNull` en ambos componentes (verificado con el grep de records vacíos — ninguno)                      |
+| 22 | Arquitectura reactiva   | ✅         | `Mono` en toda la cadena nueva; sin `block()`; `Mono.defer(...)` para diferir el caso de uso real tras el gate                                                                        |
 
 ## Desviaciones respecto al plan
 
-| Archivo | Plan decía | Código hace | ¿Justificado? |
-|---|---|---|---|
-| `resources/application/primaryport/response/package-info.java` | Anticipado en el texto, no en el árbol como archivo propio | Creado | Sí — omisión real encontrada al compilar, no una relajación |
-| `OpaFixtureServer.java`, `AuthorizationHttpTests.java` | No declarados | `OpaFixtureServer` gana `respondWithForPath`; `AuthorizationHttpTests` fija ALLOW solo en la ruta de administración | Sí — consecuencia directa de gatear un endpoint que la fixture de esa clase usaba sin depender de OPA hasta ahora; aprobado explícitamente por Sebastián |
-| `ResourceAdministrationController.java` | `[N]`, con nota de creación diferida | Creado en la fase de tester, no de planificación | Sí — el propio plan anticipaba esta secuencia por el riesgo de colisión de rutas |
+| Archivo                                                        | Plan decía                                                 | Código hace                                                                                                         | ¿Justificado?                                                                                                                                            |
+|----------------------------------------------------------------|------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `resources/application/primaryport/response/package-info.java` | Anticipado en el texto, no en el árbol como archivo propio | Creado                                                                                                              | Sí — omisión real encontrada al compilar, no una relajación                                                                                              |
+| `OpaFixtureServer.java`, `AuthorizationHttpTests.java`         | No declarados                                              | `OpaFixtureServer` gana `respondWithForPath`; `AuthorizationHttpTests` fija ALLOW solo en la ruta de administración | Sí — consecuencia directa de gatear un endpoint que la fixture de esa clase usaba sin depender de OPA hasta ahora; aprobado explícitamente por Sebastián |
+| `ResourceAdministrationController.java`                        | `[N]`, con nota de creación diferida                       | Creado en la fase de tester, no de planificación                                                                    | Sí — el propio plan anticipaba esta secuencia por el riesgo de colisión de rutas                                                                         |
 
 ## Datos para la entrega
 
-- **Mensaje de commit:** `feat(resources): gatea RegisterProtectedResourceUseCase por administración de aplicación (HU-017)`
+- **Mensaje de commit:**
+  `feat(resources): gatea RegisterProtectedResourceUseCase por administración de aplicación (HU-017)`
 - **Cuerpo:** Mueve el registro de recursos protegidos a `authorization`, gateado por
   `PrincipalMustBeApplicationAdministratorValidator` (HU-009/ADR-023) — sin `Optional`, a diferencia
   de HU-016: un recurso siempre pertenece a una aplicación, así que el gate siempre se evalúa.

@@ -34,7 +34,7 @@ public final class RegisterApplicationWithInitialResourceUseCaseImpl
     private final RemoveApplicationUseCase removeApplication;
 
     public RegisterApplicationWithInitialResourceUseCaseImpl(RegisterApplicationUseCase registerApplication,
-            RegisterProtectedResourceUseCase registerResource, RemoveApplicationUseCase removeApplication) {
+                                                             RegisterProtectedResourceUseCase registerResource, RemoveApplicationUseCase removeApplication) {
         this.registerApplication = Objects.requireNonNull(registerApplication,
                 RequiredArgumentMessages.REGISTER_APPLICATION_USE_CASE);
         this.registerResource = Objects.requireNonNull(registerResource,
@@ -61,7 +61,7 @@ public final class RegisterApplicationWithInitialResourceUseCaseImpl
     }
 
     private Mono<ApplicationWithInitialResourceRegistrationResponse> compensate(ApplicationId applicationId,
-            Throwable resourceError) {
+                                                                                Throwable resourceError) {
         return removeApplication.execute(applicationId)
                 .onErrorResume(compensationError -> {
                     LOG.error("no se pudo compensar el registro huérfano de la aplicación {}",

@@ -18,12 +18,12 @@ diseño actual es defendible por una razón que la referencia no tiene: somos re
 
 De los **69 archivos de `infrastructure`**, solo **12 tocan Spring**:
 
-| Dónde | Cuántos | Anotaciones |
-|---|---|---|
-| `web/controller` | 4 | `@RestController`, `@RequestMapping`, `@GetMapping`, `@PostMapping`, `@PutMapping`, `@RequestBody`, `@RequestParam` |
-| `config` | 4 | `@Configuration`, `@Bean`, `@EnableConfigurationProperties` |
-| `properties` | 3 | `@ConfigurationProperties` |
-| `secondary/audit` | 1 | `@EventListener` |
+| Dónde             | Cuántos | Anotaciones                                                                                                         |
+|-------------------|---------|---------------------------------------------------------------------------------------------------------------------|
+| `web/controller`  | 4       | `@RestController`, `@RequestMapping`, `@GetMapping`, `@PostMapping`, `@PutMapping`, `@RequestBody`, `@RequestParam` |
+| `config`          | 4       | `@Configuration`, `@Bean`, `@EnableConfigurationProperties`                                                         |
+| `properties`      | 3       | `@ConfigurationProperties`                                                                                          |
+| `secondary/audit` | 1       | `@EventListener`                                                                                                    |
 
 Los otros **57 son Java puro**: interactores, mappers, entities, adaptadores de persistencia, schemas.
 Y `application` tiene **cero** imports de Spring.
@@ -177,14 +177,14 @@ public record ApplicationEntity(String id, String tenantId, String name, String 
 
 ## 3. Lo que ya está bien y no hay que tocar
 
-| Pieza | Dónde está | Veredicto |
-|---|---|---|
-| `UseCase` + impl | `application/usecase` | ✅ Orquesta reglas y puertos. Es su sitio |
-| `Repository` (puerto) | `application/secondaryport/repository` | ✅ Puerto de salida definido por quien lo necesita, implementado fuera. Correcto |
-| Entidades y value objects | `domain` | ✅ Java puro, invariantes en el constructor |
-| Controller, DTO web | `infrastructure/adapter/primary/web` | ✅ Es el borde. Aquí sí viven las anotaciones |
-| Adaptador de persistencia | `infrastructure/adapter/secondary/persistence` | ✅ Implementa el puerto |
-| `{Slice}Configuration` | `infrastructure/config` | ✅ La única clase Spring del módulo |
+| Pieza                     | Dónde está                                     | Veredicto                                                                       |
+|---------------------------|------------------------------------------------|---------------------------------------------------------------------------------|
+| `UseCase` + impl          | `application/usecase`                          | ✅ Orquesta reglas y puertos. Es su sitio                                        |
+| `Repository` (puerto)     | `application/secondaryport/repository`         | ✅ Puerto de salida definido por quien lo necesita, implementado fuera. Correcto |
+| Entidades y value objects | `domain`                                       | ✅ Java puro, invariantes en el constructor                                      |
+| Controller, DTO web       | `infrastructure/adapter/primary/web`           | ✅ Es el borde. Aquí sí viven las anotaciones                                    |
+| Adaptador de persistencia | `infrastructure/adapter/secondary/persistence` | ✅ Implementa el puerto                                                          |
+| `{Slice}Configuration`    | `infrastructure/config`                        | ✅ La única clase Spring del módulo                                              |
 
 ### Sobre los mappers en `crosscutting`
 
@@ -212,14 +212,14 @@ separado.**
 **Valor: alto.** Es el que más ordena, el que más se acerca a la referencia y el único que además
 mejora el rendimiento (deja de traer agregados enteros para responder «¿existe?»).
 
-| Paso | Qué |
-|---|---|
-| A1 | `shared/contract`: añadir `DomainRule<T>` (`void validar(T)`) y `Finder<I, O>` (`Mono<O> find(I)`) |
-| A2 | Por cada regla: un `record` de entrada en `domain/{slice}/model/` con el dato **ya resuelto** |
-| A3 | Mover la regla a `domain/{slice}/rule/` + `impl/`, y hacerla **síncrona y pura** |
-| A4 | Crear el `Finder` en `application/{slice}/secondaryport/finder/`, con la consulta **mínima** |
-| A5 | El `RulesValidator` (application) hace el I/O: `finder → record → rule.validar` |
-| A6 | Adelgazar los puertos: `existsByTenantAndName` en vez de `findByTenantAndId` donde solo se comprueba existencia |
+| Paso | Qué                                                                                                             |
+|------|-----------------------------------------------------------------------------------------------------------------|
+| A1   | `shared/contract`: añadir `DomainRule<T>` (`void validar(T)`) y `Finder<I, O>` (`Mono<O> find(I)`)              |
+| A2   | Por cada regla: un `record` de entrada en `domain/{slice}/model/` con el dato **ya resuelto**                   |
+| A3   | Mover la regla a `domain/{slice}/rule/` + `impl/`, y hacerla **síncrona y pura**                                |
+| A4   | Crear el `Finder` en `application/{slice}/secondaryport/finder/`, con la consulta **mínima**                    |
+| A5   | El `RulesValidator` (application) hace el I/O: `finder → record → rule.validar`                                 |
+| A6   | Adelgazar los puertos: `existsByTenantAndName` en vez de `findByTenantAndId` donde solo se comprueba existencia |
 
 **Coste:** 6 reglas, ~20 archivos nuevos o movidos, y sus pruebas se **simplifican** (dejan de
 necesitar `StepVerifier` y fakes de repositorio).
@@ -235,12 +235,12 @@ rechazo. Debe quedarse como `Finder` + un `if` explícito en el use case, o part
 
 **Valor: medio.** Alinea con el ADR-016 y con la referencia, y saca 8 clases de infraestructura.
 
-| Paso | Qué |
-|---|---|
-| B1 | El **controller** mapea el DTO web al request tipado (el mapper web se queda donde está) |
-| B2 | El **interactor** pasa a `application/primaryport/interactor/` y recibe el request tipado |
-| B3 | El interactor devuelve el DTO de `primaryport/response`, no `PageResponse`; el controller envuelve |
-| B4 | **El tenant deja de leerse dentro del interactor**: lo pasa el controller, que sí es el borde |
+| Paso | Qué                                                                                                |
+|------|----------------------------------------------------------------------------------------------------|
+| B1   | El **controller** mapea el DTO web al request tipado (el mapper web se queda donde está)           |
+| B2   | El **interactor** pasa a `application/primaryport/interactor/` y recibe el request tipado          |
+| B3   | El interactor devuelve el DTO de `primaryport/response`, no `PageResponse`; el controller envuelve |
+| B4   | **El tenant deja de leerse dentro del interactor**: lo pasa el controller, que sí es el borde      |
 
 **El punto que hay que decidir antes de tocar nada (B4):** hoy el interactor lee el principal, tal
 como sugiere el ADR-016. Si se mueve a `application`, o bien sigue leyéndolo —y entonces
@@ -274,11 +274,11 @@ archivos sin anotaciones ahí deja de ser una anomalía y pasa a ser lo esperado
 
 ## 5. Recomendación
 
-| | Hacer | Por qué |
-|---|---|---|
-| **Fase A** | ✅ Sí | Máximo orden por el menor riesgo. Las reglas van al dominio, se vuelven puras y síncronas, y los puertos dejan de traer de más. Es donde la referencia es más claramente mejor |
-| **Fase B** | ⏸️ Después, y con ADR | Correcta, pero exige decidir dónde se lee el principal, y eso enmienda el ADR-016. No es un refactor: es una decisión de arquitectura |
-| **Fase C** | ❌ No | El criterio actual (agrupar por adaptador) es mejor que el propuesto. Solo hay que documentarlo |
+|            | Hacer                 | Por qué                                                                                                                                                                        |
+|------------|-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Fase A** | ✅ Sí                  | Máximo orden por el menor riesgo. Las reglas van al dominio, se vuelven puras y síncronas, y los puertos dejan de traer de más. Es donde la referencia es más claramente mejor |
+| **Fase B** | ⏸️ Después, y con ADR | Correcta, pero exige decidir dónde se lee el principal, y eso enmienda el ADR-016. No es un refactor: es una decisión de arquitectura                                          |
+| **Fase C** | ❌ No                  | El criterio actual (agrupar por adaptador) es mejor que el propuesto. Solo hay que documentarlo                                                                                |
 
 **Y una regla que sale de todo esto, para el harness:** cuando una pieza no encuentra su sitio, casi
 siempre es porque **hace dos cosas**. La regla no cabía en el dominio porque además consultaba. El
@@ -322,7 +322,7 @@ Probarlas es `assertThatThrownBy(() -> rule.execute(...))`: sin `StepVerifier`, 
    ganancia. El valor real del paso A4 estaba en A6 —adelgazar el puerto— y eso sí se hizo:
 
    | Antes | Ahora |
-   |---|---|
+      |---|---|
    | `ApplicationRepository.findByTenantAndId` → `Mono<Application>` | `existsByTenantAndId` → `Mono<Boolean>` |
    | `TenantRepository.findById` → `Mono<Tenant>` | `findStatusById` → `Mono<TenantStatus>` |
 
@@ -336,11 +336,11 @@ Probarlas es `assertThatThrownBy(() -> rule.execute(...))`: sin `StepVerifier`, 
 
 El estudio nombraba una «consulta con rechazo»; eran **tres**, y las tres devolvían un agregado:
 
-| Contrato | Devolvía | Quién lo usaba | Resultado |
-|---|---|---|---|
-| `ApplicationMustExistForTenantRule` | `Application` | `resources`, con `.then(...)` | **Nadie usaba el agregado.** Ahora `Mono<Void>` y el puerto responde un booleano |
-| `TenantMustBeActiveRule` | `TenantResponse` | `applications` e `identity`, con `.then(...)` | Igual: `Mono<Void>`, y el puerto devuelve solo el estado |
-| `UserMustExistRule` | `SecurityUser` | `AssignTenantUseCase`, y **sí lo usaba** | Partido: la regla pura decide, y el use case trae el usuario una sola vez porque lo necesita para reasignarlo |
+| Contrato                            | Devolvía         | Quién lo usaba                                | Resultado                                                                                                     |
+|-------------------------------------|------------------|-----------------------------------------------|---------------------------------------------------------------------------------------------------------------|
+| `ApplicationMustExistForTenantRule` | `Application`    | `resources`, con `.then(...)`                 | **Nadie usaba el agregado.** Ahora `Mono<Void>` y el puerto responde un booleano                              |
+| `TenantMustBeActiveRule`            | `TenantResponse` | `applications` e `identity`, con `.then(...)` | Igual: `Mono<Void>`, y el puerto devuelve solo el estado                                                      |
+| `UserMustExistRule`                 | `SecurityUser`   | `AssignTenantUseCase`, y **sí lo usaba**      | Partido: la regla pura decide, y el use case trae el usuario una sola vez porque lo necesita para reasignarlo |
 
 Las dos primeras cargaban una fila entera para responder «¿existe?» y tiraban el resultado.
 

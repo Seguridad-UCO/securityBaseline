@@ -1,10 +1,8 @@
 package co.edu.uco.seguridad.pdp.roles.application.rule.validator;
 
-import co.edu.uco.seguridad.pdp.applications.application.primaryport.request.ApplicationOwnershipQuery;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationMustExistForTenantValidator;
 import co.edu.uco.seguridad.pdp.applications.domain.exception.ApplicationNotFoundException;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.pdp.roles.application.primaryport.request.DefineRoleRequest;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.DefineRoleRulesValidatorImpl;
 import co.edu.uco.seguridad.pdp.roles.application.secondaryport.repository.RoleRepository;
@@ -14,9 +12,6 @@ import co.edu.uco.seguridad.pdp.roles.domain.exception.DuplicateRoleNameExceptio
 import co.edu.uco.seguridad.pdp.roles.domain.model.RoleName;
 import co.edu.uco.seguridad.pdp.roles.domain.model.RoleScope;
 import co.edu.uco.seguridad.pdp.roles.domain.rule.RoleNameMustBeUniqueInScopeRule;
-import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
-import co.edu.uco.seguridad.pdp.commons.model.RoleId;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -37,8 +32,11 @@ class DefineRoleRulesValidatorImplTests {
         throw new AssertionError("must not check application existence for a tenant-scoped role");
     };
     private static final RoleNameMustBeUniqueInScopeRule NEVER_LETS_A_NAME_THROUGH =
-            input -> { throw new DuplicateRoleNameException(input.name(), input.scope()); };
-    private static final RoleNameMustBeUniqueInScopeRule ALWAYS_ACCEPTS_THE_NAME = input -> { };
+            input -> {
+                throw new DuplicateRoleNameException(input.name(), input.scope());
+            };
+    private static final RoleNameMustBeUniqueInScopeRule ALWAYS_ACCEPTS_THE_NAME = input -> {
+    };
 
     @Test
     void completes_for_a_tenant_scoped_role_with_a_free_name() {

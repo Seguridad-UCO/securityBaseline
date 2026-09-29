@@ -5,8 +5,8 @@ import co.edu.uco.seguridad.pdp.tenants.application.primaryport.response.TenantR
 import co.edu.uco.seguridad.pdp.tenants.application.secondaryport.repository.TenantRepository;
 import co.edu.uco.seguridad.pdp.tenants.application.usecase.CreateTenantUseCase;
 import co.edu.uco.seguridad.pdp.tenants.domain.Tenant;
-import co.edu.uco.seguridad.pdp.tenants.domain.rule.model.TenantCodeAvailability;
 import co.edu.uco.seguridad.pdp.tenants.domain.rule.TenantCodeMustBeUniqueRule;
+import co.edu.uco.seguridad.pdp.tenants.domain.rule.model.TenantCodeAvailability;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import reactor.core.publisher.Mono;
 

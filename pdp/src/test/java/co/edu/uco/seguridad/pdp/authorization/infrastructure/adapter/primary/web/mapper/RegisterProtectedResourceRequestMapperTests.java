@@ -11,7 +11,9 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** HU-017: movido desde {@code resources}, mismo caso — ver PLAN-HU-017.md §7. */
+/**
+ * HU-017: movido desde {@code resources}, mismo caso — ver PLAN-HU-017.md §7.
+ */
 class RegisterProtectedResourceRequestMapperTests {
 
     @Test

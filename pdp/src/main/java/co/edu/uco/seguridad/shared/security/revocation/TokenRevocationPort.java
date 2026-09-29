@@ -16,9 +16,13 @@ import java.time.Instant;
  */
 public interface TokenRevocationPort {
 
-    /** Marca como revocado todo token del sujeto emitido antes o en {@code since}. */
+    /**
+     * Marca como revocado todo token del sujeto emitido antes o en {@code since}.
+     */
     Mono<Void> revokeAllSince(UserId subject, Instant since);
 
-    /** {@code true} si {@code issuedAt} es anterior o igual al último {@code revokeAllSince} del sujeto. */
+    /**
+     * {@code true} si {@code issuedAt} es anterior o igual al último {@code revokeAllSince} del sujeto.
+     */
     Mono<Boolean> isRevoked(UserId subject, Instant issuedAt);
 }

@@ -29,12 +29,12 @@ QA desde `develop`, porque hace que lo probado y lo aprobado sean commits distin
 
 ## Flujo
 
-| Origen | Destino | Qué ocurre |
-|---|---|---|
-| `feature/*` | `develop` | PR con build, pruebas y Quality Gate. Sin despliegue. |
-| `develop` | — | Despliegue automático a DEV al hacer merge. |
-| `develop` | `qa` | PR de promoción. Al hacer merge, despliegue a QA. |
-| `qa` | `main` | PR de promoción. Al hacer merge, despliegue a PRODUCCIÓN. |
+| Origen      | Destino   | Qué ocurre                                                |
+|-------------|-----------|-----------------------------------------------------------|
+| `feature/*` | `develop` | PR con build, pruebas y Quality Gate. Sin despliegue.     |
+| `develop`   | —         | Despliegue automático a DEV al hacer merge.               |
+| `develop`   | `qa`      | PR de promoción. Al hacer merge, despliegue a QA.         |
+| `qa`        | `main`    | PR de promoción. Al hacer merge, despliegue a PRODUCCIÓN. |
 
 La promoción siempre es merge de rama a rama y nunca un rebuild desde otro origen: el artefacto que
 llega a producción proviene del mismo commit que QA aprobó.

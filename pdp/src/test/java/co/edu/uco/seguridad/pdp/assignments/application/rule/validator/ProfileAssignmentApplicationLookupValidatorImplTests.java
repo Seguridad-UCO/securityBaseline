@@ -8,12 +8,7 @@ import co.edu.uco.seguridad.pdp.assignments.domain.ProfileAssignmentCriteria;
 import co.edu.uco.seguridad.pdp.assignments.domain.exception.ProfileAssignmentNotFoundException;
 import co.edu.uco.seguridad.pdp.assignments.domain.model.ProfileAssignmentId;
 import co.edu.uco.seguridad.pdp.assignments.domain.rule.impl.ProfileAssignmentMustExistForTenantRuleImpl;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.model.ProfileId;
-import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
-import co.edu.uco.seguridad.pdp.commons.model.UserId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -24,7 +19,9 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** HU-019: resuelve a qué aplicación pertenece una asignación de perfil, para gatear su revocación. */
+/**
+ * HU-019: resuelve a qué aplicación pertenece una asignación de perfil, para gatear su revocación.
+ */
 class ProfileAssignmentApplicationLookupValidatorImplTests {
 
     private static final TenantId TENANT = new TenantId("universidad-uco");
@@ -58,7 +55,7 @@ class ProfileAssignmentApplicationLookupValidatorImplTests {
         return new ProfileAssignmentRepository() {
             @Override
             public Mono<Boolean> existsActiveByUserApplicationProfile(UserId userId, ApplicationId applicationId,
-                    ProfileId profileId, Instant now) {
+                                                                      ProfileId profileId, Instant now) {
                 throw new UnsupportedOperationException();
             }
 

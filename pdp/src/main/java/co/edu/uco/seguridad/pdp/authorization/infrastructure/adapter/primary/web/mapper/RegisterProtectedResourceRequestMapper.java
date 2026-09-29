@@ -19,7 +19,7 @@ public final class RegisterProtectedResourceRequestMapper {
     }
 
     public static RegisterProtectedResourceRequest toRequest(RegisterProtectedResourceRawRequest raw,
-            TenantId tenantId) {
+                                                             TenantId tenantId) {
         return new RegisterProtectedResourceRequest(
                 tenantId,
                 RequestFieldParser.parse("applicationId", raw.applicationId(), ApplicationId::of),

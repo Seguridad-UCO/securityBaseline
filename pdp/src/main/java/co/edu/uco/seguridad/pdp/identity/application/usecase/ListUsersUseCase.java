@@ -5,6 +5,8 @@ import co.edu.uco.seguridad.shared.contract.ReactiveOperationWithoutInput;
 
 import java.util.List;
 
-/** Puerto primario: listar el catálogo completo de usuarios. Operación administrativa. */
+/**
+ * Puerto primario: listar el catálogo completo de usuarios. Operación administrativa.
+ */
 public interface ListUsersUseCase extends ReactiveOperationWithoutInput<List<UserResponse>> {
 }

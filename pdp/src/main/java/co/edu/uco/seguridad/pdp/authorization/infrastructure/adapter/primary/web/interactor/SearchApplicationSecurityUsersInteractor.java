@@ -1,0 +1,3 @@
+package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.SearchApplicationSecurityUsersRawRequest; import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.ApplicationSecurityUserWebResponse; import co.edu.uco.seguridad.shared.contract.ReactiveOperation; import co.edu.uco.seguridad.shared.web.PageResponse;
+public interface SearchApplicationSecurityUsersInteractor extends ReactiveOperation<SearchApplicationSecurityUsersRawRequest,PageResponse<ApplicationSecurityUserWebResponse>>{}

@@ -4,7 +4,9 @@ import co.edu.uco.seguridad.pdp.assignments.domain.message.AssignmentsMessages;
 import co.edu.uco.seguridad.pdp.assignments.domain.model.AssignmentId;
 import co.edu.uco.seguridad.pdp.commons.exception.BusinessRuleViolationException;
 
-/** La asignación referenciada no existe, o no es de ese tenant. */
+/**
+ * La asignación referenciada no existe, o no es de ese tenant.
+ */
 public final class AssignmentNotFoundException extends BusinessRuleViolationException {
 
     public AssignmentNotFoundException(AssignmentId assignmentId) {

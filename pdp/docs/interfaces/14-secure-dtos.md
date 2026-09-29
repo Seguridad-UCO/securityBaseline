@@ -7,11 +7,11 @@
 La defensa en profundidad se mantiene, pero ya no descansa en Bean Validation. Hay tres barreras
 independientes y cada una sirve para algo distinto:
 
-| Barrera | Dónde | Protege contra |
-|---|---|---|
-| Contrato de petición | setters del DTO validado | Entrada HTTP ausente o mal formada |
-| Invariante de valor | constructor del value object | Cualquier llamador, venga o no de HTTP |
-| Regla de negocio | rules validator | Datos bien formados pero no permitidos |
+| Barrera              | Dónde                        | Protege contra                         |
+|----------------------|------------------------------|----------------------------------------|
+| Contrato de petición | setters del DTO validado     | Entrada HTTP ausente o mal formada     |
+| Invariante de valor  | constructor del value object | Cualquier llamador, venga o no de HTTP |
+| Regla de negocio     | rules validator              | Datos bien formados pero no permitidos |
 
 ## Justificación
 
@@ -36,7 +36,8 @@ dependencia, el compilador lo impide.
 
 ## Ubicación verificable
 
-- [`resources/infrastructure/web/dto`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/infrastructure/adapter/primary/web/dto)
+- [
+  `resources/infrastructure/web/dto`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/infrastructure/adapter/primary/web/dto)
 - `ApplicationWebResponse.java`
 - Ausencia de la dependencia: [`pom.xml`](../../pom.xml)
 - [Reglas de dominio](../domain-and-data/03-business-rules-data-integrity.md)

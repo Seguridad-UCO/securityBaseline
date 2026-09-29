@@ -3,7 +3,9 @@ package co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.dto.response.ApplicationCredentialValidationWebResponse;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 
-/** Traducción de salida: {@link TenantId} a carga útil HTTP plana (HU-013). */
+/**
+ * Traducción de salida: {@link TenantId} a carga útil HTTP plana (HU-013).
+ */
 public final class ApplicationCredentialValidationResponseMapper {
 
     private ApplicationCredentialValidationResponseMapper() {

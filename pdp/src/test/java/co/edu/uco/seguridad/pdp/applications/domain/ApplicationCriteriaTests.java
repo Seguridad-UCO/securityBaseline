@@ -1,10 +1,10 @@
 package co.edu.uco.seguridad.pdp.applications.domain;
 
+import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
+import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
-import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
-import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;

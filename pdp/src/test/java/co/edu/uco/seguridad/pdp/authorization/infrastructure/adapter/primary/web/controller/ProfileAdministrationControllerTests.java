@@ -16,7 +16,9 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** HU-019: mismas rutas y códigos que el antiguo {@code ProfileController.define/addRole}. */
+/**
+ * HU-019: mismas rutas y códigos que el antiguo {@code ProfileController.define/addRole}.
+ */
 class ProfileAdministrationControllerTests {
 
     private static final ProfileAdministrationWebResponse EXPECTED = new ProfileAdministrationWebResponse(

@@ -2,8 +2,6 @@
 
 [← Paginación](18-pagination.md) · [↑ Dominio y datos](README.md)
 
-
-
 ## Decisión arquitectónica
 
 Además de página y tamaño, se admite el rango explícito `offset` + `limit`. Ambas formas convergen
@@ -21,11 +19,11 @@ dos conjuntos de límites que puedan divergir.
 
 El mapper exige los dos parámetros del rango juntos y rechaza mezclar rango con paginación:
 
-| Query | Resultado |
-|---|---|
-| `offset=10&limit=5` | `PageWindow.ofRange(10, 5)` |
-| `offset=10` | `CONFLICTING_REQUEST_PARAMETERS` |
-| `limit=5` | `CONFLICTING_REQUEST_PARAMETERS` |
+| Query                             | Resultado                        |
+|-----------------------------------|----------------------------------|
+| `offset=10&limit=5`               | `PageWindow.ofRange(10, 5)`      |
+| `offset=10`                       | `CONFLICTING_REQUEST_PARAMETERS` |
+| `limit=5`                         | `CONFLICTING_REQUEST_PARAMETERS` |
 | `page=1&size=10&offset=0&limit=5` | `CONFLICTING_REQUEST_PARAMETERS` |
 
 Se rechaza en vez de elegir una interpretación: adivinar qué quiso decir el cliente es cómo se

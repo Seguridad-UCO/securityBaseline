@@ -19,7 +19,9 @@ import reactor.core.publisher.Mono;
 import java.util.Objects;
 import java.util.Set;
 
-/** Implementación de {@link AdministerApplicationAdministratorRemovalInteractor} (HU-020). */
+/**
+ * Implementación de {@link AdministerApplicationAdministratorRemovalInteractor} (HU-020).
+ */
 public final class AdministerApplicationAdministratorRemovalInteractorImpl
         implements AdministerApplicationAdministratorRemovalInteractor {
 
@@ -28,7 +30,7 @@ public final class AdministerApplicationAdministratorRemovalInteractorImpl
     private final AdministerApplicationAdministratorRemovalUseCase useCase;
 
     public AdministerApplicationAdministratorRemovalInteractorImpl(ApplicationOwnerLookupValidator ownerLookup,
-            SubjectUserIdLookupValidator subjectUserIdLookup, AdministerApplicationAdministratorRemovalUseCase useCase) {
+                                                                   SubjectUserIdLookupValidator subjectUserIdLookup, AdministerApplicationAdministratorRemovalUseCase useCase) {
         this.ownerLookup = Objects.requireNonNull(ownerLookup, RequiredArgumentMessages.APPLICATION_OWNER_LOOKUP_VALIDATOR);
         this.subjectUserIdLookup = Objects.requireNonNull(subjectUserIdLookup,
                 RequiredArgumentMessages.SUBJECT_USER_ID_LOOKUP_VALIDATOR);

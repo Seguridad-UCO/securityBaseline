@@ -6,7 +6,9 @@ import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.ProfileId;
 import co.edu.uco.seguridad.pdp.commons.model.UserId;
 
-/** Ya hay una asignación activa de ese perfil para (usuario, aplicación). */
+/**
+ * Ya hay una asignación activa de ese perfil para (usuario, aplicación).
+ */
 public final class DuplicateProfileAssignmentException extends ConflictBusinessRuleException {
 
     public DuplicateProfileAssignmentException(UserId userId, ApplicationId applicationId, ProfileId profileId) {

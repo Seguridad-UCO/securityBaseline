@@ -1,11 +1,11 @@
 package co.edu.uco.seguridad.pdp.authorization.application.usecase.impl;
 
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministerProfileDefinitionRequest;
+import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministrationRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.PrincipalMustBeApplicationAdministratorValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerProfileDefinitionUseCase;
-import co.edu.uco.seguridad.pdp.profiles.application.primaryport.response.ProfileResponse;
-import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministrationRequest;
 import co.edu.uco.seguridad.pdp.authorization.domain.exception.NotAuthorizedToAdministerException;
+import co.edu.uco.seguridad.pdp.profiles.application.primaryport.response.ProfileResponse;
 import co.edu.uco.seguridad.pdp.profiles.application.usecase.DefineProfileUseCase;
 import co.edu.uco.seguridad.shared.audit.AdministrationAuditRepository;
 import co.edu.uco.seguridad.shared.audit.AdministrationEvent;
@@ -33,8 +33,8 @@ public final class AdministerProfileDefinitionUseCaseImpl implements AdministerP
     private final TimeProvider time;
 
     public AdministerProfileDefinitionUseCaseImpl(PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator,
-            DefineProfileUseCase defineProfile, AdministrationAuditRepository audit, IdentifierGenerator identifiers,
-            TimeProvider time) {
+                                                  DefineProfileUseCase defineProfile, AdministrationAuditRepository audit, IdentifierGenerator identifiers,
+                                                  TimeProvider time) {
         this.mustBeAdministrator = Objects.requireNonNull(mustBeAdministrator,
                 RequiredArgumentMessages.PRINCIPAL_MUST_BE_APPLICATION_ADMINISTRATOR_VALIDATOR);
         this.defineProfile = Objects.requireNonNull(defineProfile, RequiredArgumentMessages.DEFINE_PROFILE_USE_CASE);

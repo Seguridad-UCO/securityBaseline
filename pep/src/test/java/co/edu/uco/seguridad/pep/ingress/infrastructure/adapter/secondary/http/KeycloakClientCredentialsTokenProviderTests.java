@@ -54,7 +54,7 @@ class KeycloakClientCredentialsTokenProviderTests {
     }
 
     private static KeycloakClientCredentialsTokenProvider provider(PdpServiceIdentityProperties properties,
-                                                                     ExchangeFunction exchange) {
+                                                                   ExchangeFunction exchange) {
         return new KeycloakClientCredentialsTokenProvider(properties,
                 WebClient.builder().exchangeFunction(exchange).build());
     }

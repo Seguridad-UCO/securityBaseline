@@ -12,14 +12,16 @@ import co.edu.uco.seguridad.shared.web.RequestFieldParser;
 import java.util.Optional;
 import java.util.Set;
 
-/** raw -> AccessRequest, usando RequestFieldParser. El tenant/subject llegan ya resueltos. */
+/**
+ * raw -> AccessRequest, usando RequestFieldParser. El tenant/subject llegan ya resueltos.
+ */
 public final class AuthorizeRequestMapper {
 
     private AuthorizeRequestMapper() {
     }
 
     public static AccessRequest toRequest(AuthorizeRawRequest raw, TenantId tenantId, String subject,
-            String requestId, String correlationId, Optional<UserId> subjectUserId) {
+                                          String requestId, String correlationId, Optional<UserId> subjectUserId) {
         return new AccessRequest(
                 tenantId,
                 subject,

@@ -27,7 +27,7 @@ public final class AssignApplicationAdministratorInteractorImpl implements Assig
     private final AssignApplicationAdministratorUseCase useCase;
 
     public AssignApplicationAdministratorInteractorImpl(ApplicationOwnerLookupValidator ownerLookup,
-            AssignApplicationAdministratorUseCase useCase) {
+                                                        AssignApplicationAdministratorUseCase useCase) {
         this.ownerLookup = Objects.requireNonNull(ownerLookup, RequiredArgumentMessages.APPLICATION_OWNER_LOOKUP_VALIDATOR);
         this.useCase = Objects.requireNonNull(useCase, RequiredArgumentMessages.ASSIGN_ROLE_USE_CASE);
     }

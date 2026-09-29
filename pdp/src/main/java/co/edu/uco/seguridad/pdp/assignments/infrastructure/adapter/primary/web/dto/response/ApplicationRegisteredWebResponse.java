@@ -7,5 +7,5 @@ import java.time.Instant;
  * (este endpoint vive en {@code assignments} desde HU-015, ver PLAN-HU-015.md §0).
  */
 public record ApplicationRegisteredWebResponse(String id, String tenantId, String name, String description,
-        String baseUrl, String credential, Instant registeredAt) {
+                                               String baseUrl, String credential, Instant registeredAt) {
 }

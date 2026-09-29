@@ -1,8 +1,8 @@
 package co.edu.uco.seguridad.pdp.assignments.application.usecase.impl;
 
 import co.edu.uco.seguridad.pdp.assignments.application.primaryport.request.AssignProfileRequest;
-import co.edu.uco.seguridad.pdp.assignments.application.primaryport.response.ProfileAssignmentResponse;
 import co.edu.uco.seguridad.pdp.assignments.application.primaryport.request.AssignRoleRequest;
+import co.edu.uco.seguridad.pdp.assignments.application.primaryport.response.ProfileAssignmentResponse;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.AssignProfileRulesValidator;
 import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository.ProfileAssignmentRepository;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.AssignProfileUseCase;
@@ -33,7 +33,7 @@ public final class AssignProfileUseCaseImpl implements AssignProfileUseCase {
     private final TimeProvider time;
 
     public AssignProfileUseCaseImpl(AssignProfileRulesValidator rules, AssignRoleUseCase assignRoleUseCase,
-            ProfileAssignmentRepository repository, IdentifierGenerator identifiers, TimeProvider time) {
+                                    ProfileAssignmentRepository repository, IdentifierGenerator identifiers, TimeProvider time) {
         this.rules = Objects.requireNonNull(rules, RequiredArgumentMessages.ASSIGN_PROFILE_RULES_VALIDATOR);
         this.assignRoleUseCase = Objects.requireNonNull(assignRoleUseCase, RequiredArgumentMessages.ASSIGN_ROLE_USE_CASE);
         this.repository = Objects.requireNonNull(repository, RequiredArgumentMessages.PROFILE_ASSIGNMENT_REPOSITORY);

@@ -5,7 +5,9 @@ import co.edu.uco.seguridad.pdp.profiles.domain.message.ProfilesMessages;
 import co.edu.uco.seguridad.pdp.profiles.domain.model.ProfileName;
 import co.edu.uco.seguridad.pdp.roles.domain.model.RoleScope;
 
-/** Ya hay un perfil con ese nombre en ese alcance exacto (nivel + inquilino + aplicación). */
+/**
+ * Ya hay un perfil con ese nombre en ese alcance exacto (nivel + inquilino + aplicación).
+ */
 public final class DuplicateProfileNameException extends ConflictBusinessRuleException {
 
     public DuplicateProfileNameException(ProfileName name, RoleScope scope) {

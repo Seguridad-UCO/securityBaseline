@@ -4,4 +4,5 @@ import co.edu.uco.seguridad.pdp.applications.application.primaryport.request.Upd
 import co.edu.uco.seguridad.pdp.applications.application.primaryport.response.RegisteredApplicationResponse;
 import co.edu.uco.seguridad.shared.contract.ReactiveOperation;
 
-public interface UpdateApplicationUseCase extends ReactiveOperation<UpdateApplicationRequest, RegisteredApplicationResponse> { }
+public interface UpdateApplicationUseCase extends ReactiveOperation<UpdateApplicationRequest, RegisteredApplicationResponse> {
+}

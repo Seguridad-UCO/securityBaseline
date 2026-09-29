@@ -3,13 +3,20 @@
 ## Metadata
 
 - **ID:** HU-020
-- **Slice:** `assignments` (dos casos de uso nuevos: quitar y listar; reutiliza `AssignApplicationAdministratorUseCase` de HU-015 para agregar) + `authorization` (los gatea y expone en público)
+- **Slice:** `assignments` (dos casos de uso nuevos: quitar y listar; reutiliza `AssignApplicationAdministratorUseCase`
+  de HU-015 para agregar) + `authorization` (los gatea y expone en público)
 - **Tipo:** Escritura + consulta
 - **Fecha:** 2026-09-15
 - **Rama sugerida:** `feature/HU-020-autoservicio-administradores`
-- **Fuentes:** `pdp/docs/ai-harness/workspace/HU-020.md` (dictada), `ADR-023-application-administration-model.md`, código real: `AssignApplicationAdministratorUseCaseImpl`/`InternalApplicationAdministratorController` (HU-015), `ApplicationOwnerLookupValidator` (resuelve tenant desde `applicationId` sin pasar por el principal), `AssignmentRepository`/`AssignmentCriteria` (consulta por rol+tenant ya existe y alcanza para listar), `RevokeAssignmentUseCase` (ya gateado por HU-018)
+- **Fuentes:** `pdp/docs/ai-harness/workspace/HU-020.md` (dictada), `ADR-023-application-administration-model.md`,
+  código real: `AssignApplicationAdministratorUseCaseImpl`/`InternalApplicationAdministratorController` (HU-015),
+  `ApplicationOwnerLookupValidator` (resuelve tenant desde `applicationId` sin pasar por el principal),
+  `AssignmentRepository`/`AssignmentCriteria` (consulta por rol+tenant ya existe y alcanza para listar),
+  `RevokeAssignmentUseCase` (ya gateado por HU-018)
 - **Criterios de la línea base que toca:** 1, 2, 3, 9, 11, 12, 21, 22
-- **Decisión de Sebastián (gate 1, vía `AskUserQuestion`):** el último administrador activo de una aplicación **no puede ser revocado** — nueva regla de negocio, no una decisión de OPA (es una restricción de integridad del catálogo, igual que "no duplicar una asignación activa" en HU-005).
+- **Decisión de Sebastián (gate 1, vía `AskUserQuestion`):** el último administrador activo de una aplicación **no puede
+  ser revocado** — nueva regla de negocio, no una decisión de OPA (es una restricción de integridad del catálogo, igual
+  que "no duplicar una asignación activa" en HU-005).
 
 ## 1. Resumen funcional
 
@@ -24,23 +31,23 @@ una aplicación sin ningún administrador.
 
 ## 2. Criterios de aceptación
 
-| # | Criterio | Resultado esperado |
-|---|---|---|
-| 1 | Agregar un administrador, siendo administrador de la aplicación | `201`, misma forma que el backfill interno |
-| 2 | Agregar un administrador, sin ser administrador de la aplicación | `400 NOT_AUTHORIZED_TO_ADMINISTER` |
-| 3 | Listar administradores, siendo administrador | `200`, lista de administradores activos |
-| 4 | Listar administradores, sin ser administrador | `400 NOT_AUTHORIZED_TO_ADMINISTER` |
-| 5 | Quitar un administrador que **no** es el único activo, siendo administrador | `200`, revocado |
-| 6 | Quitar un administrador sin ser administrador de la aplicación | `400 NOT_AUTHORIZED_TO_ADMINISTER` |
-| 7 | Quitar al **único** administrador activo (incluido a sí mismo) | `400`, código nuevo `CANNOT_REMOVE_LAST_ADMINISTRATOR`, la asignación **no** se revoca |
-| 8 | El endpoint interno mTLS de backfill (HU-015) sigue funcionando sin cambios | Cero regresión |
-| 9 | Suite completa | `verificar.ps1` en verde |
+| # | Criterio                                                                    | Resultado esperado                                                                     |
+|---|-----------------------------------------------------------------------------|----------------------------------------------------------------------------------------|
+| 1 | Agregar un administrador, siendo administrador de la aplicación             | `201`, misma forma que el backfill interno                                             |
+| 2 | Agregar un administrador, sin ser administrador de la aplicación            | `400 NOT_AUTHORIZED_TO_ADMINISTER`                                                     |
+| 3 | Listar administradores, siendo administrador                                | `200`, lista de administradores activos                                                |
+| 4 | Listar administradores, sin ser administrador                               | `400 NOT_AUTHORIZED_TO_ADMINISTER`                                                     |
+| 5 | Quitar un administrador que **no** es el único activo, siendo administrador | `200`, revocado                                                                        |
+| 6 | Quitar un administrador sin ser administrador de la aplicación              | `400 NOT_AUTHORIZED_TO_ADMINISTER`                                                     |
+| 7 | Quitar al **único** administrador activo (incluido a sí mismo)              | `400`, código nuevo `CANNOT_REMOVE_LAST_ADMINISTRATOR`, la asignación **no** se revoca |
+| 8 | El endpoint interno mTLS de backfill (HU-015) sigue funcionando sin cambios | Cero regresión                                                                         |
+| 9 | Suite completa                                                              | `verificar.ps1` en verde                                                               |
 
 ## 3. Reglas de negocio
 
-| # | Regla | Dónde vive | Puerto que trae el dato | Excepción → HTTP |
-|---|---|---|---|---|
-| R1 | Quien agrega/quita/lista administradores debe administrar la aplicación | Reutiliza `PrincipalMustBeApplicationAdministratorValidator` (ya existe) | `AuthorizeAdministrationUseCase` | `NotAuthorizedToAdministerException` → 400 (ya existe) |
+| #  | Regla                                                                                             | Dónde vive                                                                                                                    | Puerto que trae el dato                                                                                                                                                          | Excepción → HTTP                                       |
+|----|---------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------|
+| R1 | Quien agrega/quita/lista administradores debe administrar la aplicación                           | Reutiliza `PrincipalMustBeApplicationAdministratorValidator` (ya existe)                                                      | `AuthorizeAdministrationUseCase`                                                                                                                                                 | `NotAuthorizedToAdministerException` → 400 (ya existe) |
 | R2 | No se puede revocar el rol `ADMIN` si es la única asignación activa de ese rol para la aplicación | **Nueva** — `LastAdministratorMustNotBeRevokedRule` **[N]**, pura y síncrona (recibe el conteo ya resuelto, no consulta nada) | `RemoveApplicationAdministratorUseCaseImpl` resuelve el conteo vía `AssignmentRepository.findBy(AssignmentCriteria.of(adminRoleId, tenantId), window)` antes de invocar la regla | `CannotRemoveLastAdministratorException` **[N]** → 400 |
 
 > **Por qué R2 es una `Rule` nueva y no una condición inline en el use case:** decide, con excepción
@@ -56,14 +63,14 @@ Ninguno nuevo. `Assignment`/`Role` (existentes) no cambian.
 
 ### Value objects / hechos de regla
 
-| Tipo | Componentes | Vive en |
-|---|---|---|
+| Tipo                                                                                    | Componentes                                                 | Vive en                          |
+|-----------------------------------------------------------------------------------------|-------------------------------------------------------------|----------------------------------|
 | `AdministratorRevocationEligibility` (hecho de `LastAdministratorMustNotBeRevokedRule`) | `ApplicationId applicationId, int activeAdministratorCount` | `assignments/domain/rule/model/` |
 
 ### Excepciones
 
-| Excepción | Código | Vive en |
-|---|---|---|
+| Excepción                                | Código                             | Vive en                         |
+|------------------------------------------|------------------------------------|---------------------------------|
 | `CannotRemoveLastAdministratorException` | `CANNOT_REMOVE_LAST_ADMINISTRATOR` | `assignments/domain/exception/` |
 
 ## 5. Persistencia
@@ -74,11 +81,11 @@ y alcanza para listar/contar los administradores activos de una aplicación (el 
 
 ## 6. Endpoint
 
-| Verbo | Ruta | Código de éxito | Cuerpo de entrada | Cuerpo de salida |
-|---|---|---|---|---|
-| `POST` | `/api/v1/applications/{applicationId}/administrators` | `201` | `{"userId": "..."}` | `ApplicationAdministratorWebResponse` |
-| `DELETE` | `/api/v1/applications/{applicationId}/administrators/{userId}` | `200` | — | — |
-| `GET` | `/api/v1/applications/{applicationId}/administrators` | `200` | — | `List<ApplicationAdministratorWebResponse>` (sin paginación — el conteo esperado de administradores por aplicación es pequeño; si eso deja de ser cierto, es una historia futura, no una suposición a la que valga la pena diseñar hoy) |
+| Verbo    | Ruta                                                           | Código de éxito | Cuerpo de entrada   | Cuerpo de salida                                                                                                                                                                                                                        |
+|----------|----------------------------------------------------------------|-----------------|---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `POST`   | `/api/v1/applications/{applicationId}/administrators`          | `201`           | `{"userId": "..."}` | `ApplicationAdministratorWebResponse`                                                                                                                                                                                                   |
+| `DELETE` | `/api/v1/applications/{applicationId}/administrators/{userId}` | `200`           | —                   | —                                                                                                                                                                                                                                       |
+| `GET`    | `/api/v1/applications/{applicationId}/administrators`          | `200`           | —                   | `List<ApplicationAdministratorWebResponse>` (sin paginación — el conteo esperado de administradores por aplicación es pequeño; si eso deja de ser cierto, es una historia futura, no una suposición a la que valga la pena diseñar hoy) |
 
 Vive en un controller nuevo, `ApplicationAdministratorController` (`authorization`) — no se fusiona
 con `ApplicationAdministrationController` (remove/rotate de HU-015, capacidad distinta) ni con
@@ -307,29 +314,29 @@ asumirlo.
 
 ## 9. Casos de prueba esperados
 
-| Capa | Clase de prueba | Casos |
-|---|---|---|
-| `domain` (`assignments`) | `LastAdministratorMustNotBeRevokedRuleImplTests` | conteo > 1 → no lanza; conteo == 1 → `CannotRemoveLastAdministratorException`; conteo == 0 → decisión explícita del tester/implementador (no debería ocurrir en la práctica — documentarlo, no silenciarlo) |
-| `application` (`assignments`) | `RemoveApplicationAdministratorUseCaseImplTests` | revoca cuando hay más de un administrador; rechaza cuando es el único, sin llegar a `RevokeAssignmentUseCase` |
-| `application` (`assignments`) | `ListApplicationAdministratorsUseCaseImplTests` | devuelve la lista de `AssignmentResponse` que el repositorio resuelve |
-| `application` (`authorization`) | `AdministerApplicationAdministratorAssignmentUseCaseImplTests` | ALLOW → delega en `AssignApplicationAdministratorUseCase`; DENY → `NotAuthorizedToAdministerException`, sin invocarlo |
-| `application` (`authorization`) | `AdministerApplicationAdministratorRemovalUseCaseImplTests` | mismos dos casos, sobre `RemoveApplicationAdministratorUseCase` |
-| `application` (`authorization`) | `AdministerApplicationAdministratorListUseCaseImplTests` | mismos dos casos, sobre `ListApplicationAdministratorsUseCase` |
-| `infrastructure` (`authorization`) | 3 `*InteractorImplTests` | construyen `AdministrationRequest` resolviendo `tenantId` vía `ApplicationOwnerLookupValidator` desde el `applicationId` de la ruta |
-| `infrastructure` (`authorization`) | `ApplicationAdministratorControllerTests` | delega a cada interactor, responde 201/200/200 |
+| Capa                               | Clase de prueba                                                | Casos                                                                                                                                                                                                       |
+|------------------------------------|----------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `domain` (`assignments`)           | `LastAdministratorMustNotBeRevokedRuleImplTests`               | conteo > 1 → no lanza; conteo == 1 → `CannotRemoveLastAdministratorException`; conteo == 0 → decisión explícita del tester/implementador (no debería ocurrir en la práctica — documentarlo, no silenciarlo) |
+| `application` (`assignments`)      | `RemoveApplicationAdministratorUseCaseImplTests`               | revoca cuando hay más de un administrador; rechaza cuando es el único, sin llegar a `RevokeAssignmentUseCase`                                                                                               |
+| `application` (`assignments`)      | `ListApplicationAdministratorsUseCaseImplTests`                | devuelve la lista de `AssignmentResponse` que el repositorio resuelve                                                                                                                                       |
+| `application` (`authorization`)    | `AdministerApplicationAdministratorAssignmentUseCaseImplTests` | ALLOW → delega en `AssignApplicationAdministratorUseCase`; DENY → `NotAuthorizedToAdministerException`, sin invocarlo                                                                                       |
+| `application` (`authorization`)    | `AdministerApplicationAdministratorRemovalUseCaseImplTests`    | mismos dos casos, sobre `RemoveApplicationAdministratorUseCase`                                                                                                                                             |
+| `application` (`authorization`)    | `AdministerApplicationAdministratorListUseCaseImplTests`       | mismos dos casos, sobre `ListApplicationAdministratorsUseCase`                                                                                                                                              |
+| `infrastructure` (`authorization`) | 3 `*InteractorImplTests`                                       | construyen `AdministrationRequest` resolviendo `tenantId` vía `ApplicationOwnerLookupValidator` desde el `applicationId` de la ruta                                                                         |
+| `infrastructure` (`authorization`) | `ApplicationAdministratorControllerTests`                      | delega a cada interactor, responde 201/200/200                                                                                                                                                              |
 
 Presupuesto total estimado: **20-24 pruebas**.
 
 ## 10. Trazabilidad
 
-| Fase | Estado | Fecha |
-|---|---|---|
-| Plan | ✅ Generado | 2026-09-15 |
-| Contrato aprobado (gate 1) | ✅ Aprobado | 2026-09-15 |
-| Pruebas en rojo | ✅ Confirmado | 2026-09-15 |
-| Implementación en verde | ✅ Verde | 2026-09-15 |
-| Validación | ✅ APROBADO — ver REPORTE-HU-020.md | 2026-09-15 |
-| Entrega (gate 2) | ⏳ Pendiente — confirmar commit/push | |
+| Fase                       | Estado                              | Fecha      |
+|----------------------------|-------------------------------------|------------|
+| Plan                       | ✅ Generado                          | 2026-09-15 |
+| Contrato aprobado (gate 1) | ✅ Aprobado                          | 2026-09-15 |
+| Pruebas en rojo            | ✅ Confirmado                        | 2026-09-15 |
+| Implementación en verde    | ✅ Verde                             | 2026-09-15 |
+| Validación                 | ✅ APROBADO — ver REPORTE-HU-020.md  | 2026-09-15 |
+| Entrega (gate 2)           | ⏳ Pendiente — confirmar commit/push |            |
 
 ## 11. Ambigüedades pendientes
 

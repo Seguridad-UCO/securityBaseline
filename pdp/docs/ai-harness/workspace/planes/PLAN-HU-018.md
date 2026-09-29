@@ -3,12 +3,15 @@
 ## Metadata
 
 - **ID:** HU-018
-- **Slice:** `assignments` (pierde dos escrituras) y `authorization` (las recibe, orquestadas) — mismo patrón que HU-016/HU-017
+- **Slice:** `assignments` (pierde dos escrituras) y `authorization` (las recibe, orquestadas) — mismo patrón que
+  HU-016/HU-017
 - **Tipo:** Escritura
 - **Fecha:** 2026-09-14
 - **Rama sugerida:** `feature/HU-018-gatear-asignaciones-administracion`
-- **Fuentes:** `pdp/docs/ai-harness/workspace/HU-018.md` (dictada), `ADR-023-application-administration-model.md`, código real: `assignments/*`, `authorization/*` (HU-016/HU-017 como precedente exacto de cableado)
-- **Criterios de la línea base que toca:** 1, 2, 3, 9, 11, 12, 21, 22 — sin 13/14/20 nuevos (se mueven DTOs existentes, no se crean formas nuevas), sin 5/6 nuevos (rutas y códigos de éxito sin cambio)
+- **Fuentes:** `pdp/docs/ai-harness/workspace/HU-018.md` (dictada), `ADR-023-application-administration-model.md`,
+  código real: `assignments/*`, `authorization/*` (HU-016/HU-017 como precedente exacto de cableado)
+- **Criterios de la línea base que toca:** 1, 2, 3, 9, 11, 12, 21, 22 — sin 13/14/20 nuevos (se mueven DTOs existentes,
+  no se crean formas nuevas), sin 5/6 nuevos (rutas y códigos de éxito sin cambio)
 
 ## 1. Resumen funcional
 
@@ -27,27 +30,27 @@ la toca), autoservicio de administradores (HU-020) ni auditoría administrativa 
 
 ## 2. Criterios de aceptación
 
-| # | Criterio | Resultado esperado |
-|---|---|---|
-| 1 | Asignar un rol como administrador de la aplicación | `201`, asignación creada, igual que hoy |
-| 2 | Asignar un rol **sin** ser administrador de esa aplicación | `400 NOT_AUTHORIZED_TO_ADMINISTER`, la asignación **no** se crea |
-| 3 | Revocar una asignación como administrador de la aplicación dueña de la asignación | `200`, revocada, igual que hoy |
-| 4 | Revocar una asignación **sin** ser administrador de esa aplicación | `400 NOT_AUTHORIZED_TO_ADMINISTER`, la asignación **no** se revoca |
-| 5 | `GET /api/v1/roles/{roleId}/assignments` (listar) | Sin cambios — no gateado, sigue en `assignments` |
-| 6 | Revocar una asignación inexistente | `AssignmentNotFoundException`, igual que hoy — el lookup de aplicación no lo enmascara |
-| 7 | `AssignApplicationAdministratorUseCase` (asignar/quitar administrador, HU-015) | Sin cambios — no es esta historia |
-| 8 | Suite completa | `verificar.ps1` en verde |
+| # | Criterio                                                                          | Resultado esperado                                                                     |
+|---|-----------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|
+| 1 | Asignar un rol como administrador de la aplicación                                | `201`, asignación creada, igual que hoy                                                |
+| 2 | Asignar un rol **sin** ser administrador de esa aplicación                        | `400 NOT_AUTHORIZED_TO_ADMINISTER`, la asignación **no** se crea                       |
+| 3 | Revocar una asignación como administrador de la aplicación dueña de la asignación | `200`, revocada, igual que hoy                                                         |
+| 4 | Revocar una asignación **sin** ser administrador de esa aplicación                | `400 NOT_AUTHORIZED_TO_ADMINISTER`, la asignación **no** se revoca                     |
+| 5 | `GET /api/v1/roles/{roleId}/assignments` (listar)                                 | Sin cambios — no gateado, sigue en `assignments`                                       |
+| 6 | Revocar una asignación inexistente                                                | `AssignmentNotFoundException`, igual que hoy — el lookup de aplicación no lo enmascara |
+| 7 | `AssignApplicationAdministratorUseCase` (asignar/quitar administrador, HU-015)    | Sin cambios — no es esta historia                                                      |
+| 8 | Suite completa                                                                    | `verificar.ps1` en verde                                                               |
 
 ## 3. Reglas de negocio
 
 Ninguna regla nueva: se reutiliza el mecanismo de HU-009 vía
 `PrincipalMustBeApplicationAdministratorValidator`, ya implementado y probado.
 
-| # | Regla | Dónde vive | Puerto que trae el dato | Excepción → HTTP |
-|---|---|---|---|---|
-| R1 | Quien asigna un rol debe administrar la aplicación de la asignación | Reutiliza `PrincipalMustBeApplicationAdministratorValidator` | `AuthorizeAdministrationUseCase` | `NotAuthorizedToAdministerException` → 400 |
-| R2 | Quien revoca una asignación debe administrar la aplicación **de la asignación existente** | Ídem R1 | Ídem, más `AssignmentApplicationLookupValidator` **[N]** para resolver el `applicationId` de la asignación | Ídem |
-| R3 | Gate siempre incondicional | Decisión de alcance: `AssignRoleRequest`/toda `Assignment` tiene `applicationId` obligatorio — no hay caso "sin aplicación" que excluir, a diferencia de HU-016 | — | — |
+| #  | Regla                                                                                     | Dónde vive                                                                                                                                                      | Puerto que trae el dato                                                                                    | Excepción → HTTP                           |
+|----|-------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|--------------------------------------------|
+| R1 | Quien asigna un rol debe administrar la aplicación de la asignación                       | Reutiliza `PrincipalMustBeApplicationAdministratorValidator`                                                                                                    | `AuthorizeAdministrationUseCase`                                                                           | `NotAuthorizedToAdministerException` → 400 |
+| R2 | Quien revoca una asignación debe administrar la aplicación **de la asignación existente** | Ídem R1                                                                                                                                                         | Ídem, más `AssignmentApplicationLookupValidator` **[N]** para resolver el `applicationId` de la asignación | Ídem                                       |
+| R3 | Gate siempre incondicional                                                                | Decisión de alcance: `AssignRoleRequest`/toda `Assignment` tiene `applicationId` obligatorio — no hay caso "sin aplicación" que excluir, a diferencia de HU-016 | —                                                                                                          | —                                          |
 
 ## 4. Modelo de dominio afectado
 
@@ -61,11 +64,11 @@ Ninguno nuevo. Se reutilizan `ApplicationId`, `TenantId`, `UserId`, `RoleId`, `A
 
 ### DTOs nuevos
 
-| DTO | Componentes | Invariantes | Vive en |
-|---|---|---|---|
-| `AssignmentOwnershipQuery` | `AssignmentId assignmentId, TenantId tenantId` | Ambos `requireNonNull` — mismo patrón que `RoleOwnershipQuery` | `assignments/application/primaryport/request/` |
-| `AdministerAssignmentCreationRequest` | `AdministrationRequest administration, AssignRoleRequest assignment` | Ambos `requireNonNull` — **sin `Optional`**, mismo criterio que HU-017 (siempre hay aplicación) | `authorization/application/primaryport/request/` |
-| `AdministerAssignmentRevocationRequest` | `AdministrationRequest administration, RevokeAssignmentRequest revocation` | Ídem | `authorization/application/primaryport/request/` |
+| DTO                                     | Componentes                                                                | Invariantes                                                                                     | Vive en                                          |
+|-----------------------------------------|----------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------|--------------------------------------------------|
+| `AssignmentOwnershipQuery`              | `AssignmentId assignmentId, TenantId tenantId`                             | Ambos `requireNonNull` — mismo patrón que `RoleOwnershipQuery`                                  | `assignments/application/primaryport/request/`   |
+| `AdministerAssignmentCreationRequest`   | `AdministrationRequest administration, AssignRoleRequest assignment`       | Ambos `requireNonNull` — **sin `Optional`**, mismo criterio que HU-017 (siempre hay aplicación) | `authorization/application/primaryport/request/` |
+| `AdministerAssignmentRevocationRequest` | `AdministrationRequest administration, RevokeAssignmentRequest revocation` | Ídem                                                                                            | `authorization/application/primaryport/request/` |
 
 ## 5. Persistencia
 
@@ -74,11 +77,11 @@ que ya existe.
 
 ## 6. Endpoint
 
-| Verbo | Ruta | Código de éxito | Cuerpo de entrada | Cuerpo de salida |
-|---|---|---|---|---|
-| `POST` | `/api/v1/roles/{roleId}/assignments` | `201` (sin cambio) | `AssignRoleRawRequest` (sin cambio de forma) | `AssignmentAdministrationWebResponse` (misma forma que `AssignmentWebResponse`, nueva clase — mismo criterio que HU-016/HU-017: no reutiliza el nombre del DTO de la respuesta de la otra clase para no acoplar módulos por el nombre de una clase) |
-| `DELETE` | `/api/v1/roles/{roleId}/assignments/{assignmentId}` | `200` (sin cambio) | — | — |
-| `GET` | `/api/v1/roles/{roleId}/assignments` | `200` (sin cambio) | — | — (permanece en `assignments`, sin tocar) |
+| Verbo    | Ruta                                                | Código de éxito    | Cuerpo de entrada                            | Cuerpo de salida                                                                                                                                                                                                                                    |
+|----------|-----------------------------------------------------|--------------------|----------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `POST`   | `/api/v1/roles/{roleId}/assignments`                | `201` (sin cambio) | `AssignRoleRawRequest` (sin cambio de forma) | `AssignmentAdministrationWebResponse` (misma forma que `AssignmentWebResponse`, nueva clase — mismo criterio que HU-016/HU-017: no reutiliza el nombre del DTO de la respuesta de la otra clase para no acoplar módulos por el nombre de una clase) |
+| `DELETE` | `/api/v1/roles/{roleId}/assignments/{assignmentId}` | `200` (sin cambio) | —                                            | —                                                                                                                                                                                                                                                   |
+| `GET`    | `/api/v1/roles/{roleId}/assignments`                | `200` (sin cambio) | —                                            | — (permanece en `assignments`, sin tocar)                                                                                                                                                                                                           |
 
 **Las dos rutas de escritura se mueven de `AssignmentController` (`assignments`) a un nuevo
 `AssignmentAdministrationController` (`authorization`).** Mismo razonamiento de Modulith que
@@ -241,28 +244,28 @@ Verificar igual compilando.
 > mapper propio o si el interactor construía el request directo) se mueven a `authorization` — trabajo
 > del tester/implementador.
 
-| Capa | Clase de prueba | Casos |
-|---|---|---|
-| `application` (`assignments`) | `AssignmentApplicationLookupValidatorImplTests` | asignación existente → `ApplicationId` correcto; asignación inexistente → `AssignmentNotFoundException` |
-| `application` (`authorization`) | `AdministerAssignmentCreationUseCaseImplTests` | decisión `ALLOW` → delega y devuelve `AssignmentResponse`; rechazo → `NotAuthorizedToAdministerException`, `AssignRoleUseCase` no se invoca |
-| `application` (`authorization`) | `AdministerAssignmentRevocationUseCaseImplTests` | mismos dos casos, sobre `RevokeAssignmentUseCase` |
-| `infrastructure` (`authorization`) | `AdministerAssignmentCreationInteractorImplTests` | construye `AdministrationRequest` directo desde `assignment.applicationId()`, sin lookup |
-| `infrastructure` (`authorization`) | `AdministerAssignmentRevocationInteractorImplTests` | resuelve el `applicationId` vía `AssignmentApplicationLookupValidator`; propaga `AssignmentNotFoundException` si no existe |
-| `infrastructure` (`authorization`) | `AssignmentAdministrationControllerTests` | delega a cada interactor, responde 201/200 |
-| `infrastructure` (`assignments`) | `AssignmentControllerTests` (ajustado) | ya no prueba `assign`/`revoke`; sigue probando `list` |
+| Capa                               | Clase de prueba                                     | Casos                                                                                                                                       |
+|------------------------------------|-----------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| `application` (`assignments`)      | `AssignmentApplicationLookupValidatorImplTests`     | asignación existente → `ApplicationId` correcto; asignación inexistente → `AssignmentNotFoundException`                                     |
+| `application` (`authorization`)    | `AdministerAssignmentCreationUseCaseImplTests`      | decisión `ALLOW` → delega y devuelve `AssignmentResponse`; rechazo → `NotAuthorizedToAdministerException`, `AssignRoleUseCase` no se invoca |
+| `application` (`authorization`)    | `AdministerAssignmentRevocationUseCaseImplTests`    | mismos dos casos, sobre `RevokeAssignmentUseCase`                                                                                           |
+| `infrastructure` (`authorization`) | `AdministerAssignmentCreationInteractorImplTests`   | construye `AdministrationRequest` directo desde `assignment.applicationId()`, sin lookup                                                    |
+| `infrastructure` (`authorization`) | `AdministerAssignmentRevocationInteractorImplTests` | resuelve el `applicationId` vía `AssignmentApplicationLookupValidator`; propaga `AssignmentNotFoundException` si no existe                  |
+| `infrastructure` (`authorization`) | `AssignmentAdministrationControllerTests`           | delega a cada interactor, responde 201/200                                                                                                  |
+| `infrastructure` (`assignments`)   | `AssignmentControllerTests` (ajustado)              | ya no prueba `assign`/`revoke`; sigue probando `list`                                                                                       |
 
 Presupuesto total estimado: **12–15 pruebas**.
 
 ## 10. Trazabilidad
 
-| Fase | Estado | Fecha |
-|---|---|---|
-| Plan | ✅ Generado | 2026-09-14 |
-| Contrato aprobado (gate 1) | ✅ Aprobado | 2026-09-14 |
-| Pruebas en rojo | ✅ Confirmado (8 casos, `UnsupportedOperationException`) | 2026-09-14 |
-| Implementación en verde | ✅ Verde (675 pruebas) | 2026-09-15 |
-| Validación | ✅ APROBADO — ver `REPORTE-HU-018.md` | 2026-09-15 |
-| Entrega (gate 2) | ⏳ Pendiente de confirmación para commit y push | |
+| Fase                       | Estado                                                  | Fecha      |
+|----------------------------|---------------------------------------------------------|------------|
+| Plan                       | ✅ Generado                                              | 2026-09-14 |
+| Contrato aprobado (gate 1) | ✅ Aprobado                                              | 2026-09-14 |
+| Pruebas en rojo            | ✅ Confirmado (8 casos, `UnsupportedOperationException`) | 2026-09-14 |
+| Implementación en verde    | ✅ Verde (675 pruebas)                                   | 2026-09-15 |
+| Validación                 | ✅ APROBADO — ver `REPORTE-HU-018.md`                    | 2026-09-15 |
+| Entrega (gate 2)           | ⏳ Pendiente de confirmación para commit y push          |            |
 
 ## 11. Ambigüedades pendientes
 

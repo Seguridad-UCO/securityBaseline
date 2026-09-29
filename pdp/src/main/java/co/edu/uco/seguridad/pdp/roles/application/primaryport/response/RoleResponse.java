@@ -10,7 +10,9 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.Set;
 
-/** Salida del núcleo: value objects, sin aplanar. El aplanado es del adaptador web. */
+/**
+ * Salida del núcleo: value objects, sin aplanar. El aplanado es del adaptador web.
+ */
 public record RoleResponse(RoleId id, RoleName name, RoleScope scope, Set<ResourceId> resources, Instant registeredAt) {
 
     public RoleResponse {

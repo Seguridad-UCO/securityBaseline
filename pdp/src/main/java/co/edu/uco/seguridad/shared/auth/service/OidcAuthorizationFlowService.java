@@ -2,8 +2,8 @@ package co.edu.uco.seguridad.shared.auth.service;
 
 import co.edu.uco.seguridad.shared.auth.model.OidcFlowIntent;
 import org.springframework.context.annotation.Profile;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.server.DefaultServerOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.server.ServerAuthorizationRequestRepository;
@@ -33,8 +33,8 @@ public final class OidcAuthorizationFlowService {
     private final OidcReturnTargetPolicy returnTargetPolicy;
 
     public OidcAuthorizationFlowService(ReactiveClientRegistrationRepository clientRegistrations,
-            ServerAuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository,
-            OidcFlowStateService flowState, OidcReturnTargetPolicy returnTargetPolicy) {
+                                        ServerAuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository,
+                                        OidcFlowStateService flowState, OidcReturnTargetPolicy returnTargetPolicy) {
         this.authorizationRequestRepository = authorizationRequestRepository;
         this.flowState = flowState;
         this.returnTargetPolicy = returnTargetPolicy;
@@ -53,7 +53,7 @@ public final class OidcAuthorizationFlowService {
     }
 
     private Mono<Void> authorize(ServerWebExchange exchange, OidcFlowIntent intent,
-            Mono<OAuth2AuthorizationRequest> authorizationRequestMono) {
+                                 Mono<OAuth2AuthorizationRequest> authorizationRequestMono) {
         return authorizationRequestMono
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Client registration not found")))
                 .map(request -> customize(request, intent, exchange))
@@ -68,7 +68,7 @@ public final class OidcAuthorizationFlowService {
     }
 
     private OAuth2AuthorizationRequest customize(OAuth2AuthorizationRequest request, OidcFlowIntent intent,
-            ServerWebExchange exchange) {
+                                                 ServerWebExchange exchange) {
         OAuth2AuthorizationRequest.Builder builder = OAuth2AuthorizationRequest.from(request);
         builder.attributes(attributes -> attributes.put(OidcFlowStateService.FLOW_INTENT_ATTRIBUTE, intent.name()));
         if (intent == OidcFlowIntent.REGISTER) {

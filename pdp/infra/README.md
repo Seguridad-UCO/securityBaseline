@@ -7,31 +7,31 @@ fuente de verdad — esta tabla es un snapshot, revisarla si algo no cuadra.
 
 ### `rg-pdp-shared-v1` — compartido entre DEV y PROD (eastus2)
 
-| Recurso | Tipo | Para qué |
-|---|---|---|
-| `vm-pdp-surrealdb-shared` | VM (`Standard_B1s`) | SurrealDB de DEV — `20.242.47.139:8000` |
-| `vm-pdp-keycloak-shared` | VM (`Standard_B2s`) | Keycloak real, realm `pdp` (ADR-020) — `20.22.186.196:8080` |
+| Recurso                   | Tipo                | Para qué                                                    |
+|---------------------------|---------------------|-------------------------------------------------------------|
+| `vm-pdp-surrealdb-shared` | VM (`Standard_B1s`) | SurrealDB de DEV — `20.242.47.139:8000`                     |
+| `vm-pdp-keycloak-shared`  | VM (`Standard_B2s`) | Keycloak real, realm `pdp` (ADR-020) — `20.22.186.196:8080` |
 
 Cada VM trae su propio VNet, NSG, NIC, IP pública y disco — no listados aparte, se identifican por
 el mismo prefijo (`vm-pdp-surrealdb-sharedNSG`, etc.).
 
 ### `rg-pdp-dev-v2` — DEV (eastus2)
 
-| Recurso | Tipo | Para qué |
-|---|---|---|
-| `app-pdp-dev` | App Service | API — `app-pdp-dev.azurewebsites.net` |
-| `asp-pdp-dev` | App Service Plan (B1) | Sostiene `app-pdp-dev` |
-| `kv-pdp-dev` | Key Vault | Secretos de DEV (`pdp-datasource-password`, `keycloak-*`) |
-| `pdpacrueco` | Container Registry (Basic) | **Compartido por los tres ambientes** — vive acá solo por dónde se creó primero |
+| Recurso       | Tipo                       | Para qué                                                                        |
+|---------------|----------------------------|---------------------------------------------------------------------------------|
+| `app-pdp-dev` | App Service                | API — `app-pdp-dev.azurewebsites.net`                                           |
+| `asp-pdp-dev` | App Service Plan (B1)      | Sostiene `app-pdp-dev`                                                          |
+| `kv-pdp-dev`  | Key Vault                  | Secretos de DEV (`pdp-datasource-password`, `keycloak-*`)                       |
+| `pdpacrueco`  | Container Registry (Basic) | **Compartido por los tres ambientes** — vive acá solo por dónde se creó primero |
 
 ### `rg-pdp-prod-v3` — PROD (mixto: VM en eastus2, resto en mexicocentral)
 
-| Recurso | Tipo | Para qué |
-|---|---|---|
-| `app-pdp-prod` | App Service | API — `app-pdp-prod.azurewebsites.net` (mexicocentral) |
-| `asp-pdp-prod` | App Service Plan (B1) | Sostiene `app-pdp-prod` (mexicocentral) |
-| `kv-pdp-prod-mx` | Key Vault | Secretos de PROD (mexicocentral) — el nombre original `kv-pdp-prod` quedó tomado por un vault en soft-delete con purge protection (ver más abajo) |
-| `vm-pdp-surrealdb-prod` | VM (`Standard_B1s`) | SurrealDB dedicado de PROD (eastus2) — `20.110.4.89:8000` |
+| Recurso                 | Tipo                  | Para qué                                                                                                                                          |
+|-------------------------|-----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| `app-pdp-prod`          | App Service           | API — `app-pdp-prod.azurewebsites.net` (mexicocentral)                                                                                            |
+| `asp-pdp-prod`          | App Service Plan (B1) | Sostiene `app-pdp-prod` (mexicocentral)                                                                                                           |
+| `kv-pdp-prod-mx`        | Key Vault             | Secretos de PROD (mexicocentral) — el nombre original `kv-pdp-prod` quedó tomado por un vault en soft-delete con purge protection (ver más abajo) |
+| `vm-pdp-surrealdb-prod` | VM (`Standard_B1s`)   | SurrealDB dedicado de PROD (eastus2) — `20.110.4.89:8000`                                                                                         |
 
 ### Acceso — cómo dar permisos a alguien nuevo
 
@@ -89,16 +89,16 @@ patrón que los secretos de JWT y SurrealDB ya usan en producción.
 No todo lo externalizable es sensible, y tratar todo como secreto hace que el vault deje de
 significar algo.
 
-| Valor | Dónde vive | Por qué |
-|---|---|---|
-| `pdp.tenants.seed[*]` | `application.properties` | Identificadores de tenant; públicos por diseño |
-| `pdp.applications.reserved-names` | `application.properties` | Política de nombres; no confidencial |
-| `management.endpoints.*` | `application.properties` | Configuración operativa |
-| Nombres de App Service, resource group, Key Vault | `ci/variables/*.yml` | Identificadores de recursos, no credenciales |
-| Contraseña de SurrealDB | **Key Vault** | Da acceso de lectura y escritura a los datos |
-| Clave de firma JWT (emisor propio) | **Key Vault** | Permite falsificar cualquier token |
-| Client secret de Keycloak/OIDC | **Key Vault** | Permite suplantar a la aplicación |
-| Token del colector OTLP | **Key Vault** | Permite inyectar o leer telemetría |
+| Valor                                             | Dónde vive               | Por qué                                        |
+|---------------------------------------------------|--------------------------|------------------------------------------------|
+| `pdp.tenants.seed[*]`                             | `application.properties` | Identificadores de tenant; públicos por diseño |
+| `pdp.applications.reserved-names`                 | `application.properties` | Política de nombres; no confidencial           |
+| `management.endpoints.*`                          | `application.properties` | Configuración operativa                        |
+| Nombres de App Service, resource group, Key Vault | `ci/variables/*.yml`     | Identificadores de recursos, no credenciales   |
+| Contraseña de SurrealDB                           | **Key Vault**            | Da acceso de lectura y escritura a los datos   |
+| Clave de firma JWT (emisor propio)                | **Key Vault**            | Permite falsificar cualquier token             |
+| Client secret de Keycloak/OIDC                    | **Key Vault**            | Permite suplantar a la aplicación              |
+| Token del colector OTLP                           | **Key Vault**            | Permite inyectar o leer telemetría             |
 
 ## Secretos reservados en el vault
 
@@ -111,12 +111,12 @@ ambiente desplegado necesita para arrancar hoy (`application-dev.properties` y
 el vault hace fallar la tarea `AzureKeyVault@2` completa, así que la fila queda tan corta como lo
 que realmente se usa.
 
-| Secreto | Consumidor previsto | Variable de entorno | Estado |
-|---|---|---|---|
-| `pdp-datasource-password` | Adaptador SurrealDB (ADR-0004) | `PDP_DATASOURCE_PASSWORD` | **En uso** |
-| `pdp-jwt-signing-key` | Emisor/validador JWT propio (ADR-0003) | `PDP_JWT_SIGNING_KEY` | Huérfano desde ADR-020 — DEV y PROD validan vía JWKS contra Keycloak real, no HMAC. El modo HMAC sigue vivo solo en el perfil por defecto (tests, desarrollo local), que no lee este secreto |
-| `pdp-oidc-client-secret` | Integración con Keycloak (ADR-0003) | `PDP_OIDC_CLIENT_SECRET` | Reservado — ningún `application-*.properties` lo referencia |
-| `pdp-otlp-token` | Exportación de trazas | `PDP_OTLP_TOKEN` | Reservado — el subsistema de telemetría no existe todavía |
+| Secreto                   | Consumidor previsto                    | Variable de entorno       | Estado                                                                                                                                                                                       |
+|---------------------------|----------------------------------------|---------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `pdp-datasource-password` | Adaptador SurrealDB (ADR-0004)         | `PDP_DATASOURCE_PASSWORD` | **En uso**                                                                                                                                                                                   |
+| `pdp-jwt-signing-key`     | Emisor/validador JWT propio (ADR-0003) | `PDP_JWT_SIGNING_KEY`     | Huérfano desde ADR-020 — DEV y PROD validan vía JWKS contra Keycloak real, no HMAC. El modo HMAC sigue vivo solo en el perfil por defecto (tests, desarrollo local), que no lee este secreto |
+| `pdp-oidc-client-secret`  | Integración con Keycloak (ADR-0003)    | `PDP_OIDC_CLIENT_SECRET`  | Reservado — ningún `application-*.properties` lo referencia                                                                                                                                  |
+| `pdp-otlp-token`          | Exportación de trazas                  | `PDP_OTLP_TOKEN`          | Reservado — el subsistema de telemetría no existe todavía                                                                                                                                    |
 
 ## Cómo se consumen
 
@@ -192,10 +192,10 @@ el propósito cambió.
 
 Resumen operativo:
 
-| Instancia | Ambientes | Aislamiento |
-|---|---|---|
-| `vm-pdp-surrealdb-shared` | DEV | `namespace`/`database` propios (`pdp_dev` — ver `application-dev.properties`) |
-| `vm-pdp-surrealdb-prod` | PROD | Instancia y credenciales propias |
+| Instancia                 | Ambientes | Aislamiento                                                                   |
+|---------------------------|-----------|-------------------------------------------------------------------------------|
+| `vm-pdp-surrealdb-shared` | DEV       | `namespace`/`database` propios (`pdp_dev` — ver `application-dev.properties`) |
+| `vm-pdp-surrealdb-prod`   | PROD      | Instancia y credenciales propias                                              |
 
 `datasourceUrl` en cada `ci/variables/*.yml` es la IP pública de la VM correspondiente —
 configuración operativa, no secreto, igual que el resto de esa tabla. El puerto 8000 solo acepta

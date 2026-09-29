@@ -5,12 +5,7 @@ import co.edu.uco.seguridad.pdp.authorization.application.primaryport.response.A
 import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.AdministrationDecisionPort;
 import co.edu.uco.seguridad.pdp.authorization.domain.model.DecisionState;
 import co.edu.uco.seguridad.pdp.authorization.domain.model.ReasonCode;
-import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.dto.OpaAdministrationEvaluationInput;
-import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.dto.OpaAdministrationEvaluationRequest;
-import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.dto.OpaApplication;
-import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.dto.OpaResponse;
-import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.dto.OpaSubject;
-import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.dto.OpaTenant;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.dto.*;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.properties.OpaProperties;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import org.springframework.http.MediaType;

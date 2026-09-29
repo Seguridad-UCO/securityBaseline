@@ -15,7 +15,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/** Fila a dominio. Los value objects validan aquí. Espejo de AssignmentPersistenceMapper. */
+/**
+ * Fila a dominio. Los value objects validan aquí. Espejo de AssignmentPersistenceMapper.
+ */
 public final class ProfileAssignmentPersistenceMapper {
 
     private ProfileAssignmentPersistenceMapper() {

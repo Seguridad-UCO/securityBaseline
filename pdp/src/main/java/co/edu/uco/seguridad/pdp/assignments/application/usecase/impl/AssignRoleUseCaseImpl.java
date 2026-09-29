@@ -32,7 +32,7 @@ public final class AssignRoleUseCaseImpl implements AssignRoleUseCase {
     private final DistributedCachePort cache;
 
     public AssignRoleUseCaseImpl(AssignRoleRulesValidator rules, AssignmentRepository repository,
-            IdentifierGenerator identifiers, TimeProvider time, DistributedCachePort cache) {
+                                 IdentifierGenerator identifiers, TimeProvider time, DistributedCachePort cache) {
         this.rules = Objects.requireNonNull(rules, RequiredArgumentMessages.ASSIGN_ROLE_RULES_VALIDATOR);
         this.repository = Objects.requireNonNull(repository, RequiredArgumentMessages.ASSIGNMENT_REPOSITORY);
         this.identifiers = Objects.requireNonNull(identifiers, RequiredArgumentMessages.IDENTIFIER_GENERATOR);

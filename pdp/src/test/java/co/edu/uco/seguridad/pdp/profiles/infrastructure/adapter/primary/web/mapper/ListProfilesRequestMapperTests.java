@@ -12,7 +12,9 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/** Misma lógica que ListRolesRequestMapper (barrera C3), ya probada allí caso por caso. */
+/**
+ * Misma lógica que ListRolesRequestMapper (barrera C3), ya probada allí caso por caso.
+ */
 class ListProfilesRequestMapperTests {
 
     private static final TenantId UCO = new TenantId("universidad-uco");

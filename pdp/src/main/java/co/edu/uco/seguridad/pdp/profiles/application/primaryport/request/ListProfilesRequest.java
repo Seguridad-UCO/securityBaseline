@@ -6,7 +6,9 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
 
-/** Entrada tipada de ListProfilesUseCase: el criterio ya validado y la ventana ya resuelta. */
+/**
+ * Entrada tipada de ListProfilesUseCase: el criterio ya validado y la ventana ya resuelta.
+ */
 public record ListProfilesRequest(ProfileCriteria criteria, PageWindow window) {
 
     public ListProfilesRequest {

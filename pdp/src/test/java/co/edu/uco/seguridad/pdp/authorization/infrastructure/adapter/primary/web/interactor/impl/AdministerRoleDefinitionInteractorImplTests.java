@@ -3,7 +3,6 @@ package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.we
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministerRoleDefinitionRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerRoleDefinitionUseCase;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.DefineRoleRawRequest;
-import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.RoleAdministrationWebResponse;
 import co.edu.uco.seguridad.pdp.commons.model.RoleId;
 import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserIdLookupValidator;
@@ -16,11 +15,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -85,7 +80,7 @@ class AdministerRoleDefinitionInteractorImplTests {
     }
 
     private static AdministerRoleDefinitionUseCase useCaseCapturing(List<AdministerRoleDefinitionRequest> received,
-            RoleResponse response) {
+                                                                    RoleResponse response) {
         return input -> {
             received.add(input);
             return Mono.just(response);

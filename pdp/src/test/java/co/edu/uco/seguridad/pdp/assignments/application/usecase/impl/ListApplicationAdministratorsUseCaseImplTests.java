@@ -6,12 +6,7 @@ import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository
 import co.edu.uco.seguridad.pdp.assignments.domain.Assignment;
 import co.edu.uco.seguridad.pdp.assignments.domain.AssignmentCriteria;
 import co.edu.uco.seguridad.pdp.assignments.domain.model.AssignmentId;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
-import co.edu.uco.seguridad.pdp.commons.model.RoleId;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
-import co.edu.uco.seguridad.pdp.commons.model.UserId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -23,7 +18,9 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** El caso de uso devuelve lo que el repositorio resuelve para el rol ADMIN de la aplicación (HU-020). */
+/**
+ * El caso de uso devuelve lo que el repositorio resuelve para el rol ADMIN de la aplicación (HU-020).
+ */
 class ListApplicationAdministratorsUseCaseImplTests {
 
     private static final TenantId TENANT = new TenantId("universidad-uco");
@@ -52,7 +49,7 @@ class ListApplicationAdministratorsUseCaseImplTests {
         return new AssignmentRepository() {
             @Override
             public Mono<Boolean> existsActiveByUserApplicationRole(UserId userId, ApplicationId applicationId, RoleId roleId,
-                    Instant now) {
+                                                                   Instant now) {
                 throw new UnsupportedOperationException();
             }
 

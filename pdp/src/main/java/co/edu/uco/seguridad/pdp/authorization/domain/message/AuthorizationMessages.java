@@ -2,7 +2,9 @@ package co.edu.uco.seguridad.pdp.authorization.domain.message;
 
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 
-/** Catálogo de mensajes de negocio del slice {@code authorization}, en español (HU-009). */
+/**
+ * Catálogo de mensajes de negocio del slice {@code authorization}, en español (HU-009).
+ */
 public final class AuthorizationMessages {
 
     private AuthorizationMessages() {

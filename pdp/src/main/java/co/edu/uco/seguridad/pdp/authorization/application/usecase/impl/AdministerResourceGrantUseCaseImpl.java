@@ -1,13 +1,13 @@
 package co.edu.uco.seguridad.pdp.authorization.application.usecase.impl;
 
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministerResourceGrantRequest;
+import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministrationRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.PrincipalMustBeApplicationAdministratorValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerResourceGrantUseCase;
-import co.edu.uco.seguridad.pdp.roles.application.primaryport.response.RoleResponse;
-import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministrationRequest;
 import co.edu.uco.seguridad.pdp.authorization.domain.exception.NotAuthorizedToAdministerException;
-import co.edu.uco.seguridad.pdp.roles.application.usecase.GrantResourceToRoleUseCase;
 import co.edu.uco.seguridad.pdp.roles.application.primaryport.request.RevokeResourceRequest;
+import co.edu.uco.seguridad.pdp.roles.application.primaryport.response.RoleResponse;
+import co.edu.uco.seguridad.pdp.roles.application.usecase.GrantResourceToRoleUseCase;
 import co.edu.uco.seguridad.pdp.roles.application.usecase.RevokeResourceFromRoleUseCase;
 import co.edu.uco.seguridad.shared.audit.AdministrationAuditRepository;
 import co.edu.uco.seguridad.shared.audit.AdministrationEvent;
@@ -36,8 +36,8 @@ public final class AdministerResourceGrantUseCaseImpl implements AdministerResou
     private final TimeProvider time;
 
     public AdministerResourceGrantUseCaseImpl(PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator,
-            GrantResourceToRoleUseCase grantResource, RevokeResourceFromRoleUseCase revokeResource, AdministrationAuditRepository audit,
-            IdentifierGenerator identifiers, TimeProvider time) {
+                                              GrantResourceToRoleUseCase grantResource, RevokeResourceFromRoleUseCase revokeResource, AdministrationAuditRepository audit,
+                                              IdentifierGenerator identifiers, TimeProvider time) {
         this.mustBeAdministrator = Objects.requireNonNull(mustBeAdministrator,
                 RequiredArgumentMessages.PRINCIPAL_MUST_BE_APPLICATION_ADMINISTRATOR_VALIDATOR);
         this.grantResource = Objects.requireNonNull(grantResource, RequiredArgumentMessages.GRANT_RESOURCE_TO_ROLE_USE_CASE);
@@ -52,8 +52,8 @@ public final class AdministerResourceGrantUseCaseImpl implements AdministerResou
      * habilita desde el adaptador que aporta explícitamente su caso de uso.
      */
     public AdministerResourceGrantUseCaseImpl(PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator,
-            GrantResourceToRoleUseCase grantResource, AdministrationAuditRepository audit,
-            IdentifierGenerator identifiers, TimeProvider time) {
+                                              GrantResourceToRoleUseCase grantResource, AdministrationAuditRepository audit,
+                                              IdentifierGenerator identifiers, TimeProvider time) {
         this(mustBeAdministrator, grantResource,
                 input -> Mono.error(new IllegalStateException("La revocación de recursos no está configurada")),
                 audit, identifiers, time);
@@ -71,7 +71,7 @@ public final class AdministerResourceGrantUseCaseImpl implements AdministerResou
     }
 
     private Mono<RoleResponse> audited(Mono<RoleResponse> result, AdministrationRequest administration,
-            AdministrationOperation operation) {
+                                       AdministrationOperation operation) {
         return result
                 .flatMap(response -> recordAudit(administration, operation, AdministrationOutcome.ALLOWED).thenReturn(response))
                 .onErrorResume(NotAuthorizedToAdministerException.class,
@@ -79,7 +79,7 @@ public final class AdministerResourceGrantUseCaseImpl implements AdministerResou
     }
 
     private Mono<Void> recordAudit(AdministrationRequest context, AdministrationOperation operation,
-            AdministrationOutcome outcome) {
+                                   AdministrationOutcome outcome) {
         UUID eventId = identifiers.next();
         AdministrationEvent event = new AdministrationEvent(eventId, eventId.toString(), context.tenantId(),
                 context.applicationId(), context.subject(), operation, outcome, time.now());

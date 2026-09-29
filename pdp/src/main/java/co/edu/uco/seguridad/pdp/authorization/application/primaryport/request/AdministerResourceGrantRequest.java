@@ -12,7 +12,7 @@ import java.util.Optional;
  * Misma semántica de {@code administration} vacío que {@link AdministerRoleDefinitionRequest}.
  */
 public record AdministerResourceGrantRequest(Optional<AdministrationRequest> administration, GrantResourceRequest grant,
-        boolean revocation) {
+                                             boolean revocation) {
 
     public AdministerResourceGrantRequest {
         Objects.requireNonNull(administration, RequiredArgumentMessages.ADMINISTRATION);

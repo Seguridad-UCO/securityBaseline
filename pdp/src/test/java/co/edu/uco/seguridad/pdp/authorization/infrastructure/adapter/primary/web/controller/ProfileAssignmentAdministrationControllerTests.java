@@ -16,7 +16,9 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** HU-019: mismas rutas y códigos que el antiguo {@code ProfileAssignmentController.assign/revoke}. */
+/**
+ * HU-019: mismas rutas y códigos que el antiguo {@code ProfileAssignmentController.assign/revoke}.
+ */
 class ProfileAssignmentAdministrationControllerTests {
 
     private static final ProfileAssignmentAdministrationWebResponse EXPECTED = new ProfileAssignmentAdministrationWebResponse(
@@ -41,9 +43,9 @@ class ProfileAssignmentAdministrationControllerTests {
         List<RevokeProfileAssignmentRawRequest> received = new ArrayList<>();
         ProfileAssignmentAdministrationController controller = new ProfileAssignmentAdministrationController(
                 raw -> Mono.empty(), raw -> {
-                    received.add(raw);
-                    return Mono.empty();
-                });
+            received.add(raw);
+            return Mono.empty();
+        });
         MockServerWebExchange exchange = exchange(
                 MockServerHttpRequest.delete("/api/v1/profiles/profile-1/assignments/profile-assignment-1"));
 

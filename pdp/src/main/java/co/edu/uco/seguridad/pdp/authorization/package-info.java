@@ -47,11 +47,11 @@
         "commons",
         "applications", "applications :: rule", "applications :: dto", "applications :: exception",
         "applications :: usecase", "applications :: model", "applications :: aggregate",
-        "resources", "resources :: rule", "resources :: dto", "resources :: model", "resources :: exception",
+        "resources", "resources :: repository", "resources :: aggregate", "resources :: rule", "resources :: dto", "resources :: model", "resources :: exception",
         "resources :: usecase",
         "assignments :: usecase", "assignments :: dto", "assignments :: rule", "assignments :: model",
         "identity :: usecase", "identity :: dto",
         "identity :: rule",
-        "roles :: rule", "roles :: usecase", "roles :: dto", "roles :: model",
-        "profiles :: rule", "profiles :: usecase", "profiles :: dto", "profiles :: model"})
+        "roles", "roles :: repository", "roles :: aggregate", "roles :: exception", "roles :: rule", "roles :: usecase", "roles :: dto", "roles :: model",
+        "profiles", "profiles :: repository", "profiles :: aggregate", "profiles :: exception", "profiles :: rule", "profiles :: usecase", "profiles :: dto", "profiles :: model"})
 package co.edu.uco.seguridad.pdp.authorization;

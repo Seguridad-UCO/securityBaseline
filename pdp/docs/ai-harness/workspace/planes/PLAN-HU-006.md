@@ -8,16 +8,16 @@
 - **Fecha:** 2026-09-12
 - **Rama sugerida:** `feature/HU-006-adaptador-opa`
 - **Fuentes:**
-  - `pdp/docs/ai-harness/workspace/HANDOFF-INTEGRACION-PEP-OPA.md` §4 (D9, D10) y §7 (alcance ya
-    acordado — tratado como entrada del plan, no como pregunta de gate 1)
-  - `contracts/pdp-opa/v1/policy-evaluation-input.schema.json`, `opa-response.schema.json`,
-    `policy-decision.schema.json`, `obligation.schema.json`, `examples/valid/minimal-same-tenant.json`
-  - `contracts/reason-codes.md` (vocabulario cerrado, ya implementado 1:1 en `ReasonCode`)
-  - `security-policy-engine/policies/application/*.rego` (composición, guards, validación de entrada)
-  - `security-policy-engine/README.md` (endpoint real: `POST /v1/data/security/authorization/decision`)
-  - Código real: `PolicyDecisionPort`, `AccessRequest`, `AccessDecision`, `DenyByDefaultPolicyDecisionAdapter`,
-    `AuthorizeUseCaseImpl`, `EvaluateInternalAccessUseCaseImpl`, `AuthorizationConfiguration`,
-    `SurrealDbConfiguration`/`SurrealDbClient` (precedente de cliente `WebClient` + Jackson 3 del proyecto)
+    - `pdp/docs/ai-harness/workspace/HANDOFF-INTEGRACION-PEP-OPA.md` §4 (D9, D10) y §7 (alcance ya
+      acordado — tratado como entrada del plan, no como pregunta de gate 1)
+    - `contracts/pdp-opa/v1/policy-evaluation-input.schema.json`, `opa-response.schema.json`,
+      `policy-decision.schema.json`, `obligation.schema.json`, `examples/valid/minimal-same-tenant.json`
+    - `contracts/reason-codes.md` (vocabulario cerrado, ya implementado 1:1 en `ReasonCode`)
+    - `security-policy-engine/policies/application/*.rego` (composición, guards, validación de entrada)
+    - `security-policy-engine/README.md` (endpoint real: `POST /v1/data/security/authorization/decision`)
+    - Código real: `PolicyDecisionPort`, `AccessRequest`, `AccessDecision`, `DenyByDefaultPolicyDecisionAdapter`,
+      `AuthorizeUseCaseImpl`, `EvaluateInternalAccessUseCaseImpl`, `AuthorizationConfiguration`,
+      `SurrealDbConfiguration`/`SurrealDbClient` (precedente de cliente `WebClient` + Jackson 3 del proyecto)
 - **Criterios de la línea base que toca:** 1, 2, 3, 4, 9, 11, 12, 21, 22 (ver §"Criterios" abajo)
 
 ## 0. Hallazgo antes de planificar — por qué el alcance NO incluye roles todavía
@@ -65,16 +65,16 @@ de aplicación (`policies/applications/`, corresponde a quien las publique), aud
 
 ## 2. Criterios de aceptación
 
-| # | Criterio | Resultado esperado |
-|---|---|---|
-| 1 | `PolicyDecisionPort` sigue siendo el único punto de contacto; `AuthorizeUseCaseImpl`/`EvaluateInternalAccessUseCaseImpl` no cambian una línea |
-| 2 | Con OPA respondiendo `{"result":{"effect":"ALLOW","reasonCode":"POLICY_ALLOWED","policyReferences":[{"id":"...","version":"..."}],"obligations":[]}}`, `AuthorizeUseCase.execute` devuelve `AccessDecision` con `state=ALLOW`, `reasonCode=POLICY_ALLOWED` y esa `policyReferences` |
-| 3 | Con OPA respondiendo `DENY`/`NO_APPLICABLE_POLICY` (el caso de hoy, sin políticas publicadas), la decisión sigue siendo `DENY`/`NO_APPLICABLE_POLICY` — mismo comportamiento observable que con el adaptador anterior, pero ahora es una respuesta real de OPA, no un valor fijo en el PDP |
-| 4 | OPA caído, con timeout, o respondiendo un cuerpo que no cumple el contrato (p. ej. `reasonCode` fuera del enum) → `AccessDecision` con `state=INDETERMINATE`, `reasonCode=CONTEXT_UNAVAILABLE` (vía el `onErrorResume` ya existente de `AuthorizeUseCaseImpl`, no lógica nueva en el adaptador) |
-| 9 | Ninguna excepción cruda llega al cliente: el adaptador no atrapa nada, deja que el error suba |
-| 11 | El adaptador no decide nada de negocio: solo traduce ida y vuelta |
-| 21 | Los DTO de transporte hacia/desde OPA son `record` inmutables, sin Lombok |
-| 22 | `WebClient` reactivo, sin `block()`; timeout con `.timeout(Duration)`, no `Thread.sleep` |
+| #  | Criterio                                                                                                                                                                                                                                                                                        | Resultado esperado |
+|----|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------|
+| 1  | `PolicyDecisionPort` sigue siendo el único punto de contacto; `AuthorizeUseCaseImpl`/`EvaluateInternalAccessUseCaseImpl` no cambian una línea                                                                                                                                                   |
+| 2  | Con OPA respondiendo `{"result":{"effect":"ALLOW","reasonCode":"POLICY_ALLOWED","policyReferences":[{"id":"...","version":"..."}],"obligations":[]}}`, `AuthorizeUseCase.execute` devuelve `AccessDecision` con `state=ALLOW`, `reasonCode=POLICY_ALLOWED` y esa `policyReferences`             |
+| 3  | Con OPA respondiendo `DENY`/`NO_APPLICABLE_POLICY` (el caso de hoy, sin políticas publicadas), la decisión sigue siendo `DENY`/`NO_APPLICABLE_POLICY` — mismo comportamiento observable que con el adaptador anterior, pero ahora es una respuesta real de OPA, no un valor fijo en el PDP      |
+| 4  | OPA caído, con timeout, o respondiendo un cuerpo que no cumple el contrato (p. ej. `reasonCode` fuera del enum) → `AccessDecision` con `state=INDETERMINATE`, `reasonCode=CONTEXT_UNAVAILABLE` (vía el `onErrorResume` ya existente de `AuthorizeUseCaseImpl`, no lógica nueva en el adaptador) |
+| 9  | Ninguna excepción cruda llega al cliente: el adaptador no atrapa nada, deja que el error suba                                                                                                                                                                                                   |
+| 11 | El adaptador no decide nada de negocio: solo traduce ida y vuelta                                                                                                                                                                                                                               |
+| 21 | Los DTO de transporte hacia/desde OPA son `record` inmutables, sin Lombok                                                                                                                                                                                                                       |
+| 22 | `WebClient` reactivo, sin `block()`; timeout con `.timeout(Duration)`, no `Thread.sleep`                                                                                                                                                                                                        |
 
 ## 3. Reglas de negocio
 
@@ -85,9 +85,9 @@ como error técnico y cae en el `onErrorResume` general de `AuthorizeUseCaseImpl
 No se envuelve esa excepción en una regla de dominio propia: es un defecto de contrato entre
 componentes, no una decisión de negocio del PDP.
 
-| # | Regla | Dónde vive | Puerto que trae el dato | Excepción → HTTP |
-|---|---|---|---|---|
-| — | (ninguna nueva) | — | — | — |
+| # | Regla           | Dónde vive | Puerto que trae el dato | Excepción → HTTP |
+|---|-----------------|------------|-------------------------|------------------|
+| — | (ninguna nueva) | —          | —                       | —                |
 
 ## 4. Modelo de dominio afectado
 
@@ -96,9 +96,9 @@ existen y no cambian de forma (son contratos existentes — el planificador no l
 
 ### Value objects
 
-| VO | Nuevo o existente | Invariantes | Vive en |
-|---|---|---|---|
-| (ninguno de dominio) | — | — | — |
+| VO                   | Nuevo o existente | Invariantes | Vive en |
+|----------------------|-------------------|-------------|---------|
+| (ninguno de dominio) | —                 | —           | —       |
 
 Los tipos nuevos de esta historia son DTO de **transporte de infraestructura** (la forma exacta del
 JSON que OPA espera/devuelve), no value objects de dominio — ver sección 7.
@@ -234,7 +234,7 @@ public static final String OPA_PROPERTIES = "se requieren las propiedades de OPA
 // construye OpaPolicyDecisionAdapter. Añade @EnableConfigurationProperties(OpaProperties.class).
 ```
 
-**Eliminación** (parte del contrato D9, no una modificación): 
+**Eliminación** (parte del contrato D9, no una modificación):
 `pdp/authorization/infrastructure/adapter/secondary/policy/DenyByDefaultPolicyDecisionAdapter.java`
 se borra. No tiene prueba dedicada (`grep` confirmó cero referencias fuera de sí mismo y de
 `AuthorizationConfiguration`), así que no hay archivo de `pdp/src/test` que tocar por esto.
@@ -279,25 +279,25 @@ No hay cruce de módulo Modulith nuevo: el adaptador solo usa tipos de `authoriz
 > mínimo con `WebClient` apuntando a `http://localhost:{puerto efímero}` basta — no hace falta
 > Testcontainers, esto no es persistencia).
 
-| Capa | Clase de prueba | Casos |
-|---|---|---|
-| infrastructure (adaptador, con servidor HTTP de prueba) | `OpaPolicyDecisionAdapterTests` | ALLOW con `policyReferences` no vacío → `AccessDecision.state=ALLOW` con esas referencias; DENY/`NO_APPLICABLE_POLICY` → `state=DENY`; OPA responde 500/conexión rechazada → el `Mono` termina en error (no en `AccessDecision`, eso lo decide `AuthorizeUseCaseImpl` aguas arriba); timeout superado → el `Mono` termina en error; `reasonCode` fuera del vocabulario cerrado → error de mapeo (no una `AccessDecision` silenciosa); el cuerpo POST enviado es exactamente `{"input": {...}}` con los campos esperados (schemaVersion, request.id/correlationId, subject.id/type/tenantId, tenant.id, application.id, resource.type/id, action) |
-| application (sin tocar, ya cubierto) | `AuthorizeUseCaseImplTests` | Ninguno nuevo — ya prueba el `onErrorResume` con un `PolicyDecisionPort` fake; no depende del adaptador real |
-| integración de arranque | (extender `LayeredArchitectureTests`/`ModulithStructureTests` si aplica) | Ninguna prueba nueva dedicada; correr las existentes basta — no se cruza ningún módulo nuevo |
+| Capa                                                    | Clase de prueba                                                          | Casos                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+|---------------------------------------------------------|--------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| infrastructure (adaptador, con servidor HTTP de prueba) | `OpaPolicyDecisionAdapterTests`                                          | ALLOW con `policyReferences` no vacío → `AccessDecision.state=ALLOW` con esas referencias; DENY/`NO_APPLICABLE_POLICY` → `state=DENY`; OPA responde 500/conexión rechazada → el `Mono` termina en error (no en `AccessDecision`, eso lo decide `AuthorizeUseCaseImpl` aguas arriba); timeout superado → el `Mono` termina en error; `reasonCode` fuera del vocabulario cerrado → error de mapeo (no una `AccessDecision` silenciosa); el cuerpo POST enviado es exactamente `{"input": {...}}` con los campos esperados (schemaVersion, request.id/correlationId, subject.id/type/tenantId, tenant.id, application.id, resource.type/id, action) |
+| application (sin tocar, ya cubierto)                    | `AuthorizeUseCaseImplTests`                                              | Ninguno nuevo — ya prueba el `onErrorResume` con un `PolicyDecisionPort` fake; no depende del adaptador real                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| integración de arranque                                 | (extender `LayeredArchitectureTests`/`ModulithStructureTests` si aplica) | Ninguna prueba nueva dedicada; correr las existentes basta — no se cruza ningún módulo nuevo                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 
 Presupuesto total estimado: **5–7 pruebas**, todas en una sola clase nueva. Es deliberadamente
 pequeño: no hay reglas de negocio nuevas, solo una traducción de ida y vuelta.
 
 ## 10. Trazabilidad
 
-| Fase | Estado | Fecha |
-|---|---|---|
-| Plan | ✅ Generado | 2026-09-12 |
-| Contrato aprobado (gate 1) | ⏳ Pendiente | |
-| Pruebas en rojo | ⏳ Pendiente | |
-| Implementación en verde | ✅ Verde (471 pruebas, 0 fallos) | 2026-09-12 |
-| Validación | ✅ APROBADO (segunda pasada — primera rechazada por deriva doc↔código, corregida) | 2026-09-12 |
-| Entrega (gate 2) | ⏳ Pendiente | |
+| Fase                       | Estado                                                                           | Fecha      |
+|----------------------------|----------------------------------------------------------------------------------|------------|
+| Plan                       | ✅ Generado                                                                       | 2026-09-12 |
+| Contrato aprobado (gate 1) | ⏳ Pendiente                                                                      |            |
+| Pruebas en rojo            | ⏳ Pendiente                                                                      |            |
+| Implementación en verde    | ✅ Verde (471 pruebas, 0 fallos)                                                  | 2026-09-12 |
+| Validación                 | ✅ APROBADO (segunda pasada — primera rechazada por deriva doc↔código, corregida) | 2026-09-12 |
+| Entrega (gate 2)           | ⏳ Pendiente                                                                      |            |
 
 ## 11. Ambigüedades pendientes
 

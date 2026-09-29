@@ -10,11 +10,7 @@ import co.edu.uco.seguridad.shared.web.PageResponse;
 import co.edu.uco.seguridad.shared.web.RequestContext;
 import co.edu.uco.seguridad.shared.web.message.WebContractMessages;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -40,9 +36,9 @@ final class ProfileAssignmentController {
 
     @GetMapping
     Mono<ResponseEntity<ApiResponse<PageResponse<ProfileAssignmentWebResponse>>>> list(@PathVariable String profileId,
-            @RequestParam(required = false) String page, @RequestParam(required = false) String size,
-            @RequestParam(required = false) String offset, @RequestParam(required = false) String limit,
-            ServerWebExchange exchange) {
+                                                                                       @RequestParam(required = false) String page, @RequestParam(required = false) String size,
+                                                                                       @RequestParam(required = false) String offset, @RequestParam(required = false) String limit,
+                                                                                       ServerWebExchange exchange) {
         RequestContext context = CorrelationWebFilter.context(exchange);
         return listInteractor.execute(new ListProfileAssignmentsRawRequest(profileId, page, size, offset, limit))
                 .map(response -> ResponseEntity.ok(ApiResponse.success("PROFILE_ASSIGNMENTS_LISTED",

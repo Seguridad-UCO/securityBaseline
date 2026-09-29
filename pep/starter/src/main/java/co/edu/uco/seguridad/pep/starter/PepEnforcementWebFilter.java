@@ -100,7 +100,8 @@ final class PepEnforcementWebFilter implements WebFilter {
         exchange.getResponse().setStatusCode(status);
         exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_PROBLEM_JSON);
         exchange.getResponse().getHeaders().setCacheControl("no-store");
-        if (status == HttpStatus.UNAUTHORIZED) exchange.getResponse().getHeaders().set(HttpHeaders.WWW_AUTHENTICATE, "Bearer");
+        if (status == HttpStatus.UNAUTHORIZED)
+            exchange.getResponse().getHeaders().set(HttpHeaders.WWW_AUTHENTICATE, "Bearer");
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, status.getReasonPhrase());
         problem.setTitle(code);
         problem.setType(URI.create("urn:security-pep:error:" + code.toLowerCase(java.util.Locale.ROOT)));

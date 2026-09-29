@@ -41,7 +41,7 @@ public final class AdministerProfileDefinitionInteractorImpl implements Administ
     private final SubjectUserIdLookupValidator subjectUserIdLookup;
 
     public AdministerProfileDefinitionInteractorImpl(AdministerProfileDefinitionUseCase useCase,
-            SubjectUserIdLookupValidator subjectUserIdLookup) {
+                                                     SubjectUserIdLookupValidator subjectUserIdLookup) {
         this.useCase = Objects.requireNonNull(useCase, RequiredArgumentMessages.ADMINISTER_PROFILE_DEFINITION_USE_CASE);
         this.subjectUserIdLookup = Objects.requireNonNull(subjectUserIdLookup,
                 RequiredArgumentMessages.SUBJECT_USER_ID_LOOKUP_VALIDATOR);
@@ -56,7 +56,7 @@ public final class AdministerProfileDefinitionInteractorImpl implements Administ
     }
 
     private static AdministerProfileDefinitionRequest toAdministerRequest(DefineProfileRawRequest raw,
-            PdpPrincipal principal, UserId subjectUserId) {
+                                                                          PdpPrincipal principal, UserId subjectUserId) {
         ProfileName name = RequestFieldParser.parse("name", raw.name(), ProfileName::new);
         RoleScopeLevel level = RequestFieldParser.parse("scope", raw.scope(), RoleScopeLevel::parse);
 
@@ -66,7 +66,7 @@ public final class AdministerProfileDefinitionInteractorImpl implements Administ
 
         RoleScope scope = level == RoleScopeLevel.APPLICATION
                 ? RoleScope.ofApplication(principal.tenantId(),
-                        RequestFieldParser.parse("applicationId", raw.applicationId(), ApplicationId::of))
+                RequestFieldParser.parse("applicationId", raw.applicationId(), ApplicationId::of))
                 : requireNoApplicationId(raw, principal.tenantId());
 
         DefineProfileRequest profile = new DefineProfileRequest(name, scope);

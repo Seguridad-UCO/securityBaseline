@@ -5,12 +5,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.oauth2.client.web.server.ServerOAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.web.server.ServerOAuth2AuthorizedClientRepository;
 import org.springframework.security.web.server.context.WebSessionServerSecurityContextRepository;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
@@ -28,7 +28,11 @@ final class InternalBffSessionTokenController {
     private final ServerOAuth2AuthorizedClientRepository clients;
     private final WebSessionServerSecurityContextRepository bffSecurityContext =
             new WebSessionServerSecurityContextRepository();
-    InternalBffSessionTokenController(ServerOAuth2AuthorizedClientRepository clients) { this.clients = clients; }
+
+    InternalBffSessionTokenController(ServerOAuth2AuthorizedClientRepository clients) {
+        this.clients = clients;
+    }
+
     @GetMapping
     Mono<ResponseEntity<TokenResponse>> token(ServerWebExchange exchange) {
         // Esta ruta se autentica con la identidad técnica del PEP, pero el cliente OIDC está
@@ -42,5 +46,7 @@ final class InternalBffSessionTokenController {
                 .map(client -> ResponseEntity.ok().body(new TokenResponse(client.getAccessToken().getTokenValue())))
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sesión BFF no activa.")));
     }
-    record TokenResponse(String accessToken) {}
+
+    record TokenResponse(String accessToken) {
+    }
 }

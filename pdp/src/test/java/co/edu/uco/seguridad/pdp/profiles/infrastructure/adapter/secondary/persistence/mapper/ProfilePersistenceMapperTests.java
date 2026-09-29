@@ -12,7 +12,9 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Espejo de RolePersistenceMapperTests. */
+/**
+ * Espejo de RolePersistenceMapperTests.
+ */
 class ProfilePersistenceMapperTests {
 
     private static final String ID = UUID.randomUUID().toString();

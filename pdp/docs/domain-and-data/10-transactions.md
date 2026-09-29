@@ -13,7 +13,8 @@ que prometería una atomicidad que ningún motor involucrado puede dar.
 
 Esto no fue la decisión original: hasta el Stage 3, un puerto `ReactiveTransactionPort` con un
 adaptador de snapshot en memoria envolvía todo el flujo, dando la ilusión de una transacción única.
-Al llegar la persistencia real ([ADR-019](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-019-surrealdb-implementation.md))
+Al llegar la persistencia
+real ([ADR-019](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-019-surrealdb-implementation.md))
 quedó claro que esa ilusión no se sostenía: las transacciones `BEGIN/COMMIT` de SurrealDB solo cubren
 un lote de SurrealQL dentro de **una misma petición HTTP**, y el trabajo real del caso de uso cruza
 módulos Java y publica eventos, no solo ejecuta sentencias. Mantener el puerto habría significado que
@@ -41,10 +42,12 @@ para quien no necesite la operación combinada.
 
 ## Ubicación verificable
 
-- Flujo y compensación: [`RegisterApplicationWithInitialResourceUseCaseImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/application/usecase/impl/RegisterApplicationWithInitialResourceUseCaseImpl.java)
+- Flujo y compensación: [
+  `RegisterApplicationWithInitialResourceUseCaseImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/application/usecase/impl/RegisterApplicationWithInitialResourceUseCaseImpl.java)
 - Pruebas: `compensates_by_removing_the_application_when_the_resource_registration_fails` y
   `still_reports_the_original_resource_error_when_the_compensation_itself_fails` en
-  [`RegisterApplicationWithInitialResourceUseCaseImplTests`](../../src/test/java/co/edu/uco/seguridad/pdp/resources/application/usecase/impl/RegisterApplicationWithInitialResourceUseCaseImplTests.java)
+  [
+  `RegisterApplicationWithInitialResourceUseCaseImplTests`](../../src/test/java/co/edu/uco/seguridad/pdp/resources/application/usecase/impl/RegisterApplicationWithInitialResourceUseCaseImplTests.java)
 - Plan y reporte de la historia: `PLAN-HU-010.md` y `REPORTE-HU-010.md` en
   `pdp/docs/ai-harness/workspace/`
 

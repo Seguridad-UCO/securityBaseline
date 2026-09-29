@@ -15,7 +15,8 @@ import java.util.Objects;
  * falla.
  */
 public record RegisterApplicationWithInitialResourceRequest(TenantId tenantId, ApplicationName name,
-        String description, ApplicationBaseUrl baseUrl, ResourcePath resourcePath, HttpVerb resourceMethod) {
+                                                            String description, ApplicationBaseUrl baseUrl,
+                                                            ResourcePath resourcePath, HttpVerb resourceMethod) {
 
     public RegisterApplicationWithInitialResourceRequest {
         Objects.requireNonNull(tenantId, RequiredArgumentMessages.TENANT_ID);

@@ -18,13 +18,13 @@ JDK: Java 25 en C:\Users\Sebastian\.jdks\temurin-25.0.4
 PRUEBAS: Tests run: 616, Failures: 0, Errors: 0, Skipped: 0
 ```
 
-| Comprobacion | Resultado |
-|---|---|
-| Compilacion | ✅ |
-| Pruebas | ✅ 616 pruebas (10 nuevas de esta historia) |
+| Comprobacion                                 | Resultado                                                     |
+|----------------------------------------------|---------------------------------------------------------------|
+| Compilacion                                  | ✅                                                             |
+| Pruebas                                      | ✅ 616 pruebas (10 nuevas de esta historia)                    |
 | Cobertura (≥ 50 % por paquete, jacoco-check) | ✅ (`jacoco:check` corrió dentro de `verify`, `BUILD SUCCESS`) |
-| `LayeredArchitectureTests` | ✅ |
-| `ModulithStructureTests` | ✅ |
+| `LayeredArchitectureTests`                   | ✅                                                             |
+| `ModulithStructureTests`                     | ✅                                                             |
 
 `consistencia.ps1` → `CONSISTENTE: todos los slices siguen la misma forma` (8 slices verificados).
 
@@ -65,7 +65,8 @@ Ninguno.
 
 ### [Cobertura] `NotAuthorizedToAdministerException` no tiene prueba dedicada
 
-- **Archivo:** `pdp/src/test/java/co/edu/uco/seguridad/pdp/authorization/application/rule/validator/impl/PrincipalMustBeApplicationAdministratorValidatorImplTests.java`
+- **Archivo:**
+  `pdp/src/test/java/co/edu/uco/seguridad/pdp/authorization/application/rule/validator/impl/PrincipalMustBeApplicationAdministratorValidatorImplTests.java`
 - **Problema:** El plan (sección 9) declaraba `NotAuthorizedToAdministerExceptionTests` como clase
   nueva. El tester no la creó, documentando en su cierre que el repositorio no tiene precedente de
   probar una excepción de dominio de forma aislada en ningún slice (siempre se ejercita
@@ -83,35 +84,35 @@ Ninguno.
 
 ## Los cuatro juicios
 
-| # | Juicio | Resultado | Evidencia |
-|---|---|---|---|
-| 1 | ¿Cumple los criterios de aceptación del plan (no solo compila)? | ✅ | Ver tabla siguiente |
-| 2 | ¿Convención de idioma? (código en inglés, mensajes en español) | ✅ | Identificadores nuevos en inglés (`AuthorizeAdministrationUseCase`, `AdministrationDecisionPort`, `PrincipalMustBeApplicationAdministratorValidator`…); mensajes en español: `AuthorizationMessages.notAuthorizedToAdminister(...)`, las 4 constantes nuevas de `RequiredArgumentMessages` |
-| 3 | ¿Introdujo deriva doc↔código? | ✅ | `drift.ps1` solo reporta el hallazgo preexistente de `pep/`, confirmado ajeno vía `git status` |
-| 4 | ¿La lógica quedó en la capa correcta? | ✅ | `AuthorizeAdministrationUseCaseImpl.execute` no tiene `if/throw` de negocio: solo orquesta `ActiveRoleNamesLookupValidator` → `AdministrationDecisionPort`, con `onErrorResume` fail-closed. `PrincipalMustBeApplicationAdministratorValidatorImpl` traduce una decisión ya tomada (por OPA) a una excepción — no decide nada, consistente con la filosofía que el propio HU-004 fijó ("el catálogo es dato de entrada para la política, jamás una decisión en Java"). `OpaAdministrationDecisionAdapter` solo traduce HTTP↔dominio, igual que `OpaPolicyDecisionAdapter`. Cero anotaciones de Spring en `domain`/`application` (grep sin resultados salvo el `package-info.java` de Modulith, que es una declaración de frontera nueva, no una relajación — `authorization/package-info.java` en sí no se tocó). Sin `.block()` en el código nuevo |
+| # | Juicio                                                          | Resultado | Evidencia                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+|---|-----------------------------------------------------------------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1 | ¿Cumple los criterios de aceptación del plan (no solo compila)? | ✅         | Ver tabla siguiente                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 2 | ¿Convención de idioma? (código en inglés, mensajes en español)  | ✅         | Identificadores nuevos en inglés (`AuthorizeAdministrationUseCase`, `AdministrationDecisionPort`, `PrincipalMustBeApplicationAdministratorValidator`…); mensajes en español: `AuthorizationMessages.notAuthorizedToAdminister(...)`, las 4 constantes nuevas de `RequiredArgumentMessages`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| 3 | ¿Introdujo deriva doc↔código?                                   | ✅         | `drift.ps1` solo reporta el hallazgo preexistente de `pep/`, confirmado ajeno vía `git status`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 4 | ¿La lógica quedó en la capa correcta?                           | ✅         | `AuthorizeAdministrationUseCaseImpl.execute` no tiene `if/throw` de negocio: solo orquesta `ActiveRoleNamesLookupValidator` → `AdministrationDecisionPort`, con `onErrorResume` fail-closed. `PrincipalMustBeApplicationAdministratorValidatorImpl` traduce una decisión ya tomada (por OPA) a una excepción — no decide nada, consistente con la filosofía que el propio HU-004 fijó ("el catálogo es dato de entrada para la política, jamás una decisión en Java"). `OpaAdministrationDecisionAdapter` solo traduce HTTP↔dominio, igual que `OpaPolicyDecisionAdapter`. Cero anotaciones de Spring en `domain`/`application` (grep sin resultados salvo el `package-info.java` de Modulith, que es una declaración de frontera nueva, no una relajación — `authorization/package-info.java` en sí no se tocó). Sin `.block()` en el código nuevo |
 
 ## Criterios de la linea base
 
 > Solo los que el plan declaró (metadata): 1, 2, 3, 4, 9, 11, 12, 21, 22.
 
-| # | Criterio | Resultado | Punto de control comprobado |
-|---|---|---|---|
-| 1 | Clean Architecture | 🤖 ✅ | `LayeredArchitectureTests` + `ModulithStructureTests` en verde; sin Spring en `domain`/`application` del cambio |
-| 2 | Contratos de servicios | ✅ | `AuthorizeAdministrationUseCase`, `AdministrationDecisionPort`, `PrincipalMustBeApplicationAdministratorValidator` son interfaces vacías que extienden contratos de `shared/contract` |
-| 3 | Reglas e integridad | ✅ | Ninguna `Rule` pura nueva, deliberadamente (Hallazgo del plan: la decisión es de OPA, no de Java). El validador solo traduce; cero `if/throw` de negocio en el caso de uso |
-| 4 | Capacidades transversales | ✅ | Sin `Instant.now()`/`UUID.randomUUID()` en línea — no hacían falta (`AdministrationDecision` no lleva id ni marca de tiempo, a propósito: no se audita) |
-| 9 | Excepciones | ✅ | `NotAuthorizedToAdministerException` extiende `BusinessRuleViolationException` (jerarquía existente); nunca `RuntimeException` cruda. El mapeo a 400 en vez de 403 ya estaba anotado como ambigüedad no bloqueante en el plan §11 |
-| 11 | Interacción entre capas | ✅ | `PrincipalMustBeApplicationAdministratorValidator` → `AuthorizeAdministrationUseCase` → `ActiveRoleNamesLookupValidator`/`AdministrationDecisionPort`. Sin controller en esta historia (mecanismo interno, sin endpoint) |
-| 12 | SOLID | ✅ | Contratos mínimos, dependencias inyectadas por constructor contra interfaces |
-| 21 | Modelo refinado | ✅ | Sin cambios a entidades de dominio — reutiliza `Role`/`Assignment` tal cual, decisión documentada en el plan (Hallazgo 6: `Assignment.applicationId` obligatorio impide el ADMIN global, retirado del alcance) |
-| 22 | Arquitectura reactiva | ✅ | Cadena `Mono` completa con `onErrorResume` fail-closed; sin `.block()` |
+| #  | Criterio                  | Resultado | Punto de control comprobado                                                                                                                                                                                                       |
+|----|---------------------------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1  | Clean Architecture        | 🤖 ✅      | `LayeredArchitectureTests` + `ModulithStructureTests` en verde; sin Spring en `domain`/`application` del cambio                                                                                                                   |
+| 2  | Contratos de servicios    | ✅         | `AuthorizeAdministrationUseCase`, `AdministrationDecisionPort`, `PrincipalMustBeApplicationAdministratorValidator` son interfaces vacías que extienden contratos de `shared/contract`                                             |
+| 3  | Reglas e integridad       | ✅         | Ninguna `Rule` pura nueva, deliberadamente (Hallazgo del plan: la decisión es de OPA, no de Java). El validador solo traduce; cero `if/throw` de negocio en el caso de uso                                                        |
+| 4  | Capacidades transversales | ✅         | Sin `Instant.now()`/`UUID.randomUUID()` en línea — no hacían falta (`AdministrationDecision` no lleva id ni marca de tiempo, a propósito: no se audita)                                                                           |
+| 9  | Excepciones               | ✅         | `NotAuthorizedToAdministerException` extiende `BusinessRuleViolationException` (jerarquía existente); nunca `RuntimeException` cruda. El mapeo a 400 en vez de 403 ya estaba anotado como ambigüedad no bloqueante en el plan §11 |
+| 11 | Interacción entre capas   | ✅         | `PrincipalMustBeApplicationAdministratorValidator` → `AuthorizeAdministrationUseCase` → `ActiveRoleNamesLookupValidator`/`AdministrationDecisionPort`. Sin controller en esta historia (mecanismo interno, sin endpoint)          |
+| 12 | SOLID                     | ✅         | Contratos mínimos, dependencias inyectadas por constructor contra interfaces                                                                                                                                                      |
+| 21 | Modelo refinado           | ✅         | Sin cambios a entidades de dominio — reutiliza `Role`/`Assignment` tal cual, decisión documentada en el plan (Hallazgo 6: `Assignment.applicationId` obligatorio impide el ADMIN global, retirado del alcance)                    |
+| 22 | Arquitectura reactiva     | ✅         | Cadena `Mono` completa con `onErrorResume` fail-closed; sin `.block()`                                                                                                                                                            |
 
 ## Desviaciones respecto al plan
 
-| Archivo | Plan decía | Código hace | ¿Justificado? |
-|---|---|---|---|
-| `application.properties` | No listado en el árbol §8 | +1 línea (`pdp.opa.administration-decision-path`) | Sí — consecuencia mecánica del `[M]` a `OpaProperties`, necesaria para que cualquier `@SpringBootTest` arranque (ver Observaciones menores) |
-| `NotAuthorizedToAdministerExceptionTests` | Declarada en sección 9 | No se creó | Sí — el repositorio no tiene precedente de probar excepciones de dominio de forma aislada; la cobertura ya existe indirectamente (ver Observaciones menores) |
+| Archivo                                   | Plan decía                | Código hace                                       | ¿Justificado?                                                                                                                                                |
+|-------------------------------------------|---------------------------|---------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `application.properties`                  | No listado en el árbol §8 | +1 línea (`pdp.opa.administration-decision-path`) | Sí — consecuencia mecánica del `[M]` a `OpaProperties`, necesaria para que cualquier `@SpringBootTest` arranque (ver Observaciones menores)                  |
+| `NotAuthorizedToAdministerExceptionTests` | Declarada en sección 9    | No se creó                                        | Sí — el repositorio no tiene precedente de probar excepciones de dominio de forma aislada; la cobertura ya existe indirectamente (ver Observaciones menores) |
 
 ## Datos para la entrega
 

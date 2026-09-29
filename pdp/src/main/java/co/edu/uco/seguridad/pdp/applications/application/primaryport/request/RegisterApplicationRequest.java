@@ -14,7 +14,7 @@ import java.util.Objects;
  * invariante propio más allá de un tope de longitud que la entidad ya aplica.</p>
  */
 public record RegisterApplicationRequest(TenantId tenantId, ApplicationName name, String description,
-        ApplicationBaseUrl baseUrl) {
+                                         ApplicationBaseUrl baseUrl) {
 
     public RegisterApplicationRequest {
         Objects.requireNonNull(tenantId, RequiredArgumentMessages.TENANT_ID);

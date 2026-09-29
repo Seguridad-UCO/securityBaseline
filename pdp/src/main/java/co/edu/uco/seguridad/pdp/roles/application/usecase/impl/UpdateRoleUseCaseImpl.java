@@ -8,11 +8,17 @@ import co.edu.uco.seguridad.pdp.roles.domain.exception.DuplicateRoleNameExceptio
 import co.edu.uco.seguridad.pdp.roles.domain.exception.ProtectedRoleException;
 import co.edu.uco.seguridad.pdp.roles.domain.exception.RoleNotFoundException;
 import reactor.core.publisher.Mono;
+
 public final class UpdateRoleUseCaseImpl implements UpdateRoleUseCase {
     private static final String ADMIN = "ADMIN";
     private final RoleRepository repository;
-    public UpdateRoleUseCaseImpl(RoleRepository repository) { this.repository = repository; }
-    @Override public Mono<RoleResponse> execute(UpdateRoleRequest input) {
+
+    public UpdateRoleUseCaseImpl(RoleRepository repository) {
+        this.repository = repository;
+    }
+
+    @Override
+    public Mono<RoleResponse> execute(UpdateRoleRequest input) {
         return repository.findByIdForTenant(input.roleId(), input.tenantId())
                 .switchIfEmpty(Mono.error(() -> new RoleNotFoundException(input.roleId())))
                 .flatMap(current -> isDefaultApplicationAdministrator(current)
@@ -24,6 +30,7 @@ public final class UpdateRoleUseCaseImpl implements UpdateRoleUseCase {
                         .switchIfEmpty(repository.save(current.withName(input.name()))))
                 .map(role -> new RoleResponse(role.id(), role.name(), role.scope(), role.resources(), role.registeredAt()));
     }
+
     private static boolean isDefaultApplicationAdministrator(co.edu.uco.seguridad.pdp.roles.domain.Role role) {
         return ADMIN.equalsIgnoreCase(role.name().value()) && role.scope().applicationId().isPresent();
     }

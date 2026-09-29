@@ -9,13 +9,7 @@ import co.edu.uco.seguridad.pdp.assignments.domain.AssignmentCriteria;
 import co.edu.uco.seguridad.pdp.assignments.domain.exception.CannotRemoveLastAdministratorException;
 import co.edu.uco.seguridad.pdp.assignments.domain.model.AssignmentId;
 import co.edu.uco.seguridad.pdp.assignments.domain.rule.LastAdministratorMustNotBeRevokedRule;
-import co.edu.uco.seguridad.pdp.assignments.domain.rule.model.AdministratorRevocationEligibility;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
-import co.edu.uco.seguridad.pdp.commons.model.RoleId;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
-import co.edu.uco.seguridad.pdp.commons.model.UserId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.shared.security.revocation.TokenRevocationPort;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
@@ -123,7 +117,7 @@ class RemoveApplicationAdministratorUseCaseImplTests {
         return new AssignmentRepository() {
             @Override
             public Mono<Boolean> existsActiveByUserApplicationRole(UserId userId, ApplicationId applicationId, RoleId roleId,
-                    Instant now) {
+                                                                   Instant now) {
                 throw new UnsupportedOperationException();
             }
 

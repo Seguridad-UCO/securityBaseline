@@ -31,15 +31,15 @@ prueba) quedó con default `false` — el filtro mTLS se salía sin validar nada
 prueba (no depende del default de ningún perfil). El default `false` en `application.properties`
 queda como hallazgo aparte, no corregido aquí — ver Observaciones.
 
-| Comprobación | Resultado |
-|---|---|
-| Compilación | ✅ |
-| Pruebas | ✅ 668 pruebas, 0 fallos |
+| Comprobación                       | Resultado                                        |
+|------------------------------------|--------------------------------------------------|
+| Compilación                        | ✅                                                |
+| Pruebas                            | ✅ 668 pruebas, 0 fallos                          |
 | Cobertura (≥ 80 % en código nuevo) | ✅ `jacoco-check` corrió y no reportó violaciones |
-| `LayeredArchitectureTests` | ✅ |
-| `ModulithStructureTests` | ✅ |
-| `consistencia.ps1` | ✅ CONSISTENTE — 8 slices |
-| `drift.ps1` | ✅ SIN DERIVA |
+| `LayeredArchitectureTests`         | ✅                                                |
+| `ModulithStructureTests`           | ✅                                                |
+| `consistencia.ps1`                 | ✅ CONSISTENTE — 8 slices                         |
+| `drift.ps1`                        | ✅ SIN DERIVA                                     |
 
 ## Estado final
 
@@ -84,26 +84,26 @@ Ninguno.
 
 ## Los cuatro juicios
 
-| # | Juicio | Resultado | Evidencia |
-|---|---|---|---|
-| 1 | ¿Cumple los criterios de aceptación del plan (no solo compila)? | ✅ | Ver tabla detallada abajo — los 9 criterios de la §2 del plan están cubiertos por una prueba o un archivo concreto |
-| 2 | ¿Convención de idioma? (código en inglés, mensajes en español) | ✅ | Clases nuevas (`AdministerRoleDefinitionUseCase`, `RoleApplicationLookupValidator`…) en inglés; Javadoc y los dos mensajes movidos a `AuthorizationMessages` (`globalScopeNotAdministrableYet`, `applicationIdNotApplicableForTenantScope`) en español; métodos de prueba en inglés descriptivo |
-| 3 | ¿Introdujo deriva doc↔código? | ✅ | `drift.ps1` → SIN DERIVA, 16 excepciones preexistentes sin cambio. `PROJECT-MAP.md` y `CHECKPOINT.md` actualizados en el mismo tramo |
-| 4 | ¿La lógica quedó en la capa correcta? | ✅ | Ver detalle abajo |
+| # | Juicio                                                          | Resultado | Evidencia                                                                                                                                                                                                                                                                                       |
+|---|-----------------------------------------------------------------|-----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1 | ¿Cumple los criterios de aceptación del plan (no solo compila)? | ✅         | Ver tabla detallada abajo — los 9 criterios de la §2 del plan están cubiertos por una prueba o un archivo concreto                                                                                                                                                                              |
+| 2 | ¿Convención de idioma? (código en inglés, mensajes en español)  | ✅         | Clases nuevas (`AdministerRoleDefinitionUseCase`, `RoleApplicationLookupValidator`…) en inglés; Javadoc y los dos mensajes movidos a `AuthorizationMessages` (`globalScopeNotAdministrableYet`, `applicationIdNotApplicableForTenantScope`) en español; métodos de prueba en inglés descriptivo |
+| 3 | ¿Introdujo deriva doc↔código?                                   | ✅         | `drift.ps1` → SIN DERIVA, 16 excepciones preexistentes sin cambio. `PROJECT-MAP.md` y `CHECKPOINT.md` actualizados en el mismo tramo                                                                                                                                                            |
+| 4 | ¿La lógica quedó en la capa correcta?                           | ✅         | Ver detalle abajo                                                                                                                                                                                                                                                                               |
 
 **Detalle del juicio 1 — criterios de aceptación:**
 
-| # Plan §2 | Criterio | Evidencia |
-|---|---|---|
-| 1 | Definir rol `APPLICATION` como admin → 201 | `AdministerRoleDefinitionUseCaseImplTests.defines_the_role_when_the_principal_administers_the_application`; `RoleHttpTests.refuses_granting_a_resource_from_another_application_to_an_application_scoped_role` usa `defineApplicationScopedRole` como fixture con éxito (201) |
-| 2 | Definir rol `APPLICATION` sin ser admin → 400 `NOT_AUTHORIZED_TO_ADMINISTER` | `AdministerRoleDefinitionUseCaseImplTests.never_defines_the_role_when_the_principal_does_not_administer_the_application` |
-| 3 | Definir rol `TENANT` → 201, sin gate | `AdministerRoleDefinitionUseCaseImplTests.defines_a_tenant_scoped_role_without_gating_when_administration_is_empty`; `RoleHttpTests.defines_a_tenant_scoped_role` (e2e) |
-| 4 | Conceder recurso a rol `APPLICATION` como admin → 200 | `AdministerResourceGrantUseCaseImplTests.grants_the_resource_when_the_principal_administers_the_application`; `RoleHttpTests.refuses_granting_a_resource_from_another_application_to_an_application_scoped_role` llega a `RESOURCE_OUTSIDE_ROLE_SCOPE` (no a `NOT_AUTHORIZED_TO_ADMINISTER`) — prueba indirecta de que el gate permitió pasar |
-| 5 | Conceder recurso a rol `APPLICATION` sin ser admin → 400 | `AdministerResourceGrantUseCaseImplTests.never_grants_the_resource_when_the_principal_does_not_administer_the_application` |
-| 6 | Conceder recurso a rol `TENANT` → 200, sin gate | `AdministerResourceGrantUseCaseImplTests.grants_a_resource_to_a_tenant_scoped_role_without_gating_when_administration_is_empty` |
-| 7 | `GET /api/v1/roles` sin cambios | `RoleControllerTests.list_delegates_to_the_interactor_and_replies_with_200`; `RoleHttpTests.the_catalog_never_shows_roles_of_another_tenant` |
-| 8 | Rol inexistente en `POST /{roleId}/resources` → rechazo del dominio | `AdministerResourceGrantInteractorImplTests.propagates_role_not_found_without_reaching_the_use_case` (`RoleNotFoundException`, mapeado a 400 por `ApiErrorHandler`, mismo criterio que el resto del proyecto) |
-| 9 | `verificar.ps1` en verde | ✅ 668/668, incluido `jacoco-check` |
+| # Plan §2 | Criterio                                                                     | Evidencia                                                                                                                                                                                                                                                                                                                                     |
+|-----------|------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1         | Definir rol `APPLICATION` como admin → 201                                   | `AdministerRoleDefinitionUseCaseImplTests.defines_the_role_when_the_principal_administers_the_application`; `RoleHttpTests.refuses_granting_a_resource_from_another_application_to_an_application_scoped_role` usa `defineApplicationScopedRole` como fixture con éxito (201)                                                                 |
+| 2         | Definir rol `APPLICATION` sin ser admin → 400 `NOT_AUTHORIZED_TO_ADMINISTER` | `AdministerRoleDefinitionUseCaseImplTests.never_defines_the_role_when_the_principal_does_not_administer_the_application`                                                                                                                                                                                                                      |
+| 3         | Definir rol `TENANT` → 201, sin gate                                         | `AdministerRoleDefinitionUseCaseImplTests.defines_a_tenant_scoped_role_without_gating_when_administration_is_empty`; `RoleHttpTests.defines_a_tenant_scoped_role` (e2e)                                                                                                                                                                       |
+| 4         | Conceder recurso a rol `APPLICATION` como admin → 200                        | `AdministerResourceGrantUseCaseImplTests.grants_the_resource_when_the_principal_administers_the_application`; `RoleHttpTests.refuses_granting_a_resource_from_another_application_to_an_application_scoped_role` llega a `RESOURCE_OUTSIDE_ROLE_SCOPE` (no a `NOT_AUTHORIZED_TO_ADMINISTER`) — prueba indirecta de que el gate permitió pasar |
+| 5         | Conceder recurso a rol `APPLICATION` sin ser admin → 400                     | `AdministerResourceGrantUseCaseImplTests.never_grants_the_resource_when_the_principal_does_not_administer_the_application`                                                                                                                                                                                                                    |
+| 6         | Conceder recurso a rol `TENANT` → 200, sin gate                              | `AdministerResourceGrantUseCaseImplTests.grants_a_resource_to_a_tenant_scoped_role_without_gating_when_administration_is_empty`                                                                                                                                                                                                               |
+| 7         | `GET /api/v1/roles` sin cambios                                              | `RoleControllerTests.list_delegates_to_the_interactor_and_replies_with_200`; `RoleHttpTests.the_catalog_never_shows_roles_of_another_tenant`                                                                                                                                                                                                  |
+| 8         | Rol inexistente en `POST /{roleId}/resources` → rechazo del dominio          | `AdministerResourceGrantInteractorImplTests.propagates_role_not_found_without_reaching_the_use_case` (`RoleNotFoundException`, mapeado a 400 por `ApiErrorHandler`, mismo criterio que el resto del proyecto)                                                                                                                                 |
+| 9         | `verificar.ps1` en verde                                                     | ✅ 668/668, incluido `jacoco-check`                                                                                                                                                                                                                                                                                                            |
 
 **Detalle del juicio 4 — capa correcta:**
 
@@ -127,27 +127,27 @@ Ninguno.
 
 > Los que el plan declaró: 1, 2, 3, 9, 11, 12, 21, 22.
 
-| # | Criterio | Resultado | Punto de control comprobado |
-|---|---|---|---|
-| 1 | Clean Architecture | ✅ 🤖 | `LayeredArchitectureTests` corrió en verde antes del fallo ajeno; sin anotaciones de Spring en `domain`/`application` de las piezas nuevas |
-| 2 | Contratos de servicios | ✅ | `RoleApplicationLookupValidator`, `AdministerRoleDefinitionUseCase`, `AdministerResourceGrantUseCase`, ambos interactores: interfaces vacías extendiendo `ReactiveOperation` |
-| 3 | Reglas e integridad | ✅ | Ninguna `Rule` nueva necesaria (ver Juicio 4); `RoleApplicationLookupValidatorImpl` reutiliza `RoleMustExistForTenantRule` sin duplicarla |
-| 9 | Excepciones | ✅ | Reutiliza `NotAuthorizedToAdministerException`/`RoleNotFoundException` existentes, sin excepción nueva; `ApiErrorHandler` sin tocar |
-| 11 | Interacción entre capas | ✅ | Controller → interactor → use case → (validador/regla) — verificado archivo por archivo en Juicio 4 |
-| 12 | SOLID | ✅ | Contratos de una operación; `AdministerRoleDefinitionUseCaseImpl`/`AdministerResourceGrantUseCaseImpl` dependen de interfaces (`PrincipalMustBeApplicationAdministratorValidator`, `DefineRoleUseCase`/`GrantResourceToRoleUseCase`) inyectadas por constructor |
-| 21 | Modelo refinado | ✅ | `AdministerRoleDefinitionRequest`/`AdministerResourceGrantRequest`: records inmutables con `Objects.requireNonNull` en cada componente (verificado con el grep de records vacíos — ninguno) |
-| 22 | Arquitectura reactiva | ✅ | `Mono` en toda la cadena nueva; sin `block()`; `Mono.defer(...)` para diferir la ejecución del caso de uso real tras el gate, mismo patrón que HU-015 |
+| #  | Criterio                | Resultado | Punto de control comprobado                                                                                                                                                                                                                                     |
+|----|-------------------------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1  | Clean Architecture      | ✅ 🤖      | `LayeredArchitectureTests` corrió en verde antes del fallo ajeno; sin anotaciones de Spring en `domain`/`application` de las piezas nuevas                                                                                                                      |
+| 2  | Contratos de servicios  | ✅         | `RoleApplicationLookupValidator`, `AdministerRoleDefinitionUseCase`, `AdministerResourceGrantUseCase`, ambos interactores: interfaces vacías extendiendo `ReactiveOperation`                                                                                    |
+| 3  | Reglas e integridad     | ✅         | Ninguna `Rule` nueva necesaria (ver Juicio 4); `RoleApplicationLookupValidatorImpl` reutiliza `RoleMustExistForTenantRule` sin duplicarla                                                                                                                       |
+| 9  | Excepciones             | ✅         | Reutiliza `NotAuthorizedToAdministerException`/`RoleNotFoundException` existentes, sin excepción nueva; `ApiErrorHandler` sin tocar                                                                                                                             |
+| 11 | Interacción entre capas | ✅         | Controller → interactor → use case → (validador/regla) — verificado archivo por archivo en Juicio 4                                                                                                                                                             |
+| 12 | SOLID                   | ✅         | Contratos de una operación; `AdministerRoleDefinitionUseCaseImpl`/`AdministerResourceGrantUseCaseImpl` dependen de interfaces (`PrincipalMustBeApplicationAdministratorValidator`, `DefineRoleUseCase`/`GrantResourceToRoleUseCase`) inyectadas por constructor |
+| 21 | Modelo refinado         | ✅         | `AdministerRoleDefinitionRequest`/`AdministerResourceGrantRequest`: records inmutables con `Objects.requireNonNull` en cada componente (verificado con el grep de records vacíos — ninguno)                                                                     |
+| 22 | Arquitectura reactiva   | ✅         | `Mono` en toda la cadena nueva; sin `block()`; `Mono.defer(...)` para diferir la ejecución del caso de uso real tras el gate, mismo patrón que HU-015                                                                                                           |
 
 ## Desviaciones respecto al plan
 
-| Archivo | Plan decía | Código hace | ¿Justificado? |
-|---|---|---|---|
-| `authorization/package-info.java` | Agregar `roles :: usecase`, `roles :: dto` y `roles :: model` | Las tres presentes | Sí — ya estaba en el texto del plan, solo faltaba aplicarlo (corregido en la fase de implementación) |
-| `authorization/package-info.java` | No mencionaba `identity :: dto` | Se agregó | Sí — corrige una omisión real de la PR #49 ajena a esta historia (ver Observaciones), no una relajación para HU-016 |
-| `identity/application/primaryport/{request,response}/package-info.java` | No declarados | Creados | Sí — mismo motivo que arriba |
-| `AssignmentHttpTests.java`, `RoleHttpTests.java` | No declarados como `[M]` | Se les agregó `OpaFixtureServer` | Sí — consecuencia directa de gatear un endpoint que sus fixtures usaban sin saberlo (ver Observaciones) |
-| `RoleAdministrationController.java` | `[N]`, con nota de creación diferida | Creado en la fase de tester, no de planificación | Sí — el propio plan anticipaba esta secuencia por el riesgo de colisión de rutas |
-| `InternalSecurityChainIntegrationTests.java` | No declarado | Se le agregó `pdp.security.internal.mtls.enabled=true` a su `@DynamicPropertySource` | Sí — corrige un hallazgo real de la PR #49 descubierto durante esta validación, aprobado por Sebastián; no es alcance de HU-016 pero se aplicó en el mismo tramo |
+| Archivo                                                                 | Plan decía                                                    | Código hace                                                                          | ¿Justificado?                                                                                                                                                    |
+|-------------------------------------------------------------------------|---------------------------------------------------------------|--------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `authorization/package-info.java`                                       | Agregar `roles :: usecase`, `roles :: dto` y `roles :: model` | Las tres presentes                                                                   | Sí — ya estaba en el texto del plan, solo faltaba aplicarlo (corregido en la fase de implementación)                                                             |
+| `authorization/package-info.java`                                       | No mencionaba `identity :: dto`                               | Se agregó                                                                            | Sí — corrige una omisión real de la PR #49 ajena a esta historia (ver Observaciones), no una relajación para HU-016                                              |
+| `identity/application/primaryport/{request,response}/package-info.java` | No declarados                                                 | Creados                                                                              | Sí — mismo motivo que arriba                                                                                                                                     |
+| `AssignmentHttpTests.java`, `RoleHttpTests.java`                        | No declarados como `[M]`                                      | Se les agregó `OpaFixtureServer`                                                     | Sí — consecuencia directa de gatear un endpoint que sus fixtures usaban sin saberlo (ver Observaciones)                                                          |
+| `RoleAdministrationController.java`                                     | `[N]`, con nota de creación diferida                          | Creado en la fase de tester, no de planificación                                     | Sí — el propio plan anticipaba esta secuencia por el riesgo de colisión de rutas                                                                                 |
+| `InternalSecurityChainIntegrationTests.java`                            | No declarado                                                  | Se le agregó `pdp.security.internal.mtls.enabled=true` a su `@DynamicPropertySource` | Sí — corrige un hallazgo real de la PR #49 descubierto durante esta validación, aprobado por Sebastián; no es alcance de HU-016 pero se aplicó en el mismo tramo |
 
 ## Datos para la entrega
 

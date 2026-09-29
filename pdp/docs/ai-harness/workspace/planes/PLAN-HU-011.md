@@ -8,21 +8,21 @@
 - **Fecha:** 2026-09-12
 - **Rama sugerida:** `feature/HU-011-perfiles-agrupacion-roles`
 - **Fuentes:**
-  - `pdp/docs/ai-harness/workspace/HU-011.md` (historia dictada; renumerada desde HU-008 el
-    2026-09-12 por colisión con la historia de identidad ya fusionada bajo ese ID — ver la nota en
-    el propio archivo)
-  - `security-platform-architecture/docs/02-domain/03-bounded-contexts.md` (BC-05 Perfiles, BC-08
-    Asignaciones) y `10-entities.md` (MVP vs. diferido: `Perfil`/`PerfilRol` y `UsuarioPerfil` en
-    Etapa 2)
-  - Diagramas `docs/02-domain/diagrams/models/05-perfiles-full.html` (Perfil 1 → PerfilRol 1..* →
-    Rol; depende de Roles y Tenants) y `08-asignaciones-full.html` ("UsuarioPerfil ... generate
-    UsuarioAplicacionRol records" — confirma materialización, no resolución en consulta)
-  - Código real: `Role`/`RoleScope`/`RoleRepository`/`DefineRoleUseCaseImpl`/
-    `GrantResourceToRoleUseCaseImpl` (patrón exacto a espejar para el catálogo), `Assignment`/
-    `AssignRoleUseCaseImpl`/`RevokeAssignmentUseCaseImpl`/`AssignmentRepository` (reutilizados
-    directamente, sin duplicar su lógica, para materializar y revocar)
-  - Tres decisiones confirmadas por Sebastián el 2026-09-12 (ver §11): alcance propio (`RoleScope`),
-    `applicationId` explícito al asignar, revocación en cascada
+    - `pdp/docs/ai-harness/workspace/HU-011.md` (historia dictada; renumerada desde HU-008 el
+      2026-09-12 por colisión con la historia de identidad ya fusionada bajo ese ID — ver la nota en
+      el propio archivo)
+    - `security-platform-architecture/docs/02-domain/03-bounded-contexts.md` (BC-05 Perfiles, BC-08
+      Asignaciones) y `10-entities.md` (MVP vs. diferido: `Perfil`/`PerfilRol` y `UsuarioPerfil` en
+      Etapa 2)
+    - Diagramas `docs/02-domain/diagrams/models/05-perfiles-full.html` (Perfil 1 → PerfilRol 1..* →
+      Rol; depende de Roles y Tenants) y `08-asignaciones-full.html` ("UsuarioPerfil ... generate
+      UsuarioAplicacionRol records" — confirma materialización, no resolución en consulta)
+    - Código real: `Role`/`RoleScope`/`RoleRepository`/`DefineRoleUseCaseImpl`/
+      `GrantResourceToRoleUseCaseImpl` (patrón exacto a espejar para el catálogo), `Assignment`/
+      `AssignRoleUseCaseImpl`/`RevokeAssignmentUseCaseImpl`/`AssignmentRepository` (reutilizados
+      directamente, sin duplicar su lógica, para materializar y revocar)
+    - Tres decisiones confirmadas por Sebastián el 2026-09-12 (ver §11): alcance propio (`RoleScope`),
+      `applicationId` explícito al asignar, revocación en cascada
 - **Criterios de la línea base que toca:** 1, 2, 3, 4, 7, 9, 11, 12, 13, 14, 15, 16, 17, 18, 21, 22
 
 ## 0. Hallazgos antes de planificar
@@ -97,26 +97,26 @@ del proyecto — no se inventa una saga aquí).
 
 ## 2. Criterios de aceptación
 
-| # | Criterio (derivado de HU-011.md + decisiones confirmadas) | Resultado esperado |
-|---|---|---|
-| 1 | Un perfil agrupa uno o más roles | `Profile.roles()` es un `Set<RoleId>`; `AddRoleToProfileUseCase` los agrega uno a uno, idempotente |
-| 2 | El nombre del perfil es único en su alcance exacto | `ProfileNameMustBeUniqueInScopeRule` — mismo patrón que `RoleNameMustBeUniqueInScopeRule` |
-| 3 | El perfil tiene su propio alcance (decisión confirmada) | `Profile.scope(): RoleScope`, validado igual que en `Role` (si es `APPLICATION`, la aplicación debe existir para el inquilino) |
-| 4 | Asignar un perfil materializa una asignación por cada rol que agrupa | `AssignProfileUseCaseImpl` llama a `AssignRoleUseCase.execute(...)` una vez por `RoleId` del perfil, dentro del mismo módulo |
-| 5 | El `applicationId` de la materialización es explícito (decisión confirmada) | `AssignProfileRequest` lo recibe como componente, igual que `AssignRoleRequest` |
-| 6 | No se puede asignar dos veces el mismo perfil activo al mismo usuario+aplicación | `ProfileAssignmentMustNotDuplicateActiveRule`, mismo patrón que `AssignmentMustNotDuplicateActiveRule` |
-| 7 | Revocar la asignación de un perfil revoca en cascada lo que generó (decisión confirmada) | `RevokeProfileAssignmentUseCaseImpl` llama a `RevokeAssignmentUseCase.execute(...)` por cada id en `ProfileAssignment.generatedAssignmentIds()` antes de revocarse a sí mismo |
-| 8 | Un perfil o un rol que no existen para el inquilino se rechazan, no se materializan a medias silenciosamente | `ProfileNotFoundException` / `RoleNotFoundException` (ya existente) antes de tocar `AssignmentRepository` |
+| # | Criterio (derivado de HU-011.md + decisiones confirmadas)                                                    | Resultado esperado                                                                                                                                                            |
+|---|--------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1 | Un perfil agrupa uno o más roles                                                                             | `Profile.roles()` es un `Set<RoleId>`; `AddRoleToProfileUseCase` los agrega uno a uno, idempotente                                                                            |
+| 2 | El nombre del perfil es único en su alcance exacto                                                           | `ProfileNameMustBeUniqueInScopeRule` — mismo patrón que `RoleNameMustBeUniqueInScopeRule`                                                                                     |
+| 3 | El perfil tiene su propio alcance (decisión confirmada)                                                      | `Profile.scope(): RoleScope`, validado igual que en `Role` (si es `APPLICATION`, la aplicación debe existir para el inquilino)                                                |
+| 4 | Asignar un perfil materializa una asignación por cada rol que agrupa                                         | `AssignProfileUseCaseImpl` llama a `AssignRoleUseCase.execute(...)` una vez por `RoleId` del perfil, dentro del mismo módulo                                                  |
+| 5 | El `applicationId` de la materialización es explícito (decisión confirmada)                                  | `AssignProfileRequest` lo recibe como componente, igual que `AssignRoleRequest`                                                                                               |
+| 6 | No se puede asignar dos veces el mismo perfil activo al mismo usuario+aplicación                             | `ProfileAssignmentMustNotDuplicateActiveRule`, mismo patrón que `AssignmentMustNotDuplicateActiveRule`                                                                        |
+| 7 | Revocar la asignación de un perfil revoca en cascada lo que generó (decisión confirmada)                     | `RevokeProfileAssignmentUseCaseImpl` llama a `RevokeAssignmentUseCase.execute(...)` por cada id en `ProfileAssignment.generatedAssignmentIds()` antes de revocarse a sí mismo |
+| 8 | Un perfil o un rol que no existen para el inquilino se rechazan, no se materializan a medias silenciosamente | `ProfileNotFoundException` / `RoleNotFoundException` (ya existente) antes de tocar `AssignmentRepository`                                                                     |
 
 ## 3. Reglas de negocio
 
-| # | Regla | Dónde vive (VO / Rule) | Puerto que trae el dato | Excepción → HTTP |
-|---|---|---|---|---|
-| P1 | El nombre de perfil es único en su alcance exacto (nivel + inquilino + aplicación) | `profiles/domain/rule/ProfileNameMustBeUniqueInScopeRule` (síncrona) | `ProfileRepository.existsByNameInScope` | `DuplicateProfileNameException` → 409 |
-| P2 | El perfil existe para el inquilino que pregunta | `profiles/domain/rule/ProfileMustExistForTenantRule` (síncrona) | `ProfileRepository.findByIdForTenant` | `ProfileNotFoundException` → 400 |
-| P3 | El rol que se agrega a un perfil existe para el inquilino | `roles/domain/rule/RoleMustExistForTenantRule` (ya existe, síncrona) — envuelta en el nuevo `RoleMustExistForTenantValidator` publicado a `profiles` | `RoleRepository.findByIdForTenant` (prestado de `roles`) | `RoleNotFoundException` (ya existente) → 400 |
-| A1 | No hay ya una asignación de este perfil activa para (usuario, aplicación) | `assignments/domain/rule/ProfileAssignmentMustNotDuplicateActiveRule` (síncrona) | `ProfileAssignmentRepository.existsActiveByUserApplicationProfile` | `DuplicateProfileAssignmentException` → 409 |
-| A2 | El `ProfileAssignment` existe para el inquilino que revoca | `assignments/domain/rule/ProfileAssignmentMustExistForTenantRule` (síncrona) | `ProfileAssignmentRepository.findByIdForTenant` | `ProfileAssignmentNotFoundException` → 400 |
+| #  | Regla                                                                              | Dónde vive (VO / Rule)                                                                                                                               | Puerto que trae el dato                                            | Excepción → HTTP                             |
+|----|------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------|----------------------------------------------|
+| P1 | El nombre de perfil es único en su alcance exacto (nivel + inquilino + aplicación) | `profiles/domain/rule/ProfileNameMustBeUniqueInScopeRule` (síncrona)                                                                                 | `ProfileRepository.existsByNameInScope`                            | `DuplicateProfileNameException` → 409        |
+| P2 | El perfil existe para el inquilino que pregunta                                    | `profiles/domain/rule/ProfileMustExistForTenantRule` (síncrona)                                                                                      | `ProfileRepository.findByIdForTenant`                              | `ProfileNotFoundException` → 400             |
+| P3 | El rol que se agrega a un perfil existe para el inquilino                          | `roles/domain/rule/RoleMustExistForTenantRule` (ya existe, síncrona) — envuelta en el nuevo `RoleMustExistForTenantValidator` publicado a `profiles` | `RoleRepository.findByIdForTenant` (prestado de `roles`)           | `RoleNotFoundException` (ya existente) → 400 |
+| A1 | No hay ya una asignación de este perfil activa para (usuario, aplicación)          | `assignments/domain/rule/ProfileAssignmentMustNotDuplicateActiveRule` (síncrona)                                                                     | `ProfileAssignmentRepository.existsActiveByUserApplicationProfile` | `DuplicateProfileAssignmentException` → 409  |
+| A2 | El `ProfileAssignment` existe para el inquilino que revoca                         | `assignments/domain/rule/ProfileAssignmentMustExistForTenantRule` (síncrona)                                                                         | `ProfileAssignmentRepository.findByIdForTenant`                    | `ProfileAssignmentNotFoundException` → 400   |
 
 Las reglas ya existentes que se reutilizan sin cambio (`RoleNameMustBeUniqueInScopeRule` no aplica
 aquí — es una regla distinta, de `roles`, no reutilizada; sí se reutilizan tal cual
@@ -139,12 +139,12 @@ sitio.
 
 ### Value objects
 
-| VO | Nuevo o existente | Invariantes | Vive en |
-|---|---|---|---|
-| `ProfileId` | Nuevo | UUID no nulo; `of(String)` para parseo | `pdp/commons/model/` (2 consumidores: `profiles` y `assignments`, mismo motivo que `RoleId`) |
-| `ProfileName` | Nuevo | 3 a 60 caracteres tras `trim()` | `profiles/domain/model/` (un solo consumidor) |
-| `ProfileAssignmentId` | Nuevo | UUID no nulo; `of(String)` para parseo | `assignments/domain/model/` (un solo consumidor, igual que `AssignmentId`) |
-| `RoleScope`/`RoleScopeLevel` | Existente, reutilizado tal cual | Sin cambio | `roles/domain/model/` — gana `@NamedInterface("model")` nuevo (hallazgo 3), cero cambio de contenido |
+| VO                           | Nuevo o existente               | Invariantes                            | Vive en                                                                                              |
+|------------------------------|---------------------------------|----------------------------------------|------------------------------------------------------------------------------------------------------|
+| `ProfileId`                  | Nuevo                           | UUID no nulo; `of(String)` para parseo | `pdp/commons/model/` (2 consumidores: `profiles` y `assignments`, mismo motivo que `RoleId`)         |
+| `ProfileName`                | Nuevo                           | 3 a 60 caracteres tras `trim()`        | `profiles/domain/model/` (un solo consumidor)                                                        |
+| `ProfileAssignmentId`        | Nuevo                           | UUID no nulo; `of(String)` para parseo | `assignments/domain/model/` (un solo consumidor, igual que `AssignmentId`)                           |
+| `RoleScope`/`RoleScopeLevel` | Existente, reutilizado tal cual | Sin cambio                             | `roles/domain/model/` — gana `@NamedInterface("model")` nuevo (hallazgo 3), cero cambio de contenido |
 
 ## 5. Persistencia
 
@@ -153,10 +153,10 @@ sitio.
 - **Campos:** `id`, `name`, `scopeLevel`, `tenantId`, `applicationId`, `roleIds` (lista de String),
   `registeredAt` — plano, como todo `{X}Entity`.
 - **Consultas nuevas en el puerto `ProfileRepository`:**
-  - `Mono<Boolean> existsByNameInScope(ProfileName name, RoleScope scope)`
-  - `Mono<Profile> findByIdForTenant(ProfileId profileId, TenantId tenantId)`
-  - `Mono<ResultPage<Profile>> findBy(ProfileCriteria criteria, PageWindow window)`
-  - `Mono<Profile> save(Profile profile)`
+    - `Mono<Boolean> existsByNameInScope(ProfileName name, RoleScope scope)`
+    - `Mono<Profile> findByIdForTenant(ProfileId profileId, TenantId tenantId)`
+    - `Mono<ResultPage<Profile>> findBy(ProfileCriteria criteria, PageWindow window)`
+    - `Mono<Profile> save(Profile profile)`
 - **Índice:** de respaldo, no único, sobre `(name)` — la unicidad real la decide la regla contra
   `scopeLevel`/`tenantId`/`applicationId` juntos, igual que en `role`; no se define un índice
   compuesto único nuevo, mismo criterio que ya usa `RoleSchema` hoy (verificar en el propio archivo
@@ -169,9 +169,10 @@ sitio.
 - **Campos:** `id`, `userId`, `tenantId`, `applicationId`, `profileId`, `generatedAssignmentIds`
   (lista de String), `validFrom`, `validUntil` — plano.
 - **Consultas nuevas en el puerto `ProfileAssignmentRepository`:**
-  - `Mono<Boolean> existsActiveByUserApplicationProfile(UserId userId, ApplicationId applicationId, ProfileId profileId, Instant now)`
-  - `Mono<ProfileAssignment> findByIdForTenant(ProfileAssignmentId id, TenantId tenantId)`
-  - `Mono<ProfileAssignment> save(ProfileAssignment profileAssignment)`
+    -
+    `Mono<Boolean> existsActiveByUserApplicationProfile(UserId userId, ApplicationId applicationId, ProfileId profileId, Instant now)`
+    - `Mono<ProfileAssignment> findByIdForTenant(ProfileAssignmentId id, TenantId tenantId)`
+    - `Mono<ProfileAssignment> save(ProfileAssignment profileAssignment)`
 - **Índice:** ninguno nuevo obligatorio — la tabla es pequeña y se consulta por id o por la tripleta
   (usuario, aplicación, perfil), igual que `assignment` hoy.
 - **Inicializador de esquema:** nuevo, `SurrealProfileAssignmentSchemaInitializer` (mismo patrón que
@@ -179,13 +180,13 @@ sitio.
 
 ## 6. Endpoint
 
-| Verbo | Ruta | Código de éxito | Cuerpo de entrada | Cuerpo de salida |
-|---|---|---|---|---|
-| POST | `/api/v1/profiles` | 201 | `{name, scope, applicationId?}` | `ProfileWebResponse` |
-| POST | `/api/v1/profiles/{profileId}/roles` | 200 | `{roleId}` | `ProfileWebResponse` |
-| GET | `/api/v1/profiles` | 200 | `page`/`size` u `offset`/`limit` (query) | `PageResponse<ProfileWebResponse>` |
-| POST | `/api/v1/profiles/{profileId}/assignments` | 201 | `{userId, applicationId}` | `ProfileAssignmentWebResponse` |
-| DELETE | `/api/v1/profiles/{profileId}/assignments/{profileAssignmentId}` | 200 | — | (sin cuerpo de datos) |
+| Verbo  | Ruta                                                             | Código de éxito | Cuerpo de entrada                        | Cuerpo de salida                   |
+|--------|------------------------------------------------------------------|-----------------|------------------------------------------|------------------------------------|
+| POST   | `/api/v1/profiles`                                               | 201             | `{name, scope, applicationId?}`          | `ProfileWebResponse`               |
+| POST   | `/api/v1/profiles/{profileId}/roles`                             | 200             | `{roleId}`                               | `ProfileWebResponse`               |
+| GET    | `/api/v1/profiles`                                               | 200             | `page`/`size` u `offset`/`limit` (query) | `PageResponse<ProfileWebResponse>` |
+| POST   | `/api/v1/profiles/{profileId}/assignments`                       | 201             | `{userId, applicationId}`                | `ProfileAssignmentWebResponse`     |
+| DELETE | `/api/v1/profiles/{profileId}/assignments/{profileAssignmentId}` | 200             | —                                        | (sin cuerpo de datos)              |
 
 - **Autorización:** requiere token; el inquilino sale del principal, nunca del body — mismo patrón
   que `RoleController`/`AssignmentController`.
@@ -575,38 +576,38 @@ shared/message/
 
 ## 9. Casos de prueba esperados
 
-| Capa | Clase de prueba | Casos |
-|---|---|---|
-| `profiles` domain | `ProfileTests` | `define` deja roles vacío; `withRole` es idempotente (agregar dos veces el mismo no duplica) |
-| `profiles` domain | `ProfileNameTests` | rechaza null/vacío/corto/largo, igual que `RoleNameTests` |
-| `profiles` domain | `ProfileCriteriaTests` | perfil del tenant coincide; perfil global coincide; perfil de otro tenant no |
-| `profiles` domain | `ProfileNameMustBeUniqueInScopeRuleImplTests`, `ProfileMustExistForTenantRuleImplTests` | 1 camino feliz + 1 rechazo cada una, calco de sus equivalentes en `roles` |
-| `profiles` application | `DefineProfileUseCaseImplTests` | camino feliz (APPLICATION y TENANT); rechazo por nombre duplicado; rechazo por aplicación inexistente cuando scope es APPLICATION |
-| `profiles` application | `AddRoleToProfileUseCaseImplTests` | camino feliz; rechazo por perfil inexistente; rechazo por rol inexistente para el tenant |
-| `profiles` application | `ListProfilesUseCaseImplTests` | página con los del tenant + globales |
-| `profiles` application | `ProfileRolesLookupValidatorImplTests` | perfil existente devuelve su conjunto de roles; perfil inexistente lanza `ProfileNotFoundException` |
-| `profiles` infrastructure | `ProfilePersistenceMapperTests`, `DefineProfileRequestMapperTests`, `AddRoleToProfileRequestMapperTests`, `ListProfilesRequestMapperTests`, `ProfileResponseMapperTests`, `ProfileControllerTests`, `ProfileHttpTests` | mismo presupuesto que sus equivalentes en `roles` (campo ausente/mal formado/válido; delega al interactor; scope GLOBAL rechazado con 400) |
-| `roles` application | `RoleMustExistForTenantValidatorImplTests` | rol existente no lanza; rol inexistente lanza `RoleNotFoundException` |
-| `assignments` domain | `ProfileAssignmentTests` | `grant` deja vigencia sin fin; `revoke` la cierra; conserva `generatedAssignmentIds` |
-| `assignments` domain | `ProfileAssignmentMustNotDuplicateActiveRuleImplTests`, `ProfileAssignmentMustExistForTenantRuleImplTests` | 1 camino feliz + 1 rechazo cada una |
-| `assignments` application | `AssignProfileUseCaseImplTests` | camino feliz: N roles del perfil generan N `Assignment` (fake de `AssignRoleUseCase` capturando cuántas veces y con qué `AssignRoleRequest` se llamó); rechazo por perfil inexistente (nunca llega a `AssignRoleUseCase`, poison-pill); rechazo por perfil ya asignado activo |
-| `assignments` application | `RevokeProfileAssignmentUseCaseImplTests` | camino feliz: revoca cada `AssignmentId` generado (fake de `RevokeAssignmentUseCase` capturando cuántas veces) y luego el propio `ProfileAssignment`; rechazo por `ProfileAssignment` inexistente |
-| `assignments` infrastructure | `ProfileAssignmentPersistenceMapperTests`, `AssignProfileRequestMapperTests`, `ProfileAssignmentResponseMapperTests`, `ProfileAssignmentControllerTests`, `ProfileAssignmentHttpTests` | mismo presupuesto que `AssignmentController`/`AssignRoleRequestMapper` |
-| `shared/persistence` | `SurrealRepositoryIntegrationTests` (extendida) | `ProfileRepository`: guarda y encuentra por nombre en alcance; `ProfileAssignmentRepository`: guarda y encuentra activo por (usuario, aplicación, perfil) |
+| Capa                         | Clase de prueba                                                                                                                                                                                                        | Casos                                                                                                                                                                                                                                                                         |
+|------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `profiles` domain            | `ProfileTests`                                                                                                                                                                                                         | `define` deja roles vacío; `withRole` es idempotente (agregar dos veces el mismo no duplica)                                                                                                                                                                                  |
+| `profiles` domain            | `ProfileNameTests`                                                                                                                                                                                                     | rechaza null/vacío/corto/largo, igual que `RoleNameTests`                                                                                                                                                                                                                     |
+| `profiles` domain            | `ProfileCriteriaTests`                                                                                                                                                                                                 | perfil del tenant coincide; perfil global coincide; perfil de otro tenant no                                                                                                                                                                                                  |
+| `profiles` domain            | `ProfileNameMustBeUniqueInScopeRuleImplTests`, `ProfileMustExistForTenantRuleImplTests`                                                                                                                                | 1 camino feliz + 1 rechazo cada una, calco de sus equivalentes en `roles`                                                                                                                                                                                                     |
+| `profiles` application       | `DefineProfileUseCaseImplTests`                                                                                                                                                                                        | camino feliz (APPLICATION y TENANT); rechazo por nombre duplicado; rechazo por aplicación inexistente cuando scope es APPLICATION                                                                                                                                             |
+| `profiles` application       | `AddRoleToProfileUseCaseImplTests`                                                                                                                                                                                     | camino feliz; rechazo por perfil inexistente; rechazo por rol inexistente para el tenant                                                                                                                                                                                      |
+| `profiles` application       | `ListProfilesUseCaseImplTests`                                                                                                                                                                                         | página con los del tenant + globales                                                                                                                                                                                                                                          |
+| `profiles` application       | `ProfileRolesLookupValidatorImplTests`                                                                                                                                                                                 | perfil existente devuelve su conjunto de roles; perfil inexistente lanza `ProfileNotFoundException`                                                                                                                                                                           |
+| `profiles` infrastructure    | `ProfilePersistenceMapperTests`, `DefineProfileRequestMapperTests`, `AddRoleToProfileRequestMapperTests`, `ListProfilesRequestMapperTests`, `ProfileResponseMapperTests`, `ProfileControllerTests`, `ProfileHttpTests` | mismo presupuesto que sus equivalentes en `roles` (campo ausente/mal formado/válido; delega al interactor; scope GLOBAL rechazado con 400)                                                                                                                                    |
+| `roles` application          | `RoleMustExistForTenantValidatorImplTests`                                                                                                                                                                             | rol existente no lanza; rol inexistente lanza `RoleNotFoundException`                                                                                                                                                                                                         |
+| `assignments` domain         | `ProfileAssignmentTests`                                                                                                                                                                                               | `grant` deja vigencia sin fin; `revoke` la cierra; conserva `generatedAssignmentIds`                                                                                                                                                                                          |
+| `assignments` domain         | `ProfileAssignmentMustNotDuplicateActiveRuleImplTests`, `ProfileAssignmentMustExistForTenantRuleImplTests`                                                                                                             | 1 camino feliz + 1 rechazo cada una                                                                                                                                                                                                                                           |
+| `assignments` application    | `AssignProfileUseCaseImplTests`                                                                                                                                                                                        | camino feliz: N roles del perfil generan N `Assignment` (fake de `AssignRoleUseCase` capturando cuántas veces y con qué `AssignRoleRequest` se llamó); rechazo por perfil inexistente (nunca llega a `AssignRoleUseCase`, poison-pill); rechazo por perfil ya asignado activo |
+| `assignments` application    | `RevokeProfileAssignmentUseCaseImplTests`                                                                                                                                                                              | camino feliz: revoca cada `AssignmentId` generado (fake de `RevokeAssignmentUseCase` capturando cuántas veces) y luego el propio `ProfileAssignment`; rechazo por `ProfileAssignment` inexistente                                                                             |
+| `assignments` infrastructure | `ProfileAssignmentPersistenceMapperTests`, `AssignProfileRequestMapperTests`, `ProfileAssignmentResponseMapperTests`, `ProfileAssignmentControllerTests`, `ProfileAssignmentHttpTests`                                 | mismo presupuesto que `AssignmentController`/`AssignRoleRequestMapper`                                                                                                                                                                                                        |
+| `shared/persistence`         | `SurrealRepositoryIntegrationTests` (extendida)                                                                                                                                                                        | `ProfileRepository`: guarda y encuentra por nombre en alcance; `ProfileAssignmentRepository`: guarda y encuentra activo por (usuario, aplicación, perfil)                                                                                                                     |
 
 Presupuesto estimado: **35-42 pruebas nuevas** — historia grande por diseño (dos slices), no por
 alcance inflado; cada pieza es un espejo 1:1 de algo que ya existe y ya está probado.
 
 ## 10. Trazabilidad
 
-| Fase | Estado | Fecha |
-|---|---|---|
-| Plan | ✅ Generado | 2026-09-12 |
-| Contrato aprobado (gate 1) | ⏳ Pendiente | |
-| Pruebas en rojo | ⏳ Pendiente | |
-| Implementación en verde | ⏳ Pendiente | |
-| Validación | ✅ Aprobado — ver `reportes/REPORTE-HU-011.md` | 2026-09-12 |
-| Entrega (gate 2) | ⏳ Pendiente | |
+| Fase                       | Estado                                        | Fecha      |
+|----------------------------|-----------------------------------------------|------------|
+| Plan                       | ✅ Generado                                    | 2026-09-12 |
+| Contrato aprobado (gate 1) | ⏳ Pendiente                                   |            |
+| Pruebas en rojo            | ⏳ Pendiente                                   |            |
+| Implementación en verde    | ⏳ Pendiente                                   |            |
+| Validación                 | ✅ Aprobado — ver `reportes/REPORTE-HU-011.md` | 2026-09-12 |
+| Entrega (gate 2)           | ⏳ Pendiente                                   |            |
 
 ## 11. Ambigüedades pendientes
 

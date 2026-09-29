@@ -3,8 +3,8 @@ package co.edu.uco.seguridad.pdp.authorization.application.usecase.impl;
 import co.edu.uco.seguridad.pdp.assignments.application.primaryport.response.AssignmentResponse;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.AssignApplicationAdministratorUseCase;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministerApplicationAdministratorAssignmentRequest;
-import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.PrincipalMustBeApplicationAdministratorValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministrationRequest;
+import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.PrincipalMustBeApplicationAdministratorValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerApplicationAdministratorAssignmentUseCase;
 import co.edu.uco.seguridad.pdp.authorization.domain.exception.NotAuthorizedToAdministerException;
 import co.edu.uco.seguridad.shared.audit.AdministrationAuditRepository;
@@ -19,7 +19,9 @@ import reactor.core.publisher.Mono;
 import java.util.Objects;
 import java.util.UUID;
 
-/** Retrofit HU-021: audita {@code ADMINISTRATOR_ASSIGNED} en ambas ramas sin cambiar el resultado. */
+/**
+ * Retrofit HU-021: audita {@code ADMINISTRATOR_ASSIGNED} en ambas ramas sin cambiar el resultado.
+ */
 public final class AdministerApplicationAdministratorAssignmentUseCaseImpl
         implements AdministerApplicationAdministratorAssignmentUseCase {
 

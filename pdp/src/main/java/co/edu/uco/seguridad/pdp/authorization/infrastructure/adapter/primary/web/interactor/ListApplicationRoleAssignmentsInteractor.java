@@ -1,0 +1,3 @@
+package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.ListApplicationSecurityRawRequest; import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.ApplicationSecurityRoleAssignmentWebResponse; import co.edu.uco.seguridad.shared.contract.ReactiveOperation; import co.edu.uco.seguridad.shared.web.PageResponse;
+public interface ListApplicationRoleAssignmentsInteractor extends ReactiveOperation<ListApplicationSecurityRawRequest,PageResponse<ApplicationSecurityRoleAssignmentWebResponse>>{}

@@ -14,9 +14,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class RouteRegistryTests {
-    @TempDir Path temporaryDirectory;
+    @TempDir
+    Path temporaryDirectory;
 
-    @Test void persists_and_resolves_a_registered_application() {
+    @Test
+    void persists_and_resolves_a_registered_application() {
         var registry = registry(List.of());
         var route = registry.register("academic", "dev", URI.create("http://academic.internal:8080"), "academic-api");
 
@@ -29,7 +31,8 @@ class RouteRegistryTests {
         assertThat(reloaded.resolve("/apps/academic/notes").orElseThrow().audiences()).containsExactly("academic-api");
     }
 
-    @Test void refuses_a_dynamic_route_that_overlaps_a_static_route() {
+    @Test
+    void refuses_a_dynamic_route_that_overlaps_a_static_route() {
         var staticRoute = new IngressProperties.Route("/apps/academic", "existing", "dev",
                 URI.create("http://existing.internal"), List.of("existing-api"), false, false);
 

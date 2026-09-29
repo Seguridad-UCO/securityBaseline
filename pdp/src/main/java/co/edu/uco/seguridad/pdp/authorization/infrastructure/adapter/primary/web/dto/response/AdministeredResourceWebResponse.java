@@ -9,5 +9,5 @@ import java.time.Instant;
  * {@code RoleAdministrationWebResponse} en HU-016).
  */
 public record AdministeredResourceWebResponse(String id, String applicationId, String tenantId, String path,
-        String method, Instant registeredAt) {
+                                              String method, Instant registeredAt) {
 }

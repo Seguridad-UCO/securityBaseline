@@ -48,7 +48,7 @@ public class RedisConfiguration {
 
     @Bean
     DistributedCachePort distributedCachePort(ReactiveRedisTemplate<String, String> redis,
-            ActiveRolesCacheRetentionProperties properties, MeterRegistry metrics) {
+                                              ActiveRolesCacheRetentionProperties properties, MeterRegistry metrics) {
         return new ObservedDistributedCachePort(new RedisDistributedCachePort(redis, properties), metrics);
     }
 }

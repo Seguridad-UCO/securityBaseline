@@ -8,11 +8,18 @@ import co.edu.uco.seguridad.pdp.applications.domain.exception.ApplicationNotFoun
 import co.edu.uco.seguridad.pdp.applications.domain.exception.DuplicateApplicationException;
 import reactor.core.publisher.Mono;
 
-/** Actualiza únicamente el catálogo y preserva la credencial emitida. */
+/**
+ * Actualiza únicamente el catálogo y preserva la credencial emitida.
+ */
 public final class UpdateApplicationUseCaseImpl implements UpdateApplicationUseCase {
     private final ApplicationRepository repository;
-    public UpdateApplicationUseCaseImpl(ApplicationRepository repository) { this.repository = repository; }
-    @Override public Mono<RegisteredApplicationResponse> execute(UpdateApplicationRequest input) {
+
+    public UpdateApplicationUseCaseImpl(ApplicationRepository repository) {
+        this.repository = repository;
+    }
+
+    @Override
+    public Mono<RegisteredApplicationResponse> execute(UpdateApplicationRequest input) {
         return repository.findByIdForTenant(input.tenantId(), input.applicationId())
                 .switchIfEmpty(Mono.error(() -> new ApplicationNotFoundException(input.applicationId())))
                 .flatMap(current -> repository.existsByTenantAndName(input.tenantId(), input.name())

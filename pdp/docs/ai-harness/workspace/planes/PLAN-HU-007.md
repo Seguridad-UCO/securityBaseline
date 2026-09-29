@@ -8,12 +8,12 @@
 - **Fecha:** 2026-09-12
 - **Rama sugerida:** `feature/HU-007-evento-acceso`
 - **Fuentes:**
-  - `pdp/docs/ai-harness/workspace/HU-007.md` (historia dictada, ya redactada; criterios 1-6 y alcance
-    tomados literalmente de ahí)
-  - `pdp/docs/ai-harness/workspace/ROADMAP-PDP.md` línea 73 (origen: paso 9 de UC-01, INV-AUD-01, BC-11)
-  - Código real: `DomainEventPublisher`/`SpringDomainEventPublisher` (ADR-0002), `ProtectedResourceRegistered`
-    + `InMemoryAuditAdapter` (el único precedente de evento de dominio del proyecto),
-    `SurrealSchemaInitializer`, `AuthorizeUseCaseImpl`, `AccessRequest`, `AccessDecision`
+    - `pdp/docs/ai-harness/workspace/HU-007.md` (historia dictada, ya redactada; criterios 1-6 y alcance
+      tomados literalmente de ahí)
+    - `pdp/docs/ai-harness/workspace/ROADMAP-PDP.md` línea 73 (origen: paso 9 de UC-01, INV-AUD-01, BC-11)
+    - Código real: `DomainEventPublisher`/`SpringDomainEventPublisher` (ADR-0002), `ProtectedResourceRegistered`
+        + `InMemoryAuditAdapter` (el único precedente de evento de dominio del proyecto),
+          `SurrealSchemaInitializer`, `AuthorizeUseCaseImpl`, `AccessRequest`, `AccessDecision`
 - **Criterios de la línea base que toca:** 1, 2, 4, 7, 9, 11, 12, 21, 22
 
 ## 0. Hallazgos antes de planificar
@@ -68,23 +68,23 @@ auditado con este mismo cambio.
 
 ## 2. Criterios de aceptación
 
-| # | Criterio (de HU-007.md) | Resultado esperado |
-|---|---|---|
-| 1 | Toda decisión emite evento | `recordAudit(...)` envuelve el resultado final de la cadena de `AuthorizeUseCaseImpl`, después de los tres `onErrorResume` — se alcanza sin importar qué camino produjo la decisión |
-| 2 | Correlación | `AccessEvent.correlationId`/`decisionId` igual a los de la `AccessDecision` devuelta |
-| 3 | Sin secretos | El `record` no tiene ningún campo que pueda llevar un token o el cuerpo — solo identificadores y el resultado (ver estructura en la SPEC) |
-| 4 | Estado técnico distinguible | `AccessEvent.state`/`reasonCode` son los mismos `DecisionState`/`ReasonCode` de la decisión — `INDETERMINATE`/`CONTEXT_UNAVAILABLE` no se confunde con `DENY`/`POLICY_DENY` |
+| # | Criterio (de HU-007.md)                     | Resultado esperado                                                                                                                                                                             |
+|---|---------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1 | Toda decisión emite evento                  | `recordAudit(...)` envuelve el resultado final de la cadena de `AuthorizeUseCaseImpl`, después de los tres `onErrorResume` — se alcanza sin importar qué camino produjo la decisión            |
+| 2 | Correlación                                 | `AccessEvent.correlationId`/`decisionId` igual a los de la `AccessDecision` devuelta                                                                                                           |
+| 3 | Sin secretos                                | El `record` no tiene ningún campo que pueda llevar un token o el cuerpo — solo identificadores y el resultado (ver estructura en la SPEC)                                                      |
+| 4 | Estado técnico distinguible                 | `AccessEvent.state`/`reasonCode` son los mismos `DecisionState`/`ReasonCode` de la decisión — `INDETERMINATE`/`CONTEXT_UNAVAILABLE` no se confunde con `DENY`/`POLICY_DENY`                    |
 | 5 | El fallo de auditoría no altera la decisión | Si `AccessAuditRepository.save(...)` falla, `AuthorizeUseCaseImpl.execute(...)` sigue devolviendo la decisión original — se registra el fallo por log, no se propaga como error de la petición |
-| 6 | Consulta por correlación | `AccessAuditRepository.findByCorrelationId(...)` — probado contra SurrealDB real |
+| 6 | Consulta por correlación                    | `AccessAuditRepository.findByCorrelationId(...)` — probado contra SurrealDB real                                                                                                               |
 
 ## 3. Reglas de negocio
 
 Ninguna regla nueva. Armar y guardar el evento es un efecto secundario de una decisión ya tomada —
 no valida ni rechaza nada.
 
-| # | Regla | Dónde vive | Puerto que trae el dato | Excepción → HTTP |
-|---|---|---|---|---|
-| — | (ninguna nueva) | — | — | — |
+| # | Regla           | Dónde vive | Puerto que trae el dato | Excepción → HTTP |
+|---|-----------------|------------|-------------------------|------------------|
+| — | (ninguna nueva) | —          | —                       | —                |
 
 ## 4. Modelo de dominio afectado
 
@@ -95,9 +95,9 @@ vez, se persiste, nunca se modifica ni se recupera para mutarlo.
 
 ### Value objects
 
-| VO | Nuevo o existente | Invariantes | Vive en |
-|---|---|---|---|
-| (ninguno nuevo) | — | `AccessEvent` reutiliza `TenantId`, `ApplicationId`, `ResourcePath`, `HttpVerb`, `DecisionState`, `ReasonCode` ya existentes | — |
+| VO              | Nuevo o existente | Invariantes                                                                                                                  | Vive en |
+|-----------------|-------------------|------------------------------------------------------------------------------------------------------------------------------|---------|
+| (ninguno nuevo) | —                 | `AccessEvent` reutiliza `TenantId`, `ApplicationId`, `ResourcePath`, `HttpVerb`, `DecisionState`, `ReasonCode` ya existentes | —       |
 
 ## 5. Persistencia
 
@@ -106,8 +106,8 @@ vez, se persiste, nunca se modifica ni se recupera para mutarlo.
   `resourcePath`, `action`, `state`, `reasonCode`, `occurredOn` — todos String/ISO-8601 en la fila,
   como en el resto de los adaptadores (`{X}Entity` siempre plano).
 - **Consultas nuevas en el puerto:**
-  - `Mono<Void> save(AccessEvent event)`
-  - `Flux<AccessEvent> findByCorrelationId(String correlationId)`
+    - `Mono<Void> save(AccessEvent event)`
+    - `Flux<AccessEvent> findByCorrelationId(String correlationId)`
 - **Índice:** `DEFINE INDEX ... ON access_event COLUMNS correlationId` — no único (una correlación
   puede, en teoría, acumular más de un evento si el PEP reintenta la misma petición).
 - **Inicializador de esquema:** nuevo, `SurrealAccessEventSchemaInitializer` (mismo patrón que
@@ -202,26 +202,26 @@ usar sus propios tipos (`TenantId`/`ApplicationId`/`ResourcePath`/`HttpVerb` son
 
 ## 9. Casos de prueba esperados
 
-| Capa | Clase de prueba | Casos |
-|---|---|---|
-| domain | `AccessEventTests` | el constructor compacto rechaza cada componente no primitivo en `null` (mismo caso por campo que `ProtectedResourceRegisteredTests`, si existe como referencia) |
-| infrastructure (mapper) | `AccessEventPersistenceMapperTests` | ida y vuelta entidad↔dominio conserva todos los campos, incluida la ausencia/presencia correcta de cada `Instant`/enum parseado |
-| application (existente, extendida) | `AuthorizeUseCaseImplTests` | cada uno de los seis casos existentes gana un fake de `AccessAuditRepository` (`save` que captura el evento recibido); nuevo caso: el evento capturado tiene el mismo `correlationId`/`decisionId`/`state`/`reasonCode` que la decisión devuelta; nuevo caso: si `audit.save(...)` falla, la decisión devuelta es idéntica a la que se habría devuelto sin ese fallo (criterio 5) |
-| infrastructure (persistencia, integración) | `SurrealRepositoryIntegrationTests` (extendida, mismo archivo que ya cubre `assignments`/`roles`/`tenants`/etc.) | `save(...)` seguido de `findByCorrelationId(...)` devuelve el evento guardado; dos eventos con la misma correlación (reintento simulado) aparecen ambos |
+| Capa                                       | Clase de prueba                                                                                                  | Casos                                                                                                                                                                                                                                                                                                                                                                             |
+|--------------------------------------------|------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| domain                                     | `AccessEventTests`                                                                                               | el constructor compacto rechaza cada componente no primitivo en `null` (mismo caso por campo que `ProtectedResourceRegisteredTests`, si existe como referencia)                                                                                                                                                                                                                   |
+| infrastructure (mapper)                    | `AccessEventPersistenceMapperTests`                                                                              | ida y vuelta entidad↔dominio conserva todos los campos, incluida la ausencia/presencia correcta de cada `Instant`/enum parseado                                                                                                                                                                                                                                                   |
+| application (existente, extendida)         | `AuthorizeUseCaseImplTests`                                                                                      | cada uno de los seis casos existentes gana un fake de `AccessAuditRepository` (`save` que captura el evento recibido); nuevo caso: el evento capturado tiene el mismo `correlationId`/`decisionId`/`state`/`reasonCode` que la decisión devuelta; nuevo caso: si `audit.save(...)` falla, la decisión devuelta es idéntica a la que se habría devuelto sin ese fallo (criterio 5) |
+| infrastructure (persistencia, integración) | `SurrealRepositoryIntegrationTests` (extendida, mismo archivo que ya cubre `assignments`/`roles`/`tenants`/etc.) | `save(...)` seguido de `findByCorrelationId(...)` devuelve el evento guardado; dos eventos con la misma correlación (reintento simulado) aparecen ambos                                                                                                                                                                                                                           |
 
 Presupuesto estimado: **8-10 pruebas nuevas**, más el ajuste mecánico de firma en los seis tests
 existentes de `AuthorizeUseCaseImplTests`.
 
 ## 10. Trazabilidad
 
-| Fase | Estado | Fecha |
-|---|---|---|
-| Plan | ✅ Generado | 2026-09-12 |
-| Contrato aprobado (gate 1) | ✅ Aprobado | 2026-09-12 |
-| Pruebas en rojo | ✅ Rojo confirmado (`UnsupportedOperationException`) | 2026-09-12 |
-| Implementación en verde | ✅ Verde | 2026-09-12 |
-| Validación | ✅ Aprobado — ver `REPORTE-HU-007.md` | 2026-09-12 |
-| Entrega (gate 2) | ⏳ Pendiente | |
+| Fase                       | Estado                                              | Fecha      |
+|----------------------------|-----------------------------------------------------|------------|
+| Plan                       | ✅ Generado                                          | 2026-09-12 |
+| Contrato aprobado (gate 1) | ✅ Aprobado                                          | 2026-09-12 |
+| Pruebas en rojo            | ✅ Rojo confirmado (`UnsupportedOperationException`) | 2026-09-12 |
+| Implementación en verde    | ✅ Verde                                             | 2026-09-12 |
+| Validación                 | ✅ Aprobado — ver `REPORTE-HU-007.md`                | 2026-09-12 |
+| Entrega (gate 2)           | ⏳ Pendiente                                         |            |
 
 ## 11. Ambigüedades pendientes
 

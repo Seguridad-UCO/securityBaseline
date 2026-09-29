@@ -5,7 +5,9 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
 
-/** Hecho ya resuelto para {@link co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationCredentialMustBeValidRule}. */
+/**
+ * Hecho ya resuelto para {@link co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationCredentialMustBeValidRule}.
+ */
 public record ApplicationCredentialValidity(ApplicationId applicationId, boolean valid) {
 
     public ApplicationCredentialValidity {

@@ -9,9 +9,12 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
-/** La evidencia correlacionada de una operación administrativa (HU-021). */
+/**
+ * La evidencia correlacionada de una operación administrativa (HU-021).
+ */
 public record AdministrationEvent(UUID eventId, String correlationId, TenantId tenantId, ApplicationId applicationId,
-        String subject, AdministrationOperation operation, AdministrationOutcome outcome, Instant occurredOn)
+                                  String subject, AdministrationOperation operation, AdministrationOutcome outcome,
+                                  Instant occurredOn)
         implements DomainEvent {
 
     public AdministrationEvent {

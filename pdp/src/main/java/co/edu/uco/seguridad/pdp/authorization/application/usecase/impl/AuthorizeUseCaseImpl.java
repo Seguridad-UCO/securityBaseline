@@ -6,10 +6,10 @@ import co.edu.uco.seguridad.pdp.applications.domain.exception.ApplicationNotFoun
 import co.edu.uco.seguridad.pdp.assignments.application.primaryport.request.ResolveActiveRolesRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AccessRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.response.AccessDecision;
-import co.edu.uco.seguridad.pdp.authorization.application.service.AuthorizationContextResolver;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.ActiveRoleNamesLookupValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.AccessAuditRepository;
 import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.PolicyDecisionPort;
+import co.edu.uco.seguridad.pdp.authorization.application.service.AuthorizationContextResolver;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.AuthorizeUseCase;
 import co.edu.uco.seguridad.pdp.authorization.domain.event.AccessEvent;
 import co.edu.uco.seguridad.pdp.authorization.domain.model.DecisionState;
@@ -47,10 +47,10 @@ public final class AuthorizeUseCaseImpl implements AuthorizeUseCase {
     private final TimeProvider time;
 
     public AuthorizeUseCaseImpl(ApplicationMustExistForTenantValidator applicationMustExist,
-            ProtectedResourceMustExistValidator resourceMustExist, ActiveRoleNamesLookupValidator rolesLookup,
-            AuthorizationContextResolver contextResolver,
-            AccessAuditRepository audit, PolicyDecisionPort policyDecisionPort, IdentifierGenerator identifiers,
-            TimeProvider time) {
+                                ProtectedResourceMustExistValidator resourceMustExist, ActiveRoleNamesLookupValidator rolesLookup,
+                                AuthorizationContextResolver contextResolver,
+                                AccessAuditRepository audit, PolicyDecisionPort policyDecisionPort, IdentifierGenerator identifiers,
+                                TimeProvider time) {
         this.applicationMustExist = Objects.requireNonNull(applicationMustExist,
                 RequiredArgumentMessages.APPLICATION_EXISTS_VALIDATOR);
         this.resourceMustExist = Objects.requireNonNull(resourceMustExist,
@@ -64,11 +64,13 @@ public final class AuthorizeUseCaseImpl implements AuthorizeUseCase {
         this.time = Objects.requireNonNull(time, RequiredArgumentMessages.TIME_PROVIDER);
     }
 
-    /** Compatibility constructor for existing in-process callers while the resolver becomes explicit. */
+    /**
+     * Compatibility constructor for existing in-process callers while the resolver becomes explicit.
+     */
     public AuthorizeUseCaseImpl(ApplicationMustExistForTenantValidator applicationMustExist,
-            ProtectedResourceMustExistValidator resourceMustExist, ActiveRoleNamesLookupValidator rolesLookup,
-            AccessAuditRepository audit, PolicyDecisionPort policyDecisionPort, IdentifierGenerator identifiers,
-            TimeProvider time) {
+                                ProtectedResourceMustExistValidator resourceMustExist, ActiveRoleNamesLookupValidator rolesLookup,
+                                AccessAuditRepository audit, PolicyDecisionPort policyDecisionPort, IdentifierGenerator identifiers,
+                                TimeProvider time) {
         this(applicationMustExist, resourceMustExist, rolesLookup,
                 new co.edu.uco.seguridad.pdp.authorization.application.service.impl.AuthorizationContextResolverImpl(),
                 audit, policyDecisionPort, identifiers, time);

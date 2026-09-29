@@ -115,7 +115,8 @@ class OpaPolicyDecisionAdapterTests {
 
     @Test
     void sends_the_input_wrapped_exactly_as_the_contract_expects() {
-        StepVerifier.create(adapter().execute(REQUEST_WITH_ROLES)).assertNext(decision -> { }).verifyComplete();
+        StepVerifier.create(adapter().execute(REQUEST_WITH_ROLES)).assertNext(decision -> {
+        }).verifyComplete();
 
         JsonNode sent = new ObjectMapper().readTree(fixture.lastRequestBody());
         JsonNode input = sent.path("input");

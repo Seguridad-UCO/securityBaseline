@@ -1,13 +1,13 @@
 package co.edu.uco.seguridad.pdp.tenants.application.usecase.impl;
 
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
-import co.edu.uco.seguridad.pdp.tenants.domain.exception.DuplicateTenantException;
 import co.edu.uco.seguridad.pdp.tenants.application.primaryport.request.CreateTenantRequest;
 import co.edu.uco.seguridad.pdp.tenants.application.secondaryport.repository.TenantRepository;
-import co.edu.uco.seguridad.pdp.tenants.domain.rule.impl.TenantCodeMustBeUniqueRuleImpl;
 import co.edu.uco.seguridad.pdp.tenants.domain.Tenant;
+import co.edu.uco.seguridad.pdp.tenants.domain.exception.DuplicateTenantException;
 import co.edu.uco.seguridad.pdp.tenants.domain.model.TenantName;
 import co.edu.uco.seguridad.pdp.tenants.domain.model.TenantStatus;
+import co.edu.uco.seguridad.pdp.tenants.domain.rule.impl.TenantCodeMustBeUniqueRuleImpl;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;

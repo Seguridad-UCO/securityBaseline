@@ -10,7 +10,7 @@ import java.util.Objects;
  * TTL de la clave {@code revoked-since:{userId}} en Redis (HU-022, ADR-026).
  *
  * @param retention tiempo tras el cual la clave de revocación puede vencer sin riesgo: cualquier
- *                   token con {@code issuedAt} anterior ya habría expirado por sí solo.
+ *                  token con {@code issuedAt} anterior ya habría expirado por sí solo.
  */
 @ConfigurationProperties(prefix = "pdp.security.revocation")
 public record RevocationRetentionProperties(Duration retention) {

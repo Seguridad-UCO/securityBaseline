@@ -31,7 +31,7 @@ public final class RotateApplicationCredentialUseCaseImpl implements RotateAppli
     private final CredentialHasher hasher;
 
     public RotateApplicationCredentialUseCaseImpl(ApplicationRepository repository,
-            ApplicationMustExistForTenantRule mustExist, SecretGenerator secretGenerator, CredentialHasher hasher) {
+                                                  ApplicationMustExistForTenantRule mustExist, SecretGenerator secretGenerator, CredentialHasher hasher) {
         this.repository = Objects.requireNonNull(repository, RequiredArgumentMessages.APPLICATION_REPOSITORY);
         this.mustExist = Objects.requireNonNull(mustExist, RequiredArgumentMessages.APPLICATION_EXISTS_RULE);
         this.secretGenerator = Objects.requireNonNull(secretGenerator, RequiredArgumentMessages.SECRET_GENERATOR);

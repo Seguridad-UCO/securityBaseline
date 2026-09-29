@@ -4,7 +4,9 @@ import co.edu.uco.seguridad.pep.commons.EnforcementFailure;
 import co.edu.uco.seguridad.pep.normalization.application.port.primary.dto.request.NormalizeAccessRequest;
 import co.edu.uco.seguridad.pep.normalization.application.rule.NormalizeAccessRequestMustBeCompleteRule;
 
-/** Validación determinista anterior a crear el mensaje para el PDP. */
+/**
+ * Validación determinista anterior a crear el mensaje para el PDP.
+ */
 public final class NormalizeAccessRequestMustBeCompleteRuleImpl implements NormalizeAccessRequestMustBeCompleteRule {
     @Override
     public void execute(NormalizeAccessRequest input) {

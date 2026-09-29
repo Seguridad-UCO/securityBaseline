@@ -10,7 +10,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-/** Adaptador primario del tráfico protegido: coordina los puertos de aplicación y el proxy HTTP. */
+/**
+ * Adaptador primario del tráfico protegido: coordina los puertos de aplicación y el proxy HTTP.
+ */
 @RestController
 public final class PepHttpController {
     private final CaptureHttpRequest capture;

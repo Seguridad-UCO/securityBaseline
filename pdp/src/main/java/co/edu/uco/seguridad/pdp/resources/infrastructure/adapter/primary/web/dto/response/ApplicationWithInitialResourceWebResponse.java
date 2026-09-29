@@ -9,7 +9,9 @@ import java.time.Instant;
  * capa {@code application} lo está).
  */
 public record ApplicationWithInitialResourceWebResponse(String applicationId, String tenantId,
-        String applicationName, String description, String baseUrl, String credential,
-        Instant applicationRegisteredAt, String resourceId, String resourcePath, String resourceMethod,
-        Instant resourceRegisteredAt) {
+                                                        String applicationName, String description, String baseUrl,
+                                                        String credential,
+                                                        Instant applicationRegisteredAt, String resourceId,
+                                                        String resourcePath, String resourceMethod,
+                                                        Instant resourceRegisteredAt) {
 }

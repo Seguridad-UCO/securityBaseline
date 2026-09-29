@@ -1,11 +1,7 @@
 package co.edu.uco.seguridad.shared.config;
 
 import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserIdLookupValidator;
-import co.edu.uco.seguridad.shared.security.ApiAccessDeniedHandler;
-import co.edu.uco.seguridad.shared.security.ApiAuthenticationEntryPoint;
-import co.edu.uco.seguridad.shared.security.InternalEvidenceJwtProperties;
-import co.edu.uco.seguridad.shared.security.InternalMtlsProperties;
-import co.edu.uco.seguridad.shared.security.InternalMtlsWebFilter;
+import co.edu.uco.seguridad.shared.security.*;
 import co.edu.uco.seguridad.shared.security.revocation.RevocationAwareJwtDecoder;
 import co.edu.uco.seguridad.shared.security.revocation.TokenRevocationPort;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -16,12 +12,7 @@ import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtClaimValidator;
-import org.springframework.security.oauth2.jwt.JwtIssuerValidator;
-import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
-import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
-import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
+import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
 import org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher;
@@ -60,9 +51,9 @@ class InternalSecurityConfiguration {
 
     @Bean
     SecurityWebFilterChain internalAccessDecisionsSecurityWebFilterChain(ServerHttpSecurity http,
-            InternalMtlsProperties mtlsProperties,
-            @Qualifier("internalEvidenceJwtDecoder") ReactiveJwtDecoder internalEvidenceJwtDecoder,
-            ApiAuthenticationEntryPoint entryPoint, ApiAccessDeniedHandler accessDeniedHandler) {
+                                                                         InternalMtlsProperties mtlsProperties,
+                                                                         @Qualifier("internalEvidenceJwtDecoder") ReactiveJwtDecoder internalEvidenceJwtDecoder,
+                                                                         ApiAuthenticationEntryPoint entryPoint, ApiAccessDeniedHandler accessDeniedHandler) {
         return http
                 .securityMatcher(new PathPatternParserServerWebExchangeMatcher("/internal/v1/**"))
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
@@ -94,7 +85,7 @@ class InternalSecurityConfiguration {
      */
     @Bean
     ReactiveJwtDecoder internalEvidenceJwtDecoder(InternalEvidenceJwtProperties properties,
-            TokenRevocationPort revocation, SubjectUserIdLookupValidator subjectUserIdLookup) {
+                                                  TokenRevocationPort revocation, SubjectUserIdLookupValidator subjectUserIdLookup) {
         NimbusReactiveJwtDecoder decoder = NimbusReactiveJwtDecoder.withJwkSetUri(properties.jwkSetUri()).build();
         OAuth2TokenValidator<Jwt> validator = new DelegatingOAuth2TokenValidator<>(List.of(
                 new JwtTimestampValidator(),

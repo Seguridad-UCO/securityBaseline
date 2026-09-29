@@ -5,7 +5,9 @@ import co.edu.uco.seguridad.pdp.roles.domain.exception.InvalidRoleScopeException
 
 import java.util.Locale;
 
-/** Nivel de alcance de un rol (INV-DAT-01): global, de inquilino o de aplicación, de forma inequívoca. */
+/**
+ * Nivel de alcance de un rol (INV-DAT-01): global, de inquilino o de aplicación, de forma inequívoca.
+ */
 public enum RoleScopeLevel {
 
     GLOBAL, TENANT, APPLICATION;

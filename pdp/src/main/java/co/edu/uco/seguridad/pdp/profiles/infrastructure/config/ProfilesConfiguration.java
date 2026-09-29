@@ -1,33 +1,11 @@
 package co.edu.uco.seguridad.pdp.profiles.infrastructure.config;
 
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationMustExistForTenantValidator;
-import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.AddRoleToProfileRulesValidator;
-import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ApplicationDeletionDependencyValidator;
-import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.DefineProfileRulesValidator;
-import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileApplicationLookupValidator;
-import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileRolesLookupValidator;
-import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileNamesLookupValidator;
-import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.RoleDeletionDependencyValidator;
-import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.impl.AddRoleToProfileRulesValidatorImpl;
-import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.impl.ApplicationDeletionDependencyValidatorImpl;
-import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.impl.DefineProfileRulesValidatorImpl;
-import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.impl.ProfileApplicationLookupValidatorImpl;
-import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.impl.ProfileRolesLookupValidatorImpl;
-import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.impl.ProfileNamesLookupValidatorImpl;
-import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.impl.RoleDeletionDependencyValidatorImpl;
+import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.*;
+import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.impl.*;
 import co.edu.uco.seguridad.pdp.profiles.application.secondaryport.repository.ProfileRepository;
-import co.edu.uco.seguridad.pdp.profiles.application.usecase.AddRoleToProfileUseCase;
-import co.edu.uco.seguridad.pdp.profiles.application.usecase.DefineProfileUseCase;
-import co.edu.uco.seguridad.pdp.profiles.application.usecase.ListProfilesUseCase;
-import co.edu.uco.seguridad.pdp.profiles.application.usecase.RemoveRoleFromProfileUseCase;
-import co.edu.uco.seguridad.pdp.profiles.application.usecase.RemoveProfileUseCase;
-import co.edu.uco.seguridad.pdp.profiles.application.usecase.UpdateProfileUseCase;
-import co.edu.uco.seguridad.pdp.profiles.application.usecase.impl.AddRoleToProfileUseCaseImpl;
-import co.edu.uco.seguridad.pdp.profiles.application.usecase.impl.DefineProfileUseCaseImpl;
-import co.edu.uco.seguridad.pdp.profiles.application.usecase.impl.ListProfilesUseCaseImpl;
-import co.edu.uco.seguridad.pdp.profiles.application.usecase.impl.RemoveRoleFromProfileUseCaseImpl;
-import co.edu.uco.seguridad.pdp.profiles.application.usecase.impl.RemoveProfileUseCaseImpl;
-import co.edu.uco.seguridad.pdp.profiles.application.usecase.impl.UpdateProfileUseCaseImpl;
+import co.edu.uco.seguridad.pdp.profiles.application.usecase.*;
+import co.edu.uco.seguridad.pdp.profiles.application.usecase.impl.*;
 import co.edu.uco.seguridad.pdp.profiles.domain.rule.ProfileMustExistForTenantRule;
 import co.edu.uco.seguridad.pdp.profiles.domain.rule.ProfileNameMustBeUniqueInScopeRule;
 import co.edu.uco.seguridad.pdp.profiles.domain.rule.impl.ProfileMustExistForTenantRuleImpl;
@@ -44,7 +22,9 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/** La única clase consciente de Spring del módulo. */
+/**
+ * La única clase consciente de Spring del módulo.
+ */
 @Configuration
 public class ProfilesConfiguration {
 
@@ -80,19 +60,19 @@ public class ProfilesConfiguration {
 
     @Bean
     DefineProfileRulesValidator defineProfileRulesValidator(ApplicationMustExistForTenantValidator applicationMustExist,
-            ProfileNameMustBeUniqueInScopeRule nameMustBeUnique, ProfileRepository repository) {
+                                                            ProfileNameMustBeUniqueInScopeRule nameMustBeUnique, ProfileRepository repository) {
         return new DefineProfileRulesValidatorImpl(applicationMustExist, nameMustBeUnique, repository);
     }
 
     @Bean
     AddRoleToProfileRulesValidator addRoleToProfileRulesValidator(ProfileRepository repository,
-            ProfileMustExistForTenantRule profileMustExist, RoleMustExistForTenantValidator roleMustExist) {
+                                                                  ProfileMustExistForTenantRule profileMustExist, RoleMustExistForTenantValidator roleMustExist) {
         return new AddRoleToProfileRulesValidatorImpl(repository, profileMustExist, roleMustExist);
     }
 
     @Bean
     ProfileRolesLookupValidator profileRolesLookupValidator(ProfileRepository repository,
-            ProfileMustExistForTenantRule mustExist) {
+                                                            ProfileMustExistForTenantRule mustExist) {
         return new ProfileRolesLookupValidatorImpl(repository, mustExist);
     }
 
@@ -105,13 +85,13 @@ public class ProfilesConfiguration {
     // que "authorization" pueda gatear definir/agregar-rol sin conocer ProfileRepository.
     @Bean
     ProfileApplicationLookupValidator profileApplicationLookupValidator(ProfileRepository repository,
-            ProfileMustExistForTenantRule mustExist) {
+                                                                        ProfileMustExistForTenantRule mustExist) {
         return new ProfileApplicationLookupValidatorImpl(repository, mustExist);
     }
 
     @Bean
     DefineProfileUseCase defineProfileUseCase(DefineProfileRulesValidator rules, ProfileRepository repository,
-            IdentifierGenerator identifiers, TimeProvider time) {
+                                              IdentifierGenerator identifiers, TimeProvider time) {
         return new DefineProfileUseCaseImpl(rules, repository, identifiers, time);
     }
 
@@ -122,7 +102,7 @@ public class ProfilesConfiguration {
 
     @Bean
     RemoveRoleFromProfileUseCase removeRoleFromProfileUseCase(AddRoleToProfileRulesValidator rules,
-            ProfileRepository repository) {
+                                                              ProfileRepository repository) {
         return new RemoveRoleFromProfileUseCaseImpl(rules, repository);
     }
 
@@ -132,10 +112,24 @@ public class ProfilesConfiguration {
     }
 
     @Bean
-    UpdateProfileUseCase updateProfileUseCase(ProfileRepository repository) { return new UpdateProfileUseCaseImpl(repository); }
+    CountApplicationProfilesUseCase countApplicationProfilesUseCase(ProfileRepository repository) {
+        return new CountApplicationProfilesUseCaseImpl(repository);
+    }
 
     @Bean
-    RemoveProfileUseCase removeProfileUseCase(ProfileRepository repository) { return new RemoveProfileUseCaseImpl(repository); }
+    ListApplicationProfilesPageUseCase listApplicationProfilesPageUseCase(ProfileRepository repository) {
+        return new ListApplicationProfilesPageUseCaseImpl(repository);
+    }
+
+    @Bean
+    UpdateProfileUseCase updateProfileUseCase(ProfileRepository repository) {
+        return new UpdateProfileUseCaseImpl(repository);
+    }
+
+    @Bean
+    RemoveProfileUseCase removeProfileUseCase(ProfileRepository repository) {
+        return new RemoveProfileUseCaseImpl(repository);
+    }
 
     @Bean
     ListProfilesInteractor listProfilesInteractor(ListProfilesUseCase useCase) {

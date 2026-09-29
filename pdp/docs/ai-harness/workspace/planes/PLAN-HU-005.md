@@ -8,7 +8,8 @@
 - **Fecha:** 2026-09-12
 - **Rama sugerida:** `feature/HU-005-asignaciones-vigentes`
 - **Fuentes:** `pdp/docs/ai-harness/workspace/HU-005.md` (decisiones de Sebastián, 2026-09-11, más las
-  dos decisiones de esta sesión sobre endpoints) · `security-platform-architecture/docs/02-domain/03-bounded-contexts.md`
+  dos decisiones de esta sesión sobre endpoints) ·
+  `security-platform-architecture/docs/02-domain/03-bounded-contexts.md`
   (BC-08 Asignaciones) · `07-business-rules.md` (`RB-05` — solo asignaciones vigentes, invariante
   `INV-ASN-01`) · `06-invariants.md` (`INV-ASN-01` — inactivas/vencidas/revocadas no participan;
   `INV-ASN-02` — alcance vigente coherente con sujeto y rol; `INV-ID-02` — un claim no basta sin
@@ -48,32 +49,32 @@ perfiles (HU-008), quién puede asignar (HU-009), enviar el contexto a OPA (HU-0
 
 ## 2. Criterios de aceptación
 
-| # | Criterio | Resultado esperado |
-|---|---|---|
-| 1 | Asignar | Un usuario existente recibe un rol existente en una aplicación existente (del tenant del principal), con vigencia desde ahora y sin fin → 201 |
-| 2 | Coherencia de alcance (`INV-ASN-02`) | El rol debe ser global, del tenant de la aplicación, o de esa misma aplicación; si no → 400 `APPLICATION_OUTSIDE_ROLE_SCOPE` |
-| 3 | No duplicar | La misma tripleta (usuario, aplicación, rol) con una asignación vigente → 409 `ASSIGNMENT_ALREADY_ACTIVE` |
-| 4 | Revocar | `DELETE` fija `fin = ahora`; la asignación deja de ser vigente inmediatamente → 200. Revocar una ya revocada es idempotente (vuelve a fijar `fin = ahora`, no falla) |
-| 5 | Solo vigentes (`RB-05`, `INV-ASN-01`) | `ResolveActiveRolesUseCase` (interno, sin HTTP en esta historia) devuelve únicamente asignaciones con `fin` nulo o futuro |
-| 6 | La fuente es el almacén | Un rol presente en el JWT pero sin asignación vigente **no** aparece en el contexto resuelto |
-| 7 | Sujeto sin asignaciones | `ResolveActiveRolesUseCase` devuelve conjunto vacío, no error |
-| 8 | Aislamiento | `GET /api/v1/roles/{roleId}/assignments` nunca muestra asignaciones de aplicaciones de otro tenant; `POST`/`DELETE` rechazan igual (400 `APPLICATION_NOT_FOUND` / `ASSIGNMENT_NOT_FOUND`) |
+| # | Criterio                              | Resultado esperado                                                                                                                                                                        |
+|---|---------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1 | Asignar                               | Un usuario existente recibe un rol existente en una aplicación existente (del tenant del principal), con vigencia desde ahora y sin fin → 201                                             |
+| 2 | Coherencia de alcance (`INV-ASN-02`)  | El rol debe ser global, del tenant de la aplicación, o de esa misma aplicación; si no → 400 `APPLICATION_OUTSIDE_ROLE_SCOPE`                                                              |
+| 3 | No duplicar                           | La misma tripleta (usuario, aplicación, rol) con una asignación vigente → 409 `ASSIGNMENT_ALREADY_ACTIVE`                                                                                 |
+| 4 | Revocar                               | `DELETE` fija `fin = ahora`; la asignación deja de ser vigente inmediatamente → 200. Revocar una ya revocada es idempotente (vuelve a fijar `fin = ahora`, no falla)                      |
+| 5 | Solo vigentes (`RB-05`, `INV-ASN-01`) | `ResolveActiveRolesUseCase` (interno, sin HTTP en esta historia) devuelve únicamente asignaciones con `fin` nulo o futuro                                                                 |
+| 6 | La fuente es el almacén               | Un rol presente en el JWT pero sin asignación vigente **no** aparece en el contexto resuelto                                                                                              |
+| 7 | Sujeto sin asignaciones               | `ResolveActiveRolesUseCase` devuelve conjunto vacío, no error                                                                                                                             |
+| 8 | Aislamiento                           | `GET /api/v1/roles/{roleId}/assignments` nunca muestra asignaciones de aplicaciones de otro tenant; `POST`/`DELETE` rechazan igual (400 `APPLICATION_NOT_FOUND` / `ASSIGNMENT_NOT_FOUND`) |
 
 ## 3. Reglas de negocio
 
-| # | Regla | Dónde vive (VO / Rule) | Puerto que trae el dato | Excepción → HTTP |
-|---|---|---|---|---|
-| L1 | `Vigencia`: si `validUntil` está presente, debe ser posterior a `validFrom` | VO `Vigencia` (**síncrona**) | — | `InvalidVigenciaException` → 400 |
-| R1 | El usuario existe | **Prestada, nueva**: `UserMustExistValidator` (`identity :: rule`) | `SecurityUserRepository.findById` | `UserNotFoundException` → 400 |
-| R2 | La aplicación existe y pertenece al tenant del principal | **Prestada**: `ApplicationMustExistForTenantValidator` (`applications :: rule`, ya existente) | (interno de `applications`) | `ApplicationNotFoundException` → 400 |
-| R3 | El rol existe y su alcance cubre la aplicación (global cubre todo; tenant cubre su tenant; aplicación cubre solo la suya) | **Prestada, nueva**: `RoleScopeMustCoverApplicationValidator` (`roles :: rule`) | `RoleRepository.findById` **[M]** | `RoleNotFoundException` (existente) / `ApplicationOutsideRoleScopeException` (**nueva**) → 400 |
-| R4 | No hay ya una asignación activa para la misma tripleta | `AssignmentMustNotDuplicateActiveRule` (**síncrona**, recibe `ActiveAssignmentAvailability`) | `AssignmentRepository.existsActiveByUserApplicationRole` | `DuplicateAssignmentException` → **409** |
-| R5 | La asignación a revocar existe para ese tenant | `AssignmentMustExistForTenantRule` (**síncrona**, recibe `AssignmentExistence`) | `AssignmentRepository.findByIdForTenant` | `AssignmentNotFoundException` → 400 |
+| #  | Regla                                                                                                                     | Dónde vive (VO / Rule)                                                                        | Puerto que trae el dato                                  | Excepción → HTTP                                                                               |
+|----|---------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------|----------------------------------------------------------|------------------------------------------------------------------------------------------------|
+| L1 | `Vigencia`: si `validUntil` está presente, debe ser posterior a `validFrom`                                               | VO `Vigencia` (**síncrona**)                                                                  | —                                                        | `InvalidVigenciaException` → 400                                                               |
+| R1 | El usuario existe                                                                                                         | **Prestada, nueva**: `UserMustExistValidator` (`identity :: rule`)                            | `SecurityUserRepository.findById`                        | `UserNotFoundException` → 400                                                                  |
+| R2 | La aplicación existe y pertenece al tenant del principal                                                                  | **Prestada**: `ApplicationMustExistForTenantValidator` (`applications :: rule`, ya existente) | (interno de `applications`)                              | `ApplicationNotFoundException` → 400                                                           |
+| R3 | El rol existe y su alcance cubre la aplicación (global cubre todo; tenant cubre su tenant; aplicación cubre solo la suya) | **Prestada, nueva**: `RoleScopeMustCoverApplicationValidator` (`roles :: rule`)               | `RoleRepository.findById` **[M]**                        | `RoleNotFoundException` (existente) / `ApplicationOutsideRoleScopeException` (**nueva**) → 400 |
+| R4 | No hay ya una asignación activa para la misma tripleta                                                                    | `AssignmentMustNotDuplicateActiveRule` (**síncrona**, recibe `ActiveAssignmentAvailability`)  | `AssignmentRepository.existsActiveByUserApplicationRole` | `DuplicateAssignmentException` → **409**                                                       |
+| R5 | La asignación a revocar existe para ese tenant                                                                            | `AssignmentMustExistForTenantRule` (**síncrona**, recibe `AssignmentExistence`)               | `AssignmentRepository.findByIdForTenant`                 | `AssignmentNotFoundException` → 400                                                            |
 
 Barrera de contrato del borde HTTP (no es regla de negocio):
 
-| # | Barrera | Dónde | Excepción → HTTP |
-|---|---|---|---|
+| #  | Barrera                                                                           | Dónde                                                                                              | Excepción → HTTP                                                                 |
+|----|-----------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
 | C1 | Ventana de paginación del `GET` (`page`/`size` u `offset`/`limit`, ambiguo → 400) | `ListAssignmentsRequestMapper` (copia de `ListApplicationsRequestMapper`, mismo patrón que HU-004) | `ConflictingRequestParametersException` / `MalformedRequestFieldException` → 400 |
 
 **Ninguna `if/throw` de negocio en los use cases.** R1→R2→R3→R4 se orquestan en `AssignRoleRulesValidatorImpl`
@@ -96,7 +97,8 @@ prematura."
 
 ### Entidad / agregado
 
-`Assignment` **[N]** — `record Assignment(AssignmentId id, UserId userId, TenantId tenantId, ApplicationId applicationId, RoleId roleId, Vigencia vigencia)`.
+`Assignment` **[N]** —
+`record Assignment(AssignmentId id, UserId userId, TenantId tenantId, ApplicationId applicationId, RoleId roleId, Vigencia vigencia)`.
 Factoría con nombre `assign(id, userId, tenantId, applicationId, roleId, now)` (vigencia desde
 `now`, sin fin). Transición `revoke(Instant now)` → nuevo `Assignment` con `vigencia.endingAt(now)`.
 Comportamiento `isActive(Instant now)` delega en `vigencia.isActiveAt(now)`.
@@ -109,17 +111,18 @@ que resolver el dueño de la aplicación en cada consulta paginada. Se fija una 
 de crear la asignación, a partir del tenant ya validado del principal (R2) — nunca es un input
 independiente. Ver sección 11.
 
-`AssignmentCriteria` **[N]** — specification, junto al agregado: `record AssignmentCriteria(RoleId roleId, TenantId tenantId)`;
+`AssignmentCriteria` **[N]** — specification, junto al agregado:
+`record AssignmentCriteria(RoleId roleId, TenantId tenantId)`;
 `matches(Assignment)` = mismo rol y mismo tenant.
 
 ### Value objects
 
-| VO | Nuevo o existente | Invariantes | Vive en |
-|---|---|---|---|
-| `AssignmentId` | **Nuevo** | UUID no nulo; `of(String)` → `InvalidIdentifierException("ASSIGNMENT_ID", raw)` | `assignments/domain/model/` — un solo consumidor |
-| `Vigencia` | **Nuevo** | `validFrom` no nulo; si `validUntil` está presente, debe ser posterior a `validFrom` | `assignments/domain/model/` |
-| `UserId` | **Se muda** de `identity/domain/model/` | Sin cambio de invariantes | `pdp/commons/model/` — pasa a tener dos consumidores (`identity`, `assignments`), mismo precedente que `ApplicationId`/`TenantId`/`ResourceId`/`RoleId` |
-| `TenantId`, `ApplicationId`, `RoleId` | Existentes | — | `pdp/commons/model/` |
+| VO                                    | Nuevo o existente                       | Invariantes                                                                          | Vive en                                                                                                                                                 |
+|---------------------------------------|-----------------------------------------|--------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `AssignmentId`                        | **Nuevo**                               | UUID no nulo; `of(String)` → `InvalidIdentifierException("ASSIGNMENT_ID", raw)`      | `assignments/domain/model/` — un solo consumidor                                                                                                        |
+| `Vigencia`                            | **Nuevo**                               | `validFrom` no nulo; si `validUntil` está presente, debe ser posterior a `validFrom` | `assignments/domain/model/`                                                                                                                             |
+| `UserId`                              | **Se muda** de `identity/domain/model/` | Sin cambio de invariantes                                                            | `pdp/commons/model/` — pasa a tener dos consumidores (`identity`, `assignments`), mismo precedente que `ApplicationId`/`TenantId`/`ResourceId`/`RoleId` |
+| `TenantId`, `ApplicationId`, `RoleId` | Existentes                              | —                                                                                    | `pdp/commons/model/`                                                                                                                                    |
 
 ### Enums
 
@@ -146,18 +149,19 @@ campos que `ResourceCoverage` (ver nota de la sección 3), hecho distinto.
   quedará como la única barrera contra la carrera, igual que documenta la nota de riesgo de la
   sección 11.
 - **Consultas nuevas en el puerto:** ver §7 (`AssignmentRepository`, completo, es nuevo)
-- **Inicializador de esquema:** **nuevo** `SurrealAssignmentSchemaInitializer` (patrón de `SurrealRoleSchemaInitializer`)
+- **Inicializador de esquema:** **nuevo** `SurrealAssignmentSchemaInitializer` (patrón de
+  `SurrealRoleSchemaInitializer`)
 - **[M] en `roles`:** `RoleRepository.findById(RoleId)` — a diferencia de `findByIdForTenant`, **sin**
   filtrar por tenant (un rol `GLOBAL` debe encontrarse igual). Mismo patrón que `findTenantIdById` de
   `applications` (HU-003).
 
 ## 6. Endpoint
 
-| Verbo | Ruta | Código de éxito | Cuerpo de entrada | Cuerpo de salida |
-|---|---|---|---|---|
-| POST | `/api/v1/roles/{roleId}/assignments` | 201 `ASSIGNMENT_CREATED` | `AssignRoleRawRequest` (+ `roleId` de la ruta) | `ApiResponse<AssignmentWebResponse>` |
-| DELETE | `/api/v1/roles/{roleId}/assignments/{assignmentId}` | 200 `ASSIGNMENT_REVOKED` | (sin cuerpo; `assignmentId` de la ruta) | `ApiResponse<Void>` |
-| GET | `/api/v1/roles/{roleId}/assignments` | 200 `ASSIGNMENTS_LISTED` | query `page`/`size`/`offset`/`limit` (+ `roleId` de la ruta) | `ApiResponse<PageResponse<AssignmentWebResponse>>` |
+| Verbo  | Ruta                                                | Código de éxito          | Cuerpo de entrada                                            | Cuerpo de salida                                   |
+|--------|-----------------------------------------------------|--------------------------|--------------------------------------------------------------|----------------------------------------------------|
+| POST   | `/api/v1/roles/{roleId}/assignments`                | 201 `ASSIGNMENT_CREATED` | `AssignRoleRawRequest` (+ `roleId` de la ruta)               | `ApiResponse<AssignmentWebResponse>`               |
+| DELETE | `/api/v1/roles/{roleId}/assignments/{assignmentId}` | 200 `ASSIGNMENT_REVOKED` | (sin cuerpo; `assignmentId` de la ruta)                      | `ApiResponse<Void>`                                |
+| GET    | `/api/v1/roles/{roleId}/assignments`                | 200 `ASSIGNMENTS_LISTED` | query `page`/`size`/`offset`/`limit` (+ `roleId` de la ruta) | `ApiResponse<PageResponse<AssignmentWebResponse>>` |
 
 - **Autorización:** canal BFF, ya cubre `/api/**`. El tenant sale del principal
   (`SecurityContext.currentPrincipal()`), nunca del cuerpo. Sin restricción de rol administrador
@@ -462,31 +466,31 @@ concretas — mismo razonamiento: nadie las consumía antes.
 
 ## 9. Casos de prueba esperados
 
-| Capa | Clase de prueba | Casos |
-|---|---|---|
-| `domain` | `VigenciaTests` | `startingNow` sin fin; `endingAt` fija fin; `isActiveAt` antes de inicio → false; sin fin → siempre activa hasta el infinito; con fin futuro → activa; con fin pasado → inactiva; `validUntil` anterior o igual a `validFrom` → `InvalidVigenciaException` |
-| `domain` | `AssignmentTests` | `assign` deja vigencia desde `now` sin fin; `revoke` fija fin y no muta el original; `isActive` delega en la vigencia |
-| `domain` | `AssignmentCriteriaTests` | mismo rol y tenant → true; mismo rol, otro tenant → false; otro rol, mismo tenant → false |
-| `domain` | `AssignmentMustNotDuplicateActiveRuleImplTests` | `taken=true` → `DuplicateAssignmentException`; `false` → no lanza |
-| `domain` | `AssignmentMustExistForTenantRuleImplTests` | `registered=false` → `AssignmentNotFoundException`; `true` → no lanza |
-| `domain` (roles) | `RoleScopeMustCoverApplicationRuleImplTests` | global cubre toda aplicación; tenant cubre aplicación de su tenant; tenant no cubre otro tenant; aplicación cubre solo la suya |
-| `application` (identity) | `UserMustExistValidatorImplTests` | usuario encontrado → completa; vacío → `UserNotFoundException` |
-| `application` (roles) | `RoleScopeMustCoverApplicationValidatorImplTests` | rol inexistente → `RoleNotFoundException`; rol global → completa para cualquier aplicación; rol de tenant que no coincide → `ApplicationOutsideRoleScopeException`; rol de aplicación que coincide → completa |
-| `application` | `AssignRoleRulesValidatorImplTests` | usuario inexistente → `UserNotFoundException` (poison pill: no consulta aplicación ni rol); aplicación inexistente → `ApplicationNotFoundException`; rol no cubre la aplicación → `ApplicationOutsideRoleScopeException`; asignación ya activa → `DuplicateAssignmentException`; todo ok → completa |
-| `application` | `RevokeAssignmentRulesValidatorImplTests` | asignación no encontrada para el tenant → `AssignmentNotFoundException`; encontrada → devuelve la asignación |
-| `application` | `AssignRoleUseCaseImplTests` | camino feliz: `IdentifierGenerator`/`TimeProvider` fijos, guarda un `Assignment` con vigencia desde `now` sin fin y devuelve `AssignmentResponse`; el validador que lanza corta antes de guardar |
-| `application` | `RevokeAssignmentUseCaseImplTests` | guarda la asignación con `validUntil = now` y completa; el validador que lanza no guarda |
-| `application` | `ListAssignmentsUseCaseImplTests` | proyecta `ResultPage<Assignment>` → `ResultPage<AssignmentResponse>` conservando total y ventana |
-| `application` | `ResolveActiveRolesUseCaseImplTests` | devuelve los `RoleId` activos para (usuario, aplicación) a la fecha `now`; sin asignaciones → conjunto vacío |
-| `infrastructure` — mapper | `AssignRoleRequestMapperTests` | `userId` ausente → Missing; no UUID → Malformed; `applicationId` ausente → Missing; no UUID → Malformed; feliz |
-| `infrastructure` — mapper | `RevokeAssignmentRequestMapperTests` | `assignmentId` no UUID → Malformed; feliz |
-| `infrastructure` — mapper | `ListAssignmentsRequestMapperTests` | sin parámetros → ventana por defecto; `page`+`offset` → `ConflictingRequestParametersException`; `size=0` → Malformed(`size`) |
-| `infrastructure` — mapper | `AssignmentResponseMapperTests` | con `validUntil` presente → string no nulo; vigente (`validUntil` vacío) → null |
-| `infrastructure` — mapper | `AssignmentPersistenceMapperTests` | entidad con `validUntil` nulo → `Vigencia` sin fin; con `validUntil` → `Vigencia` con fin |
-| `infrastructure` — controller | `AssignmentControllerTests` | `POST` → 201 `ASSIGNMENT_CREATED`; `DELETE` → 200 `ASSIGNMENT_REVOKED`, `assignmentId` de la ruta llega al interactor; `GET` → 200 con `PageResponse` |
-| `infrastructure` — persistencia | `SurrealRepositoryIntegrationTests` **[M]** (+4 casos) | `save` + `existsActiveByUserApplicationRole` (antes de crear → false, después → true); `findByIdForTenant` con otro tenant → vacío; `findBy(AssignmentCriteria)` excluye otro tenant; `findActiveRoleIdsFor` excluye una asignación revocada (`validUntil` pasado) |
-| `infrastructure` — persistencia (roles) | `SurrealRepositoryIntegrationTests` **[M]** (+1 caso) | `RoleRepository.findById` encuentra un rol `GLOBAL` sin tenant en el filtro |
-| `infrastructure` — HTTP | `AssignmentHttpTests` | asigna un rol de tenant a una aplicación del tenant → 201; asigna un rol de aplicación a otra aplicación → 400 `APPLICATION_OUTSIDE_ROLE_SCOPE`; asignar la misma tripleta dos veces → 409; revoca y confirma que ya no aparece en `ResolveActiveRolesUseCase` (llamado directo al caso de uso, no HTTP); el listado de un tenant no muestra asignaciones de otro |
+| Capa                                    | Clase de prueba                                        | Casos                                                                                                                                                                                                                                                                                                                                                             |
+|-----------------------------------------|--------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `domain`                                | `VigenciaTests`                                        | `startingNow` sin fin; `endingAt` fija fin; `isActiveAt` antes de inicio → false; sin fin → siempre activa hasta el infinito; con fin futuro → activa; con fin pasado → inactiva; `validUntil` anterior o igual a `validFrom` → `InvalidVigenciaException`                                                                                                        |
+| `domain`                                | `AssignmentTests`                                      | `assign` deja vigencia desde `now` sin fin; `revoke` fija fin y no muta el original; `isActive` delega en la vigencia                                                                                                                                                                                                                                             |
+| `domain`                                | `AssignmentCriteriaTests`                              | mismo rol y tenant → true; mismo rol, otro tenant → false; otro rol, mismo tenant → false                                                                                                                                                                                                                                                                         |
+| `domain`                                | `AssignmentMustNotDuplicateActiveRuleImplTests`        | `taken=true` → `DuplicateAssignmentException`; `false` → no lanza                                                                                                                                                                                                                                                                                                 |
+| `domain`                                | `AssignmentMustExistForTenantRuleImplTests`            | `registered=false` → `AssignmentNotFoundException`; `true` → no lanza                                                                                                                                                                                                                                                                                             |
+| `domain` (roles)                        | `RoleScopeMustCoverApplicationRuleImplTests`           | global cubre toda aplicación; tenant cubre aplicación de su tenant; tenant no cubre otro tenant; aplicación cubre solo la suya                                                                                                                                                                                                                                    |
+| `application` (identity)                | `UserMustExistValidatorImplTests`                      | usuario encontrado → completa; vacío → `UserNotFoundException`                                                                                                                                                                                                                                                                                                    |
+| `application` (roles)                   | `RoleScopeMustCoverApplicationValidatorImplTests`      | rol inexistente → `RoleNotFoundException`; rol global → completa para cualquier aplicación; rol de tenant que no coincide → `ApplicationOutsideRoleScopeException`; rol de aplicación que coincide → completa                                                                                                                                                     |
+| `application`                           | `AssignRoleRulesValidatorImplTests`                    | usuario inexistente → `UserNotFoundException` (poison pill: no consulta aplicación ni rol); aplicación inexistente → `ApplicationNotFoundException`; rol no cubre la aplicación → `ApplicationOutsideRoleScopeException`; asignación ya activa → `DuplicateAssignmentException`; todo ok → completa                                                               |
+| `application`                           | `RevokeAssignmentRulesValidatorImplTests`              | asignación no encontrada para el tenant → `AssignmentNotFoundException`; encontrada → devuelve la asignación                                                                                                                                                                                                                                                      |
+| `application`                           | `AssignRoleUseCaseImplTests`                           | camino feliz: `IdentifierGenerator`/`TimeProvider` fijos, guarda un `Assignment` con vigencia desde `now` sin fin y devuelve `AssignmentResponse`; el validador que lanza corta antes de guardar                                                                                                                                                                  |
+| `application`                           | `RevokeAssignmentUseCaseImplTests`                     | guarda la asignación con `validUntil = now` y completa; el validador que lanza no guarda                                                                                                                                                                                                                                                                          |
+| `application`                           | `ListAssignmentsUseCaseImplTests`                      | proyecta `ResultPage<Assignment>` → `ResultPage<AssignmentResponse>` conservando total y ventana                                                                                                                                                                                                                                                                  |
+| `application`                           | `ResolveActiveRolesUseCaseImplTests`                   | devuelve los `RoleId` activos para (usuario, aplicación) a la fecha `now`; sin asignaciones → conjunto vacío                                                                                                                                                                                                                                                      |
+| `infrastructure` — mapper               | `AssignRoleRequestMapperTests`                         | `userId` ausente → Missing; no UUID → Malformed; `applicationId` ausente → Missing; no UUID → Malformed; feliz                                                                                                                                                                                                                                                    |
+| `infrastructure` — mapper               | `RevokeAssignmentRequestMapperTests`                   | `assignmentId` no UUID → Malformed; feliz                                                                                                                                                                                                                                                                                                                         |
+| `infrastructure` — mapper               | `ListAssignmentsRequestMapperTests`                    | sin parámetros → ventana por defecto; `page`+`offset` → `ConflictingRequestParametersException`; `size=0` → Malformed(`size`)                                                                                                                                                                                                                                     |
+| `infrastructure` — mapper               | `AssignmentResponseMapperTests`                        | con `validUntil` presente → string no nulo; vigente (`validUntil` vacío) → null                                                                                                                                                                                                                                                                                   |
+| `infrastructure` — mapper               | `AssignmentPersistenceMapperTests`                     | entidad con `validUntil` nulo → `Vigencia` sin fin; con `validUntil` → `Vigencia` con fin                                                                                                                                                                                                                                                                         |
+| `infrastructure` — controller           | `AssignmentControllerTests`                            | `POST` → 201 `ASSIGNMENT_CREATED`; `DELETE` → 200 `ASSIGNMENT_REVOKED`, `assignmentId` de la ruta llega al interactor; `GET` → 200 con `PageResponse`                                                                                                                                                                                                             |
+| `infrastructure` — persistencia         | `SurrealRepositoryIntegrationTests` **[M]** (+4 casos) | `save` + `existsActiveByUserApplicationRole` (antes de crear → false, después → true); `findByIdForTenant` con otro tenant → vacío; `findBy(AssignmentCriteria)` excluye otro tenant; `findActiveRoleIdsFor` excluye una asignación revocada (`validUntil` pasado)                                                                                                |
+| `infrastructure` — persistencia (roles) | `SurrealRepositoryIntegrationTests` **[M]** (+1 caso)  | `RoleRepository.findById` encuentra un rol `GLOBAL` sin tenant en el filtro                                                                                                                                                                                                                                                                                       |
+| `infrastructure` — HTTP                 | `AssignmentHttpTests`                                  | asigna un rol de tenant a una aplicación del tenant → 201; asigna un rol de aplicación a otra aplicación → 400 `APPLICATION_OUTSIDE_ROLE_SCOPE`; asignar la misma tripleta dos veces → 409; revoca y confirma que ya no aparece en `ResolveActiveRolesUseCase` (llamado directo al caso de uso, no HTTP); el listado de un tenant no muestra asignaciones de otro |
 
 Presupuesto estimado: **~55 pruebas.** Es la historia más grande hasta ahora — cruza tres módulos
 (`identity`, `roles`, `assignments`) además de crear el slice completo. Si al tester le resulta
@@ -496,14 +500,14 @@ y una historia técnica chica añadiría la resolución de roles activos antes d
 
 ## 10. Trazabilidad
 
-| Fase | Estado | Fecha |
-|---|---|---|
-| Plan | ✅ Generado | 2026-09-12 |
-| Contrato aprobado (gate 1) | ✅ Aprobado | 2026-09-12 |
-| Pruebas en rojo | ✅ Completado | 2026-09-12 |
-| Implementación en verde | ✅ Completado | 2026-09-12 |
-| Validación | ✅ Aprobado (segunda pasada) — `REPORTE-HU-005.md` | 2026-09-12 |
-| Entrega (gate 2) | ⏳ Pendiente | |
+| Fase                       | Estado                                            | Fecha      |
+|----------------------------|---------------------------------------------------|------------|
+| Plan                       | ✅ Generado                                        | 2026-09-12 |
+| Contrato aprobado (gate 1) | ✅ Aprobado                                        | 2026-09-12 |
+| Pruebas en rojo            | ✅ Completado                                      | 2026-09-12 |
+| Implementación en verde    | ✅ Completado                                      | 2026-09-12 |
+| Validación                 | ✅ Aprobado (segunda pasada) — `REPORTE-HU-005.md` | 2026-09-12 |
+| Entrega (gate 2)           | ⏳ Pendiente                                       |            |
 
 ## 11. Ambigüedades pendientes
 

@@ -30,7 +30,7 @@ final class AuthorizationController {
 
     @PostMapping
     Mono<ResponseEntity<ApiResponse<AccessDecisionWebResponse>>> authorize(@RequestBody AuthorizeRawRequest body,
-            ServerWebExchange exchange) {
+                                                                           ServerWebExchange exchange) {
         RequestContext context = CorrelationWebFilter.context(exchange);
         return interactor.execute(body)
                 .map(response -> ResponseEntity.ok(ApiResponse.success("ACCESS_EVALUATED",

@@ -10,7 +10,8 @@ import java.util.Objects;
  * {@code AssignProfileRequest.applicationId()} siempre está presente, mismo criterio que
  * {@code AdministerAssignmentCreationRequest} (HU-018).
  */
-public record AdministerProfileAssignmentCreationRequest(AdministrationRequest administration, AssignProfileRequest assignment) {
+public record AdministerProfileAssignmentCreationRequest(AdministrationRequest administration,
+                                                         AssignProfileRequest assignment) {
 
     public AdministerProfileAssignmentCreationRequest {
         Objects.requireNonNull(administration, RequiredArgumentMessages.ADMINISTRATION_REQUEST);

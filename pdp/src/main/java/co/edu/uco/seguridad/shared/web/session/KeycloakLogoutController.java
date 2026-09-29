@@ -10,7 +10,9 @@ import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 
-/** Logout de navegador: invalida la sesión BFF y luego completa el logout RP-initiated en Keycloak. */
+/**
+ * Logout de navegador: invalida la sesión BFF y luego completa el logout RP-initiated en Keycloak.
+ */
 @Controller
 @Profile("keycloak")
 public final class KeycloakLogoutController {
@@ -21,7 +23,7 @@ public final class KeycloakLogoutController {
     private final String frontendOrigin;
 
     KeycloakLogoutController(KeycloakOidcSessionService oidcSessionService,
-            @Value("${pdp.frontend.origin}") String frontendOrigin) {
+                             @Value("${pdp.frontend.origin}") String frontendOrigin) {
         this.oidcSessionService = Objects.requireNonNull(oidcSessionService, "oidcSessionService");
         this.frontendOrigin = Objects.requireNonNull(frontendOrigin, "frontendOrigin");
     }

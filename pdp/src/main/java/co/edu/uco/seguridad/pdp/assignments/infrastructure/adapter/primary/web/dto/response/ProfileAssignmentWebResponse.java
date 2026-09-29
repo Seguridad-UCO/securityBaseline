@@ -2,7 +2,10 @@ package co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.
 
 import java.util.List;
 
-/** Respuesta plana. validUntil va null mientras la asignación sigue vigente. */
+/**
+ * Respuesta plana. validUntil va null mientras la asignación sigue vigente.
+ */
 public record ProfileAssignmentWebResponse(String id, String userId, String tenantId, String applicationId,
-        String profileId, List<String> generatedAssignmentIds, String validFrom, String validUntil) {
+                                           String profileId, List<String> generatedAssignmentIds, String validFrom,
+                                           String validUntil) {
 }

@@ -5,10 +5,9 @@ import co.edu.uco.seguridad.pep.commons.IdentityEvidence;
 import co.edu.uco.seguridad.pep.commons.ProxyTarget;
 import co.edu.uco.seguridad.pep.ingress.CaptureHttpRequest;
 import co.edu.uco.seguridad.pep.ingress.CapturedAccess;
-import co.edu.uco.seguridad.pep.normalization.application.port.primary.dto.request.NormalizeAccessRequest;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
-import org.springframework.stereotype.Component;
 import co.edu.uco.seguridad.pep.ingress.infrastructure.adapter.secondary.http.BffSessionTokenResolver;
+import co.edu.uco.seguridad.pep.normalization.application.port.primary.dto.request.NormalizeAccessRequest;
+import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 

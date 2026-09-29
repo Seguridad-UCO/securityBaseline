@@ -33,7 +33,8 @@ Un fragmento en blanco se normaliza a ausente, para que `?nameContains=` no se i
 
 - `ApplicationCriteria.java`
 - [`commons`](../../src/main/java/co/edu/uco/seguridad/pdp/commons) (value objects e invariantes)
-- Pruebas: [`ResourcePathTests`](../../src/test/java/co/edu/uco/seguridad/pdp/resources/domain/model/ResourcePathTests.java)
+- Pruebas: [
+  `ResourcePathTests`](../../src/test/java/co/edu/uco/seguridad/pdp/resources/domain/model/ResourcePathTests.java)
 
 ## Evidencia y límite
 

@@ -32,7 +32,7 @@ public final class AdministerAssignmentRevocationInteractorImpl implements Admin
     private final AssignmentApplicationLookupValidator applicationLookup;
 
     public AdministerAssignmentRevocationInteractorImpl(AdministerAssignmentRevocationUseCase useCase,
-            SubjectUserIdLookupValidator subjectUserIdLookup, AssignmentApplicationLookupValidator applicationLookup) {
+                                                        SubjectUserIdLookupValidator subjectUserIdLookup, AssignmentApplicationLookupValidator applicationLookup) {
         this.useCase = Objects.requireNonNull(useCase, RequiredArgumentMessages.ADMINISTER_ASSIGNMENT_REVOCATION_USE_CASE);
         this.subjectUserIdLookup = Objects.requireNonNull(subjectUserIdLookup,
                 RequiredArgumentMessages.SUBJECT_USER_ID_LOOKUP_VALIDATOR);
@@ -47,7 +47,7 @@ public final class AdministerAssignmentRevocationInteractorImpl implements Admin
                     AssignmentId assignmentId = RequestFieldParser.parse("assignmentId", input.assignmentId(), AssignmentId::of);
                     RevokeAssignmentRequest revocation = new RevokeAssignmentRequest(assignmentId, principal.tenantId());
                     return Mono.zip(resolveUserId(principal),
-                            applicationLookup.execute(new AssignmentOwnershipQuery(assignmentId, principal.tenantId())))
+                                    applicationLookup.execute(new AssignmentOwnershipQuery(assignmentId, principal.tenantId())))
                             .map(tuple -> new AdministerAssignmentRevocationRequest(
                                     new AdministrationRequest(principal.tenantId(), tuple.getT2(), tuple.getT1(),
                                             principal.subject(), Set.of(), principal.authenticationContext()),

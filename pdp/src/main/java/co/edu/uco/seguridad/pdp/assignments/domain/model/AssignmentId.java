@@ -6,7 +6,9 @@ import co.edu.uco.seguridad.pdp.commons.message.ValueObjectMessages;
 import java.util.Objects;
 import java.util.UUID;
 
-/** Identificador de una asignación (usuario, aplicación, rol) del catálogo (HU-005). */
+/**
+ * Identificador de una asignación (usuario, aplicación, rol) del catálogo (HU-005).
+ */
 public record AssignmentId(UUID value) {
 
     public AssignmentId {

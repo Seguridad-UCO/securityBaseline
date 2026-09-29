@@ -7,14 +7,7 @@ import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.PolicyDe
 import co.edu.uco.seguridad.pdp.authorization.domain.model.DecisionState;
 import co.edu.uco.seguridad.pdp.authorization.domain.model.PolicyReference;
 import co.edu.uco.seguridad.pdp.authorization.domain.model.ReasonCode;
-import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.dto.OpaApplication;
-import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.dto.OpaEvaluationInput;
-import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.dto.OpaEvaluationRequest;
-import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.dto.OpaRequestInfo;
-import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.dto.OpaResource;
-import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.dto.OpaResponse;
-import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.dto.OpaSubject;
-import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.dto.OpaTenant;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.dto.*;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.properties.OpaProperties;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
@@ -43,7 +36,7 @@ public final class OpaPolicyDecisionAdapter implements PolicyDecisionPort {
     private final TimeProvider time;
 
     public OpaPolicyDecisionAdapter(WebClient webClient, ObjectMapper objectMapper, OpaProperties properties,
-            IdentifierGenerator identifiers, TimeProvider time) {
+                                    IdentifierGenerator identifiers, TimeProvider time) {
         this.webClient = Objects.requireNonNull(webClient, RequiredArgumentMessages.OPA_WEB_CLIENT);
         this.objectMapper = Objects.requireNonNull(objectMapper, RequiredArgumentMessages.OBJECT_MAPPER);
         this.properties = Objects.requireNonNull(properties, RequiredArgumentMessages.OPA_PROPERTIES);
@@ -67,7 +60,9 @@ public final class OpaPolicyDecisionAdapter implements PolicyDecisionPort {
         });
     }
 
-    /** Compatibility helper retained for direct adapter tests while callers migrate to the resolver. */
+    /**
+     * Compatibility helper retained for direct adapter tests while callers migrate to the resolver.
+     */
     @Override
     public Mono<AccessDecision> execute(AccessRequest input) {
         return decide(toPolicyInput(input));

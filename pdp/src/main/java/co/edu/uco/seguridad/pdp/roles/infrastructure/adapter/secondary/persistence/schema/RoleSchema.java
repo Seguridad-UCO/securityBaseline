@@ -1,6 +1,8 @@
 package co.edu.uco.seguridad.pdp.roles.infrastructure.adapter.secondary.persistence.schema;
 
-/** Nombre de la tabla. Nunca un literal suelto en la consulta. */
+/**
+ * Nombre de la tabla. Nunca un literal suelto en la consulta.
+ */
 public final class RoleSchema {
 
     public static final String TABLE = "role";

@@ -22,9 +22,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class IntegrationRegistrationControllerTests {
-    @TempDir Path temporaryDirectory;
+    @TempDir
+    Path temporaryDirectory;
 
-    @Test void accepts_only_the_token_assigned_to_the_application_environment() {
+    @Test
+    void accepts_only_the_token_assigned_to_the_application_environment() {
         var controller = controller("registration-secret");
 
         var response = controller.register("academic", "dev", "Bearer registration-secret",
@@ -47,7 +49,7 @@ class IntegrationRegistrationControllerTests {
                 new IntegrationRegistrationMustBeEnabledRuleImpl(registry),
                 new IntegrationCredentialMustMatchRuleImpl((applicationId, secret) -> token.equals(secret)
                         ? Mono.empty() : Mono.error(new EnforcementFailure(EnforcementFailure.Kind.UNAUTHENTICATED,
-                                "INTEGRATION_TOKEN_INVALID"))));
+                        "INTEGRATION_TOKEN_INVALID"))));
         var useCase = new RegisterIntegrationUseCaseImpl(rules, registry);
         return new IntegrationRegistrationController(new RegisterIntegrationInteractorImpl(useCase));
     }

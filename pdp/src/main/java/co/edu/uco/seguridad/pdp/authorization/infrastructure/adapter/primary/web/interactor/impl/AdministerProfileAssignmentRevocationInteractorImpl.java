@@ -32,7 +32,7 @@ public final class AdministerProfileAssignmentRevocationInteractorImpl implement
     private final ProfileAssignmentApplicationLookupValidator applicationLookup;
 
     public AdministerProfileAssignmentRevocationInteractorImpl(AdministerProfileAssignmentRevocationUseCase useCase,
-            SubjectUserIdLookupValidator subjectUserIdLookup, ProfileAssignmentApplicationLookupValidator applicationLookup) {
+                                                               SubjectUserIdLookupValidator subjectUserIdLookup, ProfileAssignmentApplicationLookupValidator applicationLookup) {
         this.useCase = Objects.requireNonNull(useCase,
                 RequiredArgumentMessages.ADMINISTER_PROFILE_ASSIGNMENT_REVOCATION_USE_CASE);
         this.subjectUserIdLookup = Objects.requireNonNull(subjectUserIdLookup,

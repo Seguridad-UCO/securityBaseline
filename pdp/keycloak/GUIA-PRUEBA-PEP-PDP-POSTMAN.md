@@ -2,9 +2,9 @@
 
 Esta guía prepara dos identidades distintas dentro del realm local `security-baseline`:
 
-| Identidad | Cliente | Uso |
-| --- | --- | --- |
-| Técnica | `security-pep-internal` | El PEP valida ante el PDP la credencial de una aplicación registrada. |
+| Identidad        | Cliente                 | Uso                                                                          |
+|------------------|-------------------------|------------------------------------------------------------------------------|
+| Técnica          | `security-pep-internal` | El PEP valida ante el PDP la credencial de una aplicación registrada.        |
 | Humana de prueba | `security-postman-test` | Postman obtiene el Bearer de cada usuario para invocar el backend protegido. |
 
 No reutilices el token de una persona como identidad técnica del PEP. Tampoco copies secretos ni
@@ -24,10 +24,10 @@ access tokens a `application.properties` ni los subas al repositorio.
 1. Ve a **Clients** y selecciona **Create client**.
 2. Elige **OpenID Connect** y usa como **Client ID**: `security-pep-internal`.
 3. Pulsa **Next**. En **Capability config** activa:
-   - **Client authentication**: `On`.
-   - **Service accounts roles**: `On`.
-   - **Standard flow**: `Off`.
-   - **Direct access grants**: `Off`.
+    - **Client authentication**: `On`.
+    - **Service accounts roles**: `On`.
+    - **Standard flow**: `Off`.
+    - **Direct access grants**: `Off`.
 4. Pulsa **Save**.
 5. Abre la pestaña **Credentials** y copia el **Client secret**. Guárdalo en un gestor de secretos
    local; Keycloak solo permite regenerarlo, no recuperarlo después.
@@ -41,9 +41,9 @@ PEP debe llevar esa audiencia aun cuando el cliente se llame `security-pep-inter
 2. En el scope dedicado del cliente, selecciona **Add mapper** → **By configuration** →
    **Audience**.
 3. Configura:
-   - **Name**: `audience-security-baseline-bff`.
-   - **Included Client Audience**: `security-baseline-bff`.
-   - **Add to access token**: `On`.
+    - **Name**: `audience-security-baseline-bff`.
+    - **Included Client Audience**: `security-baseline-bff`.
+    - **Add to access token**: `On`.
 4. Guarda el mapper.
 
 No son necesarios realm roles ni client roles para este token técnico: el canal interno actual
@@ -79,13 +79,13 @@ Este cliente entrega tokens de personas para probar autorización. No es el clie
 1. En **Clients**, selecciona **Create client**.
 2. Elige **OpenID Connect** y usa **Client ID**: `security-postman-test`.
 3. En **Capability config** define:
-   - **Client authentication**: `Off` (cliente público para PKCE).
-   - **Standard flow**: `On`.
-   - **Direct access grants**: `Off`.
-   - **Implicit flow**: `Off`.
+    - **Client authentication**: `Off` (cliente público para PKCE).
+    - **Standard flow**: `On`.
+    - **Direct access grants**: `Off`.
+    - **Implicit flow**: `Off`.
 4. En **Login settings** agrega:
-   - **Valid redirect URIs**: `https://oauth.pstmn.io/v1/callback`
-   - **Web origins**: `https://oauth.pstmn.io`
+    - **Valid redirect URIs**: `https://oauth.pstmn.io/v1/callback`
+    - **Web origins**: `https://oauth.pstmn.io`
 5. Guarda.
 6. Repite el mapper de audiencia del paso 1, con el mismo valor:
    `security-baseline-bff` y **Add to access token** activado.
@@ -96,10 +96,10 @@ Usar usuarios locales hace la prueba repetible; no dependes de Google ni de cont
 
 Para cada usuario, ve a **Users** → **Add user**:
 
-| Usuario sugerido | Finalidad |
-| --- | --- |
-| `notes-allowed` | Recibirá el perfil/rol que permite `GET /api/notes`. |
-| `notes-denied` | No recibirá ese perfil/rol. |
+| Usuario sugerido | Finalidad                                            |
+|------------------|------------------------------------------------------|
+| `notes-allowed`  | Recibirá el perfil/rol que permite `GET /api/notes`. |
+| `notes-denied`   | No recibirá ese perfil/rol.                          |
 
 En ambos casos:
 
@@ -116,17 +116,17 @@ del recurso `GET /api/notes`; no asignes ese perfil a `notes-denied`.
 
 En Postman abre **Authorization** → tipo **OAuth 2.0** → **Get New Access Token**:
 
-| Campo | Valor |
-| --- | --- |
-| Token name | `notes-allowed-local` o `notes-denied-local` |
-| Grant type | `Authorization Code (With PKCE)` |
-| Callback URL | `https://oauth.pstmn.io/v1/callback` |
-| Auth URL | `http://localhost:9090/realms/security-baseline/protocol/openid-connect/auth` |
-| Access Token URL | `http://localhost:9090/realms/security-baseline/protocol/openid-connect/token` |
-| Client ID | `security-postman-test` |
-| Client secret | Vacío |
-| Code challenge method | `S256` |
-| Scope | `openid profile email` |
+| Campo                 | Valor                                                                          |
+|-----------------------|--------------------------------------------------------------------------------|
+| Token name            | `notes-allowed-local` o `notes-denied-local`                                   |
+| Grant type            | `Authorization Code (With PKCE)`                                               |
+| Callback URL          | `https://oauth.pstmn.io/v1/callback`                                           |
+| Auth URL              | `http://localhost:9090/realms/security-baseline/protocol/openid-connect/auth`  |
+| Access Token URL      | `http://localhost:9090/realms/security-baseline/protocol/openid-connect/token` |
+| Client ID             | `security-postman-test`                                                        |
+| Client secret         | Vacío                                                                          |
+| Code challenge method | `S256`                                                                         |
+| Scope                 | `openid profile email`                                                         |
 
 Pulsa **Get New Access Token**, inicia sesión con uno de los usuarios locales y selecciona
 **Use Token**. Antes de usarlo confirma que el `aud` contiene `security-baseline-bff`.

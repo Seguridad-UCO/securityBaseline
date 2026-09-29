@@ -17,7 +17,7 @@ import java.util.Objects;
  * de la aplicación — nunca es un input independiente (ver PLAN-HU-005 §4 y §11.1).
  */
 public record Assignment(AssignmentId id, UserId userId, TenantId tenantId, ApplicationId applicationId,
-        RoleId roleId, Validity validity) {
+                         RoleId roleId, Validity validity) {
 
     public Assignment {
         Objects.requireNonNull(id, RequiredArgumentMessages.ASSIGNMENT_ID);
@@ -29,7 +29,7 @@ public record Assignment(AssignmentId id, UserId userId, TenantId tenantId, Appl
     }
 
     public static Assignment assign(AssignmentId id, UserId userId, TenantId tenantId, ApplicationId applicationId,
-            RoleId roleId, Instant now) {
+                                    RoleId roleId, Instant now) {
         return new Assignment(id, userId, tenantId, applicationId, roleId, Validity.startingNow(now));
     }
 

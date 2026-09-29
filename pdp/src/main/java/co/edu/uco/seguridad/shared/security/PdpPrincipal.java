@@ -4,8 +4,8 @@ import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.security.mfa.AuthenticationContextEvidence;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -20,7 +20,7 @@ import java.util.Optional;
  * caminos {@code Jwt}/{@code OidcUser} son compatibilidad temporal y no lo tienen todavía.
  */
 public record PdpPrincipal(TenantId tenantId, String subject, String tokenId, Optional<UserId> userId,
-        AuthenticationContextEvidence authenticationContext) {
+                           AuthenticationContextEvidence authenticationContext) {
 
     public PdpPrincipal {
         Objects.requireNonNull(tenantId, RequiredArgumentMessages.TENANT_ID);

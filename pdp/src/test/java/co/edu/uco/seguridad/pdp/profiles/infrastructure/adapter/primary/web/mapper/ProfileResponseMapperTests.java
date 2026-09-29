@@ -16,7 +16,9 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Espejo de RoleResponseMapperTests. */
+/**
+ * Espejo de RoleResponseMapperTests.
+ */
 class ProfileResponseMapperTests {
 
     private static final ProfileId PROFILE_ID = new ProfileId(UUID.randomUUID());

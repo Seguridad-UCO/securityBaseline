@@ -17,7 +17,9 @@ import java.util.Objects;
 
 import static java.util.Map.entry;
 
-/** Adaptador real sobre SurrealDB. Lee la fila en AccessEventEntity y delega en AccessEventPersistenceMapper. */
+/**
+ * Adaptador real sobre SurrealDB. Lee la fila en AccessEventEntity y delega en AccessEventPersistenceMapper.
+ */
 public final class SurrealAccessAuditRepository implements AccessAuditRepository {
 
     private final SurrealDbClient client;
@@ -31,12 +33,12 @@ public final class SurrealAccessAuditRepository implements AccessAuditRepository
         AccessEventEntity entity = AccessEventPersistenceMapper.toEntity(event);
         return client.execute(
                         """
-                        CREATE type::record('%s', $id) SET \
-                        decisionId = $decisionId, requestId = $requestId, correlationId = $correlationId, \
-                        tenantId = $tenantId, applicationId = $applicationId, subject = $subject, \
-                        resourcePath = $resourcePath, action = $action, state = $state, reasonCode = $reasonCode, \
-                        occurredOn = <datetime>$occurredOn;\
-                        """.formatted(AccessEventSchema.TABLE),
+                                CREATE type::record('%s', $id) SET \
+                                decisionId = $decisionId, requestId = $requestId, correlationId = $correlationId, \
+                                tenantId = $tenantId, applicationId = $applicationId, subject = $subject, \
+                                resourcePath = $resourcePath, action = $action, state = $state, reasonCode = $reasonCode, \
+                                occurredOn = <datetime>$occurredOn;\
+                                """.formatted(AccessEventSchema.TABLE),
                         Map.ofEntries(
                                 entry("id", entity.id()),
                                 entry("decisionId", entity.decisionId()),

@@ -3,9 +3,11 @@ package co.edu.uco.seguridad.shared.security;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.shared.security.mfa.AuthenticationContextEvidence;
 
-/** Identidad de la sesión propia; no contiene ni expone tokens del proveedor. */
+/**
+ * Identidad de la sesión propia; no contiene ni expone tokens del proveedor.
+ */
 public record LocalUserPrincipal(String userId, String subject, TenantId tenantId, String email, String name,
-        AuthenticationContextEvidence authenticationContext) {
+                                 AuthenticationContextEvidence authenticationContext) {
 
     /**
      * Compatibilidad (HU-024): {@code ProvisionIdentityUseCaseImpl} no sabe de MFA y sigue

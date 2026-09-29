@@ -1,7 +1,7 @@
 package co.edu.uco.seguridad.pdp.authorization.application.usecase.impl;
 
-import co.edu.uco.seguridad.pdp.applications.domain.exception.ApplicationNotFoundException;
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
+import co.edu.uco.seguridad.pdp.applications.domain.exception.ApplicationNotFoundException;
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AccessRequest;
@@ -22,8 +22,8 @@ import reactor.test.StepVerifier;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -58,8 +58,12 @@ class EvaluateInternalAccessUseCaseImplTests {
                     received.add(request);
                     return Mono.just(expected);
                 },
-                () -> { throw new AssertionError("must not generate an id: AuthorizeUseCase already returned a decision"); },
-                () -> { throw new AssertionError("must not generate a time: AuthorizeUseCase already returned a decision"); });
+                () -> {
+                    throw new AssertionError("must not generate an id: AuthorizeUseCase already returned a decision");
+                },
+                () -> {
+                    throw new AssertionError("must not generate a time: AuthorizeUseCase already returned a decision");
+                });
 
         StepVerifier.create(useCase.execute(REQUEST))
                 .expectNext(expected)

@@ -11,12 +11,7 @@ import co.edu.uco.seguridad.shared.web.RequestContext;
 import co.edu.uco.seguridad.shared.web.message.WebContractMessages;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -37,14 +32,14 @@ final class RoleAdministrationController {
     private final AdministerResourceGrantInteractor grantInteractor;
 
     RoleAdministrationController(AdministerRoleDefinitionInteractor defineInteractor,
-            AdministerResourceGrantInteractor grantInteractor) {
+                                 AdministerResourceGrantInteractor grantInteractor) {
         this.defineInteractor = Objects.requireNonNull(defineInteractor);
         this.grantInteractor = Objects.requireNonNull(grantInteractor);
     }
 
     @PostMapping
     Mono<ResponseEntity<ApiResponse<RoleAdministrationWebResponse>>> define(@RequestBody DefineRoleRawRequest body,
-            ServerWebExchange exchange) {
+                                                                            ServerWebExchange exchange) {
         RequestContext context = CorrelationWebFilter.context(exchange);
         return defineInteractor.execute(body)
                 .map(response -> ResponseEntity.status(HttpStatus.CREATED)
@@ -53,7 +48,7 @@ final class RoleAdministrationController {
 
     @PostMapping("/{roleId}/resources")
     Mono<ResponseEntity<ApiResponse<RoleAdministrationWebResponse>>> grantResource(@PathVariable String roleId,
-            @RequestBody GrantResourceRawRequest body, ServerWebExchange exchange) {
+                                                                                   @RequestBody GrantResourceRawRequest body, ServerWebExchange exchange) {
         RequestContext context = CorrelationWebFilter.context(exchange);
         return grantInteractor.execute(new GrantResourceRawRequest(roleId, body.resourceId()))
                 .map(response -> ResponseEntity.ok(ApiResponse.success("ROLE_RESOURCE_GRANTED",
@@ -62,7 +57,7 @@ final class RoleAdministrationController {
 
     @DeleteMapping("/{roleId}/resources/{resourceId}")
     Mono<ResponseEntity<ApiResponse<RoleAdministrationWebResponse>>> revokeResource(@PathVariable String roleId,
-            @PathVariable String resourceId, ServerWebExchange exchange) {
+                                                                                    @PathVariable String resourceId, ServerWebExchange exchange) {
         RequestContext context = CorrelationWebFilter.context(exchange);
         return grantInteractor.revoke(new GrantResourceRawRequest(roleId, resourceId))
                 .map(response -> ResponseEntity.ok(ApiResponse.success("ROLE_RESOURCE_REVOKED",

@@ -31,14 +31,18 @@ public record Profile(ProfileId id, ProfileName name, RoleScope scope, Set<RoleI
         return new Profile(id, name, scope, Set.of(), registeredAt);
     }
 
-    /** Nuevo perfil con el rol añadido. Idempotente: agregar dos veces deja el conjunto igual. */
+    /**
+     * Nuevo perfil con el rol añadido. Idempotente: agregar dos veces deja el conjunto igual.
+     */
     public Profile withRole(RoleId roleId) {
         Set<RoleId> withNewRole = new HashSet<>(roles);
         withNewRole.add(roleId);
         return new Profile(id, name, scope, Set.copyOf(withNewRole), registeredAt);
     }
 
-    /** Nuevo perfil sin el rol. Es idempotente para que DELETE sea seguro al repetirlo. */
+    /**
+     * Nuevo perfil sin el rol. Es idempotente para que DELETE sea seguro al repetirlo.
+     */
     public Profile withoutRole(RoleId roleId) {
         Set<RoleId> remaining = new HashSet<>(roles);
         remaining.remove(roleId);

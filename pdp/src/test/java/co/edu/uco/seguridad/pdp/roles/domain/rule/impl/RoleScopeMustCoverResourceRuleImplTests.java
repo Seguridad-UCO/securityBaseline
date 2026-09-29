@@ -12,7 +12,9 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/** Regla R5 (INV-DAT-01): global cubre todo; tenant cubre sus aplicaciones; aplicación cubre solo la suya. */
+/**
+ * Regla R5 (INV-DAT-01): global cubre todo; tenant cubre sus aplicaciones; aplicación cubre solo la suya.
+ */
 class RoleScopeMustCoverResourceRuleImplTests {
 
     private static final TenantId UCO = new TenantId("universidad-uco");

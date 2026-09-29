@@ -17,7 +17,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -35,7 +34,7 @@ public final class EvaluateInternalAccessUseCaseImpl implements EvaluateInternal
     private final TimeProvider time;
 
     public EvaluateInternalAccessUseCaseImpl(ApplicationNameLookupValidator applicationLookup,
-            AuthorizeUseCase authorizeUseCase, IdentifierGenerator identifiers, TimeProvider time) {
+                                             AuthorizeUseCase authorizeUseCase, IdentifierGenerator identifiers, TimeProvider time) {
         this.applicationLookup = Objects.requireNonNull(applicationLookup, RequiredArgumentMessages.APPLICATION_OWNER_LOOKUP_VALIDATOR);
         this.authorizeUseCase = Objects.requireNonNull(authorizeUseCase, RequiredArgumentMessages.AUTHORIZE_USE_CASE);
         this.identifiers = Objects.requireNonNull(identifiers, RequiredArgumentMessages.IDENTIFIER_GENERATOR);

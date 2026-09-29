@@ -22,7 +22,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-/** HU-020: gatea ListApplicationAdministratorsUseCase tras HU-009. */
+/**
+ * HU-020: gatea ListApplicationAdministratorsUseCase tras HU-009.
+ */
 class AdministerApplicationAdministratorListUseCaseImplTests {
 
     private static final TenantId TENANT = new TenantId("universidad-uco");

@@ -3,11 +3,7 @@ package co.edu.uco.seguridad.pdp.applications.application.secondaryport.reposito
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
 import co.edu.uco.seguridad.pdp.applications.domain.ApplicationCriteria;
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash;
-import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import reactor.core.publisher.Mono;
 
 /**
@@ -53,7 +49,9 @@ public interface ApplicationRepository {
      */
     Mono<Application> findByIdForTenant(TenantId tenantId, ApplicationId applicationId);
 
-    /** Actualiza solo el hash de la credencial — nunca reconstruye el resto de la fila (HU-014). */
+    /**
+     * Actualiza solo el hash de la credencial — nunca reconstruye el resto de la fila (HU-014).
+     */
     Mono<Void> updateCredentialHash(ApplicationId applicationId, ApplicationCredentialHash credentialHash);
 
     /**
@@ -64,7 +62,9 @@ public interface ApplicationRepository {
 
     Mono<Application> save(Application application);
 
-    default Mono<Application> update(Application application) { return Mono.error(new UnsupportedOperationException()); }
+    default Mono<Application> update(Application application) {
+        return Mono.error(new UnsupportedOperationException());
+    }
 
     Mono<Void> deleteById(ApplicationId applicationId);
 }

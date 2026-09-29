@@ -36,38 +36,38 @@ crean ni modifican por HTTP** todavía), herencia/denegaciones (`RB-14`, pendien
 
 ## 2. Criterios de aceptación
 
-| # | Criterio | Resultado esperado |
-|---|---|---|
-| 1 | Alta de rol de tenant | `POST /api/v1/roles` con `scope=TENANT` → 201; el rol queda con el tenant del principal |
-| 2 | Alta de rol de aplicación | `scope=APPLICATION` + `applicationId` → 201 si la aplicación existe y es del tenant del principal; si no → 400 `APPLICATION_NOT_FOUND` |
-| 3 | Nombre único dentro del alcance | Mismo nombre y mismo alcance → 409 `ROLE_NAME_TAKEN`; mismo nombre en otro tenant, o en tenant vs. aplicación → permitido |
-| 4 | Recursos coherentes con el alcance | Conceder un recurso de una aplicación de otro tenant a un rol de tenant, o de otra aplicación a un rol de aplicación → 400 `RESOURCE_OUTSIDE_ROLE_SCOPE` (`INV-DAT-01`) |
-| 5 | Recurso inexistente | `resourceId` que no está en el catálogo → 400 `PROTECTED_RESOURCE_NOT_FOUND` |
-| 6 | Consulta por tenant | `GET /api/v1/roles` devuelve los roles del tenant del principal **más** los globales; nunca los de otro tenant. Paginado (`page`/`size` o `offset`/`limit`, ambiguo → 400) |
-| 7 | Global no creable aún | `scope=GLOBAL` por HTTP → 400 `MALFORMED_REQUEST_FIELD` en `scope`, con mensaje que diga por qué |
-| 8 | Aislamiento al conceder | Conceder un recurso a un rol de otro tenant (o a uno global) → 400 `ROLE_NOT_FOUND` — el rol «no existe» para ese tenant |
-| 9 | Conceder es idempotente | Conceder dos veces el mismo recurso deja el conjunto igual (es un `Set`), 200 ambas veces |
+| # | Criterio                           | Resultado esperado                                                                                                                                                         |
+|---|------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1 | Alta de rol de tenant              | `POST /api/v1/roles` con `scope=TENANT` → 201; el rol queda con el tenant del principal                                                                                    |
+| 2 | Alta de rol de aplicación          | `scope=APPLICATION` + `applicationId` → 201 si la aplicación existe y es del tenant del principal; si no → 400 `APPLICATION_NOT_FOUND`                                     |
+| 3 | Nombre único dentro del alcance    | Mismo nombre y mismo alcance → 409 `ROLE_NAME_TAKEN`; mismo nombre en otro tenant, o en tenant vs. aplicación → permitido                                                  |
+| 4 | Recursos coherentes con el alcance | Conceder un recurso de una aplicación de otro tenant a un rol de tenant, o de otra aplicación a un rol de aplicación → 400 `RESOURCE_OUTSIDE_ROLE_SCOPE` (`INV-DAT-01`)    |
+| 5 | Recurso inexistente                | `resourceId` que no está en el catálogo → 400 `PROTECTED_RESOURCE_NOT_FOUND`                                                                                               |
+| 6 | Consulta por tenant                | `GET /api/v1/roles` devuelve los roles del tenant del principal **más** los globales; nunca los de otro tenant. Paginado (`page`/`size` o `offset`/`limit`, ambiguo → 400) |
+| 7 | Global no creable aún              | `scope=GLOBAL` por HTTP → 400 `MALFORMED_REQUEST_FIELD` en `scope`, con mensaje que diga por qué                                                                           |
+| 8 | Aislamiento al conceder            | Conceder un recurso a un rol de otro tenant (o a uno global) → 400 `ROLE_NOT_FOUND` — el rol «no existe» para ese tenant                                                   |
+| 9 | Conceder es idempotente            | Conceder dos veces el mismo recurso deja el conjunto igual (es un `Set`), 200 ambas veces                                                                                  |
 
 ## 3. Reglas de negocio
 
-| # | Regla | Dónde vive (VO / Rule) | Puerto que trae el dato | Excepción → HTTP |
-|---|---|---|---|---|
-| L1 | Nombre: 3–60 caracteres tras `trim`, no vacío | VO `RoleName` (**síncrona**) | — | `InvalidRoleNameException` → 400 |
-| L2 | Alcance coherente: `GLOBAL` sin ids, `TENANT` solo tenant, `APPLICATION` tenant + aplicación | VO `RoleScope` (**síncrona**) | — | `InvalidRoleScopeException` → 400 |
-| R1 | El nombre es único dentro del alcance exacto (nivel + tenant + aplicación) | `RoleNameMustBeUniqueInScopeRule` (**síncrona**, recibe `RoleNameAvailability`) | `RoleRepository.existsByNameInScope` | `DuplicateRoleNameException` → **409** |
-| R2 | Para `APPLICATION`, la aplicación existe y pertenece al tenant | **Prestada**: `ApplicationMustExistForTenantValidator` (`applications :: rule`) | (interno de `applications`) | `ApplicationNotFoundException` → 400 (ya existe) |
-| R3 | El rol existe **para ese tenant** (un rol de otro tenant o uno global no existe para él) | `RoleMustExistForTenantRule` (**síncrona**, recibe `RoleExistence`) | `RoleRepository.findByIdForTenant` | `RoleNotFoundException` → 400 |
-| R4 | El recurso existe | **Prestada, nueva**: `ProtectedResourceOwnerLookupValidator` (`resources :: rule`) — resuelve la aplicación dueña | `ProtectedResourceRepository.findApplicationIdById` **[M]** | `ProtectedResourceNotFoundException` → 400 (constructor nuevo por `ResourceId`) |
-| R5 | El alcance del rol cubre el recurso: global cubre todo; tenant cubre recursos de sus aplicaciones; aplicación cubre solo los suyos | `RoleScopeMustCoverResourceRule` (**síncrona**, recibe `ResourceCoverage`) | tenant del recurso vía **prestado** `ApplicationOwnerLookupValidator` (`applications :: rule`, HU-003) | `ResourceOutsideRoleScopeException` → 400 |
+| #  | Regla                                                                                                                              | Dónde vive (VO / Rule)                                                                                            | Puerto que trae el dato                                                                                | Excepción → HTTP                                                                |
+|----|------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
+| L1 | Nombre: 3–60 caracteres tras `trim`, no vacío                                                                                      | VO `RoleName` (**síncrona**)                                                                                      | —                                                                                                      | `InvalidRoleNameException` → 400                                                |
+| L2 | Alcance coherente: `GLOBAL` sin ids, `TENANT` solo tenant, `APPLICATION` tenant + aplicación                                       | VO `RoleScope` (**síncrona**)                                                                                     | —                                                                                                      | `InvalidRoleScopeException` → 400                                               |
+| R1 | El nombre es único dentro del alcance exacto (nivel + tenant + aplicación)                                                         | `RoleNameMustBeUniqueInScopeRule` (**síncrona**, recibe `RoleNameAvailability`)                                   | `RoleRepository.existsByNameInScope`                                                                   | `DuplicateRoleNameException` → **409**                                          |
+| R2 | Para `APPLICATION`, la aplicación existe y pertenece al tenant                                                                     | **Prestada**: `ApplicationMustExistForTenantValidator` (`applications :: rule`)                                   | (interno de `applications`)                                                                            | `ApplicationNotFoundException` → 400 (ya existe)                                |
+| R3 | El rol existe **para ese tenant** (un rol de otro tenant o uno global no existe para él)                                           | `RoleMustExistForTenantRule` (**síncrona**, recibe `RoleExistence`)                                               | `RoleRepository.findByIdForTenant`                                                                     | `RoleNotFoundException` → 400                                                   |
+| R4 | El recurso existe                                                                                                                  | **Prestada, nueva**: `ProtectedResourceOwnerLookupValidator` (`resources :: rule`) — resuelve la aplicación dueña | `ProtectedResourceRepository.findApplicationIdById` **[M]**                                            | `ProtectedResourceNotFoundException` → 400 (constructor nuevo por `ResourceId`) |
+| R5 | El alcance del rol cubre el recurso: global cubre todo; tenant cubre recursos de sus aplicaciones; aplicación cubre solo los suyos | `RoleScopeMustCoverResourceRule` (**síncrona**, recibe `ResourceCoverage`)                                        | tenant del recurso vía **prestado** `ApplicationOwnerLookupValidator` (`applications :: rule`, HU-003) | `ResourceOutsideRoleScopeException` → 400                                       |
 
 Barreras de contrato del borde HTTP (no son reglas de negocio — validación de forma, como C1–C4 de
 HU-003):
 
-| # | Barrera | Dónde | Excepción → HTTP |
-|---|---|---|---|
-| C1 | `scope` debe ser `TENANT` o `APPLICATION`. `GLOBAL` se rechaza **en este canal** hasta HU-009 | `DefineRoleRequestMapper` | `MalformedRequestFieldException("scope", RolesMessages.globalScopeNotAdministrableYet())` → 400 |
-| C2 | `scope=APPLICATION` exige `applicationId`; `scope=TENANT` lo prohíbe (ambigüedad, no se adivina) | `DefineRoleRequestMapper` | `MissingRequestFieldException("applicationId")` / `MalformedRequestFieldException("applicationId", …)` → 400 |
-| C3 | Ventana de paginación: `page`/`size` y `offset`/`limit` no se mezclan; rangos válidos | `ListRolesRequestMapper` (copia de `ListApplicationsRequestMapper`) | `ConflictingRequestParametersException` / `MalformedRequestFieldException` → 400 |
+| #  | Barrera                                                                                          | Dónde                                                               | Excepción → HTTP                                                                                             |
+|----|--------------------------------------------------------------------------------------------------|---------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------|
+| C1 | `scope` debe ser `TENANT` o `APPLICATION`. `GLOBAL` se rechaza **en este canal** hasta HU-009    | `DefineRoleRequestMapper`                                           | `MalformedRequestFieldException("scope", RolesMessages.globalScopeNotAdministrableYet())` → 400              |
+| C2 | `scope=APPLICATION` exige `applicationId`; `scope=TENANT` lo prohíbe (ambigüedad, no se adivina) | `DefineRoleRequestMapper`                                           | `MissingRequestFieldException("applicationId")` / `MalformedRequestFieldException("applicationId", …)` → 400 |
+| C3 | Ventana de paginación: `page`/`size` y `offset`/`limit` no se mezclan; rangos válidos            | `ListRolesRequestMapper` (copia de `ListApplicationsRequestMapper`) | `ConflictingRequestParametersException` / `MalformedRequestFieldException` → 400                             |
 
 **Ninguna `if/throw` de negocio en los use cases.** El único `if` de orquestación (¿tiene
 `applicationId` el alcance?) se resuelve con `Mono.justOrEmpty(scope.applicationId())` en el
@@ -77,7 +77,8 @@ validador, no con una rama.
 
 ### Entidad / agregado
 
-`Role` **[N]** — `record Role(RoleId id, RoleName name, RoleScope scope, Set<ResourceId> resources, Instant registeredAt)`.
+`Role` **[N]** —
+`record Role(RoleId id, RoleName name, RoleScope scope, Set<ResourceId> resources, Instant registeredAt)`.
 Factoría con nombre `define(id, name, scope, registeredAt)` (recursos vacíos). Transición
 `withResource(ResourceId)` → nuevo `Role` con el recurso añadido (`Set.copyOf`, idempotente).
 Sin `authorizes(...)`: eso sería decidir. **Sin eventos de dominio** en esta historia (no hay
@@ -89,17 +90,17 @@ ese tenant.
 
 ### Value objects
 
-| VO | Nuevo o existente | Invariantes | Vive en |
-|---|---|---|---|
-| `RoleId` | **Nuevo** | UUID no nulo; `of(String)` → `InvalidIdentifierException("ROLE_ID", raw)` | `pdp/commons/model/` — HU-005 lo consume, dos slices → commons |
-| `RoleName` | **Nuevo** | `trim`; no nulo/vacío; 3–60 caracteres | `roles/domain/model/` |
-| `RoleScope` | **Nuevo** | `Optional<TenantId>` y `Optional<ApplicationId>` presentes **exactamente** según el nivel (L2). Factorías `global()`, `ofTenant(TenantId)`, `ofApplication(TenantId, ApplicationId)`. `isGlobal()`. `Optional` como componente tiene precedente aceptado en `ApplicationCriteria` | `roles/domain/model/` |
-| `ResourceId`, `TenantId`, `ApplicationId` | Existentes | — | `pdp/commons/model/` |
+| VO                                        | Nuevo o existente | Invariantes                                                                                                                                                                                                                                                                       | Vive en                                                        |
+|-------------------------------------------|-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------|
+| `RoleId`                                  | **Nuevo**         | UUID no nulo; `of(String)` → `InvalidIdentifierException("ROLE_ID", raw)`                                                                                                                                                                                                         | `pdp/commons/model/` — HU-005 lo consume, dos slices → commons |
+| `RoleName`                                | **Nuevo**         | `trim`; no nulo/vacío; 3–60 caracteres                                                                                                                                                                                                                                            | `roles/domain/model/`                                          |
+| `RoleScope`                               | **Nuevo**         | `Optional<TenantId>` y `Optional<ApplicationId>` presentes **exactamente** según el nivel (L2). Factorías `global()`, `ofTenant(TenantId)`, `ofApplication(TenantId, ApplicationId)`. `isGlobal()`. `Optional` como componente tiene precedente aceptado en `ApplicationCriteria` | `roles/domain/model/`                                          |
+| `ResourceId`, `TenantId`, `ApplicationId` | Existentes        | —                                                                                                                                                                                                                                                                                 | `pdp/commons/model/`                                           |
 
 ### Enums
 
-| Enum | Valores | Comportamiento que expone |
-|---|---|---|
+| Enum                     | Valores                           | Comportamiento que expone                                                                                           |
+|--------------------------|-----------------------------------|---------------------------------------------------------------------------------------------------------------------|
 | `RoleScopeLevel` **[N]** | `GLOBAL`, `TENANT`, `APPLICATION` | `requiresTenant()`, `requiresApplication()`, `parse(String)` → `InvalidRoleScopeException` si no es uno de los tres |
 
 ### Hechos de regla (`roles/domain/rule/model/`)
@@ -123,11 +124,11 @@ ese tenant.
 
 ## 6. Endpoint
 
-| Verbo | Ruta | Código de éxito | Cuerpo de entrada | Cuerpo de salida |
-|---|---|---|---|---|
-| POST | `/api/v1/roles` | 201 `ROLE_DEFINED` | `DefineRoleRawRequest` | `ApiResponse<RoleWebResponse>` |
-| POST | `/api/v1/roles/{roleId}/resources` | 200 `ROLE_RESOURCE_GRANTED` | `GrantResourceRawRequest` (+ `roleId` de la ruta) | `ApiResponse<RoleWebResponse>` |
-| GET | `/api/v1/roles` | 200 `ROLES_LISTED` | query `page`/`size`/`offset`/`limit` | `ApiResponse<PageResponse<RoleWebResponse>>` |
+| Verbo | Ruta                               | Código de éxito             | Cuerpo de entrada                                 | Cuerpo de salida                             |
+|-------|------------------------------------|-----------------------------|---------------------------------------------------|----------------------------------------------|
+| POST  | `/api/v1/roles`                    | 201 `ROLE_DEFINED`          | `DefineRoleRawRequest`                            | `ApiResponse<RoleWebResponse>`               |
+| POST  | `/api/v1/roles/{roleId}/resources` | 200 `ROLE_RESOURCE_GRANTED` | `GrantResourceRawRequest` (+ `roleId` de la ruta) | `ApiResponse<RoleWebResponse>`               |
+| GET   | `/api/v1/roles`                    | 200 `ROLES_LISTED`          | query `page`/`size`/`offset`/`limit`              | `ApiResponse<PageResponse<RoleWebResponse>>` |
 
 - **Autorización:** canal BFF (`SecurityConfiguration`/`KeycloakSecurityConfiguration`, ya
   cubre `/api/**`). **El tenant sale del principal** (`SecurityContext.currentPrincipal()`), nunca del
@@ -373,30 +374,30 @@ ajeno cambia. `resources :: rule` y `applications :: rule` ya existen como inter
 
 ## 9. Casos de prueba esperados
 
-| Capa | Clase de prueba | Casos |
-|---|---|---|
-| `domain` | `RoleNameTests` | trim; null → `InvalidRoleNameException`; 2 chars → rechaza; 61 chars → rechaza; 3 y 60 → acepta |
-| `domain` | `RoleScopeTests` | `global()` sin ids; `ofTenant`; `ofApplication`; constructor `TENANT` sin tenant → `InvalidRoleScopeException`; `GLOBAL` con tenant → rechaza; `APPLICATION` sin aplicación → rechaza |
-| `domain` | `RoleScopeLevelTests` | `parse("tenant")` case-insensitive; `parse("x")` → `InvalidRoleScopeException`; `requiresTenant/Application` por nivel |
-| `domain` | `RoleTests` | `define` deja recursos vacíos; `withResource` añade y no muta el original; `withResource` repetido no duplica |
-| `domain` | `RoleCriteriaTests` | rol del tenant → true; global → true; otro tenant → false |
-| `domain` | `RoleNameMustBeUniqueInScopeRuleImplTests` | `taken=true` → `DuplicateRoleNameException`; `false` → no lanza |
-| `domain` | `RoleMustExistForTenantRuleImplTests` | `registered=false` → `RoleNotFoundException`; `true` → no lanza |
-| `domain` | `RoleScopeMustCoverResourceRuleImplTests` | global cubre todo; tenant cubre recurso de su tenant; tenant **no** cubre otro tenant; aplicación cubre solo la suya |
-| `application` | `DefineRoleRulesValidatorImplTests` | nombre tomado → `DuplicateRoleNameException`; `APPLICATION` con app inexistente → `ApplicationNotFoundException` (fake del validador prestado); `TENANT` **no** invoca el validador de aplicación (poison pill); todo ok → completa |
-| `application` | `GrantResourceRulesValidatorImplTests` | rol no encontrado para el tenant → `RoleNotFoundException` y **no** consulta recursos (poison pill); recurso inexistente → `ProtectedResourceNotFoundException`; fuera de alcance → `ResourceOutsideRoleScopeException`; ok → devuelve el rol |
-| `application` | `DefineRoleUseCaseImplTests` | camino feliz: usa `IdentifierGenerator`/`TimeProvider` fijos, guarda un `Role` con recursos vacíos y devuelve `RoleResponse`; el validador que lanza corta antes de guardar (lista capturadora vacía) |
-| `application` | `GrantResourceToRoleUseCaseImplTests` | guarda el rol con el recurso añadido y devuelve la respuesta; el validador que lanza no guarda |
-| `application` | `ListRolesUseCaseImplTests` | proyecta `ResultPage<Role>` → `ResultPage<RoleResponse>` conservando total y ventana |
-| `application` (resources) | `ProtectedResourceOwnerLookupValidatorImplTests` | existe → `ApplicationId`; vacío → `ProtectedResourceNotFoundException` |
-| `infrastructure` — mapper | `DefineRoleRequestMapperTests` | `name` ausente → Missing; `scope` ausente → Missing; `scope=GLOBAL` → Malformed(`scope`); `scope=otro` → Malformed(`scope`); `APPLICATION` sin `applicationId` → Missing; `TENANT` con `applicationId` → Malformed(`applicationId`); `applicationId` no UUID → Malformed; feliz `TENANT`; feliz `APPLICATION` |
-| `infrastructure` — mapper | `GrantResourceRequestMapperTests` | `resourceId` ausente → Missing; no UUID → Malformed; `roleId` no UUID → Malformed; feliz |
-| `infrastructure` — mapper | `ListRolesRequestMapperTests` | sin parámetros → ventana por defecto; `page`+`offset` → `ConflictingRequestParametersException`; `size=0` → Malformed(`size`) — el resto de combinaciones ya las cubre `ListApplicationsRequestMapperTests` sobre la misma lógica |
-| `infrastructure` — mapper | `RoleResponseMapperTests` | rol de aplicación → ambos ids; global → `tenantId`/`applicationId` nulos; recursos en orden estable |
-| `infrastructure` — mapper | `RolePersistenceMapperTests` | entidad → dominio para los tres niveles; `resourceIds` vacío → `Set` vacío |
-| `infrastructure` — controller | `RoleControllerTests` | `POST /roles` → 201 `ROLE_DEFINED`; `POST /{id}/resources` → 200 y el `roleId` de la ruta llega al interactor; `GET` → 200 con `PageResponse` |
-| `infrastructure` — persistencia | `SurrealRepositoryIntegrationTests` **[M]** (+3 casos) | `save` + `findByIdForTenant` devuelve el rol con sus recursos; `findByIdForTenant` con otro tenant → vacío; `findBy(ofTenant)` incluye globales y excluye otro tenant; `findApplicationIdById` de `resources` resuelve y vacío |
-| `infrastructure` — HTTP | `RoleHttpTests` | define `TENANT` → 201; define `GLOBAL` → 400 `scope`; concede recurso de otra aplicación a rol de aplicación → 400 `RESOURCE_OUTSIDE_ROLE_SCOPE`; lista del tenant no muestra roles de otro tenant |
+| Capa                            | Clase de prueba                                        | Casos                                                                                                                                                                                                                                                                                                         |
+|---------------------------------|--------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `domain`                        | `RoleNameTests`                                        | trim; null → `InvalidRoleNameException`; 2 chars → rechaza; 61 chars → rechaza; 3 y 60 → acepta                                                                                                                                                                                                               |
+| `domain`                        | `RoleScopeTests`                                       | `global()` sin ids; `ofTenant`; `ofApplication`; constructor `TENANT` sin tenant → `InvalidRoleScopeException`; `GLOBAL` con tenant → rechaza; `APPLICATION` sin aplicación → rechaza                                                                                                                         |
+| `domain`                        | `RoleScopeLevelTests`                                  | `parse("tenant")` case-insensitive; `parse("x")` → `InvalidRoleScopeException`; `requiresTenant/Application` por nivel                                                                                                                                                                                        |
+| `domain`                        | `RoleTests`                                            | `define` deja recursos vacíos; `withResource` añade y no muta el original; `withResource` repetido no duplica                                                                                                                                                                                                 |
+| `domain`                        | `RoleCriteriaTests`                                    | rol del tenant → true; global → true; otro tenant → false                                                                                                                                                                                                                                                     |
+| `domain`                        | `RoleNameMustBeUniqueInScopeRuleImplTests`             | `taken=true` → `DuplicateRoleNameException`; `false` → no lanza                                                                                                                                                                                                                                               |
+| `domain`                        | `RoleMustExistForTenantRuleImplTests`                  | `registered=false` → `RoleNotFoundException`; `true` → no lanza                                                                                                                                                                                                                                               |
+| `domain`                        | `RoleScopeMustCoverResourceRuleImplTests`              | global cubre todo; tenant cubre recurso de su tenant; tenant **no** cubre otro tenant; aplicación cubre solo la suya                                                                                                                                                                                          |
+| `application`                   | `DefineRoleRulesValidatorImplTests`                    | nombre tomado → `DuplicateRoleNameException`; `APPLICATION` con app inexistente → `ApplicationNotFoundException` (fake del validador prestado); `TENANT` **no** invoca el validador de aplicación (poison pill); todo ok → completa                                                                           |
+| `application`                   | `GrantResourceRulesValidatorImplTests`                 | rol no encontrado para el tenant → `RoleNotFoundException` y **no** consulta recursos (poison pill); recurso inexistente → `ProtectedResourceNotFoundException`; fuera de alcance → `ResourceOutsideRoleScopeException`; ok → devuelve el rol                                                                 |
+| `application`                   | `DefineRoleUseCaseImplTests`                           | camino feliz: usa `IdentifierGenerator`/`TimeProvider` fijos, guarda un `Role` con recursos vacíos y devuelve `RoleResponse`; el validador que lanza corta antes de guardar (lista capturadora vacía)                                                                                                         |
+| `application`                   | `GrantResourceToRoleUseCaseImplTests`                  | guarda el rol con el recurso añadido y devuelve la respuesta; el validador que lanza no guarda                                                                                                                                                                                                                |
+| `application`                   | `ListRolesUseCaseImplTests`                            | proyecta `ResultPage<Role>` → `ResultPage<RoleResponse>` conservando total y ventana                                                                                                                                                                                                                          |
+| `application` (resources)       | `ProtectedResourceOwnerLookupValidatorImplTests`       | existe → `ApplicationId`; vacío → `ProtectedResourceNotFoundException`                                                                                                                                                                                                                                        |
+| `infrastructure` — mapper       | `DefineRoleRequestMapperTests`                         | `name` ausente → Missing; `scope` ausente → Missing; `scope=GLOBAL` → Malformed(`scope`); `scope=otro` → Malformed(`scope`); `APPLICATION` sin `applicationId` → Missing; `TENANT` con `applicationId` → Malformed(`applicationId`); `applicationId` no UUID → Malformed; feliz `TENANT`; feliz `APPLICATION` |
+| `infrastructure` — mapper       | `GrantResourceRequestMapperTests`                      | `resourceId` ausente → Missing; no UUID → Malformed; `roleId` no UUID → Malformed; feliz                                                                                                                                                                                                                      |
+| `infrastructure` — mapper       | `ListRolesRequestMapperTests`                          | sin parámetros → ventana por defecto; `page`+`offset` → `ConflictingRequestParametersException`; `size=0` → Malformed(`size`) — el resto de combinaciones ya las cubre `ListApplicationsRequestMapperTests` sobre la misma lógica                                                                             |
+| `infrastructure` — mapper       | `RoleResponseMapperTests`                              | rol de aplicación → ambos ids; global → `tenantId`/`applicationId` nulos; recursos en orden estable                                                                                                                                                                                                           |
+| `infrastructure` — mapper       | `RolePersistenceMapperTests`                           | entidad → dominio para los tres niveles; `resourceIds` vacío → `Set` vacío                                                                                                                                                                                                                                    |
+| `infrastructure` — controller   | `RoleControllerTests`                                  | `POST /roles` → 201 `ROLE_DEFINED`; `POST /{id}/resources` → 200 y el `roleId` de la ruta llega al interactor; `GET` → 200 con `PageResponse`                                                                                                                                                                 |
+| `infrastructure` — persistencia | `SurrealRepositoryIntegrationTests` **[M]** (+3 casos) | `save` + `findByIdForTenant` devuelve el rol con sus recursos; `findByIdForTenant` con otro tenant → vacío; `findBy(ofTenant)` incluye globales y excluye otro tenant; `findApplicationIdById` de `resources` resuelve y vacío                                                                                |
+| `infrastructure` — HTTP         | `RoleHttpTests`                                        | define `TENANT` → 201; define `GLOBAL` → 400 `scope`; concede recurso de otra aplicación a rol de aplicación → 400 `RESOURCE_OUTSIDE_ROLE_SCOPE`; lista del tenant no muestra roles de otro tenant                                                                                                            |
 
 Presupuesto estimado: **~48 pruebas.** Es la historia más grande hasta ahora, y lo es porque son
 tres casos de uso, tres reglas y tres value objects — proporcional al presupuesto de `sb-testing`
@@ -406,14 +407,14 @@ historia aparte; el plan está escrito para que eso sea un recorte limpio, no un
 
 ## 10. Trazabilidad
 
-| Fase | Estado | Fecha |
-|---|---|---|
-| Plan | ✅ Generado | 2026-09-11 |
-| Contrato aprobado (gate 1) | ✅ Aprobado | 2026-09-11 |
-| Pruebas en rojo | ✅ Completado | 2026-09-11 |
-| Implementación en verde | ✅ Completado | 2026-09-12 |
-| Validación | ✅ Aprobado — `REPORTE-HU-004.md` | 2026-09-12 |
-| Entrega (gate 2) | ⏳ Pendiente | |
+| Fase                       | Estado                           | Fecha      |
+|----------------------------|----------------------------------|------------|
+| Plan                       | ✅ Generado                       | 2026-09-11 |
+| Contrato aprobado (gate 1) | ✅ Aprobado                       | 2026-09-11 |
+| Pruebas en rojo            | ✅ Completado                     | 2026-09-11 |
+| Implementación en verde    | ✅ Completado                     | 2026-09-12 |
+| Validación                 | ✅ Aprobado — `REPORTE-HU-004.md` | 2026-09-12 |
+| Entrega (gate 2)           | ⏳ Pendiente                      |            |
 
 ## 11. Ambigüedades pendientes
 

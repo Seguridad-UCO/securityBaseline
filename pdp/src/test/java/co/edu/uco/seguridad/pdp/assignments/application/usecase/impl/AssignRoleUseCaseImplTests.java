@@ -6,12 +6,7 @@ import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository
 import co.edu.uco.seguridad.pdp.assignments.domain.Assignment;
 import co.edu.uco.seguridad.pdp.assignments.domain.AssignmentCriteria;
 import co.edu.uco.seguridad.pdp.assignments.domain.model.AssignmentId;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
-import co.edu.uco.seguridad.pdp.commons.model.RoleId;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
-import co.edu.uco.seguridad.pdp.commons.model.UserId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.shared.cache.DistributedCachePort;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
@@ -82,7 +77,8 @@ class AssignRoleUseCaseImplTests {
                 dto -> Mono.empty(), repositoryCapturing(saved), UUID::randomUUID, () -> NOW, cacheCapturingEvict(evicted));
 
         StepVerifier.create(useCase.execute(new AssignRoleRequest(TENANT, USER, APPLICATION, ROLE)))
-                .assertNext(response -> { })
+                .assertNext(response -> {
+                })
                 .verifyComplete();
 
         assertThat(evicted).hasSize(1);
@@ -93,7 +89,7 @@ class AssignRoleUseCaseImplTests {
         return new AssignmentRepository() {
             @Override
             public Mono<Boolean> existsActiveByUserApplicationRole(UserId userId, ApplicationId applicationId, RoleId roleId,
-                    Instant now) {
+                                                                   Instant now) {
                 throw new UnsupportedOperationException();
             }
 
@@ -124,7 +120,7 @@ class AssignRoleUseCaseImplTests {
         return new AssignmentRepository() {
             @Override
             public Mono<Boolean> existsActiveByUserApplicationRole(UserId userId, ApplicationId applicationId, RoleId roleId,
-                    Instant now) {
+                                                                   Instant now) {
                 throw new UnsupportedOperationException();
             }
 
@@ -202,7 +198,7 @@ class AssignRoleUseCaseImplTests {
 
             @Override
             public Mono<Void> evict(UserId subject, ApplicationId applicationId) {
-                evicted.add(new Object[] {subject, applicationId});
+                evicted.add(new Object[]{subject, applicationId});
                 return Mono.empty();
             }
         };

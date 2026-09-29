@@ -11,12 +11,7 @@ import co.edu.uco.seguridad.shared.web.RequestContext;
 import co.edu.uco.seguridad.shared.web.message.WebContractMessages;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -36,14 +31,14 @@ final class ProfileAdministrationController {
     private final AdministerProfileRoleAdditionInteractor addRoleInteractor;
 
     ProfileAdministrationController(AdministerProfileDefinitionInteractor defineInteractor,
-            AdministerProfileRoleAdditionInteractor addRoleInteractor) {
+                                    AdministerProfileRoleAdditionInteractor addRoleInteractor) {
         this.defineInteractor = Objects.requireNonNull(defineInteractor);
         this.addRoleInteractor = Objects.requireNonNull(addRoleInteractor);
     }
 
     @PostMapping
     Mono<ResponseEntity<ApiResponse<ProfileAdministrationWebResponse>>> define(@RequestBody DefineProfileRawRequest body,
-            ServerWebExchange exchange) {
+                                                                               ServerWebExchange exchange) {
         RequestContext context = CorrelationWebFilter.context(exchange);
         return defineInteractor.execute(body)
                 .map(response -> ResponseEntity.status(HttpStatus.CREATED)
@@ -52,7 +47,7 @@ final class ProfileAdministrationController {
 
     @PostMapping("/{profileId}/roles")
     Mono<ResponseEntity<ApiResponse<ProfileAdministrationWebResponse>>> addRole(@PathVariable String profileId,
-            @RequestBody AddRoleToProfileRawRequest body, ServerWebExchange exchange) {
+                                                                                @RequestBody AddRoleToProfileRawRequest body, ServerWebExchange exchange) {
         RequestContext context = CorrelationWebFilter.context(exchange);
         return addRoleInteractor.execute(new AddRoleToProfileRawRequest(profileId, body.roleId()))
                 .map(response -> ResponseEntity.ok(ApiResponse.success("PROFILE_ROLE_ADDED",
@@ -61,7 +56,7 @@ final class ProfileAdministrationController {
 
     @DeleteMapping("/{profileId}/roles/{roleId}")
     Mono<ResponseEntity<ApiResponse<ProfileAdministrationWebResponse>>> removeRole(@PathVariable String profileId,
-            @PathVariable String roleId, ServerWebExchange exchange) {
+                                                                                   @PathVariable String roleId, ServerWebExchange exchange) {
         RequestContext context = CorrelationWebFilter.context(exchange);
         return addRoleInteractor.remove(new AddRoleToProfileRawRequest(profileId, roleId))
                 .map(response -> ResponseEntity.ok(ApiResponse.success("PROFILE_ROLE_REMOVED",

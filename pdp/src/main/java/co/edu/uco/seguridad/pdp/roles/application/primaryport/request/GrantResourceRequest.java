@@ -7,7 +7,9 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
 
-/** Entrada tipada de GrantResourceToRoleUseCase. El inquilino es el del principal: acota qué roles existen para él. */
+/**
+ * Entrada tipada de GrantResourceToRoleUseCase. El inquilino es el del principal: acota qué roles existen para él.
+ */
 public record GrantResourceRequest(TenantId tenantId, RoleId roleId, ResourceId resourceId) {
 
     public GrantResourceRequest {

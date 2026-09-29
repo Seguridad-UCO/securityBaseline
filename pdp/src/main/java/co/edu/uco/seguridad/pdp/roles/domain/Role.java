@@ -30,14 +30,18 @@ public record Role(RoleId id, RoleName name, RoleScope scope, Set<ResourceId> re
         return new Role(id, name, scope, Set.of(), registeredAt);
     }
 
-    /** Nuevo rol con el recurso añadido. Idempotente: conceder dos veces deja el conjunto igual. */
+    /**
+     * Nuevo rol con el recurso añadido. Idempotente: conceder dos veces deja el conjunto igual.
+     */
     public Role withResource(ResourceId resourceId) {
         Set<ResourceId> withNewResource = new HashSet<>(resources);
         withNewResource.add(resourceId);
         return new Role(id, name, scope, Set.copyOf(withNewResource), registeredAt);
     }
 
-    /** Nuevo rol sin el recurso. Es idempotente para que DELETE sea seguro al repetirlo. */
+    /**
+     * Nuevo rol sin el recurso. Es idempotente para que DELETE sea seguro al repetirlo.
+     */
     public Role withoutResource(ResourceId resourceId) {
         Set<ResourceId> remaining = new HashSet<>(resources);
         remaining.remove(resourceId);

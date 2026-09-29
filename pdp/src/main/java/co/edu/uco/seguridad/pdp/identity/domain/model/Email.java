@@ -5,7 +5,9 @@ import co.edu.uco.seguridad.pdp.identity.domain.exception.InvalidEmailException;
 
 import java.util.regex.Pattern;
 
-/** Correo verificado por el IdP. Comparación siempre en minúsculas: la unicidad no distingue caso. */
+/**
+ * Correo verificado por el IdP. Comparación siempre en minúsculas: la unicidad no distingue caso.
+ */
 public record Email(String value) {
 
     private static final Pattern FORMAT = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");

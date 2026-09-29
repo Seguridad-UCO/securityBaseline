@@ -4,6 +4,8 @@ import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.Ac
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.PolicyEvaluationInput;
 import co.edu.uco.seguridad.shared.contract.ReactiveOperation;
 
-/** Resuelve los hechos de autorización antes de salir del PDP. */
+/**
+ * Resuelve los hechos de autorización antes de salir del PDP.
+ */
 public interface AuthorizationContextResolver extends ReactiveOperation<AccessRequest, PolicyEvaluationInput> {
 }

@@ -21,11 +21,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -50,7 +46,9 @@ class AuthorizeUseCaseImplTests {
     private static final Instant DECIDED_AT = Instant.parse("2026-09-06T00:00:00Z");
 
     private static final co.edu.uco.seguridad.pdp.authorization.application.rule.validator.ActiveRoleNamesLookupValidator NEVER_ROLES_LOOKUP =
-            request -> { throw new AssertionError("must not reach the roles lookup"); };
+            request -> {
+                throw new AssertionError("must not reach the roles lookup");
+            };
 
     // Fake comun para los casos que no ejercitan la auditoria directamente: recordAudit(...) es el
     // ultimo paso de la cadena y se alcanza sin importar que camino produjo la decision (HU-007,
@@ -72,9 +70,13 @@ class AuthorizeUseCaseImplTests {
     void reports_tenant_mismatch_when_the_application_does_not_exist() {
         AuthorizeUseCaseImpl useCase = new AuthorizeUseCaseImpl(
                 query -> Mono.error(new ApplicationNotFoundException(query.applicationId())),
-                lookup -> { throw new AssertionError("must not reach the resource lookup"); },
+                lookup -> {
+                    throw new AssertionError("must not reach the resource lookup");
+                },
                 NEVER_ROLES_LOOKUP, ACCEPTING_AUDIT,
-                request -> { throw new AssertionError("must not reach the policy port"); },
+                request -> {
+                    throw new AssertionError("must not reach the policy port");
+                },
                 () -> DECISION_ID, () -> DECIDED_AT);
 
         StepVerifier.create(useCase.execute(REQUEST))
@@ -101,9 +103,13 @@ class AuthorizeUseCaseImplTests {
                     received.add(query);
                     return Mono.error(new ApplicationNotFoundException(query.applicationId()));
                 },
-                lookup -> { throw new AssertionError("must not reach the resource lookup"); },
+                lookup -> {
+                    throw new AssertionError("must not reach the resource lookup");
+                },
                 NEVER_ROLES_LOOKUP, ACCEPTING_AUDIT,
-                request -> { throw new AssertionError("must not reach the policy port"); },
+                request -> {
+                    throw new AssertionError("must not reach the policy port");
+                },
                 () -> DECISION_ID, () -> DECIDED_AT);
 
         StepVerifier.create(useCase.execute(REQUEST))
@@ -124,7 +130,9 @@ class AuthorizeUseCaseImplTests {
                 query -> Mono.empty(),
                 lookup -> Mono.error(new ProtectedResourceNotFoundException(lookup.applicationId(), lookup.path(), lookup.method())),
                 NEVER_ROLES_LOOKUP, ACCEPTING_AUDIT,
-                request -> { throw new AssertionError("must not reach the policy port"); },
+                request -> {
+                    throw new AssertionError("must not reach the policy port");
+                },
                 () -> DECISION_ID, () -> DECIDED_AT);
 
         StepVerifier.create(useCase.execute(REQUEST))
@@ -201,9 +209,13 @@ class AuthorizeUseCaseImplTests {
     void reports_indeterminate_when_the_application_lookup_fails_for_a_technical_reason() {
         AuthorizeUseCaseImpl useCase = new AuthorizeUseCaseImpl(
                 query -> Mono.error(new RuntimeException("SurrealDB unreachable")),
-                lookup -> { throw new AssertionError("must not reach the resource lookup"); },
+                lookup -> {
+                    throw new AssertionError("must not reach the resource lookup");
+                },
                 NEVER_ROLES_LOOKUP, ACCEPTING_AUDIT,
-                request -> { throw new AssertionError("must not reach the policy port"); },
+                request -> {
+                    throw new AssertionError("must not reach the policy port");
+                },
                 () -> DECISION_ID, () -> DECIDED_AT);
 
         StepVerifier.create(useCase.execute(REQUEST))

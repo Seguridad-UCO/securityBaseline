@@ -5,25 +5,17 @@ import co.edu.uco.seguridad.pdp.applications.domain.Application;
 import co.edu.uco.seguridad.pdp.applications.domain.ApplicationCriteria;
 import co.edu.uco.seguridad.pdp.applications.domain.exception.AmbiguousApplicationNameException;
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash;
-import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.entity.ApplicationEntity;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.mapper.ApplicationPersistenceMapper;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.schema.ApplicationSchema;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealRecordId;
 import reactor.core.publisher.Mono;
 import tools.jackson.databind.JsonNode;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Locale;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Adaptador real sobre SurrealDB (ADR-019). {@code existsByTenantAndName} es la puerta principal
@@ -119,7 +111,7 @@ public final class SurrealApplicationRepository implements ApplicationRepository
         String query = """
                 SELECT * FROM %s WHERE tenantId = $tenantId%s                 ORDER BY registeredAt DESC LIMIT %d START %d;
                 SELECT count() FROM %s WHERE tenantId = $tenantId%s GROUP ALL;                """.formatted(ApplicationSchema.TABLE, filter, window.limit(), window.offset(),
-                        ApplicationSchema.TABLE, filter);
+                ApplicationSchema.TABLE, filter);
 
         return client.execute(query, parameters)
                 .map(results -> {
@@ -141,10 +133,10 @@ public final class SurrealApplicationRepository implements ApplicationRepository
     public Mono<Application> save(Application application) {
         return client.execute(
                         """
-                        CREATE type::record('%s', $id) SET \
-                        tenantId = $tenantId, name = $name, description = $description, baseUrl = $baseUrl, \
-                        credentialHash = $credentialHash, registeredAt = <datetime>$registeredAt;\
-                        """.formatted(ApplicationSchema.TABLE),
+                                CREATE type::record('%s', $id) SET \
+                                tenantId = $tenantId, name = $name, description = $description, baseUrl = $baseUrl, \
+                                credentialHash = $credentialHash, registeredAt = <datetime>$registeredAt;\
+                                """.formatted(ApplicationSchema.TABLE),
                         Map.of(
                                 "id", application.id().value().toString(),
                                 "tenantId", application.tenantId().value(),

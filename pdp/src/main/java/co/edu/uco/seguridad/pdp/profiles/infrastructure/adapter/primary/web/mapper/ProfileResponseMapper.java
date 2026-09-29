@@ -5,7 +5,9 @@ import co.edu.uco.seguridad.pdp.profiles.application.primaryport.response.Profil
 import co.edu.uco.seguridad.pdp.profiles.infrastructure.adapter.primary.web.dto.response.ProfileWebResponse;
 import co.edu.uco.seguridad.pdp.roles.domain.model.RoleScope;
 
-/** ProfileResponse (value objects) a ProfileWebResponse (plana): ningún VO ni enum de dominio cruza al cliente. */
+/**
+ * ProfileResponse (value objects) a ProfileWebResponse (plana): ningún VO ni enum de dominio cruza al cliente.
+ */
 public final class ProfileResponseMapper {
 
     private ProfileResponseMapper() {

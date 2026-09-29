@@ -7,7 +7,9 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
 
-/** Entrada tipada de AddRoleToProfileUseCase. El inquilino es el del principal: acota qué perfiles existen para él. */
+/**
+ * Entrada tipada de AddRoleToProfileUseCase. El inquilino es el del principal: acota qué perfiles existen para él.
+ */
 public record AddRoleToProfileRequest(TenantId tenantId, ProfileId profileId, RoleId roleId) {
 
     public AddRoleToProfileRequest {

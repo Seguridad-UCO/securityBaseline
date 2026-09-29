@@ -5,7 +5,8 @@
 > tomadas (con su porqué y las alternativas descartadas), las trampas verificadas que te van a
 > costar un ciclo si las pisas, y el orden exacto en que arrancar con los agentes.
 >
-> **Fecha:** 2026-09-10 · **Autor:** sesión de Claude Code con Sebastián · **Rama:** `feature/hu-003-endpoint-interno-pep`
+> **Fecha:** 2026-09-10 · **Autor:** sesión de Claude Code con Sebastián · **Rama:**
+`feature/hu-003-endpoint-interno-pep`
 
 ---
 
@@ -23,13 +24,13 @@ está mal, dilo y espera — no la cambies a mitad de implementación.
 
 ## 2. Estado real del repositorio
 
-| Hecho | Estado |
-|---|---|
-| **HU-002** — `POST /api/v1/authorize`, canal BFF, denegación por defecto | ✅ Implementada, validada y aprobada (277 pruebas verdes). **Aún NO mergeada a main** |
-| Rama de HU-002 | `feature/hu-002-endpoint-decision` — 2 commits por delante de `origin/main`, pendiente de PR |
-| **Rama del PEP** | `feature/pep` — módulo `pep/` completo, autónomo, con su propio POM. Tampoco mergeada |
-| Esta rama (`feature/hu-003-endpoint-interno-pep`) | Sale de `feature/hu-002-endpoint-decision`, porque HU-003 depende del código de HU-002 |
-| **HU-003** — endpoint interno para el PEP | ⛔ No empezada. Es lo que sigue |
+| Hecho                                                                    | Estado                                                                                       |
+|--------------------------------------------------------------------------|----------------------------------------------------------------------------------------------|
+| **HU-002** — `POST /api/v1/authorize`, canal BFF, denegación por defecto | ✅ Implementada, validada y aprobada (277 pruebas verdes). **Aún NO mergeada a main**         |
+| Rama de HU-002                                                           | `feature/hu-002-endpoint-decision` — 2 commits por delante de `origin/main`, pendiente de PR |
+| **Rama del PEP**                                                         | `feature/pep` — módulo `pep/` completo, autónomo, con su propio POM. Tampoco mergeada        |
+| Esta rama (`feature/hu-003-endpoint-interno-pep`)                        | Sale de `feature/hu-002-endpoint-decision`, porque HU-003 depende del código de HU-002       |
+| **HU-003** — endpoint interno para el PEP                                | ⛔ No empezada. Es lo que sigue                                                               |
 
 ### Lo que hay que mergear antes o en paralelo
 
@@ -63,14 +64,14 @@ el segundo. Textual de `contracts/pep-pdp/v1/PDP-INTEGRATION-GUIDE.md`:
 Fuente de verdad: `contracts/pep-pdp/v1/` en la rama `feature/pep` — `openapi.yaml`,
 `request.schema.json`, `decision.schema.json` y tres ejemplos. **Léelos antes de planificar.**
 
-| Petición (`SolicitudAcceso v1`) | Respuesta (`DecisionAcceso v1`) |
-|---|---|
-| `version` (const `"1"`) | `decision` (`ALLOW`/`DENY`/`INDETERMINATE`) |
-| `requestId` (uuid), `correlationId`, `timestamp` | `decisionId`, `reasonCode` |
-| `application.name`, `application.environment` | `policyReferences[]` (`id` + `version`) |
-| `resource.path`, `resource.action` | `requestId`, `correlationId` (deben coincidir con la petición) |
-| `context.method`, `context.channel` (const `"HTTP"`) | `obligations` — ausente/null/vacío en v1 |
-| Headers `X-Request-Id`, `X-Correlation-Id` | Mismos headers de vuelta |
+| Petición (`SolicitudAcceso v1`)                      | Respuesta (`DecisionAcceso v1`)                                |
+|------------------------------------------------------|----------------------------------------------------------------|
+| `version` (const `"1"`)                              | `decision` (`ALLOW`/`DENY`/`INDETERMINATE`)                    |
+| `requestId` (uuid), `correlationId`, `timestamp`     | `decisionId`, `reasonCode`                                     |
+| `application.name`, `application.environment`        | `policyReferences[]` (`id` + `version`)                        |
+| `resource.path`, `resource.action`                   | `requestId`, `correlationId` (deben coincidir con la petición) |
+| `context.method`, `context.channel` (const `"HTTP"`) | `obligations` — ausente/null/vacío en v1                       |
+| Headers `X-Request-Id`, `X-Correlation-Id`           | Mismos headers de vuelta                                       |
 
 Códigos que el PEP espera: **200** evaluación completa · **400** contrato inválido · **401** evidencia
 de usuario inválida · **403** PEP no admitido · **503** evaluación no disponible. Cualquier cosa que
@@ -199,11 +200,11 @@ en su `onErrorResume` final, así que no hace falta un respaldo.
 
 El PEP ya usa `pep.pdp.*`. El PDP adopta:
 
-| Prefijo | Para qué |
-|---|---|
-| `pdp.security.internal.mtls.*` | trust store, sujetos de certificado admitidos |
+| Prefijo                            | Para qué                                        |
+|------------------------------------|-------------------------------------------------|
+| `pdp.security.internal.mtls.*`     | trust store, sujetos de certificado admitidos   |
 | `pdp.security.internal.evidence.*` | issuer/JWKS/audiencia del JWT de evidencia (D5) |
-| `pdp.opa.*` | cliente OPA de HU-006 |
+| `pdp.opa.*`                        | cliente OPA de HU-006                           |
 
 Mismo estilo que `JwtSecurityProperties`/`CorsProperties` ya existentes: un `record`
 `@ConfigurationProperties`, sin Bean Validation.
@@ -270,7 +271,8 @@ flags. Ya está documentado en `.claude/agents/4-validador.md`.
 
 ### Fuera (explícitamente)
 
-- Validación de issuer/audiencia **por aplicación** → historia propia de credenciales por aplicación, sin número aún (D5).
+- Validación de issuer/audiencia **por aplicación** → historia propia de credenciales por aplicación, sin número aún (
+  D5).
 - OPA → HU-006.
 - Auditoría durable → HU-007.
 - Despliegue, red, certificados por ambiente, `X-ARR-ClientCert` → Etapa 5, no es una historia del PDP.
@@ -285,7 +287,8 @@ barreras de D7) y **4** (capacidades transversales: la cadena de seguridad nueva
 
 ## 7. Alcance de HU-006 (OPA) — resumen, se planifica cuando toque
 
-No la planifiques todavía: depende de HU-004 y HU-005 (roles y asignaciones vigentes), que es lo que le da a OPA algo que
+No la planifiques todavía: depende de HU-004 y HU-005 (roles y asignaciones vigentes), que es lo que le da a OPA algo
+que
 evaluar. Lo decidido está en D9 y D10. Lo que habrá que producir además del adaptador:
 
 - Forma del `input` que reciben las políticas Rego — es contrato con el compañero de OPA, igual que
@@ -355,13 +358,13 @@ Después, el ciclo normal: `@2-tester-spec` → `@3-implementador` → `@4-valid
 
 ## 10. Referencias
 
-| Qué | Dónde |
-|---|---|
-| Contrato PEP↔PDP v1 | `contracts/pep-pdp/v1/` (rama `feature/pep`) |
-| Guía de integración para el PDP | `contracts/pep-pdp/v1/PDP-INTEGRATION-GUIDE.md` |
-| Plan de 7 etapas de la plataforma | `docs/plans/2026-09-06-security-platform-next-steps.md` (rama `feature/pep`) |
-| ADR del PEP | `docs/architecture/adr-pep-v1.md` (rama `feature/pep`) |
-| Estado y pruebas del PEP | `pep/README.md` (rama `feature/pep`) |
-| Roadmap del PDP, renumerado | [`ROADMAP-PDP.md`](ROADMAP-PDP.md) |
-| Contrato de trabajo de los agentes | [`AGENTS.md`](../../../../AGENTS.md) |
-| Reporte de validación de HU-002 | [`reportes/REPORTE-HU-002.md`](reportes/REPORTE-HU-002.md) |
+| Qué                                | Dónde                                                                        |
+|------------------------------------|------------------------------------------------------------------------------|
+| Contrato PEP↔PDP v1                | `contracts/pep-pdp/v1/` (rama `feature/pep`)                                 |
+| Guía de integración para el PDP    | `contracts/pep-pdp/v1/PDP-INTEGRATION-GUIDE.md`                              |
+| Plan de 7 etapas de la plataforma  | `docs/plans/2026-09-06-security-platform-next-steps.md` (rama `feature/pep`) |
+| ADR del PEP                        | `docs/architecture/adr-pep-v1.md` (rama `feature/pep`)                       |
+| Estado y pruebas del PEP           | `pep/README.md` (rama `feature/pep`)                                         |
+| Roadmap del PDP, renumerado        | [`ROADMAP-PDP.md`](ROADMAP-PDP.md)                                           |
+| Contrato de trabajo de los agentes | [`AGENTS.md`](../../../../AGENTS.md)                                         |
+| Reporte de validación de HU-002    | [`reportes/REPORTE-HU-002.md`](reportes/REPORTE-HU-002.md)                   |

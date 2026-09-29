@@ -28,15 +28,15 @@ drift.ps1        → 1 hallazgo activo: una clase del starter del PEP, citada en
                     sobrescribir ese reporte con este.)
 ```
 
-| Comprobacion | Resultado |
-|---|---|
-| Compilacion | ✅ |
-| Pruebas | ✅ 465 pruebas |
-| Cobertura (≥ 50 % por paquete) | ✅ (parte de `clean verify` en verde) |
-| `LayeredArchitectureTests` | ✅ |
-| `ModulithStructureTests` | ✅ |
-| `consistencia.ps1` | ✅ |
-| `drift.ps1` | ✅ (0 hallazgos nuevos; el único activo es preexistente y ajeno a esta historia) |
+| Comprobacion                   | Resultado                                                                       |
+|--------------------------------|---------------------------------------------------------------------------------|
+| Compilacion                    | ✅                                                                               |
+| Pruebas                        | ✅ 465 pruebas                                                                   |
+| Cobertura (≥ 50 % por paquete) | ✅ (parte de `clean verify` en verde)                                            |
+| `LayeredArchitectureTests`     | ✅                                                                               |
+| `ModulithStructureTests`       | ✅                                                                               |
+| `consistencia.ps1`             | ✅                                                                               |
+| `drift.ps1`                    | ✅ (0 hallazgos nuevos; el único activo es preexistente y ajeno a esta historia) |
 
 ## Estado final
 
@@ -71,25 +71,25 @@ el alcance del escaneo de `drift.ps1`.
 
 ## Los cuatro juicios
 
-| # | Juicio | Resultado | Evidencia |
-|---|---|---|---|
-| 1 | ¿Cumple los criterios de aceptacion del plan (no solo compila)? | ✅ | Ver tabla siguiente (sin cambios respecto a la primera pasada — el rename no tocó comportamiento) |
-| 2 | ¿Convencion de idioma? (codigo en ingles, mensajes en espanol) | ✅ | Bloqueante de la pasada anterior resuelto — ver "Bloqueantes" |
-| 3 | ¿Introdujo deriva doc↔codigo? | ✅ | `drift.ps1` en verde; el único hallazgo activo es preexistente y ajeno |
-| 4 | ¿La logica quedo en la capa correcta? | ✅ | Sin cambios respecto a la primera pasada — el rename no movió lógica de capa, solo nombres |
+| # | Juicio                                                          | Resultado | Evidencia                                                                                         |
+|---|-----------------------------------------------------------------|-----------|---------------------------------------------------------------------------------------------------|
+| 1 | ¿Cumple los criterios de aceptacion del plan (no solo compila)? | ✅         | Ver tabla siguiente (sin cambios respecto a la primera pasada — el rename no tocó comportamiento) |
+| 2 | ¿Convencion de idioma? (codigo en ingles, mensajes en espanol)  | ✅         | Bloqueante de la pasada anterior resuelto — ver "Bloqueantes"                                     |
+| 3 | ¿Introdujo deriva doc↔codigo?                                   | ✅         | `drift.ps1` en verde; el único hallazgo activo es preexistente y ajeno                            |
+| 4 | ¿La logica quedo en la capa correcta?                           | ✅         | Sin cambios respecto a la primera pasada — el rename no movió lógica de capa, solo nombres        |
 
 **Detalle criterio 1 (aceptación) — criterio del plan → evidencia:**
 
-| # criterio | Evidencia |
-|---|---|
-| 1 (asignar) | `AssignRoleUseCaseImplTests.assigns_the_role_with_a_generated_id_and_the_current_time_and_no_end` + `AssignmentHttpTests.assigns_a_tenant_scoped_role_to_an_application_of_the_tenant` (201) |
-| 2 (coherencia de alcance) | `RoleScopeMustCoverApplicationRuleImplTests` (5 casos) + `AssignRoleRulesValidatorImplTests.rejects_when_the_role_does_not_cover_the_application` + `AssignmentHttpTests.refuses_assigning_an_application_scoped_role_to_another_application` (400 `APPLICATION_OUTSIDE_ROLE_SCOPE`) |
-| 3 (no duplicar) | `AssignmentMustNotDuplicateActiveRuleImplTests` + `AssignRoleRulesValidatorImplTests.rejects_when_the_assignment_is_already_active` + `AssignmentHttpTests.refuses_assigning_the_same_triple_twice` (409) |
-| 4 (revocar) | `RevokeAssignmentUseCaseImplTests.saves_the_assignment_with_the_end_fixed_and_completes` + `AssignmentHttpTests.revoking_removes_the_role_from_the_active_context` (200, confirmado vía `ResolveActiveRolesUseCase`). Idempotencia: observación menor, sin prueba directa |
-| 5 (solo vigentes) | `SurrealRepositoryIntegrationTests.assignment_repository_excludes_a_revoked_assignment_from_active_roles` + `ResolveActiveRolesUseCaseImplTests` |
-| 6 (la fuente es el almacén) | `ResolveActiveRolesUseCaseImpl` solo consulta `AssignmentRepository.findActiveRoleIdsFor`, nunca el JWT — sin ninguna referencia a claims en `assignments` |
-| 7 (sujeto sin asignaciones) | `ResolveActiveRolesUseCaseImplTests.returns_an_empty_set_when_the_subject_has_no_assignments` |
-| 8 (aislamiento) | `AssignmentHttpTests.the_catalog_never_shows_assignments_of_another_tenant` + `SurrealRepositoryIntegrationTests.assignment_repository_finds_no_assignment_for_a_tenant_it_does_not_belong_to` + `.assignment_repository_lists_the_role_catalog_excluding_other_tenants` |
+| # criterio                  | Evidencia                                                                                                                                                                                                                                                                            |
+|-----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1 (asignar)                 | `AssignRoleUseCaseImplTests.assigns_the_role_with_a_generated_id_and_the_current_time_and_no_end` + `AssignmentHttpTests.assigns_a_tenant_scoped_role_to_an_application_of_the_tenant` (201)                                                                                         |
+| 2 (coherencia de alcance)   | `RoleScopeMustCoverApplicationRuleImplTests` (5 casos) + `AssignRoleRulesValidatorImplTests.rejects_when_the_role_does_not_cover_the_application` + `AssignmentHttpTests.refuses_assigning_an_application_scoped_role_to_another_application` (400 `APPLICATION_OUTSIDE_ROLE_SCOPE`) |
+| 3 (no duplicar)             | `AssignmentMustNotDuplicateActiveRuleImplTests` + `AssignRoleRulesValidatorImplTests.rejects_when_the_assignment_is_already_active` + `AssignmentHttpTests.refuses_assigning_the_same_triple_twice` (409)                                                                            |
+| 4 (revocar)                 | `RevokeAssignmentUseCaseImplTests.saves_the_assignment_with_the_end_fixed_and_completes` + `AssignmentHttpTests.revoking_removes_the_role_from_the_active_context` (200, confirmado vía `ResolveActiveRolesUseCase`). Idempotencia: observación menor, sin prueba directa            |
+| 5 (solo vigentes)           | `SurrealRepositoryIntegrationTests.assignment_repository_excludes_a_revoked_assignment_from_active_roles` + `ResolveActiveRolesUseCaseImplTests`                                                                                                                                     |
+| 6 (la fuente es el almacén) | `ResolveActiveRolesUseCaseImpl` solo consulta `AssignmentRepository.findActiveRoleIdsFor`, nunca el JWT — sin ninguna referencia a claims en `assignments`                                                                                                                           |
+| 7 (sujeto sin asignaciones) | `ResolveActiveRolesUseCaseImplTests.returns_an_empty_set_when_the_subject_has_no_assignments`                                                                                                                                                                                        |
+| 8 (aislamiento)             | `AssignmentHttpTests.the_catalog_never_shows_assignments_of_another_tenant` + `SurrealRepositoryIntegrationTests.assignment_repository_finds_no_assignment_for_a_tenant_it_does_not_belong_to` + `.assignment_repository_lists_the_role_catalog_excluding_other_tenants`             |
 
 **Detalle criterio 4 (capa correcta):** sin cambios respecto a la validación anterior — el rename de
 `Vigencia`→`Validity` tocó exclusivamente nombres (clase, campo, accesor generado, mensaje, constante),
@@ -101,35 +101,35 @@ más allá del propio nombre del tipo, ningún archivo fuera de `assignments`/`c
 > Solo los que el plan declaro. Sin cambios respecto a la pasada anterior — el rename no afecta
 > ningún punto de control salvo el criterio 21, que ahora sí cierra.
 
-| # | Criterio | Resultado | Punto de control comprobado |
-|---|---|---|---|
-| 1 | Clean Architecture | ✅ 🤖 | `LayeredArchitectureTests` + `ModulithStructureTests` en verde |
-| 2 | Contratos de servicios | ✅ | Interfaces vacías sobre `shared/contract`; `AssignmentRepository` explícito |
-| 3 | Reglas e integridad | ✅ | Reglas puras y síncronas; validadores hacen la E/S; cero `if/throw` en los use cases |
-| 4 | Capacidades transversales | ✅ | `IdentifierGenerator`/`TimeProvider` inyectados donde se construye desde cero o se resuelve "ahora" |
-| 5 | Manejo de mensajes | ✅ | `ApiResponse.success(...)`, incluido el `Void` del `DELETE` con witness de tipo |
-| 6 | Manejo de parámetros | ✅ | Raw `String` + `RequestFieldParser` en los 3 mappers de entrada |
-| 7 | Adaptadores de persistencia | ✅ | `SurrealAssignmentRepository` sin negocio; tabla en `AssignmentSchema.TABLE` |
-| 9 | Excepciones | ✅ | Jerarquía correcta; `InvalidValidityException`/`DuplicateAssignmentException`/`AssignmentNotFoundException`/`ApplicationOutsideRoleScopeException` sin tocar `ApiErrorHandler` |
-| 11 | Interacción entre capas | ✅ | Controller → interactor → use case → rules/validators → repositorio |
-| 12 | SOLID | ✅ | Constructor injection contra interfaces en los 13 beans de `AssignmentsConfiguration` |
-| 13 | DTOs | ✅ | Dos niveles, `RequestFieldParser` de por medio |
-| 14 | DTOs seguros | ✅ | `requireNonNull` en todos los `record` nuevos — barrido explícito sin hallazgos |
-| 15 | Validación de dominio | ✅ | `AssignmentId`, `Validity` (L1: fin posterior a inicio), `Assignment` validan en constructor compacto |
-| 16 | Repositorios dinámicos | ✅ | `AssignmentRepository.findBy(AssignmentCriteria, PageWindow)` |
-| 17 | Consultas dinámicas | ✅ | `AssignmentCriteria(RoleId, TenantId)` con `matches(Assignment)` |
-| 18 | Paginación | ✅ | `PageWindow` (máx. 100) reutilizado |
-| 19 | Rangos | ✅ | Copia literal de `ListRolesRequestMapper`, probado |
-| 20 | Adaptadores limpios | ✅ | Sin reglas de negocio en controller/mappers/repositorio |
-| 21 | Modelo refinado | ✅ | `record` inmutables con factorías con nombre y comportamiento; nombres en inglés — el hallazgo de la pasada anterior queda cerrado |
-| 22 | Arquitectura reactiva | ✅ | `Mono` en toda la cadena; único `.block()` en el `ApplicationRunner` de arranque |
+| #  | Criterio                    | Resultado | Punto de control comprobado                                                                                                                                                    |
+|----|-----------------------------|-----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1  | Clean Architecture          | ✅ 🤖      | `LayeredArchitectureTests` + `ModulithStructureTests` en verde                                                                                                                 |
+| 2  | Contratos de servicios      | ✅         | Interfaces vacías sobre `shared/contract`; `AssignmentRepository` explícito                                                                                                    |
+| 3  | Reglas e integridad         | ✅         | Reglas puras y síncronas; validadores hacen la E/S; cero `if/throw` en los use cases                                                                                           |
+| 4  | Capacidades transversales   | ✅         | `IdentifierGenerator`/`TimeProvider` inyectados donde se construye desde cero o se resuelve "ahora"                                                                            |
+| 5  | Manejo de mensajes          | ✅         | `ApiResponse.success(...)`, incluido el `Void` del `DELETE` con witness de tipo                                                                                                |
+| 6  | Manejo de parámetros        | ✅         | Raw `String` + `RequestFieldParser` en los 3 mappers de entrada                                                                                                                |
+| 7  | Adaptadores de persistencia | ✅         | `SurrealAssignmentRepository` sin negocio; tabla en `AssignmentSchema.TABLE`                                                                                                   |
+| 9  | Excepciones                 | ✅         | Jerarquía correcta; `InvalidValidityException`/`DuplicateAssignmentException`/`AssignmentNotFoundException`/`ApplicationOutsideRoleScopeException` sin tocar `ApiErrorHandler` |
+| 11 | Interacción entre capas     | ✅         | Controller → interactor → use case → rules/validators → repositorio                                                                                                            |
+| 12 | SOLID                       | ✅         | Constructor injection contra interfaces en los 13 beans de `AssignmentsConfiguration`                                                                                          |
+| 13 | DTOs                        | ✅         | Dos niveles, `RequestFieldParser` de por medio                                                                                                                                 |
+| 14 | DTOs seguros                | ✅         | `requireNonNull` en todos los `record` nuevos — barrido explícito sin hallazgos                                                                                                |
+| 15 | Validación de dominio       | ✅         | `AssignmentId`, `Validity` (L1: fin posterior a inicio), `Assignment` validan en constructor compacto                                                                          |
+| 16 | Repositorios dinámicos      | ✅         | `AssignmentRepository.findBy(AssignmentCriteria, PageWindow)`                                                                                                                  |
+| 17 | Consultas dinámicas         | ✅         | `AssignmentCriteria(RoleId, TenantId)` con `matches(Assignment)`                                                                                                               |
+| 18 | Paginación                  | ✅         | `PageWindow` (máx. 100) reutilizado                                                                                                                                            |
+| 19 | Rangos                      | ✅         | Copia literal de `ListRolesRequestMapper`, probado                                                                                                                             |
+| 20 | Adaptadores limpios         | ✅         | Sin reglas de negocio en controller/mappers/repositorio                                                                                                                        |
+| 21 | Modelo refinado             | ✅         | `record` inmutables con factorías con nombre y comportamiento; nombres en inglés — el hallazgo de la pasada anterior queda cerrado                                             |
+| 22 | Arquitectura reactiva       | ✅         | `Mono` en toda la cadena; único `.block()` en el `ApplicationRunner` de arranque                                                                                               |
 
 ## Desviaciones respecto al plan
 
-| Archivo | Plan decia | Codigo hace | ¿Justificado? |
-|---|---|---|---|
-| `pdp/assignments/domain/model/Validity.java` (antes `Vigencia.java`) | El plan (sección 7) fijaba el nombre `Vigencia` para el VO de vigencia | Se renombró a `Validity`, con sus cinco puntos de uso, tras el rechazo de la primera validación por convención de idioma | Sí — corrección de un bloqueante real del propio proceso de validación, no una decisión de negocio nueva. Documentado en el cierre del implementador de esta segunda pasada |
-| `pdp/assignments/application/rule/validator/impl/AssignRoleRulesValidatorImpl.java` | Igual que en la pasada anterior: `TimeProvider` en el constructor (corrección del tester) + disciplina `Mono.defer` en cada `.then(metodo())` (corrección del implementador) | Sin cambios en esta pasada | Sí — ya validado |
+| Archivo                                                                             | Plan decia                                                                                                                                                                   | Codigo hace                                                                                                              | ¿Justificado?                                                                                                                                                               |
+|-------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `pdp/assignments/domain/model/Validity.java` (antes `Vigencia.java`)                | El plan (sección 7) fijaba el nombre `Vigencia` para el VO de vigencia                                                                                                       | Se renombró a `Validity`, con sus cinco puntos de uso, tras el rechazo de la primera validación por convención de idioma | Sí — corrección de un bloqueante real del propio proceso de validación, no una decisión de negocio nueva. Documentado en el cierre del implementador de esta segunda pasada |
+| `pdp/assignments/application/rule/validator/impl/AssignRoleRulesValidatorImpl.java` | Igual que en la pasada anterior: `TimeProvider` en el constructor (corrección del tester) + disciplina `Mono.defer` en cada `.then(metodo())` (corrección del implementador) | Sin cambios en esta pasada                                                                                               | Sí — ya validado                                                                                                                                                            |
 
 ## Datos para la entrega
 

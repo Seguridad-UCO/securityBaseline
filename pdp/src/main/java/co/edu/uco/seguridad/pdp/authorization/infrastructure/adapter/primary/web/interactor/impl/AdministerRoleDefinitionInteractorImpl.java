@@ -33,7 +33,7 @@ public final class AdministerRoleDefinitionInteractorImpl implements AdministerR
     private final SubjectUserIdLookupValidator subjectUserIdLookup;
 
     public AdministerRoleDefinitionInteractorImpl(AdministerRoleDefinitionUseCase useCase,
-            SubjectUserIdLookupValidator subjectUserIdLookup) {
+                                                  SubjectUserIdLookupValidator subjectUserIdLookup) {
         this.useCase = Objects.requireNonNull(useCase, RequiredArgumentMessages.ADMINISTER_ROLE_DEFINITION_USE_CASE);
         this.subjectUserIdLookup = Objects.requireNonNull(subjectUserIdLookup,
                 RequiredArgumentMessages.SUBJECT_USER_ID_LOOKUP_VALIDATOR);
@@ -49,7 +49,7 @@ public final class AdministerRoleDefinitionInteractorImpl implements AdministerR
     }
 
     private static AdministerRoleDefinitionRequest toAdministerRequest(DefineRoleRawRequest raw,
-            PdpPrincipal principal, UserId userId) {
+                                                                       PdpPrincipal principal, UserId userId) {
         DefineRoleRequest role = DefineRoleRequestMapper.toRequest(raw, principal.tenantId());
         var administration = role.scope().applicationId()
                 .map(applicationId -> new AdministrationRequest(principal.tenantId(), applicationId, userId,

@@ -1,6 +1,8 @@
 package co.edu.uco.seguridad.pdp.assignments.domain.message;
 
-/** Catálogo de mensajes de las excepciones de negocio del módulo {@code assignments}. */
+/**
+ * Catálogo de mensajes de las excepciones de negocio del módulo {@code assignments}.
+ */
 public final class AssignmentsMessages {
 
     public static String assignmentAlreadyActive(String userId, String applicationId, String roleId) {

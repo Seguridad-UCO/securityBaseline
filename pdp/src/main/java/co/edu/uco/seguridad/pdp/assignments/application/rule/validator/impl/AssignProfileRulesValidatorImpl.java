@@ -29,8 +29,8 @@ public final class AssignProfileRulesValidatorImpl implements AssignProfileRules
     private final TimeProvider time;
 
     public AssignProfileRulesValidatorImpl(ProfileRolesLookupValidator profileRolesLookup,
-            ProfileAssignmentRepository repository, ProfileAssignmentMustNotDuplicateActiveRule mustNotDuplicate,
-            TimeProvider time) {
+                                           ProfileAssignmentRepository repository, ProfileAssignmentMustNotDuplicateActiveRule mustNotDuplicate,
+                                           TimeProvider time) {
         this.profileRolesLookup = Objects.requireNonNull(profileRolesLookup,
                 RequiredArgumentMessages.PROFILE_ROLES_LOOKUP_VALIDATOR);
         this.repository = Objects.requireNonNull(repository, RequiredArgumentMessages.PROFILE_ASSIGNMENT_REPOSITORY);

@@ -4,7 +4,9 @@ import co.edu.uco.seguridad.pdp.assignments.application.primaryport.response.Pro
 import co.edu.uco.seguridad.pdp.assignments.domain.model.AssignmentId;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.dto.response.ProfileAssignmentWebResponse;
 
-/** ProfileAssignmentResponse (value objects) a ProfileAssignmentWebResponse (plana). */
+/**
+ * ProfileAssignmentResponse (value objects) a ProfileAssignmentWebResponse (plana).
+ */
 public final class ProfileAssignmentResponseMapper {
 
     private ProfileAssignmentResponseMapper() {

@@ -46,13 +46,13 @@ EvaluarAcceso y cliente OPA. ADR-022 y algunos diagramas de baseline todavía de
 
 ## Dependencias permitidas
 
-| Módulo | Dependencias |
-|---|---|
-| application | contratos reactivos compartidos |
-| commons | Java |
-| normalization | commons, application |
-| enforcement | commons, application |
-| ingress | commons, application, DTOs/casos de uso expuestos de normalización y enforcement |
+| Módulo        | Dependencias                                                                     |
+|---------------|----------------------------------------------------------------------------------|
+| application   | contratos reactivos compartidos                                                  |
+| commons       | Java                                                                             |
+| normalization | commons, application                                                             |
+| enforcement   | commons, application                                                             |
+| ingress       | commons, application, DTOs/casos de uso expuestos de normalización y enforcement |
 
 Modulith verifica los límites. ArchUnit comprueba que aplicación no importa infraestructura/Spring,
 dominio/commons no importan Reactor/Spring/aplicación, y PEP no importa PDP/shared ni Servlet.

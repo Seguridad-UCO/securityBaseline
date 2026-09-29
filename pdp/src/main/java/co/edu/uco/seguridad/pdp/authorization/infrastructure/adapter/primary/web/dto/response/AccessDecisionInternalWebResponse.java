@@ -9,5 +9,6 @@ import java.util.List;
  * admite ausente/null/vacío y hoy no hay obligaciones que transportar.
  */
 public record AccessDecisionInternalWebResponse(String decision, String decisionId, String reasonCode,
-        List<PolicyReferenceInternalWebResponse> policyReferences, String requestId, String correlationId) {
+                                                List<PolicyReferenceInternalWebResponse> policyReferences,
+                                                String requestId, String correlationId) {
 }

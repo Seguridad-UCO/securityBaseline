@@ -81,13 +81,17 @@ public final class TestJwtSupport {
         return builder.build();
     }
 
-    /** Para {@code Mono#contextWrite}: hace que {@link SecurityContext#currentPrincipal()} resuelva. */
+    /**
+     * Para {@code Mono#contextWrite}: hace que {@link SecurityContext#currentPrincipal()} resuelva.
+     */
     public static Context withPrincipal(String tenant, String subject) {
         Authentication authentication = new JwtAuthenticationToken(jwt(tenant, subject));
         return ReactiveSecurityContextHolder.withAuthentication(authentication);
     }
 
-    /** Token firmado y serializado, listo para {@code Authorization: Bearer <token>}. */
+    /**
+     * Token firmado y serializado, listo para {@code Authorization: Bearer <token>}.
+     */
     public static String signedToken(String tenant, String subject) {
         return signedTokenExpiringIn(tenant, subject, 300, true, true, null);
     }
@@ -105,12 +109,16 @@ public final class TestJwtSupport {
         return signedTokenExpiringIn(tenant, subject, -60, true, true, null);
     }
 
-    /** Válido en to-do lo demás, pero sin el claim {@code aud} — para probar el rechazo de audiencia. */
+    /**
+     * Válido en to-do lo demás, pero sin el claim {@code aud} — para probar el rechazo de audiencia.
+     */
     public static String tokenWithoutAudience(String tenant, String subject) {
         return signedTokenExpiringIn(tenant, subject, 300, false, true, null);
     }
 
-    /** Válido en to-do lo demás, pero sin el claim {@code jti} — para probar el rechazo de identificador. */
+    /**
+     * Válido en to-do lo demás, pero sin el claim {@code jti} — para probar el rechazo de identificador.
+     */
     public static String tokenWithoutJti(String tenant, String subject) {
         return signedTokenExpiringIn(tenant, subject, 300, true, false, null);
     }

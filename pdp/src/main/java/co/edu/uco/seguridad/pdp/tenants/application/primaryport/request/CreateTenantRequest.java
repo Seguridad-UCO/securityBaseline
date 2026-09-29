@@ -6,7 +6,9 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
 
-/** DTO de entrada del puerto primario: intención tipada de crear un tenant. */
+/**
+ * DTO de entrada del puerto primario: intención tipada de crear un tenant.
+ */
 public record CreateTenantRequest(TenantId id, TenantName name) {
 
     public CreateTenantRequest {

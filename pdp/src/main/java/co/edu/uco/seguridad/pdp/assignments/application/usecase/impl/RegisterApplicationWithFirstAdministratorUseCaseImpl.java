@@ -32,7 +32,7 @@ public final class RegisterApplicationWithFirstAdministratorUseCaseImpl
     private final AssignRoleUseCase assignRole;
 
     public RegisterApplicationWithFirstAdministratorUseCaseImpl(RegisterApplicationUseCase registerApplication,
-            DefineRoleUseCase defineRole, AssignRoleUseCase assignRole) {
+                                                                DefineRoleUseCase defineRole, AssignRoleUseCase assignRole) {
         this.registerApplication = Objects.requireNonNull(registerApplication, RequiredArgumentMessages.REGISTER_APPLICATION_USE_CASE);
         this.defineRole = Objects.requireNonNull(defineRole, RequiredArgumentMessages.DEFINE_ROLE_USE_CASE);
         this.assignRole = Objects.requireNonNull(assignRole, RequiredArgumentMessages.ASSIGN_ROLE_USE_CASE);

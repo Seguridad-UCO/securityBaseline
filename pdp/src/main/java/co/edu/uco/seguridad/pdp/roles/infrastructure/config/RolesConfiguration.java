@@ -3,39 +3,11 @@ package co.edu.uco.seguridad.pdp.roles.infrastructure.config;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationMustExistForTenantValidator;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationOwnerLookupValidator;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceOwnerLookupValidator;
-import co.edu.uco.seguridad.pdp.roles.application.rule.validator.DefineRoleRulesValidator;
-import co.edu.uco.seguridad.pdp.roles.application.rule.validator.ApplicationDeletionDependencyValidator;
-import co.edu.uco.seguridad.pdp.roles.application.rule.validator.GrantResourceRulesValidator;
-import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleApplicationLookupValidator;
-import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleLookupByNameInScopeValidator;
-import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleMustExistForTenantValidator;
-import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleNamesLookupValidator;
-import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleResourcesLookupValidator;
-import co.edu.uco.seguridad.pdp.roles.application.rule.validator.ResourceDeletionDependencyValidator;
-import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleScopeMustCoverApplicationValidator;
-import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.DefineRoleRulesValidatorImpl;
-import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.ApplicationDeletionDependencyValidatorImpl;
-import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.GrantResourceRulesValidatorImpl;
-import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.RoleApplicationLookupValidatorImpl;
-import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.RoleLookupByNameInScopeValidatorImpl;
-import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.RoleMustExistForTenantValidatorImpl;
-import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.RoleNamesLookupValidatorImpl;
-import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.RoleResourcesLookupValidatorImpl;
-import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.ResourceDeletionDependencyValidatorImpl;
-import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.RoleScopeMustCoverApplicationValidatorImpl;
+import co.edu.uco.seguridad.pdp.roles.application.rule.validator.*;
+import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.*;
 import co.edu.uco.seguridad.pdp.roles.application.secondaryport.repository.RoleRepository;
-import co.edu.uco.seguridad.pdp.roles.application.usecase.DefineRoleUseCase;
-import co.edu.uco.seguridad.pdp.roles.application.usecase.GrantResourceToRoleUseCase;
-import co.edu.uco.seguridad.pdp.roles.application.usecase.RevokeResourceFromRoleUseCase;
-import co.edu.uco.seguridad.pdp.roles.application.usecase.ListRolesUseCase;
-import co.edu.uco.seguridad.pdp.roles.application.usecase.RemoveRoleUseCase;
-import co.edu.uco.seguridad.pdp.roles.application.usecase.UpdateRoleUseCase;
-import co.edu.uco.seguridad.pdp.roles.application.usecase.impl.DefineRoleUseCaseImpl;
-import co.edu.uco.seguridad.pdp.roles.application.usecase.impl.GrantResourceToRoleUseCaseImpl;
-import co.edu.uco.seguridad.pdp.roles.application.usecase.impl.RevokeResourceFromRoleUseCaseImpl;
-import co.edu.uco.seguridad.pdp.roles.application.usecase.impl.ListRolesUseCaseImpl;
-import co.edu.uco.seguridad.pdp.roles.application.usecase.impl.RemoveRoleUseCaseImpl;
-import co.edu.uco.seguridad.pdp.roles.application.usecase.impl.UpdateRoleUseCaseImpl;
+import co.edu.uco.seguridad.pdp.roles.application.usecase.*;
+import co.edu.uco.seguridad.pdp.roles.application.usecase.impl.*;
 import co.edu.uco.seguridad.pdp.roles.domain.rule.RoleMustExistForTenantRule;
 import co.edu.uco.seguridad.pdp.roles.domain.rule.RoleNameMustBeUniqueInScopeRule;
 import co.edu.uco.seguridad.pdp.roles.domain.rule.RoleScopeMustCoverApplicationRule;
@@ -55,7 +27,9 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/** La única clase consciente de Spring del módulo. Cada regla es un bean para poder sustituirla sin tocar el validador. */
+/**
+ * La única clase consciente de Spring del módulo. Cada regla es un bean para poder sustituirla sin tocar el validador.
+ */
 @Configuration
 public class RolesConfiguration {
 
@@ -96,20 +70,20 @@ public class RolesConfiguration {
 
     @Bean
     DefineRoleRulesValidator defineRoleRulesValidator(ApplicationMustExistForTenantValidator applicationMustExist,
-            RoleNameMustBeUniqueInScopeRule nameMustBeUnique, RoleRepository repository) {
+                                                      RoleNameMustBeUniqueInScopeRule nameMustBeUnique, RoleRepository repository) {
         return new DefineRoleRulesValidatorImpl(applicationMustExist, nameMustBeUnique, repository);
     }
 
     @Bean
     GrantResourceRulesValidator grantResourceRulesValidator(RoleRepository repository,
-            RoleMustExistForTenantRule roleMustExist, ProtectedResourceOwnerLookupValidator resourceOwner,
-            ApplicationOwnerLookupValidator applicationOwner, RoleScopeMustCoverResourceRule scopeMustCover) {
+                                                            RoleMustExistForTenantRule roleMustExist, ProtectedResourceOwnerLookupValidator resourceOwner,
+                                                            ApplicationOwnerLookupValidator applicationOwner, RoleScopeMustCoverResourceRule scopeMustCover) {
         return new GrantResourceRulesValidatorImpl(repository, roleMustExist, resourceOwner, applicationOwner, scopeMustCover);
     }
 
     @Bean
     DefineRoleUseCase defineRoleUseCase(DefineRoleRulesValidator rules, RoleRepository repository,
-            IdentifierGenerator identifiers, TimeProvider time) {
+                                        IdentifierGenerator identifiers, TimeProvider time) {
         return new DefineRoleUseCaseImpl(rules, repository, identifiers, time);
     }
 
@@ -120,7 +94,7 @@ public class RolesConfiguration {
 
     @Bean
     RevokeResourceFromRoleUseCase revokeResourceFromRoleUseCase(GrantResourceRulesValidator rules,
-            RoleRepository repository) {
+                                                                RoleRepository repository) {
         return new RevokeResourceFromRoleUseCaseImpl(rules, repository);
     }
 
@@ -130,10 +104,24 @@ public class RolesConfiguration {
     }
 
     @Bean
-    UpdateRoleUseCase updateRoleUseCase(RoleRepository repository) { return new UpdateRoleUseCaseImpl(repository); }
+    CountApplicationRolesUseCase countApplicationRolesUseCase(RoleRepository repository) {
+        return new CountApplicationRolesUseCaseImpl(repository);
+    }
 
     @Bean
-    RemoveRoleUseCase removeRoleUseCase(RoleRepository repository) { return new RemoveRoleUseCaseImpl(repository); }
+    ListApplicationRolesPageUseCase listApplicationRolesPageUseCase(RoleRepository repository) {
+        return new ListApplicationRolesPageUseCaseImpl(repository);
+    }
+
+    @Bean
+    UpdateRoleUseCase updateRoleUseCase(RoleRepository repository) {
+        return new UpdateRoleUseCaseImpl(repository);
+    }
+
+    @Bean
+    RemoveRoleUseCase removeRoleUseCase(RoleRepository repository) {
+        return new RemoveRoleUseCaseImpl(repository);
+    }
 
     // HU-016 — defineRoleInteractor/grantResourceToRoleInteractor se retiraron de aquí: las
     // escrituras se exponen ahora desde RoleAdministrationController (authorization), que gatea
@@ -151,7 +139,7 @@ public class RolesConfiguration {
 
     @Bean
     RoleScopeMustCoverApplicationValidator roleScopeMustCoverApplicationValidator(RoleRepository repository,
-            RoleMustExistForTenantRule roleMustExist, RoleScopeMustCoverApplicationRule coverageRule) {
+                                                                                  RoleMustExistForTenantRule roleMustExist, RoleScopeMustCoverApplicationRule coverageRule) {
         return new RoleScopeMustCoverApplicationValidatorImpl(repository, roleMustExist, coverageRule);
     }
 
@@ -175,7 +163,7 @@ public class RolesConfiguration {
     // HU-011 — publicado para que `profiles` compruebe si un rol existe para el inquilino.
     @Bean
     RoleMustExistForTenantValidator roleMustExistForTenantValidator(RoleRepository repository,
-            RoleMustExistForTenantRule mustExist) {
+                                                                    RoleMustExistForTenantRule mustExist) {
         return new RoleMustExistForTenantValidatorImpl(repository, mustExist);
     }
 
@@ -183,7 +171,7 @@ public class RolesConfiguration {
     // concesión de recurso, sin consultar RoleRepository directamente (sb-arquitectura, regla 11).
     @Bean
     RoleApplicationLookupValidator roleApplicationLookupValidator(RoleRepository repository,
-            RoleMustExistForTenantRule mustExist) {
+                                                                  RoleMustExistForTenantRule mustExist) {
         return new RoleApplicationLookupValidatorImpl(repository, mustExist);
     }
 }

@@ -16,7 +16,7 @@ public final class ProtectedResourceMustExistValidatorImpl implements ProtectedR
     private final ProtectedResourceMustExistRule mustExist;
 
     public ProtectedResourceMustExistValidatorImpl(ProtectedResourceRepository repository,
-            ProtectedResourceMustExistRule mustExist) {
+                                                   ProtectedResourceMustExistRule mustExist) {
         this.repository = Objects.requireNonNull(repository, RequiredArgumentMessages.PROTECTED_RESOURCE_REPOSITORY);
         this.mustExist = Objects.requireNonNull(mustExist, RequiredArgumentMessages.PROTECTED_RESOURCE_EXISTS_RULE);
     }

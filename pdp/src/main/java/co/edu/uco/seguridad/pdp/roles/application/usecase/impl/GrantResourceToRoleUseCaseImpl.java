@@ -10,7 +10,9 @@ import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 
-/** Transforma lo que el validador ya encontró y validó (Role.withResource) y lo guarda. No decide nada. */
+/**
+ * Transforma lo que el validador ya encontró y validó (Role.withResource) y lo guarda. No decide nada.
+ */
 public final class GrantResourceToRoleUseCaseImpl implements GrantResourceToRoleUseCase {
 
     private final GrantResourceRulesValidator rules;

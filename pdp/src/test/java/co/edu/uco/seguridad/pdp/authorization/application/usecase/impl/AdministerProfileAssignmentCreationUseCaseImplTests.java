@@ -21,15 +21,13 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** HU-019: gatea AssignProfileUseCase — incondicional, la asignación siempre trae applicationId. */
+/**
+ * HU-019: gatea AssignProfileUseCase — incondicional, la asignación siempre trae applicationId.
+ */
 class AdministerProfileAssignmentCreationUseCaseImplTests {
 
     private static final TenantId TENANT = new TenantId("universidad-uco");

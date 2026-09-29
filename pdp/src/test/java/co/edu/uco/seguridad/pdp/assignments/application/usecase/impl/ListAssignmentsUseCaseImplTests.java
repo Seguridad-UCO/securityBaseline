@@ -5,12 +5,7 @@ import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository
 import co.edu.uco.seguridad.pdp.assignments.domain.Assignment;
 import co.edu.uco.seguridad.pdp.assignments.domain.AssignmentCriteria;
 import co.edu.uco.seguridad.pdp.assignments.domain.model.AssignmentId;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
-import co.edu.uco.seguridad.pdp.commons.model.RoleId;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
-import co.edu.uco.seguridad.pdp.commons.model.UserId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -100,7 +95,7 @@ class ListAssignmentsUseCaseImplTests {
         return new AssignmentRepository() {
             @Override
             public Mono<Boolean> existsActiveByUserApplicationRole(UserId userId, ApplicationId applicationId, RoleId roleId,
-                    Instant now) {
+                                                                   Instant now) {
                 throw new UnsupportedOperationException();
             }
 
@@ -111,7 +106,7 @@ class ListAssignmentsUseCaseImplTests {
 
             @Override
             public Mono<ResultPage<Assignment>> findBy(AssignmentCriteria criteria, PageWindow window) {
-                received.add(new Object[] {criteria, window});
+                received.add(new Object[]{criteria, window});
                 return Mono.just(page);
             }
 

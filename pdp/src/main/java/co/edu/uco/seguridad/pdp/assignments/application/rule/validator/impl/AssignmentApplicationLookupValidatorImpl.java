@@ -11,7 +11,9 @@ import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 
-/** Implementación de {@link AssignmentApplicationLookupValidator} (HU-018). */
+/**
+ * Implementación de {@link AssignmentApplicationLookupValidator} (HU-018).
+ */
 public final class AssignmentApplicationLookupValidatorImpl implements AssignmentApplicationLookupValidator {
 
     private final AssignmentRepository repository;

@@ -8,12 +8,7 @@ import co.edu.uco.seguridad.pdp.assignments.domain.AssignmentCriteria;
 import co.edu.uco.seguridad.pdp.assignments.domain.exception.AssignmentNotFoundException;
 import co.edu.uco.seguridad.pdp.assignments.domain.model.AssignmentId;
 import co.edu.uco.seguridad.pdp.assignments.domain.rule.AssignmentMustExistForTenantRule;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
-import co.edu.uco.seguridad.pdp.commons.model.RoleId;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
-import co.edu.uco.seguridad.pdp.commons.model.UserId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -52,18 +47,21 @@ class RevokeAssignmentRulesValidatorImplTests {
     }
 
     private static AssignmentMustExistForTenantRule rejecting() {
-        return input -> { throw new AssignmentNotFoundException(input.assignmentId()); };
+        return input -> {
+            throw new AssignmentNotFoundException(input.assignmentId());
+        };
     }
 
     private static AssignmentMustExistForTenantRule accepting() {
-        return input -> { };
+        return input -> {
+        };
     }
 
     private static AssignmentRepository repositoryReturning(Mono<Assignment> result) {
         return new AssignmentRepository() {
             @Override
             public Mono<Boolean> existsActiveByUserApplicationRole(UserId userId, ApplicationId applicationId, RoleId roleId,
-                    Instant now) {
+                                                                   Instant now) {
                 throw new UnsupportedOperationException();
             }
 

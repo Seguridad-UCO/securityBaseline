@@ -7,5 +7,5 @@ import java.time.Instant;
  * los value objects directamente haría que renombrar un campo del dominio rompiera la API en silencio.
  */
 public record UserWebResponse(String id, String email, String name, String provider, String tenantId,
-        Instant createdAt, Instant lastLoginAt) {
+                              Instant createdAt, Instant lastLoginAt) {
 }

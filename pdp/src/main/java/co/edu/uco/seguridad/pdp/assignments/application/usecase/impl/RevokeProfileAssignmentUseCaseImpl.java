@@ -1,9 +1,9 @@
 package co.edu.uco.seguridad.pdp.assignments.application.usecase.impl;
 
+import co.edu.uco.seguridad.pdp.assignments.application.primaryport.request.RevokeAssignmentRequest;
 import co.edu.uco.seguridad.pdp.assignments.application.primaryport.request.RevokeProfileAssignmentRequest;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.RevokeProfileAssignmentRulesValidator;
 import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository.ProfileAssignmentRepository;
-import co.edu.uco.seguridad.pdp.assignments.application.primaryport.request.RevokeAssignmentRequest;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.RevokeAssignmentUseCase;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.RevokeProfileAssignmentUseCase;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
@@ -26,7 +26,7 @@ public final class RevokeProfileAssignmentUseCaseImpl implements RevokeProfileAs
     private final TimeProvider time;
 
     public RevokeProfileAssignmentUseCaseImpl(RevokeProfileAssignmentRulesValidator rules,
-            RevokeAssignmentUseCase revokeAssignmentUseCase, ProfileAssignmentRepository repository, TimeProvider time) {
+                                              RevokeAssignmentUseCase revokeAssignmentUseCase, ProfileAssignmentRepository repository, TimeProvider time) {
         this.rules = Objects.requireNonNull(rules, RequiredArgumentMessages.REVOKE_PROFILE_ASSIGNMENT_RULES_VALIDATOR);
         this.revokeAssignmentUseCase = Objects.requireNonNull(revokeAssignmentUseCase,
                 RequiredArgumentMessages.REVOKE_ASSIGNMENT_USE_CASE);

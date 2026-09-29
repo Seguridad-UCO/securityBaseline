@@ -35,7 +35,7 @@ public final class AdministerResourceGrantInteractorImpl implements AdministerRe
     private final RoleApplicationLookupValidator roleApplicationLookup;
 
     public AdministerResourceGrantInteractorImpl(AdministerResourceGrantUseCase useCase,
-            SubjectUserIdLookupValidator subjectUserIdLookup, RoleApplicationLookupValidator roleApplicationLookup) {
+                                                 SubjectUserIdLookupValidator subjectUserIdLookup, RoleApplicationLookupValidator roleApplicationLookup) {
         this.useCase = Objects.requireNonNull(useCase, RequiredArgumentMessages.ADMINISTER_RESOURCE_GRANT_USE_CASE);
         this.subjectUserIdLookup = Objects.requireNonNull(subjectUserIdLookup,
                 RequiredArgumentMessages.SUBJECT_USER_ID_LOOKUP_VALIDATOR);
@@ -62,7 +62,7 @@ public final class AdministerResourceGrantInteractorImpl implements AdministerRe
     }
 
     private Mono<AdministerResourceGrantRequest> toAdministerRequest(GrantResourceRawRequest raw,
-            PdpPrincipal principal, UserId userId, boolean revocation) {
+                                                                     PdpPrincipal principal, UserId userId, boolean revocation) {
         GrantResourceRequest grant = GrantResourceRequestMapper.toRequest(raw, principal.tenantId());
         return roleApplicationLookup.execute(new RoleOwnershipQuery(grant.roleId(), principal.tenantId()))
                 .map(maybeApplicationId -> maybeApplicationId

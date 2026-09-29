@@ -13,7 +13,9 @@ import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 
-/** Lee el principal, resuelve la ventana con el mapper, ejecuta y proyecta ResultPage a PageResponse. */
+/**
+ * Lee el principal, resuelve la ventana con el mapper, ejecuta y proyecta ResultPage a PageResponse.
+ */
 public final class ListProfilesInteractorImpl implements ListProfilesInteractor {
 
     private final ListProfilesUseCase useCase;

@@ -6,7 +6,9 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
 
-/** Entrada tipada de ResolveActiveRolesUseCase: el contexto que HU-006 enviará a OPA. */
+/**
+ * Entrada tipada de ResolveActiveRolesUseCase: el contexto que HU-006 enviará a OPA.
+ */
 public record ResolveActiveRolesRequest(UserId userId, ApplicationId applicationId) {
 
     public ResolveActiveRolesRequest {

@@ -8,12 +8,7 @@ import co.edu.uco.seguridad.pdp.assignments.domain.AssignmentCriteria;
 import co.edu.uco.seguridad.pdp.assignments.domain.exception.AssignmentNotFoundException;
 import co.edu.uco.seguridad.pdp.assignments.domain.model.AssignmentId;
 import co.edu.uco.seguridad.pdp.assignments.domain.rule.impl.AssignmentMustExistForTenantRuleImpl;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
-import co.edu.uco.seguridad.pdp.commons.model.RoleId;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
-import co.edu.uco.seguridad.pdp.commons.model.UserId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -24,7 +19,9 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** HU-018: resuelve a qué aplicación pertenece una asignación, para gatear RevokeAssignment. */
+/**
+ * HU-018: resuelve a qué aplicación pertenece una asignación, para gatear RevokeAssignment.
+ */
 class AssignmentApplicationLookupValidatorImplTests {
 
     private static final TenantId TENANT = new TenantId("universidad-uco");
@@ -58,7 +55,7 @@ class AssignmentApplicationLookupValidatorImplTests {
         return new AssignmentRepository() {
             @Override
             public Mono<Boolean> existsActiveByUserApplicationRole(UserId userId, ApplicationId applicationId,
-                    RoleId roleId, Instant now) {
+                                                                   RoleId roleId, Instant now) {
                 throw new UnsupportedOperationException();
             }
 

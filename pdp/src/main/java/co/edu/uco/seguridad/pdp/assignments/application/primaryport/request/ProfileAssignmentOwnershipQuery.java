@@ -6,7 +6,9 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
 
-/** Entrada de {@code ProfileAssignmentApplicationLookupValidator} (HU-019): la asignación de perfil y el inquilino que pregunta por ella. */
+/**
+ * Entrada de {@code ProfileAssignmentApplicationLookupValidator} (HU-019): la asignación de perfil y el inquilino que pregunta por ella.
+ */
 public record ProfileAssignmentOwnershipQuery(ProfileAssignmentId profileAssignmentId, TenantId tenantId) {
 
     public ProfileAssignmentOwnershipQuery {

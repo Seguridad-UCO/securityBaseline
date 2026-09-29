@@ -14,12 +14,14 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
-import org.springframework.web.reactive.function.client.DefaultClientRequestObservationConvention;
 import org.springframework.web.reactive.function.client.ClientRequestObservationContext;
+import org.springframework.web.reactive.function.client.DefaultClientRequestObservationConvention;
 import org.springframework.web.server.WebFilter;
 import reactor.core.publisher.Mono;
 
-/** Capacidades técnicas; no modifica reglas ni contratos de dominio. */
+/**
+ * Capacidades técnicas; no modifica reglas ni contratos de dominio.
+ */
 @Configuration(proxyBeanMethods = false)
 public class TelemetryConfiguration {
     @Bean
@@ -93,7 +95,7 @@ public class TelemetryConfiguration {
     @Profile("observability")
     @Order(-100)
     SecurityWebFilterChain telemetryManagementSecurity(ServerHttpSecurity http,
-            @Value("${management.server.port:9081}") int managementPort) {
+                                                       @Value("${management.server.port:9081}") int managementPort) {
         return http.securityMatcher(exchange -> exchange.getRequest().getLocalAddress() != null
                         && exchange.getRequest().getLocalAddress().getPort() == managementPort
                         ? ServerWebExchangeMatcher.MatchResult.match()

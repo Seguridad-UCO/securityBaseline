@@ -18,7 +18,7 @@ import java.util.Objects;
  * son rutas relativas a esa base — el endpoint completo es {@code baseUrl + path}.</p>
  */
 public record Application(ApplicationId id, TenantId tenantId, ApplicationName name, String description,
-        ApplicationBaseUrl baseUrl, ApplicationCredentialHash credentialHash, Instant registeredAt) {
+                          ApplicationBaseUrl baseUrl, ApplicationCredentialHash credentialHash, Instant registeredAt) {
 
     private static final int MAX_DESCRIPTION_LENGTH = 500;
 
@@ -36,8 +36,8 @@ public record Application(ApplicationId id, TenantId tenantId, ApplicationName n
     }
 
     public static Application register(ApplicationId id, TenantId tenantId, ApplicationName name,
-            String description, ApplicationBaseUrl baseUrl, ApplicationCredentialHash credentialHash,
-            Instant registeredAt) {
+                                       String description, ApplicationBaseUrl baseUrl, ApplicationCredentialHash credentialHash,
+                                       Instant registeredAt) {
         return new Application(id, tenantId, name, description, baseUrl, credentialHash, registeredAt);
     }
 
@@ -45,7 +45,9 @@ public record Application(ApplicationId id, TenantId tenantId, ApplicationName n
         return new Application(id, tenantId, name, description, baseUrl, credentialHash, registeredAt);
     }
 
-    /** Conserva identidad, credencial y fecha de registro al editar el catálogo. */
+    /**
+     * Conserva identidad, credencial y fecha de registro al editar el catálogo.
+     */
     public Application withDetails(ApplicationName name, String description, ApplicationBaseUrl baseUrl) {
         return new Application(id, tenantId, name, description, baseUrl, credentialHash, registeredAt);
     }

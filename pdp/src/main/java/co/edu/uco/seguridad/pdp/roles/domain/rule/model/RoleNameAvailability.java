@@ -6,7 +6,9 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
 
-/** Hecho ya resuelto para RoleNameMustBeUniqueInScopeRule: si el nombre ya está tomado en ese alcance. */
+/**
+ * Hecho ya resuelto para RoleNameMustBeUniqueInScopeRule: si el nombre ya está tomado en ese alcance.
+ */
 public record RoleNameAvailability(RoleName name, RoleScope scope, boolean taken) {
 
     public RoleNameAvailability {

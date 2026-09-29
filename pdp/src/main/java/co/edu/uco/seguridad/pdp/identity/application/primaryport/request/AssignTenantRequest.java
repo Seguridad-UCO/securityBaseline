@@ -6,7 +6,9 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
 
-/** DTO de entrada del puerto primario: intención tipada de reasignar el tenant de un usuario. */
+/**
+ * DTO de entrada del puerto primario: intención tipada de reasignar el tenant de un usuario.
+ */
 public record AssignTenantRequest(UserId userId, TenantId tenantId) {
 
     public AssignTenantRequest {

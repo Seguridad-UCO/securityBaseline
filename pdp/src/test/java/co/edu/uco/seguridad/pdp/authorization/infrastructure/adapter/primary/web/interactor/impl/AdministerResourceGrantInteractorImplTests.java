@@ -4,11 +4,7 @@ import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.Ad
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministrationRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerResourceGrantUseCase;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.GrantResourceRawRequest;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.ResourceId;
-import co.edu.uco.seguridad.pdp.commons.model.RoleId;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
-import co.edu.uco.seguridad.pdp.commons.model.UserId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserIdLookupValidator;
 import co.edu.uco.seguridad.pdp.roles.application.primaryport.request.RoleOwnershipQuery;
 import co.edu.uco.seguridad.pdp.roles.application.primaryport.response.RoleResponse;
@@ -22,11 +18,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -105,7 +97,7 @@ class AdministerResourceGrantInteractorImplTests {
     }
 
     private static AdministerResourceGrantUseCase useCaseCapturing(List<AdministerResourceGrantRequest> received,
-            RoleResponse response) {
+                                                                   RoleResponse response) {
         return input -> {
             received.add(input);
             return Mono.just(response);

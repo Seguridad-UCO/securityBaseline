@@ -12,7 +12,8 @@ import java.util.Optional;
  * {@code Optional} vacío significa "esta escritura no requiere administración" (perfil
  * {@code TENANT}) — mismo criterio que {@code AdministerRoleDefinitionRequest} (HU-016).
  */
-public record AdministerProfileDefinitionRequest(Optional<AdministrationRequest> administration, DefineProfileRequest profile) {
+public record AdministerProfileDefinitionRequest(Optional<AdministrationRequest> administration,
+                                                 DefineProfileRequest profile) {
 
     public AdministerProfileDefinitionRequest {
         Objects.requireNonNull(administration, RequiredArgumentMessages.ADMINISTRATION);

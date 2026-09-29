@@ -15,7 +15,9 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Orquesta assignments.ResolveActiveRolesUseCase y roles.RoleNamesLookupValidator, en ese orden. */
+/**
+ * Orquesta assignments.ResolveActiveRolesUseCase y roles.RoleNamesLookupValidator, en ese orden.
+ */
 class ActiveRoleNamesLookupValidatorImplTests {
 
     private static final UserId USER_ID = new UserId(UUID.randomUUID());

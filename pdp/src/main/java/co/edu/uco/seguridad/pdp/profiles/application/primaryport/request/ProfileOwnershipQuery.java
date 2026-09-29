@@ -6,7 +6,9 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
 
-/** Entrada de ProfileRolesLookupValidator (HU-011), publicado a `assignments`. */
+/**
+ * Entrada de ProfileRolesLookupValidator (HU-011), publicado a `assignments`.
+ */
 public record ProfileOwnershipQuery(TenantId tenantId, ProfileId profileId) {
 
     public ProfileOwnershipQuery {

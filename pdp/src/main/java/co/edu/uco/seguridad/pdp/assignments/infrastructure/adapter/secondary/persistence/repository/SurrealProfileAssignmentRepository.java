@@ -7,12 +7,7 @@ import co.edu.uco.seguridad.pdp.assignments.domain.model.ProfileAssignmentId;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.entity.ProfileAssignmentEntity;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.mapper.ProfileAssignmentPersistenceMapper;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.schema.ProfileAssignmentSchema;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.model.ProfileId;
-import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
-import co.edu.uco.seguridad.pdp.commons.model.UserId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealRecordId;
@@ -20,14 +15,12 @@ import reactor.core.publisher.Mono;
 import tools.jackson.databind.JsonNode;
 
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.Set;
 
-/** Adaptador real sobre SurrealDB. Lee la fila en ProfileAssignmentEntity y delega en ProfileAssignmentPersistenceMapper. */
+/**
+ * Adaptador real sobre SurrealDB. Lee la fila en ProfileAssignmentEntity y delega en ProfileAssignmentPersistenceMapper.
+ */
 public final class SurrealProfileAssignmentRepository implements ProfileAssignmentRepository {
 
     private final SurrealDbClient client;
@@ -38,13 +31,13 @@ public final class SurrealProfileAssignmentRepository implements ProfileAssignme
 
     @Override
     public Mono<Boolean> existsActiveByUserApplicationProfile(UserId userId, ApplicationId applicationId,
-            ProfileId profileId, Instant now) {
+                                                              ProfileId profileId, Instant now) {
         return client.execute(
                         """
-                        SELECT id FROM %s WHERE userId = $userId AND applicationId = $applicationId \
-                        AND profileId = $profileId AND validFrom <= <datetime>$now \
-                        AND (validUntil = NONE OR validUntil > <datetime>$now) LIMIT 1;\
-                        """.formatted(ProfileAssignmentSchema.TABLE),
+                                SELECT id FROM %s WHERE userId = $userId AND applicationId = $applicationId \
+                                AND profileId = $profileId AND validFrom <= <datetime>$now \
+                                AND (validUntil = NONE OR validUntil > <datetime>$now) LIMIT 1;\
+                                """.formatted(ProfileAssignmentSchema.TABLE),
                         Map.of("userId", userId.value().toString(), "applicationId", applicationId.value().toString(),
                                 "profileId", profileId.value().toString(), "now", now.toString()))
                 .map(results -> !results.get(0).isEmpty());
@@ -80,6 +73,23 @@ public final class SurrealProfileAssignmentRepository implements ProfileAssignme
                 });
     }
 
+    @Override
+    public Mono<ResultPage<ProfileAssignment>> findPageByApplication(TenantId tenantId, ApplicationId applicationId,
+                                                                     PageWindow window) {
+        String query = """
+                SELECT * FROM %1$s WHERE tenantId = $tenantId AND applicationId = $applicationId \
+                ORDER BY validFrom DESC LIMIT %2$d START %3$d;
+                SELECT count() FROM %1$s WHERE tenantId = $tenantId AND applicationId = $applicationId GROUP ALL;
+                """.formatted(ProfileAssignmentSchema.TABLE, window.limit(), window.offset());
+        return client.execute(query, Map.of("tenantId", tenantId.value(), "applicationId", applicationId.value().toString()))
+                .map(results -> ResultPage.of(results.get(0).valueStream().map(SurrealProfileAssignmentRepository::toDomain).toList(), totalOf(results.get(1)), window));
+    }
+
+    @Override public Mono<Long> countByApplication(TenantId tenantId, ApplicationId applicationId) {
+        return client.execute("SELECT count() FROM %s WHERE tenantId = $tenantId AND applicationId = $applicationId GROUP ALL;".formatted(ProfileAssignmentSchema.TABLE), Map.of("tenantId", tenantId.value(), "applicationId", applicationId.value().toString()))
+                .map(r -> totalOf(r.get(0)));
+    }
+
     private static long totalOf(JsonNode countResult) {
         if (countResult.isEmpty()) {
             return 0L;
@@ -90,9 +100,9 @@ public final class SurrealProfileAssignmentRepository implements ProfileAssignme
     @Override
     public Mono<Set<ProfileId>> findActiveProfileIdsFor(UserId userId, ApplicationId applicationId, Instant now) {
         return client.execute("""
-                        SELECT profileId FROM %s WHERE userId = $userId AND applicationId = $applicationId \
-                        AND validFrom <= <datetime>$now AND (validUntil = NONE OR validUntil > <datetime>$now);\
-                        """.formatted(ProfileAssignmentSchema.TABLE),
+                                SELECT profileId FROM %s WHERE userId = $userId AND applicationId = $applicationId \
+                                AND validFrom <= <datetime>$now AND (validUntil = NONE OR validUntil > <datetime>$now);\
+                                """.formatted(ProfileAssignmentSchema.TABLE),
                         Map.of("userId", userId.value().toString(), "applicationId", applicationId.value().toString(),
                                 "now", now.toString()))
                 .map(results -> results.get(0).valueStream().map(row -> ProfileId.of(row.path("profileId").asString()))
@@ -128,9 +138,9 @@ public final class SurrealProfileAssignmentRepository implements ProfileAssignme
     @Override
     public Mono<Boolean> existsActiveByProfileId(ProfileId profileId, Instant now) {
         return client.execute("""
-                        SELECT id FROM %s WHERE profileId = $profileId AND validFrom <= <datetime>$now \
-                        AND (validUntil = NONE OR validUntil > <datetime>$now) LIMIT 1;
-                        """.formatted(ProfileAssignmentSchema.TABLE),
+                                SELECT id FROM %s WHERE profileId = $profileId AND validFrom <= <datetime>$now \
+                                AND (validUntil = NONE OR validUntil > <datetime>$now) LIMIT 1;
+                                """.formatted(ProfileAssignmentSchema.TABLE),
                         Map.of("profileId", profileId.value().toString(), "now", now.toString()))
                 .map(results -> !results.get(0).isEmpty());
     }
@@ -138,7 +148,7 @@ public final class SurrealProfileAssignmentRepository implements ProfileAssignme
     @Override
     public Mono<Boolean> existsByApplicationId(ApplicationId applicationId) {
         return client.execute("SELECT id FROM %s WHERE applicationId = $applicationId LIMIT 1;"
-                        .formatted(ProfileAssignmentSchema.TABLE),
+                                .formatted(ProfileAssignmentSchema.TABLE),
                         Map.of("applicationId", applicationId.value().toString()))
                 .map(results -> !results.get(0).isEmpty());
     }

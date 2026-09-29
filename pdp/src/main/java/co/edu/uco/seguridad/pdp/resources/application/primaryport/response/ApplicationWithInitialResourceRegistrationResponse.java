@@ -10,7 +10,7 @@ import java.util.Objects;
  * HU-012) más su recurso inicial. Combina dos proyecciones ya existentes, sin duplicar campos.
  */
 public record ApplicationWithInitialResourceRegistrationResponse(ApplicationRegistrationResponse application,
-        RegisteredProtectedResourceResponse resource) {
+                                                                 RegisteredProtectedResourceResponse resource) {
 
     public ApplicationWithInitialResourceRegistrationResponse {
         Objects.requireNonNull(application, RequiredArgumentMessages.REGISTERED_APPLICATION_RESPONSE);

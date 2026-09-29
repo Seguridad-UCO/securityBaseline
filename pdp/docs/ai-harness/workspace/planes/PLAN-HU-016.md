@@ -3,12 +3,16 @@
 ## Metadata
 
 - **ID:** HU-016
-- **Slice:** `roles` (pierde dos escrituras) y `authorization` (las recibe, orquestadas) — mismo patrón de HU-015 con `applications`
+- **Slice:** `roles` (pierde dos escrituras) y `authorization` (las recibe, orquestadas) — mismo patrón de HU-015 con
+  `applications`
 - **Tipo:** Escritura
 - **Fecha:** 2026-09-14
 - **Rama sugerida:** `feature/HU-016-gatear-roles-administracion`
-- **Fuentes:** `pdp/docs/ai-harness/workspace/HU-016.md` (dictada), `ADR-023-application-administration-model.md` (`security-platform-architecture`), código real: `roles/*`, `authorization/*` (HU-009, HU-015 como precedente de cableado)
-- **Criterios de la línea base que toca:** 1, 2, 3, 9, 11, 12, 21, 22 (estructurales + reglas) — sin 13/14/20 nuevos (no hay DTO nuevo de HTTP más allá de mover los existentes), sin 5/6 nuevos (las rutas y sus códigos de éxito no cambian)
+- **Fuentes:** `pdp/docs/ai-harness/workspace/HU-016.md` (dictada), `ADR-023-application-administration-model.md` (
+  `security-platform-architecture`), código real: `roles/*`, `authorization/*` (HU-009, HU-015 como precedente de
+  cableado)
+- **Criterios de la línea base que toca:** 1, 2, 3, 9, 11, 12, 21, 22 (estructurales + reglas) — sin 13/14/20 nuevos (no
+  hay DTO nuevo de HTTP más allá de mover los existentes), sin 5/6 nuevos (las rutas y sus códigos de éxito no cambian)
 
 ## 1. Resumen funcional
 
@@ -24,17 +28,17 @@ para crear roles de ese alcance. No cubre `resources` (HU-017), `assignments` (H
 
 ## 2. Criterios de aceptación
 
-| # | Criterio | Resultado esperado |
-|---|---|---|
-| 1 | Definir un rol `APPLICATION` como administrador de esa aplicación | `201`, rol creado, igual que hoy |
-| 2 | Definir un rol `APPLICATION` **sin** ser administrador de esa aplicación | `400 NOT_AUTHORIZED_TO_ADMINISTER`, el rol **no** se crea |
-| 3 | Definir un rol `TENANT` sin ser administrador de ninguna aplicación | `201`, sin gate — cero regresión |
-| 4 | Conceder un recurso a un rol `APPLICATION` como administrador de la aplicación dueña del rol | `200`, recurso concedido, igual que hoy |
-| 5 | Conceder un recurso a un rol `APPLICATION` **sin** ser administrador de esa aplicación | `400 NOT_AUTHORIZED_TO_ADMINISTER`, el recurso **no** se concede |
-| 6 | Conceder un recurso a un rol `TENANT` | `200`, sin gate — cero regresión |
-| 7 | `GET /api/v1/roles` (listar) | Sin cambios — no gateado, sigue en `roles` |
-| 8 | Rol inexistente en `POST /{roleId}/resources` | `404`-equivalente del dominio (`RoleNotFoundException`), igual que hoy — el lookup de aplicación no lo enmascara |
-| 9 | Suite completa | `verificar.ps1` en verde |
+| # | Criterio                                                                                     | Resultado esperado                                                                                               |
+|---|----------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
+| 1 | Definir un rol `APPLICATION` como administrador de esa aplicación                            | `201`, rol creado, igual que hoy                                                                                 |
+| 2 | Definir un rol `APPLICATION` **sin** ser administrador de esa aplicación                     | `400 NOT_AUTHORIZED_TO_ADMINISTER`, el rol **no** se crea                                                        |
+| 3 | Definir un rol `TENANT` sin ser administrador de ninguna aplicación                          | `201`, sin gate — cero regresión                                                                                 |
+| 4 | Conceder un recurso a un rol `APPLICATION` como administrador de la aplicación dueña del rol | `200`, recurso concedido, igual que hoy                                                                          |
+| 5 | Conceder un recurso a un rol `APPLICATION` **sin** ser administrador de esa aplicación       | `400 NOT_AUTHORIZED_TO_ADMINISTER`, el recurso **no** se concede                                                 |
+| 6 | Conceder un recurso a un rol `TENANT`                                                        | `200`, sin gate — cero regresión                                                                                 |
+| 7 | `GET /api/v1/roles` (listar)                                                                 | Sin cambios — no gateado, sigue en `roles`                                                                       |
+| 8 | Rol inexistente en `POST /{roleId}/resources`                                                | `404`-equivalente del dominio (`RoleNotFoundException`), igual que hoy — el lookup de aplicación no lo enmascara |
+| 9 | Suite completa                                                                               | `verificar.ps1` en verde                                                                                         |
 
 ## 3. Reglas de negocio
 
@@ -43,11 +47,11 @@ Ninguna regla de dominio **nueva**: se reutiliza el mecanismo completo de HU-009
 `INDETERMINATE`) a través de `PrincipalMustBeApplicationAdministratorValidator`, ya implementado y
 probado. Esta historia solo **cablea** ese validador en dos puntos nuevos.
 
-| # | Regla | Dónde vive | Puerto que trae el dato | Excepción → HTTP |
-|---|---|---|---|---|
-| R1 | Quien define un rol `APPLICATION` debe administrar esa aplicación | Reutiliza `PrincipalMustBeApplicationAdministratorValidator` (ya existe) | `AuthorizeAdministrationUseCase` (ya existe) | `NotAuthorizedToAdministerException` → 400 (ya existe) |
-| R2 | Quien concede un recurso a un rol `APPLICATION` debe administrar la aplicación **dueña del rol** | Ídem R1 | Ídem, más `RoleApplicationLookupValidator` **[N]** para resolver el `applicationId` del rol | Ídem |
-| R3 | Un rol `TENANT` no se gatea | Decisión de alcance de esta historia, no una `Rule`: el interactor no construye `AdministrationRequest` cuando `scope.applicationId()` está vacío | — | — |
+| #  | Regla                                                                                            | Dónde vive                                                                                                                                        | Puerto que trae el dato                                                                     | Excepción → HTTP                                       |
+|----|--------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------|--------------------------------------------------------|
+| R1 | Quien define un rol `APPLICATION` debe administrar esa aplicación                                | Reutiliza `PrincipalMustBeApplicationAdministratorValidator` (ya existe)                                                                          | `AuthorizeAdministrationUseCase` (ya existe)                                                | `NotAuthorizedToAdministerException` → 400 (ya existe) |
+| R2 | Quien concede un recurso a un rol `APPLICATION` debe administrar la aplicación **dueña del rol** | Ídem R1                                                                                                                                           | Ídem, más `RoleApplicationLookupValidator` **[N]** para resolver el `applicationId` del rol | Ídem                                                   |
+| R3 | Un rol `TENANT` no se gatea                                                                      | Decisión de alcance de esta historia, no una `Rule`: el interactor no construye `AdministrationRequest` cuando `scope.applicationId()` está vacío | —                                                                                           | —                                                      |
 
 > **Por qué R3 no es una `Rule`:** no rechaza nada — decide si hay algo que gatear. Es control de
 > flujo del interactor, no una restricción de negocio con excepción propia.
@@ -64,10 +68,10 @@ Ninguno nuevo. Se reutilizan `RoleScope`, `ApplicationId`, `TenantId`, `UserId` 
 
 ### DTOs nuevos (primaryport de `authorization`)
 
-| DTO | Nuevo o existente | Invariantes | Vive en |
-|---|---|---|---|
-| `AdministerRoleDefinitionRequest(Optional<AdministrationRequest> administration, DefineRoleRequest role)` | Nuevo | Ambos componentes `requireNonNull` (el `Optional` en sí, no su contenido) — mismo patrón que `RoleScope` (Javadoc: "Optional como componente", precedente ya aceptado) | `authorization/application/primaryport/request/` |
-| `AdministerResourceGrantRequest(Optional<AdministrationRequest> administration, GrantResourceRequest grant)` | Nuevo | Ídem | `authorization/application/primaryport/request/` |
+| DTO                                                                                                          | Nuevo o existente | Invariantes                                                                                                                                                            | Vive en                                          |
+|--------------------------------------------------------------------------------------------------------------|-------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------|
+| `AdministerRoleDefinitionRequest(Optional<AdministrationRequest> administration, DefineRoleRequest role)`    | Nuevo             | Ambos componentes `requireNonNull` (el `Optional` en sí, no su contenido) — mismo patrón que `RoleScope` (Javadoc: "Optional como componente", precedente ya aceptado) | `authorization/application/primaryport/request/` |
+| `AdministerResourceGrantRequest(Optional<AdministrationRequest> administration, GrantResourceRequest grant)` | Nuevo             | Ídem                                                                                                                                                                   | `authorization/application/primaryport/request/` |
 
 `Optional<AdministrationRequest>` vacío significa "esta escritura no requiere administración" (rol
 `TENANT`) — nunca "no se pudo resolver": si el rol no existe, `RoleApplicationLookupValidator`
@@ -80,11 +84,11 @@ Sin cambios. No hay tabla, campo ni consulta nueva — `RoleApplicationLookupVal
 
 ## 6. Endpoint
 
-| Verbo | Ruta | Código de éxito | Cuerpo de entrada | Cuerpo de salida |
-|---|---|---|---|---|
-| `POST` | `/api/v1/roles` | `201` (sin cambio) | `DefineRoleRawRequest` (sin cambio de forma) | `RoleAdministrationWebResponse` (misma forma que `RoleWebResponse`, nueva clase — ver §7) |
-| `POST` | `/api/v1/roles/{roleId}/resources` | `200` (sin cambio) | `GrantResourceRawRequest` (sin cambio de forma) | `RoleAdministrationWebResponse` |
-| `GET` | `/api/v1/roles` | `200` (sin cambio) | — | — (permanece en `roles`, sin tocar) |
+| Verbo  | Ruta                               | Código de éxito    | Cuerpo de entrada                               | Cuerpo de salida                                                                          |
+|--------|------------------------------------|--------------------|-------------------------------------------------|-------------------------------------------------------------------------------------------|
+| `POST` | `/api/v1/roles`                    | `201` (sin cambio) | `DefineRoleRawRequest` (sin cambio de forma)    | `RoleAdministrationWebResponse` (misma forma que `RoleWebResponse`, nueva clase — ver §7) |
+| `POST` | `/api/v1/roles/{roleId}/resources` | `200` (sin cambio) | `GrantResourceRawRequest` (sin cambio de forma) | `RoleAdministrationWebResponse`                                                           |
+| `GET`  | `/api/v1/roles`                    | `200` (sin cambio) | —                                               | — (permanece en `roles`, sin tocar)                                                       |
 
 **Las dos rutas de escritura se mueven físicamente de `RoleController` (`roles`) a un nuevo
 `RoleAdministrationController` (`authorization`).** No es un cambio de contrato HTTP — mismas rutas,
@@ -273,31 +277,31 @@ interfaz nombrada, solo se declara un consumidor nuevo. Verificar igual compilan
 > tocar `pdp/src/test`, trabajo del tester/implementador, no del planificador. Igual para cualquier
 > test de `RoleControllerTests` que hoy cubra `define`/`grantResource`.
 
-| Capa | Clase de prueba | Casos |
-|---|---|---|
-| `application` (`roles`) | `RoleApplicationLookupValidatorImplTests` | rol `APPLICATION` existente → `Optional` con el id correcto; rol `TENANT` existente → `Optional.empty()`; rol inexistente → `RoleNotFoundException` |
-| `application` (`authorization`) | `AdministerRoleDefinitionUseCaseImplTests` | administración presente + decisión `ALLOW` → delega y devuelve `RoleResponse`; administración presente + rechazo → `NotAuthorizedToAdministerException`, `DefineRoleUseCase` **no** se invoca; administración vacía (`TENANT`) → delega directo, sin llamar al validador |
-| `application` (`authorization`) | `AdministerResourceGrantUseCaseImplTests` | mismos tres casos que arriba, sobre `GrantResourceToRoleUseCase` |
-| `infrastructure` (`authorization`) | `AdministerRoleDefinitionInteractorImplTests` | rol `APPLICATION` → construye `Optional` presente con el `applicationId` del propio `RoleScope` de la petición; rol `TENANT` → `Optional.empty()`, sin tocar `RoleApplicationLookupValidator` |
-| `infrastructure` (`authorization`) | `AdministerResourceGrantInteractorImplTests` | resuelve el `applicationId` vía `RoleApplicationLookupValidator`; propaga `RoleNotFoundException` si el rol no existe |
-| `infrastructure` (`authorization`) | `DefineRoleRequestMapperTests` (movido) | mismos casos que hoy, con `AuthorizationMessages` en vez de `RolesMessages` |
-| `infrastructure` (`authorization`) | `GrantResourceRequestMapperTests` (movido) | sin cambios de caso |
-| `infrastructure` (`authorization`) | `RoleAdministrationControllerTests` | delega a cada interactor y responde el código esperado (201/200); no decide reglas |
-| `infrastructure` (`roles`) | `RoleControllerTests` (ajustado) | ya no prueba `define`/`grantResource` (movidos); sigue probando `list` |
+| Capa                               | Clase de prueba                               | Casos                                                                                                                                                                                                                                                                    |
+|------------------------------------|-----------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `application` (`roles`)            | `RoleApplicationLookupValidatorImplTests`     | rol `APPLICATION` existente → `Optional` con el id correcto; rol `TENANT` existente → `Optional.empty()`; rol inexistente → `RoleNotFoundException`                                                                                                                      |
+| `application` (`authorization`)    | `AdministerRoleDefinitionUseCaseImplTests`    | administración presente + decisión `ALLOW` → delega y devuelve `RoleResponse`; administración presente + rechazo → `NotAuthorizedToAdministerException`, `DefineRoleUseCase` **no** se invoca; administración vacía (`TENANT`) → delega directo, sin llamar al validador |
+| `application` (`authorization`)    | `AdministerResourceGrantUseCaseImplTests`     | mismos tres casos que arriba, sobre `GrantResourceToRoleUseCase`                                                                                                                                                                                                         |
+| `infrastructure` (`authorization`) | `AdministerRoleDefinitionInteractorImplTests` | rol `APPLICATION` → construye `Optional` presente con el `applicationId` del propio `RoleScope` de la petición; rol `TENANT` → `Optional.empty()`, sin tocar `RoleApplicationLookupValidator`                                                                            |
+| `infrastructure` (`authorization`) | `AdministerResourceGrantInteractorImplTests`  | resuelve el `applicationId` vía `RoleApplicationLookupValidator`; propaga `RoleNotFoundException` si el rol no existe                                                                                                                                                    |
+| `infrastructure` (`authorization`) | `DefineRoleRequestMapperTests` (movido)       | mismos casos que hoy, con `AuthorizationMessages` en vez de `RolesMessages`                                                                                                                                                                                              |
+| `infrastructure` (`authorization`) | `GrantResourceRequestMapperTests` (movido)    | sin cambios de caso                                                                                                                                                                                                                                                      |
+| `infrastructure` (`authorization`) | `RoleAdministrationControllerTests`           | delega a cada interactor y responde el código esperado (201/200); no decide reglas                                                                                                                                                                                       |
+| `infrastructure` (`roles`)         | `RoleControllerTests` (ajustado)              | ya no prueba `define`/`grantResource` (movidos); sigue probando `list`                                                                                                                                                                                                   |
 
 Presupuesto total estimado: **14–17 pruebas**, dentro del rango orientativo de `sb-testing` para una
 historia con dos escrituras y una validación de propiedad nueva.
 
 ## 10. Trazabilidad
 
-| Fase | Estado | Fecha |
-|---|---|---|
-| Plan | ✅ Generado | 2026-09-14 |
-| Contrato aprobado (gate 1) | ✅ Aprobado | 2026-09-14 |
-| Pruebas en rojo | ✅ Confirmado | 2026-09-14 |
-| Implementación en verde | ✅ Verde (668 pruebas) | 2026-09-14 |
-| Validación | ✅ APROBADO — ver `REPORTE-HU-016.md` | 2026-09-14 |
-| Entrega (gate 2) | ⏳ Pendiente de confirmación para commit y push | |
+| Fase                       | Estado                                         | Fecha      |
+|----------------------------|------------------------------------------------|------------|
+| Plan                       | ✅ Generado                                     | 2026-09-14 |
+| Contrato aprobado (gate 1) | ✅ Aprobado                                     | 2026-09-14 |
+| Pruebas en rojo            | ✅ Confirmado                                   | 2026-09-14 |
+| Implementación en verde    | ✅ Verde (668 pruebas)                          | 2026-09-14 |
+| Validación                 | ✅ APROBADO — ver `REPORTE-HU-016.md`           | 2026-09-14 |
+| Entrega (gate 2)           | ⏳ Pendiente de confirmación para commit y push |            |
 
 ## 11. Ambigüedades pendientes
 

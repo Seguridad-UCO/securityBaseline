@@ -59,14 +59,14 @@ consultar la credencial que el PDP ya sabe emitir, validar y rotar.
 
 ## 2. Estado por capacidad
 
-| Capacidad | Hecho | Parcial | Pendiente | Resumen |
-|---|---|---|---|---|
-| Arquitectura y contratos | 6 | 1 | 1 | Sin cambios recientes. `contracts/` con OpenAPI + JSON Schema, ejemplos validados en el build |
-| Seguridad PEP · PDP · OPA | 5 | 3 | 3 | Los tres saltos de código corren y cada decisión queda auditada. Falta la política de aplicación en OPA y migrar el PEP a la credencial del PDP |
-| Librería de integración | 5 | 4 | 0 | El PDP ya emite (HU-012), valida (HU-013) y rota (HU-014) una credencial de aplicación. El starter del PEP (v0) sigue sin consumirla |
-| Observabilidad | 13 | 3 | 3 | Todo el stack (OTel, Jaeger, Loki, Prometheus, Grafana) armado y cableado, con auditoría de decisiones real (HU-007). Falta encenderlo con tráfico real y documentar la convención |
-| Microfrontend de seguridad | 0 | 1 | 11 | Ya no bloqueado por falta de datos de dominio ni por decisión (ADR-029/030/031, 2026-09-18). Sigue sin arrancar como proyecto — lo arrancan HU-025 y HU-026 |
-| Administración por aplicación | 2 | 1 | 5 | **HU-015**: el registro ya da de alta al primer administrador automáticamente, y borrar/rotar la credencial de una aplicación exige serlo (gateado vía OPA, mecanismo de HU-009). Falta el resto: delegar, listar/quitar administradores por HTTP público, y el ADR formal de "rol global vs. por aplicación" |
+| Capacidad                     | Hecho | Parcial | Pendiente | Resumen                                                                                                                                                                                                                                                                                                       |
+|-------------------------------|-------|---------|-----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Arquitectura y contratos      | 6     | 1       | 1         | Sin cambios recientes. `contracts/` con OpenAPI + JSON Schema, ejemplos validados en el build                                                                                                                                                                                                                 |
+| Seguridad PEP · PDP · OPA     | 5     | 3       | 3         | Los tres saltos de código corren y cada decisión queda auditada. Falta la política de aplicación en OPA y migrar el PEP a la credencial del PDP                                                                                                                                                               |
+| Librería de integración       | 5     | 4       | 0         | El PDP ya emite (HU-012), valida (HU-013) y rota (HU-014) una credencial de aplicación. El starter del PEP (v0) sigue sin consumirla                                                                                                                                                                          |
+| Observabilidad                | 13    | 3       | 3         | Todo el stack (OTel, Jaeger, Loki, Prometheus, Grafana) armado y cableado, con auditoría de decisiones real (HU-007). Falta encenderlo con tráfico real y documentar la convención                                                                                                                            |
+| Microfrontend de seguridad    | 0     | 1       | 11        | Ya no bloqueado por falta de datos de dominio ni por decisión (ADR-029/030/031, 2026-09-18). Sigue sin arrancar como proyecto — lo arrancan HU-025 y HU-026                                                                                                                                                   |
+| Administración por aplicación | 2     | 1       | 5         | **HU-015**: el registro ya da de alta al primer administrador automáticamente, y borrar/rotar la credencial de una aplicación exige serlo (gateado vía OPA, mecanismo de HU-009). Falta el resto: delegar, listar/quitar administradores por HTTP público, y el ADR formal de "rol global vs. por aplicación" |
 
 ---
 
@@ -127,16 +127,16 @@ observabilidad, y mover el perfil `observability` de opt-in a default.
 Ya no está bloqueado ni por datos de dominio ni por decisión. Tres ADRs lo cierran y dos historias
 lo arrancan:
 
-| ADR | Qué decide |
-|---|---|
+| ADR       | Qué decide                                                                                                                                                                                                                                                                                                                                  |
+|-----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `ADR-029` | Aislamiento por Shadow DOM abierto; lo único que cruza la frontera visual son design tokens. **No** se exige Tailwind ni ninguna base de estilos a las aplicaciones — la hipótesis original del equipo, evaluada y descartada: Tailwind genera clases globales y no aísla del preflight, la herencia ni los selectores de elemento del host |
-| `ADR-030` | El contrato es `mount(container, options)` / custom element, no un componente Vue. Module Federation **y** un bundle ESM como canales sobre el mismo artefacto. Sin `shared` en v1 |
-| `ADR-031` | El host es dueño de la sesión y entrega `getAccessToken()`; el componente no hace login propio |
+| `ADR-030` | El contrato es `mount(container, options)` / custom element, no un componente Vue. Module Federation **y** un bundle ESM como canales sobre el mismo artefacto. Sin `shared` en v1                                                                                                                                                          |
+| `ADR-031` | El host es dueño de la sesión y entrega `getAccessToken()`; el componente no hace login propio                                                                                                                                                                                                                                              |
 
-| # | Historia | Dónde |
-|---|---|---|
-| HU-026 | Canal bearer en el perfil `keycloak` + aprovisionamiento perezoso de identidad | Este repo, ciclo normal del harness. **Prerrequisito de HU-025** |
-| HU-025 | PoC: un componente real en tres hosts hostiles (React+Webpack, Vue+Vite, HTML plano), 12 criterios verificados en CI | Repo nuevo `security-ui`, a mano |
+| #      | Historia                                                                                                             | Dónde                                                            |
+|--------|----------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------|
+| HU-026 | Canal bearer en el perfil `keycloak` + aprovisionamiento perezoso de identidad                                       | Este repo, ciclo normal del harness. **Prerrequisito de HU-025** |
+| HU-025 | PoC: un componente real en tres hosts hostiles (React+Webpack, Vue+Vite, HTML plano), 12 criterios verificados en CI | Repo nuevo `security-ui`, a mano                                 |
 
 Queda **una** decisión abierta y es de producto, no técnica: el modelo de marca (PD-16) — si
 Seguridad manda o si el host manda dentro de la lista cerrada de tokens. HU-025 prueba ambos y la
@@ -147,17 +147,17 @@ cierra con evidencia, antes de publicar la lista de tokens v1.
 (`security-platform-architecture`), y quedó un backlog ordenado listo para planificarse con el harness
 de agentes:
 
-| # | Historia | Qué cierra |
-|---|---|---|
-| HU-016 | Gatear roles (`DefineRole`, `GrantResourceToRole`) | Brecha de mínimo privilegio — prioridad #1 |
-| HU-017 | Gatear registro de recursos protegidos | Misma brecha, slice `resources` |
-| HU-018 | Gatear asignación/revocación de roles | Misma brecha, slice `assignments` |
-| HU-019 | Gatear perfiles (definir, componer, asignar) | Misma brecha, slices `profiles`+`assignments` |
-| HU-022 | Infraestructura Redis + revocación de tokens (`jti`) | Brecha de seguridad real — ningún token puede invalidarse antes de expirar |
-| HU-020 | Autoservicio de administradores (agregar/quitar/listar por HTTP público) | Reemplaza la dependencia del canal interno mTLS para uso cotidiano |
-| HU-021 | Auditoría de operaciones administrativas (evento propio) | Deuda aplazada dos veces (HU-009, HU-015) |
-| HU-023 | Caché distribuida de roles activos vía Redis, invalidada por evento | Reduce carga de lectura repetida en el camino caliente de autorización y administración |
-| HU-024 | MFA como step-up para operaciones administrativas | Una credencial de un solo factor comprometida hoy alcanza para control administrativo total |
+| #      | Historia                                                                 | Qué cierra                                                                                  |
+|--------|--------------------------------------------------------------------------|---------------------------------------------------------------------------------------------|
+| HU-016 | Gatear roles (`DefineRole`, `GrantResourceToRole`)                       | Brecha de mínimo privilegio — prioridad #1                                                  |
+| HU-017 | Gatear registro de recursos protegidos                                   | Misma brecha, slice `resources`                                                             |
+| HU-018 | Gatear asignación/revocación de roles                                    | Misma brecha, slice `assignments`                                                           |
+| HU-019 | Gatear perfiles (definir, componer, asignar)                             | Misma brecha, slices `profiles`+`assignments`                                               |
+| HU-022 | Infraestructura Redis + revocación de tokens (`jti`)                     | Brecha de seguridad real — ningún token puede invalidarse antes de expirar                  |
+| HU-020 | Autoservicio de administradores (agregar/quitar/listar por HTTP público) | Reemplaza la dependencia del canal interno mTLS para uso cotidiano                          |
+| HU-021 | Auditoría de operaciones administrativas (evento propio)                 | Deuda aplazada dos veces (HU-009, HU-015)                                                   |
+| HU-023 | Caché distribuida de roles activos vía Redis, invalidada por evento      | Reduce carga de lectura repetida en el camino caliente de autorización y administración     |
+| HU-024 | MFA como step-up para operaciones administrativas                        | Una credencial de un solo factor comprometida hoy alcanza para control administrativo total |
 
 Administrador global (`ADR-024`): decisión de diseño tomada y documentada, construcción diferida
 hasta que exista un caso de uso concreto (candidato: abrir `POST /api/v1/roles` para alcance
@@ -249,16 +249,16 @@ distintas y el componente sigue sin existir.
 
 ### F · Administración de seguridad por aplicación
 
-| Estado | Ítem | Evidencia / qué falta |
-|---|---|---|
-| ✅ | Alta automática del primer administrador | HU-015: `RegisterApplicationWithFirstAdministratorUseCaseImpl` asigna el rol `ADMIN` de alcance-aplicación al registrador, en la misma operación de registro |
-| ✅ | Borrar/rotar credencial exige ser administrador | HU-015: `AdministerApplicationRemovalUseCaseImpl`/`AdministerApplicationCredentialRotationUseCaseImpl` gatean vía el mecanismo de HU-009 (OPA), no un `if` de rol |
-| 🟡 | Backfill de administrador para aplicaciones preexistentes | `InternalApplicationAdministratorController` (mTLS) existe; es manual, sin flujo de descubrimiento de "aplicaciones sin administrador" |
-| ⬜ | Delegar administración a otro usuario | No modelado |
-| ⬜ | Listar/quitar administradores por HTTP público | No existe endpoint |
-| ⬜ | ADR formal: rol global vs. por aplicación vs. perfil | Sigue sin escribirse — HU-015 resolvió el caso concreto (aplicación) sin cerrar la decisión general |
-| ⬜ | Auditoría de operaciones administrativas | Las operaciones de HU-015 no emiten `AccessEvent` propio, solo la respuesta HTTP |
-| ⬜ | Panel/UI de administración | Depende del microfrontend (sección E) |
+| Estado | Ítem                                                      | Evidencia / qué falta                                                                                                                                             |
+|--------|-----------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ✅      | Alta automática del primer administrador                  | HU-015: `RegisterApplicationWithFirstAdministratorUseCaseImpl` asigna el rol `ADMIN` de alcance-aplicación al registrador, en la misma operación de registro      |
+| ✅      | Borrar/rotar credencial exige ser administrador           | HU-015: `AdministerApplicationRemovalUseCaseImpl`/`AdministerApplicationCredentialRotationUseCaseImpl` gatean vía el mecanismo de HU-009 (OPA), no un `if` de rol |
+| 🟡     | Backfill de administrador para aplicaciones preexistentes | `InternalApplicationAdministratorController` (mTLS) existe; es manual, sin flujo de descubrimiento de "aplicaciones sin administrador"                            |
+| ⬜      | Delegar administración a otro usuario                     | No modelado                                                                                                                                                       |
+| ⬜      | Listar/quitar administradores por HTTP público            | No existe endpoint                                                                                                                                                |
+| ⬜      | ADR formal: rol global vs. por aplicación vs. perfil      | Sigue sin escribirse — HU-015 resolvió el caso concreto (aplicación) sin cerrar la decisión general                                                               |
+| ⬜      | Auditoría de operaciones administrativas                  | Las operaciones de HU-015 no emiten `AccessEvent` propio, solo la respuesta HTTP                                                                                  |
+| ⬜      | Panel/UI de administración                                | Depende del microfrontend (sección E)                                                                                                                             |
 
 ---
 

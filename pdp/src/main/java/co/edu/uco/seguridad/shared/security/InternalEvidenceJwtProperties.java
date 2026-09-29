@@ -13,7 +13,8 @@ import java.util.Objects;
  * {@code application.name}, no por configuración estática.
  */
 @ConfigurationProperties(prefix = "pdp.security.internal.evidence")
-public record InternalEvidenceJwtProperties(String jwkSetUri, String issuer, String audience, String technicalClientId) {
+public record InternalEvidenceJwtProperties(String jwkSetUri, String issuer, String audience,
+                                            String technicalClientId) {
 
     public InternalEvidenceJwtProperties {
         Objects.requireNonNull(jwkSetUri, RequiredArgumentMessages.INTERNAL_EVIDENCE_JWK_SET_URI);

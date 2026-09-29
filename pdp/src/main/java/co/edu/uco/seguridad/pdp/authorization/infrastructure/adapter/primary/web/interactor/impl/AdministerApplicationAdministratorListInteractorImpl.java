@@ -22,7 +22,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-/** Implementación de {@link AdministerApplicationAdministratorListInteractor} (HU-020). */
+/**
+ * Implementación de {@link AdministerApplicationAdministratorListInteractor} (HU-020).
+ */
 public final class AdministerApplicationAdministratorListInteractorImpl
         implements AdministerApplicationAdministratorListInteractor {
 
@@ -31,7 +33,7 @@ public final class AdministerApplicationAdministratorListInteractorImpl
     private final AdministerApplicationAdministratorListUseCase useCase;
 
     public AdministerApplicationAdministratorListInteractorImpl(ApplicationOwnerLookupValidator ownerLookup,
-            SubjectUserIdLookupValidator subjectUserIdLookup, AdministerApplicationAdministratorListUseCase useCase) {
+                                                                SubjectUserIdLookupValidator subjectUserIdLookup, AdministerApplicationAdministratorListUseCase useCase) {
         this.ownerLookup = Objects.requireNonNull(ownerLookup, RequiredArgumentMessages.APPLICATION_OWNER_LOOKUP_VALIDATOR);
         this.subjectUserIdLookup = Objects.requireNonNull(subjectUserIdLookup,
                 RequiredArgumentMessages.SUBJECT_USER_ID_LOOKUP_VALIDATOR);

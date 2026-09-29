@@ -17,7 +17,7 @@ public final class ActiveRoleNamesLookupValidatorImpl implements ActiveRoleNames
     private final RoleNamesLookupValidator roleNamesLookup;
 
     public ActiveRoleNamesLookupValidatorImpl(ResolveActiveRolesUseCase resolveActiveRoles,
-            RoleNamesLookupValidator roleNamesLookup) {
+                                              RoleNamesLookupValidator roleNamesLookup) {
         this.resolveActiveRoles = Objects.requireNonNull(resolveActiveRoles, RequiredArgumentMessages.RESOLVE_ACTIVE_ROLES_USE_CASE);
         this.roleNamesLookup = Objects.requireNonNull(roleNamesLookup, RequiredArgumentMessages.ROLE_NAMES_LOOKUP_VALIDATOR);
     }

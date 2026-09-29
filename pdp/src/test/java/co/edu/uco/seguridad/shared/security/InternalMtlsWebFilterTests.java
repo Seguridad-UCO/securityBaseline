@@ -109,7 +109,7 @@ class InternalMtlsWebFilterTests {
 
             @Override
             public X509Certificate[] getPeerCertificates() {
-                return new X509Certificate[] {certificate};
+                return new X509Certificate[]{certificate};
             }
         };
     }

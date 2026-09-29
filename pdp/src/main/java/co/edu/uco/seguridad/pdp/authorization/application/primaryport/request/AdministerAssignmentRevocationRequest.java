@@ -10,7 +10,8 @@ import java.util.Objects;
  * más la administración a gatear (resuelta vía {@code AssignmentApplicationLookupValidator}). Sin
  * {@code Optional} — siempre hay una aplicación una vez la asignación se resuelve.
  */
-public record AdministerAssignmentRevocationRequest(AdministrationRequest administration, RevokeAssignmentRequest revocation) {
+public record AdministerAssignmentRevocationRequest(AdministrationRequest administration,
+                                                    RevokeAssignmentRequest revocation) {
 
     public AdministerAssignmentRevocationRequest {
         Objects.requireNonNull(administration, RequiredArgumentMessages.ADMINISTRATION_REQUEST);

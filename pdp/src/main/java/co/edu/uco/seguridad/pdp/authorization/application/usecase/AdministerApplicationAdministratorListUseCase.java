@@ -6,7 +6,9 @@ import co.edu.uco.seguridad.shared.contract.ReactiveOperation;
 
 import java.util.List;
 
-/** Gatea el listado de administradores de aplicación tras HU-009 (HU-020). */
+/**
+ * Gatea el listado de administradores de aplicación tras HU-009 (HU-020).
+ */
 public interface AdministerApplicationAdministratorListUseCase
         extends ReactiveOperation<AdministerApplicationAdministratorListRequest, List<AssignmentResponse>> {
 }

@@ -16,7 +16,9 @@ import java.net.URI;
 import java.time.Duration;
 import java.util.Map;
 
-/** Optional control-plane self-registration with the remote PEP. */
+/**
+ * Optional control-plane self-registration with the remote PEP.
+ */
 @AutoConfiguration
 @EnableConfigurationProperties(PepRegistrationProperties.class)
 @ConditionalOnProperty(prefix = "security", name = "enabled", havingValue = "true", matchIfMissing = true)
@@ -50,15 +52,23 @@ public class PepRegistrationAutoConfiguration {
                 .exchangeToMono(response -> response.statusCode().is2xxSuccessful()
                         ? response.bodyToMono(RegistrationResponse.class)
                         : response.bodyToMono(String.class).defaultIfEmpty("").flatMap(body -> Mono.error(
-                                response.statusCode().is4xxClientError() ? new RegistrationRejectedException(response.statusCode())
-                                        : new RegistrationUnavailableException(response.statusCode()))));
+                        response.statusCode().is4xxClientError() ? new RegistrationRejectedException(response.statusCode())
+                        : new RegistrationUnavailableException(response.statusCode()))));
     }
 
-    record RegistrationResponse(String applicationId, String environment, String prefix, URI publicBaseUrl, String status) {}
-    static final class RegistrationRejectedException extends RuntimeException {
-        RegistrationRejectedException(HttpStatusCode status) { super("PEP returned " + status.value()); }
+    record RegistrationResponse(String applicationId, String environment, String prefix, URI publicBaseUrl,
+                                String status) {
     }
+
+    static final class RegistrationRejectedException extends RuntimeException {
+        RegistrationRejectedException(HttpStatusCode status) {
+            super("PEP returned " + status.value());
+        }
+    }
+
     static final class RegistrationUnavailableException extends RuntimeException {
-        RegistrationUnavailableException(HttpStatusCode status) { super("PEP returned " + status.value()); }
+        RegistrationUnavailableException(HttpStatusCode status) {
+            super("PEP returned " + status.value());
+        }
     }
 }

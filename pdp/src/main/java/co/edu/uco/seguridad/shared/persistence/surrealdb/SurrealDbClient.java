@@ -29,12 +29,14 @@ public final class SurrealDbClient {
         this.properties = Objects.requireNonNull(properties, RequiredArgumentMessages.SURREALDB_PROPERTIES);
     }
 
-    /** Idempotente — cada módulo la llama antes de definir sus tablas, sin depender del orden de arranque. */
+    /**
+     * Idempotente — cada módulo la llama antes de definir sus tablas, sin depender del orden de arranque.
+     */
     public Mono<Void> ensureNamespaceAndDatabase() {
         return execute(
-                        "DEFINE NAMESPACE IF NOT EXISTS %s; DEFINE DATABASE IF NOT EXISTS %s;"
-                                .formatted(properties.namespace(), properties.database()),
-                        Map.of())
+                "DEFINE NAMESPACE IF NOT EXISTS %s; DEFINE DATABASE IF NOT EXISTS %s;"
+                        .formatted(properties.namespace(), properties.database()),
+                Map.of())
                 .then();
     }
 

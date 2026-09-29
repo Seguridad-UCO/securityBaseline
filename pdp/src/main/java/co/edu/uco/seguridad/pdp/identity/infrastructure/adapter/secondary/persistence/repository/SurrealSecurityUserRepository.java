@@ -1,6 +1,8 @@
 package co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.repository;
 
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
+import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
+import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
 import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.SecurityUserRepository;
 import co.edu.uco.seguridad.pdp.identity.domain.model.Email;
 import co.edu.uco.seguridad.pdp.identity.domain.model.ExternalIdentity;
@@ -119,6 +121,18 @@ public final class SurrealSecurityUserRepository implements SecurityUserReposito
         return client.execute("SELECT * FROM %s ORDER BY lastLoginAt DESC;".formatted(IdentitySchema.USER_TABLE), Map.of())
                 .flatMapMany(results -> Flux.fromIterable(results.get(0).valueStream().toList()))
                 .map(SurrealSecurityUserRepository::toSecurityUser);
+    }
+
+    @Override
+    public Mono<ResultPage<SecurityUser>> findPageByTenant(TenantId tenantId, String query, PageWindow window) {
+        String term = query == null ? "" : query.trim().toLowerCase();
+        String statement = """
+                SELECT * FROM %1$s WHERE tenantId = $tenantId AND (string::lowercase(name) CONTAINS $query OR string::lowercase(email) CONTAINS $query) ORDER BY name ASC LIMIT %2$d START %3$d;
+                SELECT count() FROM %1$s WHERE tenantId = $tenantId AND (string::lowercase(name) CONTAINS $query OR string::lowercase(email) CONTAINS $query) GROUP ALL;
+                """.formatted(IdentitySchema.USER_TABLE, window.limit(), window.offset());
+        return client.execute(statement, Map.of("tenantId", tenantId.value(), "query", term)).map(results ->
+                ResultPage.of(results.get(0).valueStream().map(SurrealSecurityUserRepository::toSecurityUser).toList(),
+                        results.get(1).isEmpty() ? 0 : results.get(1).get(0).path("count").asLong(0), window));
     }
 
     private static SecurityUser toSecurityUser(JsonNode row) {

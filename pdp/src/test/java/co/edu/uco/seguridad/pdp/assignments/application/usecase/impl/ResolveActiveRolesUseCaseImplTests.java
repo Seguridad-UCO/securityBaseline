@@ -5,12 +5,7 @@ import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository
 import co.edu.uco.seguridad.pdp.assignments.domain.Assignment;
 import co.edu.uco.seguridad.pdp.assignments.domain.AssignmentCriteria;
 import co.edu.uco.seguridad.pdp.assignments.domain.model.AssignmentId;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
-import co.edu.uco.seguridad.pdp.commons.model.RoleId;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
-import co.edu.uco.seguridad.pdp.commons.model.UserId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.shared.cache.DistributedCachePort;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
@@ -88,7 +83,7 @@ class ResolveActiveRolesUseCaseImplTests {
         return new AssignmentRepository() {
             @Override
             public Mono<Boolean> existsActiveByUserApplicationRole(UserId userId, ApplicationId applicationId, RoleId roleId,
-                    Instant now) {
+                                                                   Instant now) {
                 throw new UnsupportedOperationException();
             }
 
@@ -118,7 +113,7 @@ class ResolveActiveRolesUseCaseImplTests {
         return new AssignmentRepository() {
             @Override
             public Mono<Boolean> existsActiveByUserApplicationRole(UserId userId, ApplicationId applicationId, RoleId roleId,
-                    Instant now) {
+                                                                   Instant now) {
                 throw new UnsupportedOperationException();
             }
 
@@ -191,7 +186,7 @@ class ResolveActiveRolesUseCaseImplTests {
 
             @Override
             public Mono<Void> put(UserId subject, ApplicationId applicationId, Set<RoleId> roleIds) {
-                put.add(new Object[] {subject, applicationId, roleIds});
+                put.add(new Object[]{subject, applicationId, roleIds});
                 return Mono.empty();
             }
 

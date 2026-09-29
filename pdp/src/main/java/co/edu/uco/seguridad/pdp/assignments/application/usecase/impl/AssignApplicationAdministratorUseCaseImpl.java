@@ -34,7 +34,7 @@ public final class AssignApplicationAdministratorUseCaseImpl implements AssignAp
     private final AssignRoleUseCase assignRole;
 
     public AssignApplicationAdministratorUseCaseImpl(RoleLookupByNameInScopeValidator roleLookup,
-            DefineRoleUseCase defineRole, AssignRoleUseCase assignRole) {
+                                                     DefineRoleUseCase defineRole, AssignRoleUseCase assignRole) {
         this.roleLookup = Objects.requireNonNull(roleLookup, RequiredArgumentMessages.ROLE_LOOKUP_BY_NAME_IN_SCOPE_VALIDATOR);
         this.defineRole = Objects.requireNonNull(defineRole, RequiredArgumentMessages.DEFINE_ROLE_USE_CASE);
         this.assignRole = Objects.requireNonNull(assignRole, RequiredArgumentMessages.ASSIGN_ROLE_USE_CASE);

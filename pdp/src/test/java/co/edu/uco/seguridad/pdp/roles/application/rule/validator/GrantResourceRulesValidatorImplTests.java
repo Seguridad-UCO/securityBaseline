@@ -1,12 +1,7 @@
 package co.edu.uco.seguridad.pdp.roles.application.rule.validator;
 
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationOwnerLookupValidator;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.model.ResourceId;
-import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
-import co.edu.uco.seguridad.pdp.commons.model.RoleId;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceOwnerLookupValidator;
 import co.edu.uco.seguridad.pdp.resources.domain.exception.ProtectedResourceNotFoundException;
 import co.edu.uco.seguridad.pdp.roles.application.primaryport.request.GrantResourceRequest;
@@ -45,7 +40,8 @@ class GrantResourceRulesValidatorImplTests {
     void rejects_when_the_role_does_not_exist_for_the_tenant() {
         GrantResourceRulesValidatorImpl validator = new GrantResourceRulesValidatorImpl(
                 repositoryReturning(Mono.empty()), roleMustExistRejecting(),
-                NEVER_CALLED_RESOURCE_OWNER, NEVER_CALLED_APPLICATION_OWNER, coverage -> { });
+                NEVER_CALLED_RESOURCE_OWNER, NEVER_CALLED_APPLICATION_OWNER, coverage -> {
+        });
 
         StepVerifier.create(validator.execute(request()))
                 .expectError(RoleNotFoundException.class)
@@ -57,7 +53,8 @@ class GrantResourceRulesValidatorImplTests {
         GrantResourceRulesValidatorImpl validator = new GrantResourceRulesValidatorImpl(
                 repositoryReturning(Mono.just(ROLE)), roleMustExistAccepting(),
                 resourceId -> Mono.error(new ProtectedResourceNotFoundException(RESOURCE)),
-                NEVER_CALLED_APPLICATION_OWNER, coverage -> { });
+                NEVER_CALLED_APPLICATION_OWNER, coverage -> {
+        });
 
         StepVerifier.create(validator.execute(request()))
                 .expectError(ProtectedResourceNotFoundException.class)
@@ -69,7 +66,9 @@ class GrantResourceRulesValidatorImplTests {
         GrantResourceRulesValidatorImpl validator = new GrantResourceRulesValidatorImpl(
                 repositoryReturning(Mono.just(ROLE)), roleMustExistAccepting(),
                 resourceId -> Mono.just(APPLICATION), applicationId -> Mono.just(new TenantId("otra-universidad")),
-                coverage -> { throw new ResourceOutsideRoleScopeException(RESOURCE); });
+                coverage -> {
+                    throw new ResourceOutsideRoleScopeException(RESOURCE);
+                });
 
         StepVerifier.create(validator.execute(request()))
                 .expectError(ResourceOutsideRoleScopeException.class)
@@ -80,7 +79,8 @@ class GrantResourceRulesValidatorImplTests {
     void returns_the_role_when_every_rule_passes() {
         GrantResourceRulesValidatorImpl validator = new GrantResourceRulesValidatorImpl(
                 repositoryReturning(Mono.just(ROLE)), roleMustExistAccepting(),
-                resourceId -> Mono.just(APPLICATION), applicationId -> Mono.just(TENANT), coverage -> { });
+                resourceId -> Mono.just(APPLICATION), applicationId -> Mono.just(TENANT), coverage -> {
+        });
 
         StepVerifier.create(validator.execute(request())).expectNext(ROLE).verifyComplete();
     }
@@ -90,11 +90,14 @@ class GrantResourceRulesValidatorImplTests {
     }
 
     private static co.edu.uco.seguridad.pdp.roles.domain.rule.RoleMustExistForTenantRule roleMustExistRejecting() {
-        return input -> { throw new RoleNotFoundException(input.roleId()); };
+        return input -> {
+            throw new RoleNotFoundException(input.roleId());
+        };
     }
 
     private static co.edu.uco.seguridad.pdp.roles.domain.rule.RoleMustExistForTenantRule roleMustExistAccepting() {
-        return input -> { };
+        return input -> {
+        };
     }
 
     private static RoleRepository repositoryReturning(Mono<Role> role) {

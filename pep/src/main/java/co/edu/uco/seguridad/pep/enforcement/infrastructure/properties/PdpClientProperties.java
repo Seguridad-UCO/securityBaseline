@@ -6,7 +6,9 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.time.Duration;
 
-/** Configuración del adaptador HTTP secundario que consulta al PDP. */
+/**
+ * Configuración del adaptador HTTP secundario que consulta al PDP.
+ */
 @ConfigurationProperties("pep.pdp")
 public record PdpClientProperties(URI baseUrl, boolean allowInsecureHttp, Duration connectTimeout,
                                   Duration timeout, int maxResponseBytes, Path caCertificate, Path clientCertificate,
@@ -21,7 +23,8 @@ public record PdpClientProperties(URI baseUrl, boolean allowInsecureHttp, Durati
         if (!allowInsecureHttp && (clientCertificate == null || clientKey == null || caCertificate == null)) {
             throw new IllegalArgumentException("PDP mTLS certificate, key and CA are required outside development");
         }
-        if ((clientCertificate == null) != (clientKey == null)) throw new IllegalArgumentException("Incomplete PDP client certificate");
+        if ((clientCertificate == null) != (clientKey == null))
+            throw new IllegalArgumentException("Incomplete PDP client certificate");
         if (connectTimeout == null || connectTimeout.isNegative() || connectTimeout.isZero()
                 || timeout == null || timeout.isNegative() || timeout.isZero() || maxResponseBytes < 1) {
             throw new IllegalArgumentException("PDP timeouts and response limit must be positive");

@@ -6,7 +6,9 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
 
-/** Entrada tipada de ListRolesUseCase: el criterio ya validado y la ventana ya resuelta. */
+/**
+ * Entrada tipada de ListRolesUseCase: el criterio ya validado y la ventana ya resuelta.
+ */
 public record ListRolesRequest(RoleCriteria criteria, PageWindow window) {
 
     public ListRolesRequest {
