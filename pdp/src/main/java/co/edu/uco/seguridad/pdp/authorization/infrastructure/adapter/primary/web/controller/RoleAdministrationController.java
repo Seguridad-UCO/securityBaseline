@@ -12,6 +12,7 @@ import co.edu.uco.seguridad.shared.web.message.WebContractMessages;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -57,5 +58,14 @@ final class RoleAdministrationController {
         return grantInteractor.execute(new GrantResourceRawRequest(roleId, body.resourceId()))
                 .map(response -> ResponseEntity.ok(ApiResponse.success("ROLE_RESOURCE_GRANTED",
                         WebContractMessages.successRoleResourceGranted(), response, context)));
+    }
+
+    @DeleteMapping("/{roleId}/resources/{resourceId}")
+    Mono<ResponseEntity<ApiResponse<RoleAdministrationWebResponse>>> revokeResource(@PathVariable String roleId,
+            @PathVariable String resourceId, ServerWebExchange exchange) {
+        RequestContext context = CorrelationWebFilter.context(exchange);
+        return grantInteractor.revoke(new GrantResourceRawRequest(roleId, resourceId))
+                .map(response -> ResponseEntity.ok(ApiResponse.success("ROLE_RESOURCE_REVOKED",
+                        "El recurso fue retirado del rol", response, context)));
     }
 }

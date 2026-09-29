@@ -32,4 +32,9 @@ public interface ProfileAssignmentRepository {
     }
 
     Mono<ProfileAssignment> save(ProfileAssignment profileAssignment);
+
+    default Mono<Boolean> existsActiveByProfileId(ProfileId profileId, Instant now) { return Mono.just(false); }
+
+    /** True si hay asignaciones de perfiles, vigentes o históricas, para la aplicación. */
+    default Mono<Boolean> existsByApplicationId(ApplicationId applicationId) { return Mono.just(false); }
 }

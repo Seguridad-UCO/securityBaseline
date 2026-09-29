@@ -9,9 +9,11 @@ import co.edu.uco.seguridad.pdp.resources.domain.rule.ProtectedResourceMustExist
 import co.edu.uco.seguridad.pdp.resources.domain.rule.impl.ProtectedResourceMustBeUniqueRuleImpl;
 import co.edu.uco.seguridad.pdp.resources.domain.rule.impl.ProtectedResourceMustExistRuleImpl;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceMustExistValidator;
+import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ApplicationDeletionDependencyValidator;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceOwnerLookupValidator;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceIdLookupValidator;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.ProtectedResourceMustExistValidatorImpl;
+import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.ApplicationDeletionDependencyValidatorImpl;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.ProtectedResourceOwnerLookupValidatorImpl;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.ProtectedResourceIdLookupValidatorImpl;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.RegisterProtectedResourceRulesValidator;
@@ -19,9 +21,13 @@ import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.Regist
 import co.edu.uco.seguridad.pdp.resources.application.usecase.ListProtectedResourcesUseCase;
 import co.edu.uco.seguridad.pdp.resources.application.usecase.RegisterApplicationWithInitialResourceUseCase;
 import co.edu.uco.seguridad.pdp.resources.application.usecase.RegisterProtectedResourceUseCase;
+import co.edu.uco.seguridad.pdp.resources.application.usecase.RemoveProtectedResourceUseCase;
+import co.edu.uco.seguridad.pdp.resources.application.usecase.UpdateProtectedResourceUseCase;
 import co.edu.uco.seguridad.pdp.resources.application.usecase.impl.ListProtectedResourcesUseCaseImpl;
 import co.edu.uco.seguridad.pdp.resources.application.usecase.impl.RegisterApplicationWithInitialResourceUseCaseImpl;
 import co.edu.uco.seguridad.pdp.resources.application.usecase.impl.RegisterProtectedResourceUseCaseImpl;
+import co.edu.uco.seguridad.pdp.resources.application.usecase.impl.RemoveProtectedResourceUseCaseImpl;
+import co.edu.uco.seguridad.pdp.resources.application.usecase.impl.UpdateProtectedResourceUseCaseImpl;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.interactor.ListProtectedResourcesInteractor;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.interactor.RegisterApplicationWithInitialResourceInteractor;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.interactor.impl.ListProtectedResourcesInteractorImpl;
@@ -47,6 +53,12 @@ public class ResourcesConfiguration {
     @Bean
     ProtectedResourceRepository protectedResourceRepository(SurrealDbClient client) {
         return new SurrealProtectedResourceRepository(client);
+    }
+
+    @Bean
+    ApplicationDeletionDependencyValidator resourceApplicationDeletionDependencyValidator(
+            ProtectedResourceRepository repository) {
+        return new ApplicationDeletionDependencyValidatorImpl(repository);
     }
 
     @Bean
@@ -102,6 +114,16 @@ public class ResourcesConfiguration {
     @Bean
     ListProtectedResourcesUseCase listProtectedResourcesUseCase(ProtectedResourceRepository resources) {
         return new ListProtectedResourcesUseCaseImpl(resources);
+    }
+
+    @Bean
+    UpdateProtectedResourceUseCase updateProtectedResourceUseCase(ProtectedResourceRepository repository) {
+        return new UpdateProtectedResourceUseCaseImpl(repository);
+    }
+
+    @Bean
+    RemoveProtectedResourceUseCase removeProtectedResourceUseCase(ProtectedResourceRepository repository) {
+        return new RemoveProtectedResourceUseCaseImpl(repository);
     }
 
     // HU-017 — registerProtectedResourceInteractor se retiró de aquí: la escritura se expone ahora

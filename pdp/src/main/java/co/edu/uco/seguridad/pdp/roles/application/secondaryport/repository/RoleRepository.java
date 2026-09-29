@@ -1,8 +1,10 @@
 package co.edu.uco.seguridad.pdp.roles.application.secondaryport.repository;
 
 import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
+import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
 import co.edu.uco.seguridad.pdp.commons.model.RoleId;
+import co.edu.uco.seguridad.pdp.commons.model.ResourceId;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.roles.domain.Role;
 import co.edu.uco.seguridad.pdp.roles.domain.RoleCriteria;
@@ -33,4 +35,12 @@ public interface RoleRepository {
     Mono<ResultPage<Role>> findBy(RoleCriteria criteria, PageWindow window);
 
     Mono<Role> save(Role role);
+
+    default Mono<Void> deleteById(RoleId roleId) { return Mono.error(new UnsupportedOperationException()); }
+
+    /** True si algún rol aún conserva el grant; protege el borrado del recurso. */
+    default Mono<Boolean> existsByResourceId(ResourceId resourceId) { return Mono.just(false); }
+
+    /** True si existen roles cuyo alcance pertenece a la aplicación. */
+    default Mono<Boolean> existsByApplicationId(ApplicationId applicationId) { return Mono.just(false); }
 }

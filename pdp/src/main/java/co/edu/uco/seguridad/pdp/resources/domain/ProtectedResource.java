@@ -45,4 +45,9 @@ public record ProtectedResource(ResourceId id, ApplicationId applicationId, Tena
     public boolean isSameEndpointAs(ResourcePath otherPath, HttpVerb otherMethod) {
         return path.equals(otherPath) && method == otherMethod;
     }
+
+    /** Conserva identidad, dueño y fecha de registro al editar el endpoint. */
+    public ProtectedResource withEndpoint(ResourcePath path, HttpVerb method) {
+        return new ProtectedResource(id, applicationId, tenantId, path, method, registeredAt);
+    }
 }

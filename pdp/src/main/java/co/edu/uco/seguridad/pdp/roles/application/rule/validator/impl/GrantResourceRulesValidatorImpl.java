@@ -6,6 +6,7 @@ import co.edu.uco.seguridad.pdp.roles.application.primaryport.request.GrantResou
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.GrantResourceRulesValidator;
 import co.edu.uco.seguridad.pdp.roles.application.secondaryport.repository.RoleRepository;
 import co.edu.uco.seguridad.pdp.roles.domain.Role;
+import co.edu.uco.seguridad.pdp.roles.domain.exception.ProtectedRoleException;
 import co.edu.uco.seguridad.pdp.roles.domain.rule.RoleMustExistForTenantRule;
 import co.edu.uco.seguridad.pdp.roles.domain.rule.RoleScopeMustCoverResourceRule;
 import co.edu.uco.seguridad.pdp.roles.domain.rule.model.ResourceCoverage;
@@ -22,6 +23,8 @@ import java.util.Objects;
  * (R5, regla pura). Devuelve el rol encontrado para que el caso de uso lo transforme.
  */
 public final class GrantResourceRulesValidatorImpl implements GrantResourceRulesValidator {
+
+    private static final String ADMIN = "ADMIN";
 
     private final RoleRepository repository;
     private final RoleMustExistForTenantRule roleMustExist;
@@ -47,10 +50,16 @@ public final class GrantResourceRulesValidatorImpl implements GrantResourceRules
                 .doOnNext(role -> roleMustExist.execute(new RoleExistence(input.roleId(), input.tenantId(), true)))
                 .switchIfEmpty(Mono.fromRunnable(
                         () -> roleMustExist.execute(new RoleExistence(input.roleId(), input.tenantId(), false))))
-                .flatMap(role -> resourceOwner.execute(input.resourceId())
+                .flatMap(role -> isDefaultApplicationAdministrator(role)
+                        ? Mono.error(new ProtectedRoleException(role.id()))
+                        : resourceOwner.execute(input.resourceId())
                         .flatMap(resourceApplicationId -> applicationOwner.execute(resourceApplicationId)
                                 .doOnNext(resourceTenantId -> scopeMustCover.execute(
                                         new ResourceCoverage(role.scope(), resourceApplicationId, resourceTenantId)))
                                 .thenReturn(role)));
+    }
+
+    private static boolean isDefaultApplicationAdministrator(Role role) {
+        return ADMIN.equalsIgnoreCase(role.name().value()) && role.scope().applicationId().isPresent();
     }
 }

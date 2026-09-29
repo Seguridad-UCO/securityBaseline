@@ -36,4 +36,15 @@ public record Role(RoleId id, RoleName name, RoleScope scope, Set<ResourceId> re
         withNewResource.add(resourceId);
         return new Role(id, name, scope, Set.copyOf(withNewResource), registeredAt);
     }
+
+    /** Nuevo rol sin el recurso. Es idempotente para que DELETE sea seguro al repetirlo. */
+    public Role withoutResource(ResourceId resourceId) {
+        Set<ResourceId> remaining = new HashSet<>(resources);
+        remaining.remove(resourceId);
+        return new Role(id, name, scope, Set.copyOf(remaining), registeredAt);
+    }
+
+    public Role withName(RoleName name) {
+        return new Role(id, name, scope, resources, registeredAt);
+    }
 }

@@ -12,6 +12,7 @@ import co.edu.uco.seguridad.shared.web.message.WebContractMessages;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -56,5 +57,14 @@ final class ProfileAdministrationController {
         return addRoleInteractor.execute(new AddRoleToProfileRawRequest(profileId, body.roleId()))
                 .map(response -> ResponseEntity.ok(ApiResponse.success("PROFILE_ROLE_ADDED",
                         WebContractMessages.successProfileRoleAdded(), response, context)));
+    }
+
+    @DeleteMapping("/{profileId}/roles/{roleId}")
+    Mono<ResponseEntity<ApiResponse<ProfileAdministrationWebResponse>>> removeRole(@PathVariable String profileId,
+            @PathVariable String roleId, ServerWebExchange exchange) {
+        RequestContext context = CorrelationWebFilter.context(exchange);
+        return addRoleInteractor.remove(new AddRoleToProfileRawRequest(profileId, roleId))
+                .map(response -> ResponseEntity.ok(ApiResponse.success("PROFILE_ROLE_REMOVED",
+                        "El rol fue retirado del perfil", response, context)));
     }
 }
