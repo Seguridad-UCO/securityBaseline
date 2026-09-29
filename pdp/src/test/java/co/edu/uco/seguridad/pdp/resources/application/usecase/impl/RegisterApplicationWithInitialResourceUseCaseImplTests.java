@@ -69,7 +69,9 @@ class RegisterApplicationWithInitialResourceUseCaseImplTests {
         RuntimeException failure = new RuntimeException("nombre reservado");
         RegisterApplicationUseCase registerApplication = request -> Mono.error(failure);
         RegisterProtectedResourceUseCase registerResource =
-                request -> { throw new AssertionError("must not reach resource registration"); };
+                request -> {
+                    throw new AssertionError("must not reach resource registration");
+                };
         RemoveApplicationUseCase removeApplication = neverCompensate();
         RegisterApplicationWithInitialResourceUseCaseImpl useCase = new RegisterApplicationWithInitialResourceUseCaseImpl(
                 registerApplication, registerResource, removeApplication);
@@ -124,6 +126,8 @@ class RegisterApplicationWithInitialResourceUseCaseImplTests {
     }
 
     private static RemoveApplicationUseCase neverCompensate() {
-        return id -> { throw new AssertionError("must not reach compensation"); };
+        return id -> {
+            throw new AssertionError("must not reach compensation");
+        };
     }
 }

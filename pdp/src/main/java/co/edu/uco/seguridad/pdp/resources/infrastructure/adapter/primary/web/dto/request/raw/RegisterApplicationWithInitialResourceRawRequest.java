@@ -6,5 +6,5 @@ package co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.dt
  * (ADR-018).
  */
 public record RegisterApplicationWithInitialResourceRawRequest(String name, String description, String baseUrl,
-        String resourcePath, String resourceMethod) {
+                                                               String resourcePath, String resourceMethod) {
 }

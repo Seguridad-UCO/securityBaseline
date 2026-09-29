@@ -6,7 +6,9 @@ import co.edu.uco.seguridad.pdp.roles.domain.model.RoleScopeLevel;
 import co.edu.uco.seguridad.pdp.roles.domain.rule.RoleScopeMustCoverResourceRule;
 import co.edu.uco.seguridad.pdp.roles.domain.rule.model.ResourceCoverage;
 
-/** R5 (INV-DAT-01): global cubre todo; tenant cubre sus aplicaciones; aplicación cubre solo la suya. */
+/**
+ * R5 (INV-DAT-01): global cubre todo; tenant cubre sus aplicaciones; aplicación cubre solo la suya.
+ */
 public final class RoleScopeMustCoverResourceRuleImpl implements RoleScopeMustCoverResourceRule {
 
     @Override

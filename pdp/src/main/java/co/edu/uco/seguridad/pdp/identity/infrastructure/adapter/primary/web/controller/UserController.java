@@ -9,21 +9,17 @@ import co.edu.uco.seguridad.shared.web.ApiResponse;
 import co.edu.uco.seguridad.shared.web.CorrelationWebFilter;
 import co.edu.uco.seguridad.shared.web.RequestContext;
 import co.edu.uco.seguridad.shared.web.message.WebContractMessages;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Objects;
 
-/** Adaptador primario del catálogo de usuarios. Operación administrativa. */
+/**
+ * Adaptador primario del catálogo de usuarios. Operación administrativa.
+ */
 @RestController
 @RequestMapping("/api/v1/users")
 final class UserController {
@@ -46,7 +42,7 @@ final class UserController {
 
     @PutMapping("/{id}/tenant")
     Mono<ResponseEntity<ApiResponse<UserWebResponse>>> assign(@PathVariable String id,
-            @RequestBody AssignTenantBodyRequest body, ServerWebExchange exchange) {
+                                                              @RequestBody AssignTenantBodyRequest body, ServerWebExchange exchange) {
         RequestContext context = CorrelationWebFilter.context(exchange);
         AssignTenantRawRequest raw = new AssignTenantRawRequest(id, body.tenantCode());
         return assignInteractor.execute(raw)

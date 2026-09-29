@@ -9,7 +9,9 @@ import reactor.core.publisher.Mono;
 import java.util.Map;
 import java.util.Objects;
 
-/** Define la tabla {@code profile_assignment}, siguiendo el patrón de {@code SurrealAssignmentSchemaInitializer}. */
+/**
+ * Define la tabla {@code profile_assignment}, siguiendo el patrón de {@code SurrealAssignmentSchemaInitializer}.
+ */
 public final class SurrealProfileAssignmentSchemaInitializer extends SurrealSchemaInitializer {
 
     private final SurrealDbClient client;

@@ -1,6 +1,7 @@
 package co.edu.uco.seguridad.pdp.resources.application.rule.validator;
 
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
+import co.edu.uco.seguridad.pdp.commons.model.ResourceId;
 import co.edu.uco.seguridad.pdp.resources.application.primaryport.request.ProtectedResourceLookup;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.ProtectedResourceMustExistValidatorImpl;
 import co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository.ProtectedResourceRepository;
@@ -9,7 +10,6 @@ import co.edu.uco.seguridad.pdp.resources.domain.exception.ProtectedResourceNotF
 import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
 import co.edu.uco.seguridad.pdp.resources.domain.rule.impl.ProtectedResourceMustExistRuleImpl;
-import co.edu.uco.seguridad.pdp.commons.model.ResourceId;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -47,7 +47,7 @@ class ProtectedResourceMustExistValidatorTests {
         return new ProtectedResourceRepository() {
             @Override
             public Mono<Boolean> existsByApplicationPathAndMethod(ApplicationId applicationId, ResourcePath path,
-                    HttpVerb method) {
+                                                                  HttpVerb method) {
                 return Mono.just(exists);
             }
 

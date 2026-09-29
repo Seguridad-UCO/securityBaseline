@@ -1,16 +1,13 @@
 package co.edu.uco.seguridad.pdp.identity.application.usecase.impl;
 
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
-import co.edu.uco.seguridad.pdp.identity.domain.exception.UserNotFoundException;
+import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.pdp.identity.application.primaryport.request.AssignTenantRequest;
 import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.SecurityUserRepository;
+import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;
+import co.edu.uco.seguridad.pdp.identity.domain.exception.UserNotFoundException;
 import co.edu.uco.seguridad.pdp.identity.domain.model.Email;
 import co.edu.uco.seguridad.pdp.identity.domain.model.ExternalIdentity;
-import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;
-import co.edu.uco.seguridad.pdp.commons.model.UserId;
-import co.edu.uco.seguridad.pdp.tenants.application.primaryport.response.TenantResponse;
-import co.edu.uco.seguridad.pdp.tenants.domain.model.TenantName;
-import co.edu.uco.seguridad.pdp.tenants.domain.model.TenantStatus;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -31,7 +28,8 @@ class AssignTenantUseCaseImplTests {
                 new Email("david@uco.edu"), "David", Instant.now());
         AssignTenantUseCaseImpl useCase = new AssignTenantUseCaseImpl(
                 tenantId -> Mono.empty(),
-                existence -> { },
+                existence -> {
+                },
                 repositoryWithUser(user));
 
         StepVerifier.create(useCase.execute(new AssignTenantRequest(user.id(), NEW_TENANT)))
@@ -44,7 +42,9 @@ class AssignTenantUseCaseImplTests {
         UserId missing = new UserId(UUID.randomUUID());
         AssignTenantUseCaseImpl useCase = new AssignTenantUseCaseImpl(
                 tenantId -> Mono.empty(),
-                existence -> { throw new UserNotFoundException(existence.userId()); },
+                existence -> {
+                    throw new UserNotFoundException(existence.userId());
+                },
                 repositoryWithUser(null));
 
         StepVerifier.create(useCase.execute(new AssignTenantRequest(missing, NEW_TENANT)))

@@ -8,21 +8,21 @@
 - **Fecha:** 2026-09-13
 - **Rama sugerida:** `feature/HU-010-saga-registro-aplicacion-recurso-inicial`
 - **Fuentes:**
-  - `pdp/docs/ai-harness/workspace/HU-010.md` (borrador original)
-  - `pdp/docs/criteria-compliance-matrix.md` (criterio 10, único no cumplido; confirma que
-    `ReactiveTransactionPort`/`SnapshotReactiveTransactionAdapter` existieron y se retiraron —
-    `RemoveApplicationUseCase` quedó de esa época, sin nadie que lo invoque)
-  - Decisiones tomadas interactivamente con Sebastián en esta sesión (ver §0)
-  - Código real leído antes de planificar: `RemoveApplicationUseCase.java` (su propio Javadoc ya
-    decía literalmente "se invoca cuando el registro de un recurso protegido en `resources` falla
-    después de que la aplicación ya fue creada" — confirma la dirección de esta historia),
-    `RegisterApplicationUseCase`/`RegisterApplicationRequest`/`ApplicationRegistrationResponse`
-    (applications, reutilizables sin cambio), `RegisterProtectedResourceUseCase`/`RegisterProtectedResourceRequest`/
-    `RegisteredProtectedResourceResponse` (resources, reutilizables sin cambio),
-    `resources/package-info.java` (ya depende de `applications :: rule`, `:: dto`, `:: exception` —
-    falta solo `:: usecase`, que `applications/application/usecase/package-info.java` **ya publica**
-    y nadie consume todavía), `AuthorizeUseCaseImpl.recordAudit` (patrón a espejar para "el fallo de
-    un paso secundario se loguea y no cambia el resultado ya decidido")
+    - `pdp/docs/ai-harness/workspace/HU-010.md` (borrador original)
+    - `pdp/docs/criteria-compliance-matrix.md` (criterio 10, único no cumplido; confirma que
+      `ReactiveTransactionPort`/`SnapshotReactiveTransactionAdapter` existieron y se retiraron —
+      `RemoveApplicationUseCase` quedó de esa época, sin nadie que lo invoque)
+    - Decisiones tomadas interactivamente con Sebastián en esta sesión (ver §0)
+    - Código real leído antes de planificar: `RemoveApplicationUseCase.java` (su propio Javadoc ya
+      decía literalmente "se invoca cuando el registro de un recurso protegido en `resources` falla
+      después de que la aplicación ya fue creada" — confirma la dirección de esta historia),
+      `RegisterApplicationUseCase`/`RegisterApplicationRequest`/`ApplicationRegistrationResponse`
+      (applications, reutilizables sin cambio), `RegisterProtectedResourceUseCase`/`RegisterProtectedResourceRequest`/
+      `RegisteredProtectedResourceResponse` (resources, reutilizables sin cambio),
+      `resources/package-info.java` (ya depende de `applications :: rule`, `:: dto`, `:: exception` —
+      falta solo `:: usecase`, que `applications/application/usecase/package-info.java` **ya publica**
+      y nadie consume todavía), `AuthorizeUseCaseImpl.recordAudit` (patrón a espejar para "el fallo de
+      un paso secundario se loguea y no cambia el resultado ya decidido")
 - **Criterios de la línea base que toca:** 1, 2, 9, 10, 11, 12, 13, 14, 21, 22
 
 ## 0. Hallazgos y decisiones tomadas antes de planificar
@@ -36,10 +36,10 @@ criterios lo confirma: hubo un `ReactiveTransactionPort` que se retiró en un re
 Cerrar el criterio 10 exige **construir por primera vez** el flujo combinado, no conectar uno
 existente. Esto se resolvió con tres decisiones:
 
-| # | Pregunta | Decisión |
-|---|---|---|
-| 1 | ¿Forma del endpoint nuevo? | Un tercer endpoint, aparte de los dos que ya existen: `POST /api/v1/applications/with-initial-resource`. `POST /api/v1/applications` y `POST /api/v1/applications/{id}/resources` quedan intactos — el frontend (`securityBaseline-fr`) y las pruebas E2E de HU-001/012/013/014 no se tocan |
-| 2 | ¿El recurso inicial es obligatorio? | Sí — es lo único que le da sentido al criterio 2 ("si el registro del recurso falla, la aplicación se elimina"): si fuera opcional, la mitad de las veces no habría nada que compensar |
+| # | Pregunta                                              | Decisión                                                                                                                                                                                                                                                                                         |
+|---|-------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1 | ¿Forma del endpoint nuevo?                            | Un tercer endpoint, aparte de los dos que ya existen: `POST /api/v1/applications/with-initial-resource`. `POST /api/v1/applications` y `POST /api/v1/applications/{id}/resources` quedan intactos — el frontend (`securityBaseline-fr`) y las pruebas E2E de HU-001/012/013/014 no se tocan      |
+| 2 | ¿El recurso inicial es obligatorio?                   | Sí — es lo único que le da sentido al criterio 2 ("si el registro del recurso falla, la aplicación se elimina"): si fuera opcional, la mitad de las veces no habría nada que compensar                                                                                                           |
 | 3 | ¿Cómo se registra una compensación que también falla? | Log estructurado (`LOG.error`), sin puerto ni tabla nuevos — mismo patrón que `AuthorizeUseCaseImpl.recordAudit`: "un fallo al auditar se registra por log, nunca cambia la decisión ya calculada". El cliente sigue viendo el error original del registro del recurso, no el de la compensación |
 
 ### Hallazgo — el nuevo endpoint vive en `resources`, no en `applications`
@@ -120,13 +120,13 @@ son datos legítimos de antes de que este flujo existiera).
 
 ## 2. Criterios de aceptación
 
-| # | Criterio | Resultado esperado |
-|---|---|---|
-| 1 | Camino feliz | `POST .../with-initial-resource` responde 201 con la aplicación (credencial en claro incluida, HU-012) y el recurso, ambos persistidos |
-| 2 | Compensación | Si `RegisterProtectedResourceUseCase` falla, la aplicación recién creada se elimina (`RemoveApplicationUseCase`) y el error del recurso llega al cliente con su código HTTP habitual (400/409) |
-| 3 | Compensación que también falla | Si además falla `RemoveApplicationUseCase`, se registra por log (`LOG.error`, con el `applicationId` huérfano) — el cliente sigue viendo el error original del recurso, nunca un 500 sin explicación ni silencio |
-| 4 | Sin transacción mágica | Ningún `TransactionPort`/puerto genérico nuevo: la compensación es una llamada explícita dentro del propio caso de uso, leíble de arriba a abajo |
-| 5 | Los dos endpoints existentes no cambian | `POST /api/v1/applications` y `POST /api/v1/applications/{id}/resources` siguen respondiendo exactamente igual que hoy (evidencia: la suite completa existente sigue en verde) |
+| # | Criterio                                | Resultado esperado                                                                                                                                                                                               |
+|---|-----------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1 | Camino feliz                            | `POST .../with-initial-resource` responde 201 con la aplicación (credencial en claro incluida, HU-012) y el recurso, ambos persistidos                                                                           |
+| 2 | Compensación                            | Si `RegisterProtectedResourceUseCase` falla, la aplicación recién creada se elimina (`RemoveApplicationUseCase`) y el error del recurso llega al cliente con su código HTTP habitual (400/409)                   |
+| 3 | Compensación que también falla          | Si además falla `RemoveApplicationUseCase`, se registra por log (`LOG.error`, con el `applicationId` huérfano) — el cliente sigue viendo el error original del recurso, nunca un 500 sin explicación ni silencio |
+| 4 | Sin transacción mágica                  | Ningún `TransactionPort`/puerto genérico nuevo: la compensación es una llamada explícita dentro del propio caso de uso, leíble de arriba a abajo                                                                 |
+| 5 | Los dos endpoints existentes no cambian | `POST /api/v1/applications` y `POST /api/v1/applications/{id}/resources` siguen respondiendo exactamente igual que hoy (evidencia: la suite completa existente sigue en verde)                                   |
 
 ## 3. Reglas de negocio
 
@@ -134,8 +134,8 @@ Ninguna regla pura nueva. Es orquestación de dos casos de uso ya validados por 
 (`RegisterApplicationRulesValidator`, `RegisterProtectedResourceRulesValidator`) — este caso de uso
 nuevo no decide nada de negocio, solo encadena y compensa.
 
-| # | Regla | Dónde vive | Puerto que trae el dato | Excepción → HTTP |
-|---|---|---|---|---|
+| # | Regla                                           | Dónde vive                                                                      | Puerto que trae el dato                   | Excepción → HTTP                                                                     |
+|---|-------------------------------------------------|---------------------------------------------------------------------------------|-------------------------------------------|--------------------------------------------------------------------------------------|
 | — | Si el segundo paso falla, el primero se deshace | `RegisterApplicationWithInitialResourceUseCaseImpl` (orquestación, no decisión) | `RemoveApplicationUseCase` (ya existente) | El error propagado sigue siendo el del segundo paso — su propio mapeo HTTP no cambia |
 
 ## 4. Modelo de dominio afectado
@@ -156,9 +156,9 @@ los repositorios que `RegisterApplicationUseCase`, `RegisterProtectedResourceUse
 
 ## 6. Endpoint
 
-| Verbo | Ruta | Código de éxito | Cuerpo de entrada | Cuerpo de salida |
-|---|---|---|---|---|
-| POST | `/api/v1/applications/with-initial-resource` | 201 | nombre/descripción/URL base de la aplicación + ruta/verbo del recurso inicial | Aplicación registrada (con credencial en claro, HU-012) + recurso registrado |
+| Verbo | Ruta                                         | Código de éxito | Cuerpo de entrada                                                             | Cuerpo de salida                                                             |
+|-------|----------------------------------------------|-----------------|-------------------------------------------------------------------------------|------------------------------------------------------------------------------|
+| POST  | `/api/v1/applications/with-initial-resource` | 201             | nombre/descripción/URL base de la aplicación + ruta/verbo del recurso inicial | Aplicación registrada (con credencial en claro, HU-012) + recurso registrado |
 
 - **Autorización:** BFF — requiere token, el inquilino sale del principal.
 - **Errores esperados:** cualquier excepción de `RegisterApplicationRulesValidator` (antes del
@@ -274,23 +274,23 @@ pdp/src/main/java/co/edu/uco/seguridad/
 
 ## 9. Casos de prueba esperados
 
-| Capa | Clase de prueba | Casos |
-|---|---|---|
-| `resources` application | `RegisterApplicationWithInitialResourceUseCaseImplTests` (nueva) | Camino feliz: ambos pasos completan, la respuesta combina `ApplicationRegistrationResponse` (con credencial) y `RegisteredProtectedResourceResponse`; el registro de aplicación falla (regla de `applications`) → ni el recurso ni la compensación se intentan (poison pill), el error de aplicación llega intacto; el registro del recurso falla (poison pill) → `RemoveApplicationUseCase` se invoca con el `ApplicationId` correcto (capturado) y el error **del recurso** (no uno nuevo) llega al cliente; el registro del recurso **y** la compensación fallan (ambos poison pill) → el cliente sigue recibiendo el error del recurso, no el de la compensación, y no se propaga silenciosamente (verificado por el propio `StepVerifier`, no por el log) |
-| `resources` infrastructure | `RegisterApplicationWithInitialResourceRequestMapperTests` (nueva) | Cada uno de los 5 campos crudos: ausente → `MissingRequestFieldException`; mal formado → `MalformedRequestFieldException`; válido → value objects correctos y `tenantId` del principal |
-| `resources` infrastructure | `ApplicationWithInitialResourceControllerTests` (nueva) | El controller delega al interactor y responde 201 con el cuerpo combinado |
-| `resources` infrastructure (E2E) | `ApplicationWithInitialResourceHttpTests` (nueva) | Camino feliz completo contra SurrealDB real: `POST .../with-initial-resource` → 201, `$.data.credential` existe, `$.data.resourcePath` coincide con lo enviado; una consulta posterior (`GET /api/v1/applications/{id}/resources`) confirma que el recurso quedó persistido de verdad. La compensación no se prueba aquí — no hay un rechazo de negocio real y reproducible tras crear la aplicación (ver Hallazgos) |
+| Capa                             | Clase de prueba                                                    | Casos                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+|----------------------------------|--------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `resources` application          | `RegisterApplicationWithInitialResourceUseCaseImplTests` (nueva)   | Camino feliz: ambos pasos completan, la respuesta combina `ApplicationRegistrationResponse` (con credencial) y `RegisteredProtectedResourceResponse`; el registro de aplicación falla (regla de `applications`) → ni el recurso ni la compensación se intentan (poison pill), el error de aplicación llega intacto; el registro del recurso falla (poison pill) → `RemoveApplicationUseCase` se invoca con el `ApplicationId` correcto (capturado) y el error **del recurso** (no uno nuevo) llega al cliente; el registro del recurso **y** la compensación fallan (ambos poison pill) → el cliente sigue recibiendo el error del recurso, no el de la compensación, y no se propaga silenciosamente (verificado por el propio `StepVerifier`, no por el log) |
+| `resources` infrastructure       | `RegisterApplicationWithInitialResourceRequestMapperTests` (nueva) | Cada uno de los 5 campos crudos: ausente → `MissingRequestFieldException`; mal formado → `MalformedRequestFieldException`; válido → value objects correctos y `tenantId` del principal                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `resources` infrastructure       | `ApplicationWithInitialResourceControllerTests` (nueva)            | El controller delega al interactor y responde 201 con el cuerpo combinado                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `resources` infrastructure (E2E) | `ApplicationWithInitialResourceHttpTests` (nueva)                  | Camino feliz completo contra SurrealDB real: `POST .../with-initial-resource` → 201, `$.data.credential` existe, `$.data.resourcePath` coincide con lo enviado; una consulta posterior (`GET /api/v1/applications/{id}/resources`) confirma que el recurso quedó persistido de verdad. La compensación no se prueba aquí — no hay un rechazo de negocio real y reproducible tras crear la aplicación (ver Hallazgos)                                                                                                                                                                                                                                                                                                                                           |
 
 ## 10. Trazabilidad
 
-| Fase | Estado | Fecha |
-|---|---|---|
-| Plan | ✅ Generado | 2026-09-13 |
-| Contrato aprobado (gate 1) | ⏳ Pendiente | |
-| Pruebas en rojo | ⏳ Pendiente | |
-| Implementación en verde | ⏳ Pendiente | |
-| Validación | ✅ Aprobada (2ª corrida, tras corregir el bloqueante de documentación) | 2026-09-13 |
-| Entrega (gate 2) | ⏳ Pendiente | |
+| Fase                       | Estado                                                                | Fecha      |
+|----------------------------|-----------------------------------------------------------------------|------------|
+| Plan                       | ✅ Generado                                                            | 2026-09-13 |
+| Contrato aprobado (gate 1) | ⏳ Pendiente                                                           |            |
+| Pruebas en rojo            | ⏳ Pendiente                                                           |            |
+| Implementación en verde    | ⏳ Pendiente                                                           |            |
+| Validación                 | ✅ Aprobada (2ª corrida, tras corregir el bloqueante de documentación) | 2026-09-13 |
+| Entrega (gate 2)           | ⏳ Pendiente                                                           |            |
 
 ## 11. Ambigüedades pendientes
 

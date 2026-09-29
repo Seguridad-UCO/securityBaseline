@@ -25,13 +25,15 @@ public final class AccessDecisionRawRequestMapper {
     private AccessDecisionRawRequestMapper() {
     }
 
-    /** Compatibilidad para los consumidores que todavía no han resuelto una identidad local. */
+    /**
+     * Compatibilidad para los consumidores que todavía no han resuelto una identidad local.
+     */
     public static InternalAccessRequest toRequest(AccessDecisionRawRequest raw, String subject) {
         return toRequest(raw, subject, Optional.empty());
     }
 
     public static InternalAccessRequest toRequest(AccessDecisionRawRequest raw, String subject,
-            Optional<UserId> subjectUserId) {
+                                                  Optional<UserId> subjectUserId) {
         String version = RequestFieldParser.requirePresent("version", raw.version());
         if (!"1".equals(version)) {
             throw new MalformedRequestFieldException("version", WebContractMessages.mustBeVersion1());

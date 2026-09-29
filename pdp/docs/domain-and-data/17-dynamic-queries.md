@@ -2,7 +2,6 @@
 
 [← Repositorios](16-repository-strategy.md) · [Siguiente: paginación →](18-pagination.md)
 
-
 ## Decisión arquitectónica
 
 La consulta se construye en tiempo de ejecución desde parámetros opcionales convertidos en

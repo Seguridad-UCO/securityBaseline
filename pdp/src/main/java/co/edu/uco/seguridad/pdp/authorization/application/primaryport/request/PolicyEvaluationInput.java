@@ -1,19 +1,23 @@
 package co.edu.uco.seguridad.pdp.authorization.application.primaryport.request;
 
-import co.edu.uco.seguridad.pdp.authorization.domain.model.PolicyReference;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-/** Hechos confiables, ya resueltos por el PDP, que se entregan al motor de políticas. */
+/**
+ * Hechos confiables, ya resueltos por el PDP, que se entregan al motor de políticas.
+ */
 public record PolicyEvaluationInput(String requestId, String correlationId, String subjectId, String subjectType,
-        String subjectTenantId, Set<String> roles, Set<String> profiles, Set<String> entitlements, Set<String> groups,
-        Map<String, Object> subjectAttributes, String tenantId, Map<String, Object> tenantAttributes,
-        String applicationId, Map<String, Object> applicationAttributes, String resourceType, String resourceId,
-        Map<String, Object> resourceAttributes, String action, List<Map<String, Object>> relationships,
-        Map<String, Object> context, Map<String, Object> security) {
+                                    String subjectTenantId, Set<String> roles, Set<String> profiles,
+                                    Set<String> entitlements, Set<String> groups,
+                                    Map<String, Object> subjectAttributes, String tenantId,
+                                    Map<String, Object> tenantAttributes,
+                                    String applicationId, Map<String, Object> applicationAttributes,
+                                    String resourceType, String resourceId,
+                                    Map<String, Object> resourceAttributes, String action,
+                                    List<Map<String, Object>> relationships,
+                                    Map<String, Object> context, Map<String, Object> security) {
 
     public PolicyEvaluationInput {
         Objects.requireNonNull(requestId);

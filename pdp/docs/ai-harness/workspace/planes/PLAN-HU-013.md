@@ -8,17 +8,17 @@
 - **Fecha:** 2026-09-13
 - **Rama sugerida:** `feature/HU-013-validacion-credencial-aplicacion`
 - **Fuentes:**
-  - `pdp/docs/ai-harness/workspace/HU-013.md` (historia dictada por Sebastián, dependiente de HU-012)
-  - Código real leído antes de planificar: `InternalAccessDecisionController.java` +
-    `InternalSecurityConfiguration.java` (HU-003 — el canal `/internal/v1/**` ya protege con mTLS +
-    evidencia JWT cualquier ruta bajo ese prefijo, sin tocar la cadena de seguridad para sumar una
-    ruta nueva), `ApplicationOwnerLookupValidator`/`Impl` (patrón de "resolver por id, rechazar con
-    una sola excepción si no existe"), `ApplicationRepository.java`, `CredentialHasher.java`,
-    `SharedPortsConfiguration.java`, `ApplicationNotFoundException.java` + `ApplicationsMessages.java`
-    (patrón de excepción + catálogo a espejar)
-  - Decisiones ya fijadas por la propia `HU-013.md`: canal interno mTLS (mismo que HU-003), el
-    endpoint recibe el secreto en texto plano, responde inválida sin distinguir "no existe" de
-    "no coincide", y no migra el `pep/starter` (eso es una historia del lado del PEP)
+    - `pdp/docs/ai-harness/workspace/HU-013.md` (historia dictada por Sebastián, dependiente de HU-012)
+    - Código real leído antes de planificar: `InternalAccessDecisionController.java` +
+      `InternalSecurityConfiguration.java` (HU-003 — el canal `/internal/v1/**` ya protege con mTLS +
+      evidencia JWT cualquier ruta bajo ese prefijo, sin tocar la cadena de seguridad para sumar una
+      ruta nueva), `ApplicationOwnerLookupValidator`/`Impl` (patrón de "resolver por id, rechazar con
+      una sola excepción si no existe"), `ApplicationRepository.java`, `CredentialHasher.java`,
+      `SharedPortsConfiguration.java`, `ApplicationNotFoundException.java` + `ApplicationsMessages.java`
+      (patrón de excepción + catálogo a espejar)
+    - Decisiones ya fijadas por la propia `HU-013.md`: canal interno mTLS (mismo que HU-003), el
+      endpoint recibe el secreto en texto plano, responde inválida sin distinguir "no existe" de
+      "no coincide", y no migra el `pep/starter` (eso es una historia del lado del PEP)
 - **Criterios de la línea base que toca:** 1, 2, 4, 9, 11, 12, 13, 14, 15, 21, 22
 
 ## 0. Hallazgos antes de planificar
@@ -69,18 +69,18 @@ rotar la credencial (HU-014).
 
 ## 2. Criterios de aceptación
 
-| # | Criterio | Resultado esperado |
-|---|---|---|
-| 1 | Credencial válida | El secreto correcto para una aplicación existente responde 200 con el `tenantId` de esa aplicación |
-| 2 | Credencial inválida por secreto incorrecto | Responde el mismo error que el caso 3, sin distinguir |
-| 3 | Credencial inválida por aplicación inexistente | Responde exactamente el mismo cuerpo/código que el caso 2 |
-| 4 | Canal interno, no BFF | La ruta vive bajo `/internal/v1/**`; no requiere ni acepta un token de usuario final |
-| 5 | Sin fuga de datos | La respuesta de éxito solo trae `tenantId` — nunca el hash, nunca el secreto, nunca otros campos de `Application` |
+| # | Criterio                                       | Resultado esperado                                                                                                |
+|---|------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|
+| 1 | Credencial válida                              | El secreto correcto para una aplicación existente responde 200 con el `tenantId` de esa aplicación                |
+| 2 | Credencial inválida por secreto incorrecto     | Responde el mismo error que el caso 3, sin distinguir                                                             |
+| 3 | Credencial inválida por aplicación inexistente | Responde exactamente el mismo cuerpo/código que el caso 2                                                         |
+| 4 | Canal interno, no BFF                          | La ruta vive bajo `/internal/v1/**`; no requiere ni acepta un token de usuario final                              |
+| 5 | Sin fuga de datos                              | La respuesta de éxito solo trae `tenantId` — nunca el hash, nunca el secreto, nunca otros campos de `Application` |
 
 ## 3. Reglas de negocio
 
-| # | Regla | Dónde vive (VO / Rule) | Puerto que trae el dato | Excepción → HTTP |
-|---|---|---|---|---|
+| #  | Regla                                                                                           | Dónde vive (VO / Rule)                                                     | Puerto que trae el dato                                                                                  | Excepción → HTTP                              |
+|----|-------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------|-----------------------------------------------|
 | C1 | La credencial (aplicación + secreto) debe ser válida — existe y el secreto coincide con su hash | `applications/domain/rule/ApplicationCredentialMustBeValidRule` (síncrona) | `ApplicationRepository.findCredentialHashById` + `CredentialHasher.matches` (resueltos por el validador) | `InvalidApplicationCredentialException` → 400 |
 
 Ninguna otra regla nueva: no hay unicidad que verificar, no hay estado de tenant que consultar (a
@@ -96,8 +96,8 @@ Ninguno nuevo. El secreto en tránsito sigue siendo `String` (mismo criterio que
 
 ### "Hecho ya resuelto" de la regla
 
-| Registro | Vive en | Campos |
-|---|---|---|
+| Registro                        | Vive en                           | Campos                                       |
+|---------------------------------|-----------------------------------|----------------------------------------------|
 | `ApplicationCredentialValidity` | `applications/domain/rule/model/` | `ApplicationId applicationId, boolean valid` |
 
 ## 5. Persistencia
@@ -110,9 +110,9 @@ en el puerto existente:
 
 ## 6. Endpoint
 
-| Verbo | Ruta | Código de éxito | Cuerpo de entrada | Cuerpo de salida |
-|---|---|---|---|---|
-| POST | `/internal/v1/applications/{applicationId}/credential-validations` | 200 | `{secret}` | `{tenantId}` (plano, sin `ApiResponse` — mismo criterio D6 de HU-003: es un canal máquina-a-máquina) |
+| Verbo | Ruta                                                               | Código de éxito | Cuerpo de entrada | Cuerpo de salida                                                                                     |
+|-------|--------------------------------------------------------------------|-----------------|-------------------|------------------------------------------------------------------------------------------------------|
+| POST  | `/internal/v1/applications/{applicationId}/credential-validations` | 200             | `{secret}`        | `{tenantId}` (plano, sin `ApiResponse` — mismo criterio D6 de HU-003: es un canal máquina-a-máquina) |
 
 - **Autorización:** canal interno — mTLS + evidencia JWT, heredado automáticamente de
   `InternalSecurityConfiguration` (comodín `/internal/v1/**`). Sin token de usuario final.
@@ -237,25 +237,25 @@ pdp/src/main/java/co/edu/uco/seguridad/
 
 ## 9. Casos de prueba esperados
 
-| Capa | Clase de prueba | Casos |
-|---|---|---|
-| `applications` domain | `ApplicationCredentialMustBeValidRuleImplTests` (nueva) | `valid=true` no lanza; `valid=false` lanza `InvalidApplicationCredentialException` |
-| `applications` application | `ValidateApplicationCredentialUseCaseImplTests` (nueva) | secreto correcto para aplicación existente devuelve su `tenantId`; secreto incorrecto lanza `InvalidApplicationCredentialException` (fake `CredentialHasher.matches` devuelve `false`); aplicación inexistente lanza la **misma** excepción (fake `findCredentialHashById` devuelve `Mono.empty()`, nunca se llega a invocar `matches` — poison-pill) |
-| `applications` infrastructure | `ValidateApplicationCredentialRequestMapperTests` (nueva) | `applicationId` ausente → `MissingRequestFieldException`; mal formado → `MalformedRequestFieldException`; válido → `ApplicationId` correcto; `secret` pasa tal cual sin transformar |
-| `applications` infrastructure | `ApplicationCredentialValidationResponseMapperTests` (nueva) | `toResponse` aplana el `TenantId` a `String` |
-| `applications` infrastructure | `InternalApplicationCredentialControllerTests` (nueva) | delega al interactor con `applicationId` del path (no del cuerpo, si el cuerpo llegase a traerlo) y responde 200 con el cuerpo plano — mismo presupuesto que `ApplicationControllerTests` |
-| `applications` infrastructure (E2E) | `InternalApplicationCredentialHttpTests` (nueva, `@SpringBootTest` + mTLS como `PdpTlsIntegrationTests`/`ApplicationHttpTests`) | registra una aplicación (reutilizando HU-012), valida con el secreto correcto → 200 + `tenantId` correcto; valida con un secreto incorrecto → 400 `INVALID_APPLICATION_CREDENTIAL`; valida contra un `applicationId` que no existe → mismo 400, mismo código |
+| Capa                                | Clase de prueba                                                                                                                 | Casos                                                                                                                                                                                                                                                                                                                                                 |
+|-------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `applications` domain               | `ApplicationCredentialMustBeValidRuleImplTests` (nueva)                                                                         | `valid=true` no lanza; `valid=false` lanza `InvalidApplicationCredentialException`                                                                                                                                                                                                                                                                    |
+| `applications` application          | `ValidateApplicationCredentialUseCaseImplTests` (nueva)                                                                         | secreto correcto para aplicación existente devuelve su `tenantId`; secreto incorrecto lanza `InvalidApplicationCredentialException` (fake `CredentialHasher.matches` devuelve `false`); aplicación inexistente lanza la **misma** excepción (fake `findCredentialHashById` devuelve `Mono.empty()`, nunca se llega a invocar `matches` — poison-pill) |
+| `applications` infrastructure       | `ValidateApplicationCredentialRequestMapperTests` (nueva)                                                                       | `applicationId` ausente → `MissingRequestFieldException`; mal formado → `MalformedRequestFieldException`; válido → `ApplicationId` correcto; `secret` pasa tal cual sin transformar                                                                                                                                                                   |
+| `applications` infrastructure       | `ApplicationCredentialValidationResponseMapperTests` (nueva)                                                                    | `toResponse` aplana el `TenantId` a `String`                                                                                                                                                                                                                                                                                                          |
+| `applications` infrastructure       | `InternalApplicationCredentialControllerTests` (nueva)                                                                          | delega al interactor con `applicationId` del path (no del cuerpo, si el cuerpo llegase a traerlo) y responde 200 con el cuerpo plano — mismo presupuesto que `ApplicationControllerTests`                                                                                                                                                             |
+| `applications` infrastructure (E2E) | `InternalApplicationCredentialHttpTests` (nueva, `@SpringBootTest` + mTLS como `PdpTlsIntegrationTests`/`ApplicationHttpTests`) | registra una aplicación (reutilizando HU-012), valida con el secreto correcto → 200 + `tenantId` correcto; valida con un secreto incorrecto → 400 `INVALID_APPLICATION_CREDENTIAL`; valida contra un `applicationId` que no existe → mismo 400, mismo código                                                                                          |
 
 ## 10. Trazabilidad
 
-| Fase | Estado | Fecha |
-|---|---|---|
-| Plan | ✅ Generado | 2026-09-13 |
-| Contrato aprobado (gate 1) | ⏳ Pendiente | |
-| Pruebas en rojo | ⏳ Pendiente | |
-| Implementación en verde | ⏳ Pendiente | |
-| Validación | ✅ Aprobado — ver `reportes/REPORTE-HU-013.md` | 2026-09-13 |
-| Entrega (gate 2) | ⏳ Pendiente | |
+| Fase                       | Estado                                        | Fecha      |
+|----------------------------|-----------------------------------------------|------------|
+| Plan                       | ✅ Generado                                    | 2026-09-13 |
+| Contrato aprobado (gate 1) | ⏳ Pendiente                                   |            |
+| Pruebas en rojo            | ⏳ Pendiente                                   |            |
+| Implementación en verde    | ⏳ Pendiente                                   |            |
+| Validación                 | ✅ Aprobado — ver `reportes/REPORTE-HU-013.md` | 2026-09-13 |
+| Entrega (gate 2)           | ⏳ Pendiente                                   |            |
 
 ## 11. Ambigüedades pendientes
 

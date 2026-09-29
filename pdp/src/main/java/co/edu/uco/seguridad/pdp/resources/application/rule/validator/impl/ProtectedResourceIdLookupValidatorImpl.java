@@ -8,6 +8,13 @@ import reactor.core.publisher.Mono;
 
 public final class ProtectedResourceIdLookupValidatorImpl implements ProtectedResourceIdLookupValidator {
     private final ProtectedResourceRepository repository;
-    public ProtectedResourceIdLookupValidatorImpl(ProtectedResourceRepository repository) { this.repository=repository; }
-    @Override public Mono<ResourceId> execute(ProtectedResourceLookup lookup) { return repository.findIdByApplicationPathAndMethod(lookup.applicationId(), lookup.path(), lookup.method()); }
+
+    public ProtectedResourceIdLookupValidatorImpl(ProtectedResourceRepository repository) {
+        this.repository = repository;
+    }
+
+    @Override
+    public Mono<ResourceId> execute(ProtectedResourceLookup lookup) {
+        return repository.findIdByApplicationPathAndMethod(lookup.applicationId(), lookup.path(), lookup.method());
+    }
 }

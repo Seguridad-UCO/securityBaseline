@@ -8,12 +8,12 @@
 - **Fecha:** 2026-09-12
 - **Rama sugerida:** `feature/HU-008-identidad-bff-roles-opa`
 - **Fuentes:**
-  - `PLAN-HU-006.md` §0 — el hallazgo que abrió esta historia ("HU-008 — identidad de usuario final
-    en el canal interno", ahora acotada al canal BFF, ver §0 abajo)
-  - Código real: `PdpPrincipal`, `SecurityContext`, `LocalUserPrincipal`, `AccessRequest`,
-    `AuthorizeUseCaseImpl`, `AuthorizeRequestMapper`, `AuthorizeInteractorImpl`,
-    `ResolveActiveRolesUseCase`/`ActiveRolesResponse` (ya existían, ver hallazgo 2 de §0),
-    `RoleRepository.findById`, `OpaSubject`, `OpaPolicyDecisionAdapter`
+    - `PLAN-HU-006.md` §0 — el hallazgo que abrió esta historia ("HU-008 — identidad de usuario final
+      en el canal interno", ahora acotada al canal BFF, ver §0 abajo)
+    - Código real: `PdpPrincipal`, `SecurityContext`, `LocalUserPrincipal`, `AccessRequest`,
+      `AuthorizeUseCaseImpl`, `AuthorizeRequestMapper`, `AuthorizeInteractorImpl`,
+      `ResolveActiveRolesUseCase`/`ActiveRolesResponse` (ya existían, ver hallazgo 2 de §0),
+      `RoleRepository.findById`, `OpaSubject`, `OpaPolicyDecisionAdapter`
 - **Criterios de la línea base que toca:** 1, 2, 4, 9, 11, 12, 21, 22
 
 ## 0. Hallazgos antes de planificar
@@ -79,24 +79,24 @@ es lo único que el catálogo del PDP modela hoy (HU-004/HU-005).
 
 ## 2. Criterios de aceptación
 
-| # | Criterio | Resultado esperado |
-|---|---|---|
-| 1 | Un login por el canal BFF deja `PdpPrincipal.userId()` presente | Prueba directa sobre `SecurityContext`/el mapeo desde `LocalUserPrincipal` |
-| 2 | `AuthorizeUseCaseImpl`, con un usuario que tiene un rol vigente en esa aplicación, llama a `PolicyDecisionPort.execute` con `AccessRequest.subjectRoles()` conteniendo el nombre de ese rol | `AuthorizeUseCaseImplTests` con fakes de `ActiveRoleNamesLookupValidator` |
-| 3 | Sin `subjectUserId` (canal interno, o BFF sin sesión resuelta), `subjectRoles` queda vacío y no se intenta ninguna resolución | `AuthorizeUseCaseImplTests` — poison pill sobre `ActiveRoleNamesLookupValidator` |
-| 4 | Un rol activo que ya no existe en el catálogo se omite del resultado, sin error | `RoleNamesLookupValidatorImplTests` |
-| 5 | `OpaPolicyDecisionAdapter` envía `subject.roles` con los nombres resueltos | `OpaPolicyDecisionAdapterTests` — inspecciona el cuerpo POST capturado |
-| 6 | El canal interno (`EvaluateInternalAccessUseCaseImpl`) sigue construyendo `AccessRequest` sin `subjectUserId`, comportamiento idéntico a hoy | Prueba existente de ese caso de uso, sin cambios de expectativa |
-| 7 | `AuthorizationHttpTests`/`InternalSecurityChainIntegrationTests` (e2e) siguen en verde sin cambiar sus aserciones | Regresión — ver sección 9 |
+| # | Criterio                                                                                                                                                                                    | Resultado esperado                                                               |
+|---|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
+| 1 | Un login por el canal BFF deja `PdpPrincipal.userId()` presente                                                                                                                             | Prueba directa sobre `SecurityContext`/el mapeo desde `LocalUserPrincipal`       |
+| 2 | `AuthorizeUseCaseImpl`, con un usuario que tiene un rol vigente en esa aplicación, llama a `PolicyDecisionPort.execute` con `AccessRequest.subjectRoles()` conteniendo el nombre de ese rol | `AuthorizeUseCaseImplTests` con fakes de `ActiveRoleNamesLookupValidator`        |
+| 3 | Sin `subjectUserId` (canal interno, o BFF sin sesión resuelta), `subjectRoles` queda vacío y no se intenta ninguna resolución                                                               | `AuthorizeUseCaseImplTests` — poison pill sobre `ActiveRoleNamesLookupValidator` |
+| 4 | Un rol activo que ya no existe en el catálogo se omite del resultado, sin error                                                                                                             | `RoleNamesLookupValidatorImplTests`                                              |
+| 5 | `OpaPolicyDecisionAdapter` envía `subject.roles` con los nombres resueltos                                                                                                                  | `OpaPolicyDecisionAdapterTests` — inspecciona el cuerpo POST capturado           |
+| 6 | El canal interno (`EvaluateInternalAccessUseCaseImpl`) sigue construyendo `AccessRequest` sin `subjectUserId`, comportamiento idéntico a hoy                                                | Prueba existente de ese caso de uso, sin cambios de expectativa                  |
+| 7 | `AuthorizationHttpTests`/`InternalSecurityChainIntegrationTests` (e2e) siguen en verde sin cambiar sus aserciones                                                                           | Regresión — ver sección 9                                                        |
 
 ## 3. Reglas de negocio
 
 Ninguna regla nueva de dominio. Todo lo nuevo son **validadores de enriquecimiento** (consultan y
 traducen, no rechazan) — misma categoría que `ApplicationOwnerLookupValidator` de HU-003.
 
-| # | Regla | Dónde vive | Puerto que trae el dato | Excepción → HTTP |
-|---|---|---|---|---|
-| — | (ninguna nueva) | — | — | — |
+| # | Regla           | Dónde vive | Puerto que trae el dato | Excepción → HTTP |
+|---|-----------------|------------|-------------------------|------------------|
+| — | (ninguna nueva) | —          | —                       | —                |
 
 ## 4. Modelo de dominio afectado
 
@@ -233,29 +233,29 @@ shared/message/RequiredArgumentMessages.java                         [M] — con
 > intencional (ver `sb-testing`, "al cambiar la firma de un puerto") — no son casos nuevos que
 > inventar, son los mismos tests con dos argumentos más.
 
-| Capa | Clase de prueba | Casos |
-|---|---|---|
-| application (roles) | `RoleNamesLookupValidatorImplTests` | resuelve nombres de un conjunto de ids existentes; omite un id que no existe sin lanzar; conjunto vacío → conjunto vacío |
-| application (authorization) | `ActiveRoleNamesLookupValidatorImplTests` | delega en `ResolveActiveRolesUseCase` y `RoleNamesLookupValidator` en cadena; conjunto vacío de `assignments` → conjunto vacío de nombres |
-| application (authorization, existente) | `AuthorizeUseCaseImplTests` | camino feliz ahora arma `AccessRequest` con `subjectRoles` no vacío cuando `subjectUserId` está presente; con `subjectUserId` ausente, poison pill sobre `rolesLookup` (nunca se llama); los casos de rechazo ya existentes (aplicación/recurso) siguen sin alcanzar `rolesLookup` — otro poison pill |
-| infrastructure (adaptador, existente) | `OpaPolicyDecisionAdapterTests` | el caso "sends the input wrapped..." ahora también afirma `input.subject.roles` con los nombres del `AccessRequest` de prueba |
-| infrastructure (mapper) | `AuthorizeRequestMapperTests` (si no existe, créala; si existe, extiéndela) | `subjectUserId` se propaga tal cual al `AccessRequest` |
-| shared (seguridad) | `SecurityContextTests`/equivalente | `LocalUserPrincipal` → `PdpPrincipal.userId()` presente con el valor correcto; `Jwt`/`OidcUser` → ausente |
-| e2e (regresión, existente) | `AuthorizationHttpTests`, `InternalSecurityChainIntegrationTests` | sin casos nuevos — deben seguir en verde con las mismas aserciones; confirman que enriquecer con roles no cambia el resultado cuando OPA sigue sin política (`DENY`/`NO_APPLICABLE_POLICY`) |
+| Capa                                   | Clase de prueba                                                             | Casos                                                                                                                                                                                                                                                                                                 |
+|----------------------------------------|-----------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| application (roles)                    | `RoleNamesLookupValidatorImplTests`                                         | resuelve nombres de un conjunto de ids existentes; omite un id que no existe sin lanzar; conjunto vacío → conjunto vacío                                                                                                                                                                              |
+| application (authorization)            | `ActiveRoleNamesLookupValidatorImplTests`                                   | delega en `ResolveActiveRolesUseCase` y `RoleNamesLookupValidator` en cadena; conjunto vacío de `assignments` → conjunto vacío de nombres                                                                                                                                                             |
+| application (authorization, existente) | `AuthorizeUseCaseImplTests`                                                 | camino feliz ahora arma `AccessRequest` con `subjectRoles` no vacío cuando `subjectUserId` está presente; con `subjectUserId` ausente, poison pill sobre `rolesLookup` (nunca se llama); los casos de rechazo ya existentes (aplicación/recurso) siguen sin alcanzar `rolesLookup` — otro poison pill |
+| infrastructure (adaptador, existente)  | `OpaPolicyDecisionAdapterTests`                                             | el caso "sends the input wrapped..." ahora también afirma `input.subject.roles` con los nombres del `AccessRequest` de prueba                                                                                                                                                                         |
+| infrastructure (mapper)                | `AuthorizeRequestMapperTests` (si no existe, créala; si existe, extiéndela) | `subjectUserId` se propaga tal cual al `AccessRequest`                                                                                                                                                                                                                                                |
+| shared (seguridad)                     | `SecurityContextTests`/equivalente                                          | `LocalUserPrincipal` → `PdpPrincipal.userId()` presente con el valor correcto; `Jwt`/`OidcUser` → ausente                                                                                                                                                                                             |
+| e2e (regresión, existente)             | `AuthorizationHttpTests`, `InternalSecurityChainIntegrationTests`           | sin casos nuevos — deben seguir en verde con las mismas aserciones; confirman que enriquecer con roles no cambia el resultado cuando OPA sigue sin política (`DENY`/`NO_APPLICABLE_POLICY`)                                                                                                           |
 
 Presupuesto estimado: **12-16 pruebas nuevas**, más los ajustes mecánicos de firma en los archivos
 existentes que ya construían `AccessRequest`/`PdpPrincipal` a mano.
 
 ## 10. Trazabilidad
 
-| Fase | Estado | Fecha |
-|---|---|---|
-| Plan | ✅ Generado | 2026-09-12 |
-| Contrato aprobado (gate 1) | ✅ Aprobado | 2026-09-12 |
-| Pruebas en rojo | ✅ Rojo confirmado (478 pruebas, 5 errores por `UnsupportedOperationException`) | 2026-09-12 |
-| Implementación en verde | ✅ Verde (478 pruebas, 0 fallos) | 2026-09-12 |
-| Validación | ✅ APROBADO | 2026-09-12 |
-| Entrega (gate 2) | ⏳ Pendiente | |
+| Fase                       | Estado                                                                         | Fecha      |
+|----------------------------|--------------------------------------------------------------------------------|------------|
+| Plan                       | ✅ Generado                                                                     | 2026-09-12 |
+| Contrato aprobado (gate 1) | ✅ Aprobado                                                                     | 2026-09-12 |
+| Pruebas en rojo            | ✅ Rojo confirmado (478 pruebas, 5 errores por `UnsupportedOperationException`) | 2026-09-12 |
+| Implementación en verde    | ✅ Verde (478 pruebas, 0 fallos)                                                | 2026-09-12 |
+| Validación                 | ✅ APROBADO                                                                     | 2026-09-12 |
+| Entrega (gate 2)           | ⏳ Pendiente                                                                    |            |
 
 ## 11. Ambigüedades pendientes
 

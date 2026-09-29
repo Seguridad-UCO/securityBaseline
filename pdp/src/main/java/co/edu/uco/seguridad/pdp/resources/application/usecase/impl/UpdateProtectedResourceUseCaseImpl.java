@@ -10,8 +10,13 @@ import reactor.core.publisher.Mono;
 
 public final class UpdateProtectedResourceUseCaseImpl implements UpdateProtectedResourceUseCase {
     private final ProtectedResourceRepository repository;
-    public UpdateProtectedResourceUseCaseImpl(ProtectedResourceRepository repository) { this.repository = repository; }
-    @Override public Mono<RegisteredProtectedResourceResponse> execute(UpdateProtectedResourceRequest input) {
+
+    public UpdateProtectedResourceUseCaseImpl(ProtectedResourceRepository repository) {
+        this.repository = repository;
+    }
+
+    @Override
+    public Mono<RegisteredProtectedResourceResponse> execute(UpdateProtectedResourceRequest input) {
         return repository.findByIdForTenant(input.resourceId(), input.tenantId())
                 .switchIfEmpty(Mono.error(() -> new ProtectedResourceNotFoundException(input.resourceId())))
                 .flatMap(current -> repository.existsByApplicationPathAndMethod(current.applicationId(), input.path(), input.method())

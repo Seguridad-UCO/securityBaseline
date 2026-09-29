@@ -10,11 +10,7 @@ import co.edu.uco.seguridad.shared.web.RequestContext;
 import co.edu.uco.seguridad.shared.web.message.WebContractMessages;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -33,7 +29,7 @@ final class ApplicationAdministrationController {
     private final ApplicationCredentialRotationInteractor rotationInteractor;
 
     ApplicationAdministrationController(ApplicationRemovalInteractor removalInteractor,
-            ApplicationCredentialRotationInteractor rotationInteractor) {
+                                        ApplicationCredentialRotationInteractor rotationInteractor) {
         this.removalInteractor = Objects.requireNonNull(removalInteractor);
         this.rotationInteractor = Objects.requireNonNull(rotationInteractor);
     }
@@ -48,7 +44,7 @@ final class ApplicationAdministrationController {
 
     @PostMapping("/{applicationId}/credential-rotations")
     Mono<ResponseEntity<ApiResponse<AdministeredApplicationWebResponse>>> rotate(@PathVariable String applicationId,
-            ServerWebExchange exchange) {
+                                                                                 ServerWebExchange exchange) {
         RequestContext context = CorrelationWebFilter.context(exchange);
         return rotationInteractor.execute(new ApplicationAdministrationRawRequest(applicationId))
                 .map(response -> ResponseEntity.status(HttpStatus.CREATED)

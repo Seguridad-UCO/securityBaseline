@@ -31,7 +31,7 @@ public final class RegisterApplicationWithFirstAdministratorInteractorImpl
     private final SubjectUserIdLookupValidator subjectUserIdLookup;
 
     public RegisterApplicationWithFirstAdministratorInteractorImpl(RegisterApplicationWithFirstAdministratorUseCase useCase,
-            SubjectUserIdLookupValidator subjectUserIdLookup) {
+                                                                   SubjectUserIdLookupValidator subjectUserIdLookup) {
         this.useCase = Objects.requireNonNull(useCase, RequiredArgumentMessages.REGISTER_APPLICATION_USE_CASE);
         this.subjectUserIdLookup = Objects.requireNonNull(subjectUserIdLookup,
                 RequiredArgumentMessages.SUBJECT_USER_ID_LOOKUP_VALIDATOR);

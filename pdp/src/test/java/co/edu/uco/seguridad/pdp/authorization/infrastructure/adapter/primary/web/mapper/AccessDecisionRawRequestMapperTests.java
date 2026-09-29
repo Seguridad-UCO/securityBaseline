@@ -23,7 +23,7 @@ class AccessDecisionRawRequestMapperTests {
     private static final String SUBJECT = "evidence-subject";
 
     private static AccessDecisionRawRequest rawWith(String version, String applicationName, String path,
-            String action, String timestamp) {
+                                                    String action, String timestamp) {
         return new AccessDecisionRawRequest(version, "req-1", "corr-1", timestamp,
                 new RawApplication(applicationName, "prod"), new RawResource(path, action),
                 new RawContext(action, "HTTP"));

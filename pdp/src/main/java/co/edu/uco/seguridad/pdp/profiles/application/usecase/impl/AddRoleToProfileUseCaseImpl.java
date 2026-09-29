@@ -10,7 +10,9 @@ import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 
-/** Transforma lo que el validador ya encontró (Profile.withRole) y lo guarda. No decide nada. */
+/**
+ * Transforma lo que el validador ya encontró (Profile.withRole) y lo guarda. No decide nada.
+ */
 public final class AddRoleToProfileUseCaseImpl implements AddRoleToProfileUseCase {
 
     private final AddRoleToProfileRulesValidator rules;

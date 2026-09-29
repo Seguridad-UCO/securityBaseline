@@ -1,10 +1,14 @@
 package co.edu.uco.seguridad.pep.enforcement.infrastructure.config;
 
-import co.edu.uco.seguridad.pep.commons.*;
+import co.edu.uco.seguridad.pep.commons.AccessDecision;
+import co.edu.uco.seguridad.pep.commons.AccessRequest;
+import co.edu.uco.seguridad.pep.commons.EnforcementFailure;
+import co.edu.uco.seguridad.pep.commons.IdentityEvidence;
 import co.edu.uco.seguridad.pep.enforcement.application.port.primary.dto.request.EnforceAccessRequest;
 import co.edu.uco.seguridad.pep.enforcement.infrastructure.properties.PdpClientProperties;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import io.netty.handler.ssl.*;
+import io.netty.handler.ssl.ClientAuth;
+import io.netty.handler.ssl.SslContextBuilder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import reactor.core.publisher.Mono;
@@ -13,17 +17,23 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.net.URI;
 import java.nio.file.Path;
-import java.time.*;
-import java.util.*;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class PdpTlsIntegrationTests {
-    @TempDir Path directory;
+    @TempDir
+    Path directory;
 
-    @Test void mtls_validates_client_certificate_ca_and_server_hostname() throws Exception {
+    @Test
+    void mtls_validates_client_certificate_ca_and_server_hostname() throws Exception {
         Path cert = directory.resolve("cert.pem"), key = directory.resolve("key.pem");
         Process generation = new ProcessBuilder("openssl", "req", "-x509", "-newkey", "rsa:2048",
                 "-nodes", "-keyout", key.toString(), "-out", cert.toString(), "-days", "1", "-subj", "/CN=localhost")

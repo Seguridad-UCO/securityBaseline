@@ -1,10 +1,6 @@
 package co.edu.uco.seguridad.pdp.roles.application.usecase.impl;
 
-import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.model.ResourceId;
-import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
-import co.edu.uco.seguridad.pdp.commons.model.RoleId;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.pdp.roles.application.primaryport.request.GrantResourceRequest;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.GrantResourceRulesValidator;
 import co.edu.uco.seguridad.pdp.roles.application.secondaryport.repository.RoleRepository;

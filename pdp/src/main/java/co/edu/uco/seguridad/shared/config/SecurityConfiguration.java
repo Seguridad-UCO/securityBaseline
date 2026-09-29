@@ -1,27 +1,18 @@
 package co.edu.uco.seguridad.shared.config;
 
-import co.edu.uco.seguridad.shared.security.ApiAccessDeniedHandler;
-import co.edu.uco.seguridad.shared.security.ApiAuthenticationEntryPoint;
-import co.edu.uco.seguridad.shared.security.CorsProperties;
-import co.edu.uco.seguridad.shared.security.JwtSecurityProperties;
-import co.edu.uco.seguridad.shared.security.KeycloakSessionProperties;
+import co.edu.uco.seguridad.shared.security.*;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.Primary;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtClaimValidator;
-import org.springframework.security.oauth2.jwt.JwtIssuerValidator;
-import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
-import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
-import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
+import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.context.WebSessionServerSecurityContextRepository;
 import org.springframework.security.web.server.csrf.CookieServerCsrfTokenRepository;
@@ -29,17 +20,16 @@ import org.springframework.security.web.server.csrf.CsrfWebFilter;
 import org.springframework.security.web.server.csrf.ServerCsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.server.util.matcher.AndServerWebExchangeMatcher;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
-import org.springframework.web.server.session.CookieWebSessionIdResolver;
 import org.springframework.util.StringUtils;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
+import org.springframework.web.server.session.CookieWebSessionIdResolver;
 import tools.jackson.databind.ObjectMapper;
 
+import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import javax.crypto.spec.SecretKeySpec;
-import reactor.core.publisher.Mono;
 
 /**
  * Frontera del canal BFF, reactiva (ADR-018, ADR-020). Único lugar **para ese canal** donde se
@@ -57,8 +47,8 @@ class SecurityConfiguration {
 
     @Bean
     SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http, @Qualifier("jwtDecoder") ReactiveJwtDecoder jwtDecoder,
-            ApiAuthenticationEntryPoint entryPoint, ApiAccessDeniedHandler accessDeniedHandler,
-            CorsConfigurationSource corsConfigurationSource) {
+                                                  ApiAuthenticationEntryPoint entryPoint, ApiAccessDeniedHandler accessDeniedHandler,
+                                                  CorsConfigurationSource corsConfigurationSource) {
         CookieServerCsrfTokenRepository csrf = CookieServerCsrfTokenRepository.withHttpOnlyFalse();
         csrf.setCookiePath("/");
         return http
@@ -83,7 +73,9 @@ class SecurityConfiguration {
                 .build();
     }
 
-    /** CSRF solo aplica a la autenticación BFF por cookie, no a Bearer tokens servidor-a-servidor. */
+    /**
+     * CSRF solo aplica a la autenticación BFF por cookie, no a Bearer tokens servidor-a-servidor.
+     */
     private static ServerWebExchangeMatcher bffSessionRequest() {
         return exchange -> exchange.getRequest().getCookies().containsKey("SECURITY_BASELINE_SESSION")
                 ? ServerWebExchangeMatcher.MatchResult.match()

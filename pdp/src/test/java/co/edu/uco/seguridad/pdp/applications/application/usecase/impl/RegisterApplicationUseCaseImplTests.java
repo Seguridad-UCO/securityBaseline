@@ -1,19 +1,14 @@
 package co.edu.uco.seguridad.pdp.applications.application.usecase.impl;
 
 import co.edu.uco.seguridad.pdp.applications.application.primaryport.request.RegisterApplicationRequest;
-import co.edu.uco.seguridad.pdp.applications.application.secondaryport.repository.ApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.RegisterApplicationRulesValidator;
+import co.edu.uco.seguridad.pdp.applications.application.secondaryport.repository.ApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
 import co.edu.uco.seguridad.pdp.applications.domain.ApplicationCriteria;
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
-import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.shared.port.CredentialHasher;
 import org.junit.jupiter.api.Test;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -68,7 +63,7 @@ class RegisterApplicationUseCaseImplTests {
 
             @Override
             public Mono<Void> updateCredentialHash(ApplicationId applicationId,
-                    co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash credentialHash) {
+                                                   co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash credentialHash) {
                 throw new UnsupportedOperationException();
             }
 
@@ -143,7 +138,7 @@ class RegisterApplicationUseCaseImplTests {
 
             @Override
             public Mono<Void> updateCredentialHash(ApplicationId applicationId,
-                    co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash credentialHash) {
+                                                   co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash credentialHash) {
                 throw new UnsupportedOperationException();
             }
 
@@ -212,7 +207,7 @@ class RegisterApplicationUseCaseImplTests {
 
             @Override
             public Mono<Void> updateCredentialHash(ApplicationId applicationId,
-                    co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash credentialHash) {
+                                                   co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash credentialHash) {
                 throw new UnsupportedOperationException();
             }
 
@@ -234,7 +229,9 @@ class RegisterApplicationUseCaseImplTests {
         RegisterApplicationRulesValidator alwaysRejects = dto -> Mono.error(rejection);
         RegisterApplicationUseCaseImpl useCase = new RegisterApplicationUseCaseImpl(
                 alwaysRejects, repository, UUID::randomUUID, () -> NOW,
-                () -> { throw new AssertionError("must not generate a secret when the rules reject the request"); },
+                () -> {
+                    throw new AssertionError("must not generate a secret when the rules reject the request");
+                },
                 new CredentialHasher() {
                     @Override
                     public String hash(String plaintext) {

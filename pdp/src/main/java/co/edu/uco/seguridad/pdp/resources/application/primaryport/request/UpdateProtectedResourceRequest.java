@@ -6,4 +6,5 @@ import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
 
 public record UpdateProtectedResourceRequest(TenantId tenantId, ResourceId resourceId, ResourcePath path,
-        HttpVerb method) { }
+                                             HttpVerb method) {
+}

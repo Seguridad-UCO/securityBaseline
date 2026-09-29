@@ -3,60 +3,14 @@ package co.edu.uco.seguridad.pdp.assignments.infrastructure.config;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationMustExistForTenantValidator;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationOwnerLookupValidator;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RegisterApplicationUseCase;
-import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.AssignProfileRulesValidator;
-import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.ApplicationDeletionDependencyValidator;
-import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.AssignRoleRulesValidator;
-import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.AssignmentApplicationLookupValidator;
-import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.RevokeAssignmentRulesValidator;
-import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.RevokeProfileAssignmentRulesValidator;
-import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.RoleDeletionDependencyValidator;
-import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.ProfileDeletionDependencyValidator;
-import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.impl.AssignProfileRulesValidatorImpl;
-import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.impl.ApplicationDeletionDependencyValidatorImpl;
-import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.impl.AssignRoleRulesValidatorImpl;
-import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.ProfileAssignmentApplicationLookupValidator;
-import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.impl.AssignmentApplicationLookupValidatorImpl;
-import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.impl.ProfileAssignmentApplicationLookupValidatorImpl;
-import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.impl.RevokeAssignmentRulesValidatorImpl;
-import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.impl.RevokeProfileAssignmentRulesValidatorImpl;
-import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.impl.RoleDeletionDependencyValidatorImpl;
-import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.impl.ProfileDeletionDependencyValidatorImpl;
+import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.*;
+import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.impl.*;
 import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository.AssignmentRepository;
 import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository.ProfileAssignmentRepository;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.AssignApplicationAdministratorUseCase;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.AssignProfileUseCase;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.AssignRoleUseCase;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.ListApplicationAdministratorsUseCase;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.ListAssignmentsUseCase;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.ListProfileAssignmentsUseCase;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.RegisterApplicationWithFirstAdministratorUseCase;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.RemoveApplicationAdministratorUseCase;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.ResolveActiveRolesUseCase;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.ResolveAuthorizationSubjectFactsUseCase;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.RevokeAssignmentUseCase;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.RevokeProfileAssignmentUseCase;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.AssignApplicationAdministratorUseCaseImpl;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.AssignProfileUseCaseImpl;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.AssignRoleUseCaseImpl;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.ListApplicationAdministratorsUseCaseImpl;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.ListAssignmentsUseCaseImpl;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.ListProfileAssignmentsUseCaseImpl;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.RegisterApplicationWithFirstAdministratorUseCaseImpl;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.RemoveApplicationAdministratorUseCaseImpl;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.ResolveActiveRolesUseCaseImpl;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.ResolveAuthorizationSubjectFactsUseCaseImpl;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.RevokeAssignmentUseCaseImpl;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.RevokeProfileAssignmentUseCaseImpl;
-import co.edu.uco.seguridad.pdp.assignments.domain.rule.AssignmentMustExistForTenantRule;
-import co.edu.uco.seguridad.pdp.assignments.domain.rule.AssignmentMustNotDuplicateActiveRule;
-import co.edu.uco.seguridad.pdp.assignments.domain.rule.LastAdministratorMustNotBeRevokedRule;
-import co.edu.uco.seguridad.pdp.assignments.domain.rule.ProfileAssignmentMustExistForTenantRule;
-import co.edu.uco.seguridad.pdp.assignments.domain.rule.ProfileAssignmentMustNotDuplicateActiveRule;
-import co.edu.uco.seguridad.pdp.assignments.domain.rule.impl.AssignmentMustExistForTenantRuleImpl;
-import co.edu.uco.seguridad.pdp.assignments.domain.rule.impl.AssignmentMustNotDuplicateActiveRuleImpl;
-import co.edu.uco.seguridad.pdp.assignments.domain.rule.impl.LastAdministratorMustNotBeRevokedRuleImpl;
-import co.edu.uco.seguridad.pdp.assignments.domain.rule.impl.ProfileAssignmentMustExistForTenantRuleImpl;
-import co.edu.uco.seguridad.pdp.assignments.domain.rule.impl.ProfileAssignmentMustNotDuplicateActiveRuleImpl;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.*;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.*;
+import co.edu.uco.seguridad.pdp.assignments.domain.rule.*;
+import co.edu.uco.seguridad.pdp.assignments.domain.rule.impl.*;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.interactor.AssignApplicationAdministratorInteractor;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.interactor.ListAssignmentsInteractor;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.interactor.ListProfileAssignmentsInteractor;
@@ -71,12 +25,12 @@ import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.per
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.schema.SurrealProfileAssignmentSchemaInitializer;
 import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserIdLookupValidator;
 import co.edu.uco.seguridad.pdp.identity.application.rule.validator.UserMustExistValidator;
-import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileRolesLookupValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileNamesLookupValidator;
+import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileRolesLookupValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleLookupByNameInScopeValidator;
-import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleScopeMustCoverApplicationValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleNamesLookupValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleResourcesLookupValidator;
+import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleScopeMustCoverApplicationValidator;
 import co.edu.uco.seguridad.pdp.roles.application.usecase.DefineRoleUseCase;
 import co.edu.uco.seguridad.shared.cache.DistributedCachePort;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
@@ -87,7 +41,9 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/** La única clase consciente de Spring del módulo. */
+/**
+ * La única clase consciente de Spring del módulo.
+ */
 @Configuration
 public class AssignmentsConfiguration {
 
@@ -124,16 +80,16 @@ public class AssignmentsConfiguration {
 
     @Bean
     AssignRoleRulesValidator assignRoleRulesValidator(UserMustExistValidator userMustExist,
-            ApplicationMustExistForTenantValidator applicationMustExist,
-            RoleScopeMustCoverApplicationValidator roleScopeMustCoverApplication,
-            AssignmentMustNotDuplicateActiveRule mustNotDuplicate, AssignmentRepository repository, TimeProvider time) {
+                                                      ApplicationMustExistForTenantValidator applicationMustExist,
+                                                      RoleScopeMustCoverApplicationValidator roleScopeMustCoverApplication,
+                                                      AssignmentMustNotDuplicateActiveRule mustNotDuplicate, AssignmentRepository repository, TimeProvider time) {
         return new AssignRoleRulesValidatorImpl(userMustExist, applicationMustExist, roleScopeMustCoverApplication,
                 mustNotDuplicate, repository, time);
     }
 
     @Bean
     RevokeAssignmentRulesValidator revokeAssignmentRulesValidator(AssignmentRepository repository,
-            AssignmentMustExistForTenantRule mustExist) {
+                                                                  AssignmentMustExistForTenantRule mustExist) {
         return new RevokeAssignmentRulesValidatorImpl(repository, mustExist);
     }
 
@@ -141,19 +97,19 @@ public class AssignmentsConfiguration {
     // para que "authorization" pueda gatear su revocación sin conocer AssignmentRepository.
     @Bean
     AssignmentApplicationLookupValidator assignmentApplicationLookupValidator(AssignmentRepository repository,
-            AssignmentMustExistForTenantRule mustExist) {
+                                                                              AssignmentMustExistForTenantRule mustExist) {
         return new AssignmentApplicationLookupValidatorImpl(repository, mustExist);
     }
 
     @Bean
     AssignRoleUseCase assignRoleUseCase(AssignRoleRulesValidator rules, AssignmentRepository repository,
-            IdentifierGenerator identifiers, TimeProvider time, DistributedCachePort cache) {
+                                        IdentifierGenerator identifiers, TimeProvider time, DistributedCachePort cache) {
         return new AssignRoleUseCaseImpl(rules, repository, identifiers, time, cache);
     }
 
     @Bean
     RevokeAssignmentUseCase revokeAssignmentUseCase(RevokeAssignmentRulesValidator rules, AssignmentRepository repository,
-            TimeProvider time, TokenRevocationPort revocation, DistributedCachePort cache) {
+                                                    TimeProvider time, TokenRevocationPort revocation, DistributedCachePort cache) {
         return new RevokeAssignmentUseCaseImpl(rules, repository, time, revocation, cache);
     }
 
@@ -163,15 +119,33 @@ public class AssignmentsConfiguration {
     }
 
     @Bean
+    ListApplicationRoleAssignmentsPageUseCase listApplicationRoleAssignmentsPageUseCase(AssignmentRepository repository) {
+        return new ListApplicationRoleAssignmentsPageUseCaseImpl(repository);
+    }
+
+    @Bean
+    ListApplicationAdministratorsPageUseCase listApplicationAdministratorsPageUseCase(
+            RoleLookupByNameInScopeValidator roles, AssignmentRepository repository, TimeProvider time) {
+        return new ListApplicationAdministratorsPageUseCaseImpl(roles, repository, time);
+    }
+
+    @Bean
+    ReadApplicationAssignmentCountsUseCase readApplicationAssignmentCountsUseCase(
+            AssignmentRepository assignments, ProfileAssignmentRepository profileAssignments,
+            RoleLookupByNameInScopeValidator roles, TimeProvider time) {
+        return new ReadApplicationAssignmentCountsUseCaseImpl(assignments, profileAssignments, roles, time);
+    }
+
+    @Bean
     ResolveActiveRolesUseCase resolveActiveRolesUseCase(AssignmentRepository repository, TimeProvider time,
-            DistributedCachePort cache) {
+                                                        DistributedCachePort cache) {
         return new ResolveActiveRolesUseCaseImpl(repository, time, cache);
     }
 
     @Bean
     ResolveAuthorizationSubjectFactsUseCase resolveAuthorizationSubjectFactsUseCase(AssignmentRepository assignments,
-            ProfileAssignmentRepository profiles, ProfileRolesLookupValidator profileRoles, ProfileNamesLookupValidator profileNames,
-            RoleNamesLookupValidator roleNames, RoleResourcesLookupValidator resources, TimeProvider time) {
+                                                                                    ProfileAssignmentRepository profiles, ProfileRolesLookupValidator profileRoles, ProfileNamesLookupValidator profileNames,
+                                                                                    RoleNamesLookupValidator roleNames, RoleResourcesLookupValidator resources, TimeProvider time) {
         return new ResolveAuthorizationSubjectFactsUseCaseImpl(assignments, profiles, profileRoles, profileNames, roleNames, resources, time);
     }
 
@@ -187,8 +161,13 @@ public class AssignmentsConfiguration {
     }
 
     @Bean
+    ListApplicationProfileAssignmentsPageUseCase listApplicationProfileAssignmentsPageUseCase(ProfileAssignmentRepository repository) {
+        return new ListApplicationProfileAssignmentsPageUseCaseImpl(repository);
+    }
+
+    @Bean
     ProfileDeletionDependencyValidator profileDeletionDependencyValidator(ProfileAssignmentRepository repository,
-            TimeProvider time) {
+                                                                          TimeProvider time) {
         return new ProfileDeletionDependencyValidatorImpl(repository, time);
     }
 
@@ -209,14 +188,14 @@ public class AssignmentsConfiguration {
 
     @Bean
     AssignProfileRulesValidator assignProfileRulesValidator(ProfileRolesLookupValidator profileRolesLookup,
-            ProfileAssignmentRepository repository, ProfileAssignmentMustNotDuplicateActiveRule mustNotDuplicate,
-            TimeProvider time) {
+                                                            ProfileAssignmentRepository repository, ProfileAssignmentMustNotDuplicateActiveRule mustNotDuplicate,
+                                                            TimeProvider time) {
         return new AssignProfileRulesValidatorImpl(profileRolesLookup, repository, mustNotDuplicate, time);
     }
 
     @Bean
     RevokeProfileAssignmentRulesValidator revokeProfileAssignmentRulesValidator(ProfileAssignmentRepository repository,
-            ProfileAssignmentMustExistForTenantRule mustExist) {
+                                                                                ProfileAssignmentMustExistForTenantRule mustExist) {
         return new RevokeProfileAssignmentRulesValidatorImpl(repository, mustExist);
     }
 
@@ -230,13 +209,13 @@ public class AssignmentsConfiguration {
 
     @Bean
     AssignProfileUseCase assignProfileUseCase(AssignProfileRulesValidator rules, AssignRoleUseCase assignRoleUseCase,
-            ProfileAssignmentRepository repository, IdentifierGenerator identifiers, TimeProvider time) {
+                                              ProfileAssignmentRepository repository, IdentifierGenerator identifiers, TimeProvider time) {
         return new AssignProfileUseCaseImpl(rules, assignRoleUseCase, repository, identifiers, time);
     }
 
     @Bean
     RevokeProfileAssignmentUseCase revokeProfileAssignmentUseCase(RevokeProfileAssignmentRulesValidator rules,
-            RevokeAssignmentUseCase revokeAssignmentUseCase, ProfileAssignmentRepository repository, TimeProvider time) {
+                                                                  RevokeAssignmentUseCase revokeAssignmentUseCase, ProfileAssignmentRepository repository, TimeProvider time) {
         return new RevokeProfileAssignmentUseCaseImpl(rules, revokeAssignmentUseCase, repository, time);
     }
 

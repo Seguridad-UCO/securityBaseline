@@ -36,7 +36,7 @@ final class ProtectedResourceController {
 
     @GetMapping
     Mono<ResponseEntity<ApiResponse<List<ProtectedResourceWebResponse>>>> list(@PathVariable String applicationId,
-            ServerWebExchange exchange) {
+                                                                               ServerWebExchange exchange) {
         RequestContext context = CorrelationWebFilter.context(exchange);
         return listInteractor.execute(applicationId)
                 .map(response -> ResponseEntity.ok(ApiResponse.success("PROTECTED_RESOURCES_LISTED",

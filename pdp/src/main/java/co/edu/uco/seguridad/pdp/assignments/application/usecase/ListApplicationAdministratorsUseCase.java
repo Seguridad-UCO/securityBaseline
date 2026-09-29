@@ -6,7 +6,9 @@ import co.edu.uco.seguridad.shared.contract.ReactiveOperation;
 
 import java.util.List;
 
-/** Lista los administradores activos (asignaciones del rol {@code ADMIN}) de una aplicación (HU-020). */
+/**
+ * Lista los administradores activos (asignaciones del rol {@code ADMIN}) de una aplicación (HU-020).
+ */
 public interface ListApplicationAdministratorsUseCase
         extends ReactiveOperation<ListApplicationAdministratorsRequest, List<AssignmentResponse>> {
 }

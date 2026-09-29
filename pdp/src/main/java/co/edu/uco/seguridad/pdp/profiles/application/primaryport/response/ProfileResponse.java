@@ -11,7 +11,8 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.Set;
 
-public record ProfileResponse(ProfileId id, ProfileName name, RoleScope scope, Set<RoleId> roles, Instant registeredAt) {
+public record ProfileResponse(ProfileId id, ProfileName name, RoleScope scope, Set<RoleId> roles,
+                              Instant registeredAt) {
 
     public ProfileResponse {
         Objects.requireNonNull(id, RequiredArgumentMessages.PROFILE_ID);

@@ -14,7 +14,9 @@ import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 
-/** Construye un Profile desde cero: por eso IdentifierGenerator y TimeProvider van en la firma desde el primer día. */
+/**
+ * Construye un Profile desde cero: por eso IdentifierGenerator y TimeProvider van en la firma desde el primer día.
+ */
 public final class DefineProfileUseCaseImpl implements DefineProfileUseCase {
 
     private final DefineProfileRulesValidator rules;
@@ -23,7 +25,7 @@ public final class DefineProfileUseCaseImpl implements DefineProfileUseCase {
     private final TimeProvider time;
 
     public DefineProfileUseCaseImpl(DefineProfileRulesValidator rules, ProfileRepository repository,
-            IdentifierGenerator identifiers, TimeProvider time) {
+                                    IdentifierGenerator identifiers, TimeProvider time) {
         this.rules = Objects.requireNonNull(rules, RequiredArgumentMessages.DEFINE_PROFILE_RULES_VALIDATOR);
         this.repository = Objects.requireNonNull(repository, RequiredArgumentMessages.PROFILE_REPOSITORY);
         this.identifiers = Objects.requireNonNull(identifiers, RequiredArgumentMessages.IDENTIFIER_GENERATOR);

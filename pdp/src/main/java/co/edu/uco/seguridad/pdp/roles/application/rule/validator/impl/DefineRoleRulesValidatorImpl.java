@@ -26,7 +26,7 @@ public final class DefineRoleRulesValidatorImpl implements DefineRoleRulesValida
     private final RoleRepository repository;
 
     public DefineRoleRulesValidatorImpl(ApplicationMustExistForTenantValidator applicationMustExist,
-            RoleNameMustBeUniqueInScopeRule nameMustBeUnique, RoleRepository repository) {
+                                        RoleNameMustBeUniqueInScopeRule nameMustBeUnique, RoleRepository repository) {
         this.applicationMustExist = Objects.requireNonNull(applicationMustExist,
                 RequiredArgumentMessages.APPLICATION_EXISTS_VALIDATOR);
         this.nameMustBeUnique = Objects.requireNonNull(nameMustBeUnique, RequiredArgumentMessages.ROLE_NAME_UNIQUE_RULE);

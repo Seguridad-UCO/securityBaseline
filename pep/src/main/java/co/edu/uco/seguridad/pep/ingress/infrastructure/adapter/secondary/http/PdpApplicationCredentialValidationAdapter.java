@@ -12,7 +12,9 @@ import reactor.core.publisher.Mono;
 import java.util.Map;
 import java.util.Objects;
 
-/** HTTP adapter for HU-013. The PDP remains the sole owner of application secrets. */
+/**
+ * HTTP adapter for HU-013. The PDP remains the sole owner of application secrets.
+ */
 public final class PdpApplicationCredentialValidationAdapter implements ApplicationCredentialValidationPort {
     private static final Logger LOG = LoggerFactory.getLogger(PdpApplicationCredentialValidationAdapter.class);
     private final WebClient client;

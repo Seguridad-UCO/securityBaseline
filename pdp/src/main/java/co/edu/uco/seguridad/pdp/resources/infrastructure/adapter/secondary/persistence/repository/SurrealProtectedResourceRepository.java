@@ -1,11 +1,9 @@
 package co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.persistence.repository;
 
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.ResourceId;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository.ProtectedResourceRepository;
-import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.ProtectedResource;
+import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.persistence.entity.ProtectedResourceEntity;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.persistence.mapper.ProtectedResourcePersistenceMapper;
@@ -34,7 +32,7 @@ public final class SurrealProtectedResourceRepository implements ProtectedResour
 
     @Override
     public Mono<Boolean> existsByApplicationPathAndMethod(ApplicationId applicationId, ResourcePath path,
-            HttpVerb method) {
+                                                          HttpVerb method) {
         return client.execute(
                         "SELECT id FROM %s WHERE applicationId = $applicationId AND path = $path AND method = $method LIMIT 1;"
                                 .formatted(ProtectedResourceSchema.TABLE),
@@ -46,7 +44,7 @@ public final class SurrealProtectedResourceRepository implements ProtectedResour
     @Override
     public Mono<Boolean> existsByApplicationId(ApplicationId applicationId) {
         return client.execute("SELECT id FROM %s WHERE applicationId = $applicationId LIMIT 1;"
-                        .formatted(ProtectedResourceSchema.TABLE),
+                                .formatted(ProtectedResourceSchema.TABLE),
                         Map.of("applicationId", applicationId.value().toString()))
                 .map(results -> !results.get(0).isEmpty());
     }
@@ -62,13 +60,29 @@ public final class SurrealProtectedResourceRepository implements ProtectedResour
     }
 
     @Override
+    public Mono<ResultPage<ProtectedResource>> findPageByApplication(ApplicationId applicationId, PageWindow window) {
+        String query = """
+                SELECT * FROM %1$s WHERE applicationId = $applicationId ORDER BY registeredAt DESC LIMIT %2$d START %3$d;
+                SELECT count() FROM %1$s WHERE applicationId = $applicationId GROUP ALL;
+                """.formatted(ProtectedResourceSchema.TABLE, window.limit(), window.offset());
+        return client.execute(query, Map.of("applicationId", applicationId.value().toString()))
+                .map(results -> ResultPage.of(results.get(0).valueStream().map(SurrealProtectedResourceRepository::toDomain).toList(),
+                        results.get(1).isEmpty() ? 0L : results.get(1).get(0).path("count").asLong(0L), window));
+    }
+
+    @Override public Mono<Long> countByApplication(ApplicationId applicationId) {
+        return client.execute("SELECT count() FROM %s WHERE applicationId = $applicationId GROUP ALL;".formatted(ProtectedResourceSchema.TABLE), Map.of("applicationId", applicationId.value().toString()))
+                .map(r -> r.get(0).isEmpty() ? 0L : r.get(0).get(0).path("count").asLong(0));
+    }
+
+    @Override
     public Mono<ProtectedResource> save(ProtectedResource resource) {
         return client.execute(
                         """
-                        CREATE type::record('%s', $id) SET \
-                        applicationId = $applicationId, tenantId = $tenantId, path = $path, method = $method, \
-                        registeredAt = <datetime>$registeredAt;\
-                        """.formatted(ProtectedResourceSchema.TABLE),
+                                CREATE type::record('%s', $id) SET \
+                                applicationId = $applicationId, tenantId = $tenantId, path = $path, method = $method, \
+                                registeredAt = <datetime>$registeredAt;\
+                                """.formatted(ProtectedResourceSchema.TABLE),
                         Map.of(
                                 "id", resource.id().value().toString(),
                                 "applicationId", resource.applicationId().value().toString(),
@@ -90,7 +104,7 @@ public final class SurrealProtectedResourceRepository implements ProtectedResour
     @Override
     public Mono<ProtectedResource> findByIdForTenant(ResourceId resourceId, TenantId tenantId) {
         return client.execute("SELECT * FROM type::record('%s', $id) WHERE tenantId = $tenantId;"
-                        .formatted(ProtectedResourceSchema.TABLE),
+                                .formatted(ProtectedResourceSchema.TABLE),
                         Map.of("id", resourceId.value().toString(), "tenantId", tenantId.value()))
                 .flatMap(results -> results.get(0).isEmpty() ? Mono.empty() : Mono.just(toDomain(results.get(0).get(0))));
     }
@@ -98,7 +112,7 @@ public final class SurrealProtectedResourceRepository implements ProtectedResour
     @Override
     public Mono<ProtectedResource> update(ProtectedResource resource) {
         return client.execute("UPDATE type::record('%s', $id) SET path = $path, method = $method;"
-                        .formatted(ProtectedResourceSchema.TABLE),
+                                .formatted(ProtectedResourceSchema.TABLE),
                         Map.of("id", resource.id().value().toString(), "path", resource.path().value(),
                                 "method", resource.method().name()))
                 .thenReturn(resource);

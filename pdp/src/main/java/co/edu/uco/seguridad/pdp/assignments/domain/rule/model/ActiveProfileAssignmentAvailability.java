@@ -7,9 +7,11 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
 
-/** Hecho ya resuelto para ProfileAssignmentMustNotDuplicateActiveRule. */
+/**
+ * Hecho ya resuelto para ProfileAssignmentMustNotDuplicateActiveRule.
+ */
 public record ActiveProfileAssignmentAvailability(UserId userId, ApplicationId applicationId, ProfileId profileId,
-        boolean taken) {
+                                                  boolean taken) {
 
     public ActiveProfileAssignmentAvailability {
         Objects.requireNonNull(userId, RequiredArgumentMessages.USER_ID);

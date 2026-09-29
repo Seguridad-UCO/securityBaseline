@@ -14,7 +14,9 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Espejo de AssignmentTests, con el conjunto de Assignment generadas que hace posible la cascada. */
+/**
+ * Espejo de AssignmentTests, con el conjunto de Assignment generadas que hace posible la cascada.
+ */
 class ProfileAssignmentTests {
 
     private static final ProfileAssignmentId ID = new ProfileAssignmentId(UUID.randomUUID());

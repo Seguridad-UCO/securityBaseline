@@ -20,7 +20,9 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Lee el principal, delega en ListProfilesUseCase y proyecta ResultPage a PageResponse. */
+/**
+ * Lee el principal, delega en ListProfilesUseCase y proyecta ResultPage a PageResponse.
+ */
 class ListProfilesInteractorImplTests {
 
     private static final String TENANT = "universidad-uco";

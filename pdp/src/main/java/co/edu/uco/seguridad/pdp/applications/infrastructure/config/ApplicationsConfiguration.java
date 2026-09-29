@@ -1,34 +1,18 @@
 package co.edu.uco.seguridad.pdp.applications.infrastructure.config;
 
+import co.edu.uco.seguridad.pdp.applications.application.rule.validator.*;
+import co.edu.uco.seguridad.pdp.applications.application.rule.validator.impl.*;
 import co.edu.uco.seguridad.pdp.applications.application.secondaryport.repository.ApplicationRepository;
+import co.edu.uco.seguridad.pdp.applications.application.usecase.*;
+import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.*;
+import co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationCredentialMustBeValidRule;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationMustExistForTenantRule;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationNameMustBeUniqueForTenantRule;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationNameMustNotBeReservedRule;
+import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationCredentialMustBeValidRuleImpl;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationMustExistForTenantRuleImpl;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationNameMustBeUniqueForTenantRuleImpl;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationNameMustNotBeReservedRuleImpl;
-import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationMustExistForTenantValidator;
-import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationNameLookupValidator;
-import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationOwnerLookupValidator;
-import co.edu.uco.seguridad.pdp.applications.application.rule.validator.impl.ApplicationMustExistForTenantValidatorImpl;
-import co.edu.uco.seguridad.pdp.applications.application.rule.validator.impl.ApplicationNameLookupValidatorImpl;
-import co.edu.uco.seguridad.pdp.applications.application.rule.validator.impl.ApplicationOwnerLookupValidatorImpl;
-import co.edu.uco.seguridad.pdp.applications.application.rule.validator.RegisterApplicationRulesValidator;
-import co.edu.uco.seguridad.pdp.applications.application.rule.validator.impl.RegisterApplicationRulesValidatorImpl;
-import co.edu.uco.seguridad.pdp.applications.application.usecase.ListApplicationsUseCase;
-import co.edu.uco.seguridad.pdp.applications.application.usecase.RegisterApplicationUseCase;
-import co.edu.uco.seguridad.pdp.applications.application.usecase.RemoveApplicationUseCase;
-import co.edu.uco.seguridad.pdp.applications.application.usecase.RotateApplicationCredentialUseCase;
-import co.edu.uco.seguridad.pdp.applications.application.usecase.ValidateApplicationCredentialUseCase;
-import co.edu.uco.seguridad.pdp.applications.application.usecase.UpdateApplicationUseCase;
-import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.ListApplicationsUseCaseImpl;
-import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.RegisterApplicationUseCaseImpl;
-import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.RemoveApplicationUseCaseImpl;
-import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.RotateApplicationCredentialUseCaseImpl;
-import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.ValidateApplicationCredentialUseCaseImpl;
-import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.UpdateApplicationUseCaseImpl;
-import co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationCredentialMustBeValidRule;
-import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationCredentialMustBeValidRuleImpl;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.ListApplicationsInteractor;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.ValidateApplicationCredentialInteractor;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.impl.ListApplicationsInteractorImpl;
@@ -122,7 +106,7 @@ public class ApplicationsConfiguration {
 
     @Bean
     ApplicationMustExistForTenantValidator applicationMustExistForTenantValidator(ApplicationRepository repository,
-                                                                                 ApplicationMustExistForTenantRule mustExist) {
+                                                                                  ApplicationMustExistForTenantRule mustExist) {
         return new ApplicationMustExistForTenantValidatorImpl(repository, mustExist);
     }
 
@@ -130,6 +114,11 @@ public class ApplicationsConfiguration {
     @Bean
     ApplicationOwnerLookupValidator applicationOwnerLookupValidator(ApplicationRepository repository) {
         return new ApplicationOwnerLookupValidatorImpl(repository);
+    }
+
+    @Bean
+    ApplicationDetailsLookupValidator applicationDetailsLookupValidator(ApplicationRepository repository) {
+        return new ApplicationDetailsLookupValidatorImpl(repository);
     }
 
     // Canal interno del PEP: resuelve el UUID interno desde el nombre configurable de la aplicación.
@@ -159,7 +148,7 @@ public class ApplicationsConfiguration {
     // HU-014 — rotación de credencial de aplicación.
     @Bean
     RotateApplicationCredentialUseCase rotateApplicationCredentialUseCase(ApplicationRepository repository,
-            ApplicationMustExistForTenantRule mustExist, SecretGenerator secretGenerator, CredentialHasher hasher) {
+                                                                          ApplicationMustExistForTenantRule mustExist, SecretGenerator secretGenerator, CredentialHasher hasher) {
         return new RotateApplicationCredentialUseCaseImpl(repository, mustExist, secretGenerator, hasher);
     }
 

@@ -3,8 +3,8 @@ package co.edu.uco.seguridad.pdp.applications.application.usecase.impl;
 import co.edu.uco.seguridad.pdp.applications.application.primaryport.request.RegisterApplicationRequest;
 import co.edu.uco.seguridad.pdp.applications.application.primaryport.response.ApplicationRegistrationResponse;
 import co.edu.uco.seguridad.pdp.applications.application.primaryport.response.RegisteredApplicationResponse;
-import co.edu.uco.seguridad.pdp.applications.application.secondaryport.repository.ApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.RegisterApplicationRulesValidator;
+import co.edu.uco.seguridad.pdp.applications.application.secondaryport.repository.ApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RegisterApplicationUseCase;
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash;
@@ -41,8 +41,8 @@ public final class RegisterApplicationUseCaseImpl implements RegisterApplication
     private final CredentialHasher hasher;
 
     public RegisterApplicationUseCaseImpl(RegisterApplicationRulesValidator rules,
-            ApplicationRepository repository, IdentifierGenerator identifiers, TimeProvider time,
-            SecretGenerator secretGenerator, CredentialHasher hasher) {
+                                          ApplicationRepository repository, IdentifierGenerator identifiers, TimeProvider time,
+                                          SecretGenerator secretGenerator, CredentialHasher hasher) {
         this.rules = Objects.requireNonNull(rules, RequiredArgumentMessages.RULES_VALIDATOR);
         this.repository = Objects.requireNonNull(repository, RequiredArgumentMessages.APPLICATION_REPOSITORY);
         this.identifiers = Objects.requireNonNull(identifiers, RequiredArgumentMessages.IDENTIFIER_GENERATOR);

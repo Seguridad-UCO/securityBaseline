@@ -26,7 +26,7 @@ public final class ValidateApplicationCredentialUseCaseImpl implements ValidateA
     private final CredentialHasher hasher;
 
     public ValidateApplicationCredentialUseCaseImpl(ApplicationCredentialMustBeValidRule rule,
-            ApplicationRepository repository, CredentialHasher hasher) {
+                                                    ApplicationRepository repository, CredentialHasher hasher) {
         this.rule = Objects.requireNonNull(rule, RequiredArgumentMessages.APPLICATION_CREDENTIAL_MUST_BE_VALID_RULE);
         this.repository = Objects.requireNonNull(repository, RequiredArgumentMessages.APPLICATION_REPOSITORY);
         this.hasher = Objects.requireNonNull(hasher, RequiredArgumentMessages.CREDENTIAL_HASHER);

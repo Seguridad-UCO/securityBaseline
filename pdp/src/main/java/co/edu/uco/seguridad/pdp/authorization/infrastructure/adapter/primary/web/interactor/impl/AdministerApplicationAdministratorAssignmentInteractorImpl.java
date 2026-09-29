@@ -35,7 +35,7 @@ public final class AdministerApplicationAdministratorAssignmentInteractorImpl
     private final AdministerApplicationAdministratorAssignmentUseCase useCase;
 
     public AdministerApplicationAdministratorAssignmentInteractorImpl(ApplicationOwnerLookupValidator ownerLookup,
-            SubjectUserIdLookupValidator subjectUserIdLookup, AdministerApplicationAdministratorAssignmentUseCase useCase) {
+                                                                      SubjectUserIdLookupValidator subjectUserIdLookup, AdministerApplicationAdministratorAssignmentUseCase useCase) {
         this.ownerLookup = Objects.requireNonNull(ownerLookup, RequiredArgumentMessages.APPLICATION_OWNER_LOOKUP_VALIDATOR);
         this.subjectUserIdLookup = Objects.requireNonNull(subjectUserIdLookup,
                 RequiredArgumentMessages.SUBJECT_USER_ID_LOOKUP_VALIDATOR);

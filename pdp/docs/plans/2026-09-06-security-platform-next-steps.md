@@ -3,7 +3,8 @@
 **Fecha:** 2026-09-06
 
 **Referencia de destino:** diagrama C4 Nivel 2 “Plataforma Central de Seguridad — MVP técnico”.
-**Propósito:** convertir el estado actual del repositorio en la arquitectura objetivo sin confundir diseño con funcionalidad ya disponible.
+**Propósito:** convertir el estado actual del repositorio en la arquitectura objetivo sin confundir diseño con
+funcionalidad ya disponible.
 
 ## 1. Visión objetivo
 
@@ -31,16 +32,16 @@ alcanzable desde la red del PEP. De otro modo, una aplicación puede eludir el e
 
 ## 2. Estado actual frente al objetivo
 
-| Elemento objetivo | Estado actual comprobado | Brecha |
-|---|---|---|
-| PEP reactivo | Implementado como proyecto autónomo WebFlux, con JWT, rutas, proxy, límites, mTLS configurable y fallo cerrado. | Desplegarlo con red/TLS reales y conectarlo a PDP real. |
-| Contrato PEP→PDP | v1 versionado; cliente PEP implementado para `POST /internal/v1/access-decisions`. | El PDP no expone aún esa operación. |
-| PDP de autorización | Existen módulos de identidad, tenants, aplicaciones y recursos. | Falta el caso de uso que ensamble evidencia, catálogo, OPA, decisión y auditoría. |
-| OPA | Está definido como responsabilidad objetivo. | No hay adaptador, políticas, distribución de bundles ni prueba de decisión real. |
-| SurrealDB | Hay adaptadores y documentación de persistencia del PDP. | Debe integrarse y probarse en la ruta de decisión, no solo en administración. |
-| Auditoría | El objetivo exige evidencia durable; hay referencias a auditoría dummy/en memoria en áreas existentes. | Falta publicación confiable, almacenamiento, consulta y control de acceso. |
-| Starter WebFlux | Implementado: alta técnica ante PEP y aplicación de ejemplo. | No protege endpoints locales; requiere red privada y PEP/PDP operativos. |
-| Operación | Health, métricas y logs básicos presentes en PEP. | Faltan trazas, alertas y runbooks de toda la cadena. |
+| Elemento objetivo   | Estado actual comprobado                                                                                        | Brecha                                                                            |
+|---------------------|-----------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
+| PEP reactivo        | Implementado como proyecto autónomo WebFlux, con JWT, rutas, proxy, límites, mTLS configurable y fallo cerrado. | Desplegarlo con red/TLS reales y conectarlo a PDP real.                           |
+| Contrato PEP→PDP    | v1 versionado; cliente PEP implementado para `POST /internal/v1/access-decisions`.                              | El PDP no expone aún esa operación.                                               |
+| PDP de autorización | Existen módulos de identidad, tenants, aplicaciones y recursos.                                                 | Falta el caso de uso que ensamble evidencia, catálogo, OPA, decisión y auditoría. |
+| OPA                 | Está definido como responsabilidad objetivo.                                                                    | No hay adaptador, políticas, distribución de bundles ni prueba de decisión real.  |
+| SurrealDB           | Hay adaptadores y documentación de persistencia del PDP.                                                        | Debe integrarse y probarse en la ruta de decisión, no solo en administración.     |
+| Auditoría           | El objetivo exige evidencia durable; hay referencias a auditoría dummy/en memoria en áreas existentes.          | Falta publicación confiable, almacenamiento, consulta y control de acceso.        |
+| Starter WebFlux     | Implementado: alta técnica ante PEP y aplicación de ejemplo.                                                    | No protege endpoints locales; requiere red privada y PEP/PDP operativos.          |
+| Operación           | Health, métricas y logs básicos presentes en PEP.                                                               | Faltan trazas, alertas y runbooks de toda la cadena.                              |
 
 El sistema no debe generar un `ALLOW` provisional en Java. Hasta que PDP, OPA e identidad confiable estén
 completos, el resultado correcto de una ruta pública es `503` sin reenvío al backend.
@@ -59,7 +60,8 @@ solamente compilar código.
 - Acordar formato, retención y control de acceso de auditoría; tokens, cookies, query y cuerpos no son evidencia.
 - Definir timeout, presupuesto de latencia, disponibilidad y degradación esperada.
 
-**Salida:** decisiones aprobadas, certificados y secretos por entorno planificados, matriz 401/403/503 acordada y modelo de auditoría definido.
+**Salida:** decisiones aprobadas, certificados y secretos por entorno planificados, matriz 401/403/503 acordada y modelo
+de auditoría definido.
 
 ### Etapa 1 — Endpoint de decisión PDP, mínimo seguro
 
@@ -99,7 +101,8 @@ solamente compilar código.
 - Implementar almacenamiento, retención, consulta autorizada y trazabilidad del acceso a la evidencia.
 - Decidir explícitamente si degradación de auditoría bloquea autorización; no dejarlo como comportamiento accidental.
 
-**Salida:** allow y deny dejan evidencia correlacionada, consultable por operación con controles y retención verificable.
+**Salida:** allow y deny dejan evidencia correlacionada, consultable por operación con controles y retención
+verificable.
 
 ### Etapa 5 — Despliegue seguro de PEP y PDP
 
@@ -132,26 +135,26 @@ solamente compilar código.
 
 ## 4. Decisiones bloqueantes
 
-| Decisión | Razón |
-|---|---|
-| Modelo recurso/ruta/acción | Determina input confiable a OPA y evita autorizar un recurso distinto. |
-| mTLS e identidad PEP | Sin ello el PDP no distingue un PEP autorizado. |
-| Modelo tenant/roles | No se inventa en PEP ni se confía desde el cliente. |
-| Semántica de auditoría degradada | Afecta cumplimiento y disponibilidad efectiva. |
-| Registro de rutas PEP para HA | Archivo local actual no permite varias réplicas seguras. |
-| Gobierno de políticas OPA | Sin versionado/rollback no hay evidencia reproducible de una decisión. |
+| Decisión                         | Razón                                                                  |
+|----------------------------------|------------------------------------------------------------------------|
+| Modelo recurso/ruta/acción       | Determina input confiable a OPA y evita autorizar un recurso distinto. |
+| mTLS e identidad PEP             | Sin ello el PDP no distingue un PEP autorizado.                        |
+| Modelo tenant/roles              | No se inventa en PEP ni se confía desde el cliente.                    |
+| Semántica de auditoría degradada | Afecta cumplimiento y disponibilidad efectiva.                         |
+| Registro de rutas PEP para HA    | Archivo local actual no permite varias réplicas seguras.               |
+| Gobierno de políticas OPA        | Sin versionado/rollback no hay evidencia reproducible de una decisión. |
 
 ## 5. Matriz mínima de aceptación
 
-| Escenario | Resultado obligatorio |
-|---|---|
-| Usuario válido y allow | PEP reenvía una vez; PDP/auditoría guardan evidencia correlacionada. |
-| Usuario válido y deny | 403; backend no recibe solicitud; evidencia disponible. |
-| JWT inválido o audiencia incorrecta | 401 en PEP; PDP y backend no reciben solicitud. |
-| PDP, OPA o contrato no disponible | 503; backend no recibe solicitud. |
-| Certificado PEP no admitido | PDP rechaza; PEP falla cerrado. |
-| Acceso directo al backend | Falla por segmentación de red. |
-| Consulta de auditoría | Solo usuario/rol autorizado accede a evidencia sin secretos. |
+| Escenario                           | Resultado obligatorio                                                |
+|-------------------------------------|----------------------------------------------------------------------|
+| Usuario válido y allow              | PEP reenvía una vez; PDP/auditoría guardan evidencia correlacionada. |
+| Usuario válido y deny               | 403; backend no recibe solicitud; evidencia disponible.              |
+| JWT inválido o audiencia incorrecta | 401 en PEP; PDP y backend no reciben solicitud.                      |
+| PDP, OPA o contrato no disponible   | 503; backend no recibe solicitud.                                    |
+| Certificado PEP no admitido         | PDP rechaza; PEP falla cerrado.                                      |
+| Acceso directo al backend           | Falla por segmentación de red.                                       |
+| Consulta de auditoría               | Solo usuario/rol autorizado accede a evidencia sin secretos.         |
 
 ## 6. Referencias
 

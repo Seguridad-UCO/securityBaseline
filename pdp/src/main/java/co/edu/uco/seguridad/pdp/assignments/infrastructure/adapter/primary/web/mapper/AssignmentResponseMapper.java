@@ -3,7 +3,9 @@ package co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.
 import co.edu.uco.seguridad.pdp.assignments.application.primaryport.response.AssignmentResponse;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.dto.response.AssignmentWebResponse;
 
-/** AssignmentResponse (value objects) a AssignmentWebResponse (plana). */
+/**
+ * AssignmentResponse (value objects) a AssignmentWebResponse (plana).
+ */
 public final class AssignmentResponseMapper {
 
     private AssignmentResponseMapper() {

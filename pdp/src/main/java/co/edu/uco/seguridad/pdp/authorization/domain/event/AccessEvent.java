@@ -24,8 +24,9 @@ import java.util.UUID;
  * constructor canónico — el mismo sitio que ya conoce ambos tipos.</p>
  */
 public record AccessEvent(UUID eventId, UUID decisionId, String requestId, String correlationId,
-        TenantId tenantId, ApplicationId applicationId, String subject, ResourcePath resourcePath,
-        HttpVerb action, DecisionState state, ReasonCode reasonCode, Instant occurredOn) implements DomainEvent {
+                          TenantId tenantId, ApplicationId applicationId, String subject, ResourcePath resourcePath,
+                          HttpVerb action, DecisionState state, ReasonCode reasonCode,
+                          Instant occurredOn) implements DomainEvent {
 
     public AccessEvent {
         Objects.requireNonNull(eventId, RequiredArgumentMessages.EVENT_ID);

@@ -16,13 +16,13 @@ SPA nueva ──cookie──> backend de la aplicación ──canal técnico─�
 
 ## 1. Qué se configura una vez y qué configura cada aplicación
 
-| Ámbito | Responsabilidad | Frecuencia |
-| --- | --- | --- |
-| Keycloak/BFF central | Cliente `security-baseline-bff`, audiencia y URL de retorno permitida | Una vez por entorno/origen nuevo |
-| PEP | Identidad técnica `security-pep-internal` | Una vez por entorno; ver la guía de Postman |
-| PDP/OPA | Aplicación, recursos, roles, perfiles y asignaciones | Una vez por aplicación y recurso |
-| Backend integrado | Starter PEP, identificador/credencial de la aplicación y CORS | Por aplicación |
-| Frontend integrado | Chequeo de sesión BFF y llamadas con `credentials: include` | Por frontend |
+| Ámbito               | Responsabilidad                                                       | Frecuencia                                  |
+|----------------------|-----------------------------------------------------------------------|---------------------------------------------|
+| Keycloak/BFF central | Cliente `security-baseline-bff`, audiencia y URL de retorno permitida | Una vez por entorno/origen nuevo            |
+| PEP                  | Identidad técnica `security-pep-internal`                             | Una vez por entorno; ver la guía de Postman |
+| PDP/OPA              | Aplicación, recursos, roles, perfiles y asignaciones                  | Una vez por aplicación y recurso            |
+| Backend integrado    | Starter PEP, identificador/credencial de la aplicación y CORS         | Por aplicación                              |
+| Frontend integrado   | Chequeo de sesión BFF y llamadas con `credentials: include`           | Por frontend                                |
 
 No se crea un cliente Keycloak por aplicación ni por microfrontend. Cada frontend solo registra su
 origen y retorno exactos en la configuración del BFF.
@@ -41,12 +41,12 @@ En el realm `security-baseline`, el cliente `security-baseline-bff` debe tener:
 Es preferible usar un client scope reutilizable, por ejemplo
 `security-baseline-pdp-audience`. En el scope cree el mapper:
 
-| Campo | Valor |
-| --- | --- |
-| Type | `Audience` |
-| Name | `audience-security-baseline-bff` |
-| Included Client Audience | `security-baseline-bff` |
-| Add to access token | Activado |
+| Campo                    | Valor                            |
+|--------------------------|----------------------------------|
+| Type                     | `Audience`                       |
+| Name                     | `audience-security-baseline-bff` |
+| Included Client Audience | `security-baseline-bff`          |
+| Add to access token      | Activado                         |
 
 Después, desde **Clients → security-baseline-bff → Client scopes**, agréguelo en **Default client
 scopes**. Crearlo desde el menú global **Client scopes** no lo asocia al BFF por sí solo.
@@ -115,11 +115,11 @@ configurados.
 
 Mapee las respuestas de seguridad a mensajes funcionales. Por ejemplo:
 
-| Estado | Comportamiento de la SPA |
-| --- | --- |
-| `401` | Redirigir al login central y conservar `returnTo` |
-| `403` | Alerta: “Usted no tiene permisos para acceder a este recurso.” |
-| `503` | Alerta: “El servicio de seguridad no está disponible. Intente más tarde.” |
+| Estado | Comportamiento de la SPA                                                  |
+|--------|---------------------------------------------------------------------------|
+| `401`  | Redirigir al login central y conservar `returnTo`                         |
+| `403`  | Alerta: “Usted no tiene permisos para acceder a este recurso.”            |
+| `503`  | Alerta: “El servicio de seguridad no está disponible. Intente más tarde.” |
 
 ## 5. Configurar el backend de la aplicación
 
@@ -165,11 +165,11 @@ No combine `allowCredentials(true)` con `*` en `allowedOrigins`.
 
 Registre recursos distintos en PDP/OPA para ambos métodos:
 
-| Perfil | `GET /api/notes` | `POST /api/notes` |
-| --- | --- | --- |
-| Lector | Permitido | Denegado (`403`) |
-| Escritor | Según la política definida | Permitido |
-| Administrador | Permitido | Permitido |
+| Perfil        | `GET /api/notes`           | `POST /api/notes` |
+|---------------|----------------------------|-------------------|
+| Lector        | Permitido                  | Denegado (`403`)  |
+| Escritor      | Según la política definida | Permitido         |
+| Administrador | Permitido                  | Permitido         |
 
 La asignación del perfil pertenece al PDP. Los roles de Keycloak no sustituyen esa asignación.
 
@@ -188,13 +188,13 @@ intento de crear una nota sin el permiso de escritura debe dar `403` y la alerta
 
 ## 8. Diagnóstico rápido
 
-| Síntoma | Causa probable | Verificación/corrección |
-| --- | --- | --- |
-| `401 TOKEN_INVALID` desde la SPA | Token BFF sin audiencia | Verifique `aud` y que el scope esté asociado como Default client scope |
-| `401` después de cambiar un mapper | Sesión conserva token anterior | Cierre sesión BFF e inicie sesión de nuevo |
-| `CORS error` | Falta `CorsWebFilter` o el origen no coincide | Permita el origen exacto y `allowCredentials(true)` |
-| `403 ACCESS_DENIED` | PDP/OPA denegó el recurso | Revise perfiles, roles, recursos y asignaciones en PDP |
-| `503` | PEP/PDP o identidad técnica no disponible | Revise PEP, PDP y `PEP_KEYCLOAK_CLIENT_SECRET` |
+| Síntoma                            | Causa probable                                | Verificación/corrección                                                |
+|------------------------------------|-----------------------------------------------|------------------------------------------------------------------------|
+| `401 TOKEN_INVALID` desde la SPA   | Token BFF sin audiencia                       | Verifique `aud` y que el scope esté asociado como Default client scope |
+| `401` después de cambiar un mapper | Sesión conserva token anterior                | Cierre sesión BFF e inicie sesión de nuevo                             |
+| `CORS error`                       | Falta `CorsWebFilter` o el origen no coincide | Permita el origen exacto y `allowCredentials(true)`                    |
+| `403 ACCESS_DENIED`                | PDP/OPA denegó el recurso                     | Revise perfiles, roles, recursos y asignaciones en PDP                 |
+| `503`                              | PEP/PDP o identidad técnica no disponible     | Revise PEP, PDP y `PEP_KEYCLOAK_CLIENT_SECRET`                         |
 
 ## 9. Postman
 

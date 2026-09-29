@@ -25,7 +25,7 @@ public final class DefineProfileRulesValidatorImpl implements DefineProfileRules
     private final ProfileRepository repository;
 
     public DefineProfileRulesValidatorImpl(ApplicationMustExistForTenantValidator applicationMustExist,
-            ProfileNameMustBeUniqueInScopeRule nameMustBeUnique, ProfileRepository repository) {
+                                           ProfileNameMustBeUniqueInScopeRule nameMustBeUnique, ProfileRepository repository) {
         this.applicationMustExist = Objects.requireNonNull(applicationMustExist,
                 RequiredArgumentMessages.APPLICATION_EXISTS_VALIDATOR);
         this.nameMustBeUnique = Objects.requireNonNull(nameMustBeUnique, RequiredArgumentMessages.PROFILE_NAME_UNIQUE_RULE);

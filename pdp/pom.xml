@@ -1,236 +1,241 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.1.0</version>
-		<relativePath/> <!-- lookup parent from repository -->
-	</parent>
-	<groupId>co.edu.uco</groupId>
-	<artifactId>security-pdp</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name/>
-	<description/>
-	<url/>
-	<licenses>
-		<license/>
-	</licenses>
-	<developers>
-		<developer/>
-	</developers>
-	<scm>
-		<connection/>
-		<developerConnection/>
-		<tag/>
-		<url/>
-	</scm>
-	<properties>
-		<java.version>25</java.version>
-		<spring-modulith.version>2.1.0</spring-modulith.version>
-		<jacoco.version>0.8.15</jacoco.version>
-		<archunit.version>1.3.0</archunit.version>
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.1.0</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+    <groupId>co.edu.uco</groupId>
+    <artifactId>security-pdp</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name/>
+    <description/>
+    <url/>
+    <licenses>
+        <license/>
+    </licenses>
+    <developers>
+        <developer/>
+    </developers>
+    <scm>
+        <connection/>
+        <developerConnection/>
+        <tag/>
+        <url/>
+    </scm>
+    <properties>
+        <java.version>25</java.version>
+        <spring-modulith.version>2.1.0</spring-modulith.version>
+        <jacoco.version>0.8.15</jacoco.version>
+        <archunit.version>1.3.0</archunit.version>
 
-		<!--
-			SonarQube analysis settings. The server URL and token are NOT here on purpose: the
-			pipeline supplies them through the SonarQube service connection, so no credential is
-			ever committed. Only non-sensitive analysis metadata belongs in this file.
-		-->
-		<sonar.organization>seguridad-uco</sonar.organization>
-		<sonar.projectKey>Seguridad-UCO_securityBaseline</sonar.projectKey>
-		<sonar.projectName>Security Baseline PDP</sonar.projectName>
-		<sonar.sources>src/main/java</sonar.sources>
-		<sonar.tests>src/test/java</sonar.tests>
-		<sonar.java.source>${java.version}</sonar.java.source>
-		<sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
-		<sonar.junit.reportPaths>${project.build.directory}/surefire-reports</sonar.junit.reportPaths>
-		<!-- Configuration classes are wiring, not logic; excluding them keeps coverage honest. -->
-		<sonar.coverage.exclusions>**/PdpApplication.java,**/*Configuration.java,**/package-info.java</sonar.coverage.exclusions>
-	</properties>
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>org.springframework.modulith</groupId>
-				<artifactId>spring-modulith-bom</artifactId>
-				<version>${spring-modulith.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
-	<dependencies>
-        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-webclient</artifactId></dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webflux</artifactId>
-		</dependency>
-		<!--
-			spring-boot-starter-validation is intentionally absent. Input validation runs as
-			explicit code in the web DTO setters (see RegisterProtectedApplicationRequest), so
-			Jakarta Validation annotations cannot creep back in: the API is not on the classpath.
-		-->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-actuator</artifactId>
-		</dependency>
-		<!--
-			Frontera PEP reactiva (ADR-0003). oauth2-resource-server, no una librería JWT suelta:
-			trae NimbusReactiveJwtDecoder ya integrado con SecurityWebFilterChain, y el día que
-			Keycloak reemplace el emisor propio (ver ADR-0003), el cambio es
-			withSecretKey(...) → withJwkSetUri(...) sin tocar el resto de la cadena.
-		-->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-security</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-oauth2-client</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-opentelemetry</artifactId>
-		</dependency>
-		<!--
-			HU-022/ADR-026: revocación de tokens. Trae Lettuce (cliente reactivo) por defecto, coherente
-			con WebFlux (ADR-002) — mismo criterio que ya llevó a SurrealDB a su cliente reactivo propio.
-		-->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-redis-reactive</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.micrometer</groupId>
-			<artifactId>micrometer-registry-prometheus</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.modulith</groupId>
-			<artifactId>spring-modulith-starter-core</artifactId>
-		</dependency>
-		<!--
-			spring-modulith-events-api/-core NOT added on purpose (ADR-0002, revisado durante la
-			implementación de la etapa 2). @ApplicationModuleListener requiere que
-			spring-modulith-events-core autoconfigure un EventPublicationRegistry, y ningún
-			backend de ese registro (JDBC/JPA/MongoDB/Neo4j) encaja con "todavía no hay base de
-			datos real": añadir uno solo para el registro de eventos sería una base de datos
-			desechable disfrazada de infraestructura de eventos. La publicación de eventos de
-			dominio usa el ApplicationEventPublisher de Spring puro (ver shared/event); se revisita
-			cuando la persistencia real (ADR-0004) aporte un almacén que el registro de Modulith
-			pueda usar de verdad.
-		-->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.modulith</groupId>
-			<artifactId>spring-modulith-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>io.projectreactor</groupId>
-			<artifactId>reactor-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<!--
-			SurrealDB no tiene módulo oficial de Testcontainers (ADR-0004): se levanta con
-			GenericContainer sobre la imagen surrealdb/surrealdb, verificada manualmente antes de
-			escribir el adaptador. spring-boot-testcontainers gestiona la versión vía el BOM del
-			padre; junit-jupiter añade el ciclo de vida @Testcontainers/@Container.
-		-->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-testcontainers</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.testcontainers</groupId>
-			<artifactId>testcontainers-junit-jupiter</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<!--
-			Modulith verifica fronteras ENTRE módulos (cortes verticales); no ve fronteras ENTRE
-			CAPAS dentro de un módulo (application/domain no deben importar infrastructure). ArchUnit
-			cubre esa segunda dimensión — ver LayeredArchitectureTests.
-		-->
-		<dependency>
-			<groupId>com.tngtech.archunit</groupId>
-			<artifactId>archunit-junit5</artifactId>
-			<version>${archunit.version}</version>
-			<scope>test</scope>
-		</dependency>
-	</dependencies>
+        <!--
+            SonarQube analysis settings. The server URL and token are NOT here on purpose: the
+            pipeline supplies them through the SonarQube service connection, so no credential is
+            ever committed. Only non-sensitive analysis metadata belongs in this file.
+        -->
+        <sonar.organization>seguridad-uco</sonar.organization>
+        <sonar.projectKey>Seguridad-UCO_securityBaseline</sonar.projectKey>
+        <sonar.projectName>Security Baseline PDP</sonar.projectName>
+        <sonar.sources>src/main/java</sonar.sources>
+        <sonar.tests>src/test/java</sonar.tests>
+        <sonar.java.source>${java.version}</sonar.java.source>
+        <sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml
+        </sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.junit.reportPaths>${project.build.directory}/surefire-reports</sonar.junit.reportPaths>
+        <!-- Configuration classes are wiring, not logic; excluding them keeps coverage honest. -->
+        <sonar.coverage.exclusions>**/PdpApplication.java,**/*Configuration.java,**/package-info.java
+        </sonar.coverage.exclusions>
+    </properties>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.modulith</groupId>
+                <artifactId>spring-modulith-bom</artifactId>
+                <version>${spring-modulith.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webclient</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+        <!--
+            spring-boot-starter-validation is intentionally absent. Input validation runs as
+            explicit code in the web DTO setters (see RegisterProtectedApplicationRequest), so
+            Jakarta Validation annotations cannot creep back in: the API is not on the classpath.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <!--
+            Frontera PEP reactiva (ADR-0003). oauth2-resource-server, no una librería JWT suelta:
+            trae NimbusReactiveJwtDecoder ya integrado con SecurityWebFilterChain, y el día que
+            Keycloak reemplace el emisor propio (ver ADR-0003), el cambio es
+            withSecretKey(...) → withJwkSetUri(...) sin tocar el resto de la cadena.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-opentelemetry</artifactId>
+        </dependency>
+        <!--
+            HU-022/ADR-026: revocación de tokens. Trae Lettuce (cliente reactivo) por defecto, coherente
+            con WebFlux (ADR-002) — mismo criterio que ya llevó a SurrealDB a su cliente reactivo propio.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis-reactive</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.modulith</groupId>
+            <artifactId>spring-modulith-starter-core</artifactId>
+        </dependency>
+        <!--
+            spring-modulith-events-api/-core NOT added on purpose (ADR-0002, revisado durante la
+            implementación de la etapa 2). @ApplicationModuleListener requiere que
+            spring-modulith-events-core autoconfigure un EventPublicationRegistry, y ningún
+            backend de ese registro (JDBC/JPA/MongoDB/Neo4j) encaja con "todavía no hay base de
+            datos real": añadir uno solo para el registro de eventos sería una base de datos
+            desechable disfrazada de infraestructura de eventos. La publicación de eventos de
+            dominio usa el ApplicationEventPublisher de Spring puro (ver shared/event); se revisita
+            cuando la persistencia real (ADR-0004) aporte un almacén que el registro de Modulith
+            pueda usar de verdad.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.modulith</groupId>
+            <artifactId>spring-modulith-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!--
+            SurrealDB no tiene módulo oficial de Testcontainers (ADR-0004): se levanta con
+            GenericContainer sobre la imagen surrealdb/surrealdb, verificada manualmente antes de
+            escribir el adaptador. spring-boot-testcontainers gestiona la versión vía el BOM del
+            padre; junit-jupiter añade el ciclo de vida @Testcontainers/@Container.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!--
+            Modulith verifica fronteras ENTRE módulos (cortes verticales); no ve fronteras ENTRE
+            CAPAS dentro de un módulo (application/domain no deben importar infrastructure). ArchUnit
+            cubre esa segunda dimensión — ver LayeredArchitectureTests.
+        -->
+        <dependency>
+            <groupId>com.tngtech.archunit</groupId>
+            <artifactId>archunit-junit5</artifactId>
+            <version>${archunit.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-			</plugin>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
 
-			<!--
-				Produces the coverage report SonarQube reads. The agent is attached before tests
-				run and the XML report is written after, so `mvn verify` alone is enough for the
-				pipeline to have everything the quality gate needs.
-			-->
-			<plugin>
-				<groupId>org.jacoco</groupId>
-				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>${jacoco.version}</version>
-				<executions>
-					<execution>
-						<id>prepare-agent</id>
-						<goals>
-							<goal>prepare-agent</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>report</id>
-						<phase>verify</phase>
-						<goals>
-							<goal>report</goal>
-						</goals>
-						<configuration>
-							<!-- SonarQube Cloud solo importa el XML; HTML/CSV son opcionales. -->
-							<formats>
-								<format>XML</format>
-								<format>HTML</format>
-							</formats>
-						</configuration>
-					</execution>
-					<execution>
-						<id>jacoco-check</id>
-						<phase>verify</phase>
-						<goals>
-							<goal>check</goal>
-						</goals>
-						<configuration>
-							<rules>
-								<rule>
-									<element>PACKAGE</element>
-									<excludes>
-										<exclude>*Test</exclude>
-									</excludes>
-									<limits>
-										<limit>
-											<counter>LINE</counter>
-											<value>COVEREDRATIO</value>
-											<minimum>0.50</minimum>
-										</limit>
-									</limits>
-								</rule>
-							</rules>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
+            <!--
+                Produces the coverage report SonarQube reads. The agent is attached before tests
+                run and the XML report is written after, so `mvn verify` alone is enough for the
+                pipeline to have everything the quality gate needs.
+            -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <!-- SonarQube Cloud solo importa el XML; HTML/CSV son opcionales. -->
+                            <formats>
+                                <format>XML</format>
+                                <format>HTML</format>
+                            </formats>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>jacoco-check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>PACKAGE</element>
+                                    <excludes>
+                                        <exclude>*Test</exclude>
+                                    </excludes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.50</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

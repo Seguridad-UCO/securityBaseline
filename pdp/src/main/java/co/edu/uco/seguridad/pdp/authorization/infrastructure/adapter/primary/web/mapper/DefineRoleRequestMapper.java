@@ -33,7 +33,7 @@ public final class DefineRoleRequestMapper {
 
         RoleScope scope = level == RoleScopeLevel.APPLICATION
                 ? RoleScope.ofApplication(tenantId,
-                        RequestFieldParser.parse("applicationId", raw.applicationId(), ApplicationId::of))
+                RequestFieldParser.parse("applicationId", raw.applicationId(), ApplicationId::of))
                 : requireNoApplicationId(raw, tenantId);
 
         return new DefineRoleRequest(name, scope);

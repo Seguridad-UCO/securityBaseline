@@ -25,7 +25,7 @@ public final class AddRoleToProfileRulesValidatorImpl implements AddRoleToProfil
     private final RoleMustExistForTenantValidator roleMustExist;
 
     public AddRoleToProfileRulesValidatorImpl(ProfileRepository repository,
-            ProfileMustExistForTenantRule profileMustExist, RoleMustExistForTenantValidator roleMustExist) {
+                                              ProfileMustExistForTenantRule profileMustExist, RoleMustExistForTenantValidator roleMustExist) {
         this.repository = Objects.requireNonNull(repository, RequiredArgumentMessages.PROFILE_REPOSITORY);
         this.profileMustExist = Objects.requireNonNull(profileMustExist, RequiredArgumentMessages.PROFILE_EXISTS_RULE);
         this.roleMustExist = Objects.requireNonNull(roleMustExist,

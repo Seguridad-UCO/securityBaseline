@@ -8,16 +8,16 @@
 - **Fecha:** 2026-09-13
 - **Rama sugerida:** `feature/HU-014-rotacion-credencial-aplicacion`
 - **Fuentes:**
-  - `pdp/docs/ai-harness/workspace/HU-014.md` (historia dictada por Sebastián, dependiente de
-    HU-012/HU-013 — ambas ya en `develop`)
-  - Código real leído antes de planificar: `Application.java`, `ApplicationRepository.java`,
-    `SurrealApplicationRepository.java` (confirma que `save(Application)` usa `CREATE`, no
-    `UPSERT` — no se puede reutilizar para actualizar una fila existente, ver Hallazgo 2),
-    `ApplicationController.java`, `ApplicationMustExistForTenantRule`/`Impl`/`ApplicationExistence`
-    (regla ya existente, reutilizable tal cual), `ApplicationRegistrationResponse`/
-    `ApplicationRegisteredWebResponse`/`ApplicationResponseMapper.toRegisteredResponse` (de HU-012,
-    reutilizables sin cambio), `RevokeAssignmentInteractor`/`Impl`/`RawRequest` (patrón de "solo un
-    id del path, sin cuerpo" a espejar)
+    - `pdp/docs/ai-harness/workspace/HU-014.md` (historia dictada por Sebastián, dependiente de
+      HU-012/HU-013 — ambas ya en `develop`)
+    - Código real leído antes de planificar: `Application.java`, `ApplicationRepository.java`,
+      `SurrealApplicationRepository.java` (confirma que `save(Application)` usa `CREATE`, no
+      `UPSERT` — no se puede reutilizar para actualizar una fila existente, ver Hallazgo 2),
+      `ApplicationController.java`, `ApplicationMustExistForTenantRule`/`Impl`/`ApplicationExistence`
+      (regla ya existente, reutilizable tal cual), `ApplicationRegistrationResponse`/
+      `ApplicationRegisteredWebResponse`/`ApplicationResponseMapper.toRegisteredResponse` (de HU-012,
+      reutilizables sin cambio), `RevokeAssignmentInteractor`/`Impl`/`RawRequest` (patrón de "solo un
+      id del path, sin cuerpo" a espejar)
 - **Criterios de la línea base que toca:** 1, 2, 4, 9, 11, 12, 13, 15, 21, 22
 
 ## 0. Hallazgos antes de planificar
@@ -82,12 +82,12 @@ Hallazgo 1).
 
 ## 2. Criterios de aceptación
 
-| # | Criterio | Resultado esperado |
-|---|---|---|
-| 1 | Rotar genera una nueva credencial | `POST .../credential-rotations` responde 201 con un secreto nuevo en texto plano |
-| 2 | La identidad no cambia | `ApplicationId`, nombre, `baseUrl`, `tenantId`, `registeredAt` de la respuesta son los mismos que antes de rotar |
-| 3 | La credencial anterior deja de validar de inmediato | Tras rotar, `findCredentialHashById` devuelve el hash **nuevo** — el viejo ya no está en ningún lado |
-| 4 | Aplicación inexistente se rechaza | Rotar una aplicación que no existe (o no es del tenant) responde `ApplicationNotFoundException` (ya existente) → 400, no 500 |
+| # | Criterio                                            | Resultado esperado                                                                                                           |
+|---|-----------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
+| 1 | Rotar genera una nueva credencial                   | `POST .../credential-rotations` responde 201 con un secreto nuevo en texto plano                                             |
+| 2 | La identidad no cambia                              | `ApplicationId`, nombre, `baseUrl`, `tenantId`, `registeredAt` de la respuesta son los mismos que antes de rotar             |
+| 3 | La credencial anterior deja de validar de inmediato | Tras rotar, `findCredentialHashById` devuelve el hash **nuevo** — el viejo ya no está en ningún lado                         |
+| 4 | Aplicación inexistente se rechaza                   | Rotar una aplicación que no existe (o no es del tenant) responde `ApplicationNotFoundException` (ya existente) → 400, no 500 |
 
 ## 3. Reglas de negocio
 
@@ -120,9 +120,9 @@ existente:
 
 ## 6. Endpoint
 
-| Verbo | Ruta | Código de éxito | Cuerpo de entrada | Cuerpo de salida |
-|---|---|---|---|---|
-| POST | `/api/v1/applications/{applicationId}/credential-rotations` | 201 | (sin cuerpo) | `ApplicationRegisteredWebResponse` — misma forma que el registro (HU-012), con el secreto nuevo |
+| Verbo | Ruta                                                        | Código de éxito | Cuerpo de entrada | Cuerpo de salida                                                                                |
+|-------|-------------------------------------------------------------|-----------------|-------------------|-------------------------------------------------------------------------------------------------|
+| POST  | `/api/v1/applications/{applicationId}/credential-rotations` | 201             | (sin cuerpo)      | `ApplicationRegisteredWebResponse` — misma forma que el registro (HU-012), con el secreto nuevo |
 
 - **Autorización:** BFF — requiere token, el inquilino sale del principal (Hallazgo 1, punto 1). No
   es el canal interno de HU-013: esto lo dispara un administrador autenticado, no el PEP.
@@ -208,24 +208,24 @@ pdp/src/main/java/co/edu/uco/seguridad/
 
 ## 9. Casos de prueba esperados
 
-| Capa | Clase de prueba | Casos |
-|---|---|---|
-| `applications` domain | `ApplicationTests` (existente, +1 caso) | `withCredentialHash` conserva identidad, `baseUrl`, `registeredAt`, y solo cambia `credentialHash` |
-| `applications` application | `RotateApplicationCredentialUseCaseImplTests` (nueva) | rotar una aplicación existente devuelve el secreto nuevo en claro y persiste su hash (nunca el secreto) vía `updateCredentialHash`; rotar una aplicación inexistente lanza `ApplicationNotFoundException` **sin** llegar a generar ni hashear un secreto (poison-pill en `SecretGenerator`/`CredentialHasher`, mismo patrón que HU-012/HU-013) |
-| `applications` infrastructure | `RotateApplicationCredentialRequestMapperTests` (nueva) | `applicationId` ausente → `MissingRequestFieldException`; mal formado → `MalformedRequestFieldException`; válido → `ApplicationId` correcto, `tenantId` del principal |
-| `applications` infrastructure | `ApplicationControllerTests` (existente, +1 caso) | `rotate` usa el `applicationId` de la ruta y responde 201 con el cuerpo del interactor |
-| `applications` infrastructure (E2E) | `ApplicationHttpTests` (existente, +1 caso) | registra una aplicación, rota su credencial → 201 con un `credential` distinto al original; una validación posterior (si se ejercita directamente el caso de uso de HU-013 en la prueba, no por HTTP) confirma que el secreto viejo ya no sirve y el nuevo sí |
+| Capa                                | Clase de prueba                                         | Casos                                                                                                                                                                                                                                                                                                                                          |
+|-------------------------------------|---------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `applications` domain               | `ApplicationTests` (existente, +1 caso)                 | `withCredentialHash` conserva identidad, `baseUrl`, `registeredAt`, y solo cambia `credentialHash`                                                                                                                                                                                                                                             |
+| `applications` application          | `RotateApplicationCredentialUseCaseImplTests` (nueva)   | rotar una aplicación existente devuelve el secreto nuevo en claro y persiste su hash (nunca el secreto) vía `updateCredentialHash`; rotar una aplicación inexistente lanza `ApplicationNotFoundException` **sin** llegar a generar ni hashear un secreto (poison-pill en `SecretGenerator`/`CredentialHasher`, mismo patrón que HU-012/HU-013) |
+| `applications` infrastructure       | `RotateApplicationCredentialRequestMapperTests` (nueva) | `applicationId` ausente → `MissingRequestFieldException`; mal formado → `MalformedRequestFieldException`; válido → `ApplicationId` correcto, `tenantId` del principal                                                                                                                                                                          |
+| `applications` infrastructure       | `ApplicationControllerTests` (existente, +1 caso)       | `rotate` usa el `applicationId` de la ruta y responde 201 con el cuerpo del interactor                                                                                                                                                                                                                                                         |
+| `applications` infrastructure (E2E) | `ApplicationHttpTests` (existente, +1 caso)             | registra una aplicación, rota su credencial → 201 con un `credential` distinto al original; una validación posterior (si se ejercita directamente el caso de uso de HU-013 en la prueba, no por HTTP) confirma que el secreto viejo ya no sirve y el nuevo sí                                                                                  |
 
 ## 10. Trazabilidad
 
-| Fase | Estado | Fecha |
-|---|---|---|
-| Plan | ✅ Generado | 2026-09-13 |
-| Contrato aprobado (gate 1) | ⏳ Pendiente | |
-| Pruebas en rojo | ⏳ Pendiente | |
-| Implementación en verde | ⏳ Pendiente | |
-| Validación | ✅ Aprobada | 2026-09-13 |
-| Entrega (gate 2) | ⏳ Pendiente | |
+| Fase                       | Estado      | Fecha      |
+|----------------------------|-------------|------------|
+| Plan                       | ✅ Generado  | 2026-09-13 |
+| Contrato aprobado (gate 1) | ⏳ Pendiente |            |
+| Pruebas en rojo            | ⏳ Pendiente |            |
+| Implementación en verde    | ⏳ Pendiente |            |
+| Validación                 | ✅ Aprobada  | 2026-09-13 |
+| Entrega (gate 2)           | ⏳ Pendiente |            |
 
 ## 11. Ambigüedades pendientes
 

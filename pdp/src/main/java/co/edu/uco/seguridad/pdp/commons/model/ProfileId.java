@@ -6,7 +6,9 @@ import co.edu.uco.seguridad.pdp.commons.message.ValueObjectMessages;
 import java.util.Objects;
 import java.util.UUID;
 
-/** Identificador de un perfil del catálogo (HU-011). Vive en commons porque assignments lo consume. */
+/**
+ * Identificador de un perfil del catálogo (HU-011). Vive en commons porque assignments lo consume.
+ */
 public record ProfileId(UUID value) {
 
     public ProfileId {

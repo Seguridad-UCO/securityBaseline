@@ -66,7 +66,8 @@ Alternativa Docker:
 docker compose -f pep/compose.integration.yml up --build
 ```
 
-Esta composición es independiente de [`pdp/docker-compose.yml`](../pdp/docker-compose.yml). Publica PEP 8081 y control de fixtures
+Esta composición es independiente de [`pdp/docker-compose.yml`](../pdp/docker-compose.yml). Publica PEP 8081 y control
+de fixtures
 18080 solo en loopback; la aplicación 18081 queda únicamente en la red interna.
 Detener con docker compose -f pep/compose.integration.yml down; no requiere borrar volúmenes del PDP.
 
@@ -124,18 +125,18 @@ HTTP ya no permite sustituir ese estado por 502/504. No se reintenta una operaci
 
 ## Configuración operativa inicial
 
-| Propiedad | Default |
-|---|---|
-| server.port | 8081 |
-| pep.pdp.connect-timeout / timeout | 1s / 3s |
-| pep.proxy.connect-timeout / timeout | 2s / 30s totales |
-| server.max-http-request-header-size | 16KB |
-| pep.ingress.max-body-bytes | 10485760 |
-| pep.pdp.max-response-bytes | 65536 |
-| pep.ingress.max-concurrent | 200 |
+| Propiedad                               | Default                    |
+|-----------------------------------------|----------------------------|
+| server.port                             | 8081                       |
+| pep.pdp.connect-timeout / timeout       | 1s / 3s                    |
+| pep.proxy.connect-timeout / timeout     | 2s / 30s totales           |
+| server.max-http-request-header-size     | 16KB                       |
+| pep.ingress.max-body-bytes              | 10485760                   |
+| pep.pdp.max-response-bytes              | 65536                      |
+| pep.ingress.max-concurrent              | 200                        |
 | pep.ingress.requests-per-second / burst | 100 / 200 por IP inmediata |
-| pep.ingress.max-rate-keys | 10000; inactividad 60s |
-| pep.ingress.jwks-timeout | 3s |
+| pep.ingress.max-rate-keys               | 10000; inactividad 60s     |
+| pep.ingress.jwks-timeout                | 3s                         |
 
 El rate limit es local por réplica, sin Redis; no es una cuota global. Saturación produce 503; exceso de
 tasa, 429 con Retry-After. Son defaults configurables, no SLOs de latencia o capacidad demostrados.

@@ -16,7 +16,7 @@ import java.util.Objects;
  * y nunca el agregado {@code Application} en sí.</p>
  */
 public record RegisteredApplicationResponse(ApplicationId id, TenantId tenantId, ApplicationName name,
-        String description, ApplicationBaseUrl baseUrl, Instant registeredAt) {
+                                            String description, ApplicationBaseUrl baseUrl, Instant registeredAt) {
 
     public RegisteredApplicationResponse {
         Objects.requireNonNull(id, RequiredArgumentMessages.APPLICATION_ID);

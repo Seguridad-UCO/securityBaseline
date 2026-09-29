@@ -34,7 +34,7 @@ public final class AdministerAssignmentCreationInteractorImpl implements Adminis
     private final SubjectUserIdLookupValidator subjectUserIdLookup;
 
     public AdministerAssignmentCreationInteractorImpl(AdministerAssignmentCreationUseCase useCase,
-            SubjectUserIdLookupValidator subjectUserIdLookup) {
+                                                      SubjectUserIdLookupValidator subjectUserIdLookup) {
         this.useCase = Objects.requireNonNull(useCase, RequiredArgumentMessages.ADMINISTER_ASSIGNMENT_CREATION_USE_CASE);
         this.subjectUserIdLookup = Objects.requireNonNull(subjectUserIdLookup,
                 RequiredArgumentMessages.SUBJECT_USER_ID_LOOKUP_VALIDATOR);
@@ -49,7 +49,7 @@ public final class AdministerAssignmentCreationInteractorImpl implements Adminis
     }
 
     private static AdministerAssignmentCreationRequest toAdministerRequest(AssignRoleRawRequest raw,
-            PdpPrincipal principal, UserId subjectUserId) {
+                                                                           PdpPrincipal principal, UserId subjectUserId) {
         RoleId roleId = RequestFieldParser.parse("roleId", raw.roleId(), RoleId::of);
         UserId userId = RequestFieldParser.parse("userId", raw.userId(), UserId::of);
         ApplicationId applicationId = RequestFieldParser.parse("applicationId", raw.applicationId(), ApplicationId::of);

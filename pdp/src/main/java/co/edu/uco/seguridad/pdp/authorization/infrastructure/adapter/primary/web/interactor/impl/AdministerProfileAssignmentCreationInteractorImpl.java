@@ -34,7 +34,7 @@ public final class AdministerProfileAssignmentCreationInteractorImpl implements 
     private final SubjectUserIdLookupValidator subjectUserIdLookup;
 
     public AdministerProfileAssignmentCreationInteractorImpl(AdministerProfileAssignmentCreationUseCase useCase,
-            SubjectUserIdLookupValidator subjectUserIdLookup) {
+                                                             SubjectUserIdLookupValidator subjectUserIdLookup) {
         this.useCase = Objects.requireNonNull(useCase, RequiredArgumentMessages.ADMINISTER_PROFILE_ASSIGNMENT_CREATION_USE_CASE);
         this.subjectUserIdLookup = Objects.requireNonNull(subjectUserIdLookup,
                 RequiredArgumentMessages.SUBJECT_USER_ID_LOOKUP_VALIDATOR);
@@ -49,7 +49,7 @@ public final class AdministerProfileAssignmentCreationInteractorImpl implements 
     }
 
     private static AdministerProfileAssignmentCreationRequest toAdministerRequest(AssignProfileRawRequest raw,
-            PdpPrincipal principal, UserId subjectUserId) {
+                                                                                  PdpPrincipal principal, UserId subjectUserId) {
         ProfileId profileId = RequestFieldParser.parse("profileId", raw.profileId(), ProfileId::of);
         UserId userId = RequestFieldParser.parse("userId", raw.userId(), UserId::of);
         ApplicationId applicationId = RequestFieldParser.parse("applicationId", raw.applicationId(), ApplicationId::of);

@@ -3,12 +3,7 @@ package co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repositor
 import co.edu.uco.seguridad.pdp.assignments.domain.ProfileAssignment;
 import co.edu.uco.seguridad.pdp.assignments.domain.ProfileAssignmentCriteria;
 import co.edu.uco.seguridad.pdp.assignments.domain.model.ProfileAssignmentId;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.model.ProfileId;
-import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
-import co.edu.uco.seguridad.pdp.commons.model.UserId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;

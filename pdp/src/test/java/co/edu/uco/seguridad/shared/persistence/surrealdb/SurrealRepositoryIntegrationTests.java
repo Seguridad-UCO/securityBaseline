@@ -1,45 +1,39 @@
 package co.edu.uco.seguridad.shared.persistence.surrealdb;
 
 import co.edu.uco.seguridad.AbstractSurrealDbIntegrationTest;
-import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository.AssignmentRepository;
-import co.edu.uco.seguridad.pdp.assignments.domain.Assignment;
-import co.edu.uco.seguridad.pdp.assignments.domain.AssignmentCriteria;
-import co.edu.uco.seguridad.pdp.assignments.domain.model.AssignmentId;
-import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.repository.SurrealAssignmentRepository;
 import co.edu.uco.seguridad.pdp.applications.application.secondaryport.repository.ApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
 import co.edu.uco.seguridad.pdp.applications.domain.ApplicationCriteria;
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.repository.SurrealApplicationRepository;
+import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository.AssignmentRepository;
+import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository.ProfileAssignmentRepository;
+import co.edu.uco.seguridad.pdp.assignments.domain.Assignment;
+import co.edu.uco.seguridad.pdp.assignments.domain.AssignmentCriteria;
+import co.edu.uco.seguridad.pdp.assignments.domain.ProfileAssignment;
+import co.edu.uco.seguridad.pdp.assignments.domain.model.AssignmentId;
+import co.edu.uco.seguridad.pdp.assignments.domain.model.ProfileAssignmentId;
+import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.repository.SurrealAssignmentRepository;
+import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.repository.SurrealProfileAssignmentRepository;
 import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.AccessAuditRepository;
 import co.edu.uco.seguridad.pdp.authorization.domain.event.AccessEvent;
 import co.edu.uco.seguridad.pdp.authorization.domain.model.DecisionState;
 import co.edu.uco.seguridad.pdp.authorization.domain.model.ReasonCode;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.persistence.repository.SurrealAccessAuditRepository;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
-import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.model.ResourceId;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.SecurityUserRepository;
+import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;
 import co.edu.uco.seguridad.pdp.identity.domain.model.Email;
 import co.edu.uco.seguridad.pdp.identity.domain.model.ExternalIdentity;
-import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;
-import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.repository.SurrealSecurityUserRepository;
-import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository.ProfileAssignmentRepository;
-import co.edu.uco.seguridad.pdp.assignments.domain.ProfileAssignment;
-import co.edu.uco.seguridad.pdp.assignments.domain.model.ProfileAssignmentId;
-import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.repository.SurrealProfileAssignmentRepository;
-import co.edu.uco.seguridad.pdp.commons.model.ProfileId;
 import co.edu.uco.seguridad.pdp.profiles.application.secondaryport.repository.ProfileRepository;
 import co.edu.uco.seguridad.pdp.profiles.domain.Profile;
 import co.edu.uco.seguridad.pdp.profiles.domain.model.ProfileName;
 import co.edu.uco.seguridad.pdp.profiles.infrastructure.adapter.secondary.persistence.repository.SurrealProfileRepository;
 import co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository.ProtectedResourceRepository;
-import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.ProtectedResource;
+import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.persistence.repository.SurrealProtectedResourceRepository;
 import co.edu.uco.seguridad.pdp.roles.application.secondaryport.repository.RoleRepository;
@@ -47,7 +41,6 @@ import co.edu.uco.seguridad.pdp.roles.domain.Role;
 import co.edu.uco.seguridad.pdp.roles.domain.RoleCriteria;
 import co.edu.uco.seguridad.pdp.roles.domain.model.RoleName;
 import co.edu.uco.seguridad.pdp.roles.domain.model.RoleScope;
-import co.edu.uco.seguridad.pdp.commons.model.RoleId;
 import co.edu.uco.seguridad.pdp.roles.infrastructure.adapter.secondary.persistence.repository.SurrealRoleRepository;
 import co.edu.uco.seguridad.pdp.tenants.application.secondaryport.repository.TenantRepository;
 import co.edu.uco.seguridad.pdp.tenants.domain.Tenant;
@@ -137,10 +130,10 @@ class SurrealRepositoryIntegrationTests extends AbstractSurrealDbIntegrationTest
         client.ensureNamespaceAndDatabase()
                 .then(client.execute(
                         """
-                        DEFINE TABLE IF NOT EXISTS application SCHEMALESS;
-                        DEFINE INDEX IF NOT EXISTS application_tenant_name ON application \
-                        COLUMNS tenantId, name UNIQUE;\
-                        """,
+                                DEFINE TABLE IF NOT EXISTS application SCHEMALESS;
+                                DEFINE INDEX IF NOT EXISTS application_tenant_name ON application \
+                                COLUMNS tenantId, name UNIQUE;\
+                                """,
                         Map.of()))
                 .block();
 
@@ -202,10 +195,10 @@ class SurrealRepositoryIntegrationTests extends AbstractSurrealDbIntegrationTest
         client.ensureNamespaceAndDatabase()
                 .then(client.execute(
                         """
-                        DEFINE TABLE IF NOT EXISTS protected_resource SCHEMALESS;
-                        DEFINE INDEX IF NOT EXISTS protected_resource_endpoint ON protected_resource \
-                        COLUMNS applicationId, path, method UNIQUE;\
-                        """,
+                                DEFINE TABLE IF NOT EXISTS protected_resource SCHEMALESS;
+                                DEFINE INDEX IF NOT EXISTS protected_resource_endpoint ON protected_resource \
+                                COLUMNS applicationId, path, method UNIQUE;\
+                                """,
                         Map.of()))
                 .block();
 
@@ -246,10 +239,10 @@ class SurrealRepositoryIntegrationTests extends AbstractSurrealDbIntegrationTest
         client.ensureNamespaceAndDatabase()
                 .then(client.execute(
                         """
-                        DEFINE TABLE IF NOT EXISTS protected_resource SCHEMALESS;
-                        DEFINE INDEX IF NOT EXISTS protected_resource_endpoint ON protected_resource \
-                        COLUMNS applicationId, path, method UNIQUE;\
-                        """,
+                                DEFINE TABLE IF NOT EXISTS protected_resource SCHEMALESS;
+                                DEFINE INDEX IF NOT EXISTS protected_resource_endpoint ON protected_resource \
+                                COLUMNS applicationId, path, method UNIQUE;\
+                                """,
                         Map.of()))
                 .block();
 
@@ -272,10 +265,10 @@ class SurrealRepositoryIntegrationTests extends AbstractSurrealDbIntegrationTest
         client.ensureNamespaceAndDatabase()
                 .then(client.execute(
                         """
-                        DEFINE TABLE IF NOT EXISTS role SCHEMALESS;
-                        DEFINE INDEX IF NOT EXISTS role_scope_name ON role \
-                        COLUMNS level, tenantId, applicationId, name UNIQUE;\
-                        """,
+                                DEFINE TABLE IF NOT EXISTS role SCHEMALESS;
+                                DEFINE INDEX IF NOT EXISTS role_scope_name ON role \
+                                COLUMNS level, tenantId, applicationId, name UNIQUE;\
+                                """,
                         Map.of()))
                 .block();
 
@@ -483,9 +476,9 @@ class SurrealRepositoryIntegrationTests extends AbstractSurrealDbIntegrationTest
         client.ensureNamespaceAndDatabase()
                 .then(client.execute(
                         """
-                        DEFINE TABLE IF NOT EXISTS security_user SCHEMALESS;
-                        DEFINE TABLE IF NOT EXISTS external_identity SCHEMALESS;
-                        """,
+                                DEFINE TABLE IF NOT EXISTS security_user SCHEMALESS;
+                                DEFINE TABLE IF NOT EXISTS external_identity SCHEMALESS;
+                                """,
                         Map.of()))
                 .block();
 
@@ -569,10 +562,10 @@ class SurrealRepositoryIntegrationTests extends AbstractSurrealDbIntegrationTest
         client.ensureNamespaceAndDatabase()
                 .then(client.execute(
                         """
-                        DEFINE TABLE IF NOT EXISTS profile SCHEMALESS;
-                        DEFINE INDEX IF NOT EXISTS profile_scope_name ON profile \
-                        COLUMNS level, tenantId, applicationId, name UNIQUE;\
-                        """,
+                                DEFINE TABLE IF NOT EXISTS profile SCHEMALESS;
+                                DEFINE INDEX IF NOT EXISTS profile_scope_name ON profile \
+                                COLUMNS level, tenantId, applicationId, name UNIQUE;\
+                                """,
                         Map.of()))
                 .block();
 

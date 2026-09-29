@@ -5,7 +5,9 @@ import co.edu.uco.seguridad.pdp.roles.domain.message.RolesMessages;
 import co.edu.uco.seguridad.pdp.roles.domain.model.RoleName;
 import co.edu.uco.seguridad.pdp.roles.domain.model.RoleScope;
 
-/** Ya hay un rol con ese nombre en ese alcance exacto (nivel + inquilino + aplicación). */
+/**
+ * Ya hay un rol con ese nombre en ese alcance exacto (nivel + inquilino + aplicación).
+ */
 public final class DuplicateRoleNameException extends ConflictBusinessRuleException {
 
     public DuplicateRoleNameException(RoleName name, RoleScope scope) {

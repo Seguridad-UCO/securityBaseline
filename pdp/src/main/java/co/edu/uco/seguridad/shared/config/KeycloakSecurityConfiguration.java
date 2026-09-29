@@ -6,25 +6,21 @@ import co.edu.uco.seguridad.shared.security.ApiAccessDeniedHandler;
 import co.edu.uco.seguridad.shared.security.ApiAuthenticationEntryPoint;
 import co.edu.uco.seguridad.shared.security.CorsProperties;
 import co.edu.uco.seguridad.shared.security.KeycloakSessionProperties;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
-import org.springframework.security.oauth2.client.web.server.ServerOAuth2AuthorizedClientRepository;
-import org.springframework.security.oauth2.client.web.server.WebSessionServerOAuth2AuthorizedClientRepository;
-import org.springframework.security.oauth2.client.web.server.ServerAuthorizationRequestRepository;
-import org.springframework.security.oauth2.client.web.server.DefaultServerOAuth2AuthorizationRequestResolver;
-import org.springframework.security.oauth2.client.web.server.WebSessionOAuth2ServerAuthorizationRequestRepository;
-import org.springframework.security.web.server.context.WebSessionServerSecurityContextRepository;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.server.*;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.context.WebSessionServerSecurityContextRepository;
 import org.springframework.security.web.server.csrf.CookieServerCsrfTokenRepository;
-import org.springframework.security.web.server.csrf.ServerCsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.server.csrf.CsrfWebFilter;
+import org.springframework.security.web.server.csrf.ServerCsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.server.util.matcher.AndServerWebExchangeMatcher;
 import org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
@@ -32,12 +28,13 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 import org.springframework.web.server.session.CookieWebSessionIdResolver;
-import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
 
-/** BFF reactivo: Keycloak autentica, WebFlux conserva una sesión HttpOnly y el navegador nunca recibe el JWT. */
+/**
+ * BFF reactivo: Keycloak autentica, WebFlux conserva una sesión HttpOnly y el navegador nunca recibe el JWT.
+ */
 @Configuration
 @Profile("keycloak")
 @EnableWebFluxSecurity
@@ -51,13 +48,13 @@ class KeycloakSecurityConfiguration {
 
     @Bean
     SecurityWebFilterChain keycloakSecurityWebFilterChain(ServerHttpSecurity http,
-            ApiAuthenticationEntryPoint entryPoint, ApiAccessDeniedHandler deniedHandler,
-            CorsConfigurationSource corsConfigurationSource,
-            OidcAuthenticationSuccessHandler successHandler,
-            OidcAuthenticationFailureHandler failureHandler,
-            ReactiveClientRegistrationRepository clientRegistrations,
-            ServerAuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository,
-            ServerOAuth2AuthorizedClientRepository authorizedClientRepository) {
+                                                          ApiAuthenticationEntryPoint entryPoint, ApiAccessDeniedHandler deniedHandler,
+                                                          CorsConfigurationSource corsConfigurationSource,
+                                                          OidcAuthenticationSuccessHandler successHandler,
+                                                          OidcAuthenticationFailureHandler failureHandler,
+                                                          ReactiveClientRegistrationRepository clientRegistrations,
+                                                          ServerAuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository,
+                                                          ServerOAuth2AuthorizedClientRepository authorizedClientRepository) {
         CookieServerCsrfTokenRepository csrf = CookieServerCsrfTokenRepository.withHttpOnlyFalse();
         csrf.setCookiePath("/");
         return http

@@ -6,7 +6,9 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
 
-/** Specification de consulta del catálogo de asignaciones de un perfil, aislado por tenant. */
+/**
+ * Specification de consulta del catálogo de asignaciones de un perfil, aislado por tenant.
+ */
 public record ProfileAssignmentCriteria(ProfileId profileId, TenantId tenantId) {
 
     public ProfileAssignmentCriteria {

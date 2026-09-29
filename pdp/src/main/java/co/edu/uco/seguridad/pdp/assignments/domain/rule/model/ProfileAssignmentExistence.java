@@ -6,8 +6,11 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
 
-/** Hecho ya resuelto para ProfileAssignmentMustExistForTenantRule. */
-public record ProfileAssignmentExistence(ProfileAssignmentId profileAssignmentId, TenantId tenantId, boolean registered) {
+/**
+ * Hecho ya resuelto para ProfileAssignmentMustExistForTenantRule.
+ */
+public record ProfileAssignmentExistence(ProfileAssignmentId profileAssignmentId, TenantId tenantId,
+                                         boolean registered) {
 
     public ProfileAssignmentExistence {
         Objects.requireNonNull(profileAssignmentId, RequiredArgumentMessages.PROFILE_ASSIGNMENT_ID);

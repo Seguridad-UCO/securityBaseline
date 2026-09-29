@@ -12,7 +12,9 @@ import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import java.time.Instant;
 import java.util.Optional;
 
-/** Fila a dominio. Los value objects validan aquí. */
+/**
+ * Fila a dominio. Los value objects validan aquí.
+ */
 public final class AssignmentPersistenceMapper {
 
     private AssignmentPersistenceMapper() {

@@ -1,20 +1,28 @@
 package co.edu.uco.seguridad.pep.fixture;
 
-import com.nimbusds.jose.*;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.RSASSASigner;
-import com.nimbusds.jose.jwk.*;
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
-import com.nimbusds.jwt.*;
-import io.netty.handler.codec.http.HttpHeaderNames;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
 import reactor.core.publisher.Mono;
 import reactor.netty.DisposableServer;
 import reactor.netty.http.server.HttpServer;
 import tools.jackson.databind.ObjectMapper;
-import java.time.*;
-import java.util.*;
-import java.util.concurrent.atomic.*;
 
-/** External HTTP fixtures, confined to test classpath. Never packaged in the PEP executable. */
+import java.time.Duration;
+import java.time.Instant;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+
+/**
+ * External HTTP fixtures, confined to test classpath. Never packaged in the PEP executable.
+ */
 public final class FixtureServers implements AutoCloseable {
     public final AtomicInteger evaluations = new AtomicInteger();
     public final AtomicInteger forwarded = new AtomicInteger();
@@ -33,8 +41,11 @@ public final class FixtureServers implements AutoCloseable {
     private final String issuer;
 
     public FixtureServers(int pdpPort, int appPort) {
-        try { key = new RSAKeyGenerator(2048).keyID("fixture-key").generate(); }
-        catch (Exception e) { throw new IllegalStateException(e); }
+        try {
+            key = new RSAKeyGenerator(2048).keyID("fixture-key").generate();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
         pdp = HttpServer.create().host(System.getProperty("fixture.bind-host", "127.0.0.1")).port(pdpPort).handle((request, response) -> {
             String path = request.fullPath();
             if (path.equals("/jwks")) {
@@ -42,7 +53,8 @@ public final class FixtureServers implements AutoCloseable {
                         .sendString(Mono.just(new JWKSet(key.toPublicJWK()).toString()));
             }
             if (path.equals("/actuator/health")) return response.status(healthy.get() ? 200 : 503).send();
-            if (path.equals("/token")) return response.header("Content-Type", "text/plain").sendString(Mono.fromSupplier(() -> token("protected-api", issuer(), 300)));
+            if (path.equals("/token"))
+                return response.header("Content-Type", "text/plain").sendString(Mono.fromSupplier(() -> token("protected-api", issuer(), 300)));
             if (path.startsWith("/__fixture/mode/")) {
                 mode.set(path.substring("/__fixture/mode/".length()));
                 return response.send();
@@ -57,8 +69,10 @@ public final class FixtureServers implements AutoCloseable {
                 if (current.equals("HTTP500")) return response.status(500).send().then();
                 if (current.equals("HTTP302")) return response.status(302).header("Location", "/token").send().then();
                 if (current.equals("EMPTY")) return response.header("Content-Type", "application/json").send().then();
-                if (current.equals("MALFORMED")) return response.header("Content-Type", "application/json").sendString(Mono.just("{")).then();
-                if (current.equals("LARGE")) return response.header("Content-Type", "application/json").sendString(Mono.just("x".repeat(70000))).then();
+                if (current.equals("MALFORMED"))
+                    return response.header("Content-Type", "application/json").sendString(Mono.just("{")).then();
+                if (current.equals("LARGE"))
+                    return response.header("Content-Type", "application/json").sendString(Mono.just("x".repeat(70000))).then();
                 Map<String, Object> output = new LinkedHashMap<>();
                 output.put("decision", Set.of("DENY", "INDETERMINATE", "UNKNOWN").contains(current) ? current : "ALLOW");
                 output.put("decisionId", "fixture-decision");
@@ -85,9 +99,12 @@ public final class FixtureServers implements AutoCloseable {
             request.requestHeaders().forEach(entry -> headers.computeIfAbsent(entry.getKey(), k -> new ArrayList<>()).add(entry.getValue()));
             lastHeaders.set(headers);
             lastUri.set(request.uri());
-            if (request.fullPath().equals("/slow")) return response.sendString(Mono.just("late").delayElement(Duration.ofSeconds(2)));
-            if (request.fullPath().equals("/redirect")) return response.status(302).header("Location", "/elsewhere").send();
-            if (request.fullPath().equals("/sse")) return response.header("Content-Type", "text/event-stream").sendString(Mono.just("data: event\n\n"));
+            if (request.fullPath().equals("/slow"))
+                return response.sendString(Mono.just("late").delayElement(Duration.ofSeconds(2)));
+            if (request.fullPath().equals("/redirect"))
+                return response.status(302).header("Location", "/elsewhere").send();
+            if (request.fullPath().equals("/sse"))
+                return response.header("Content-Type", "text/event-stream").sendString(Mono.just("data: event\n\n"));
             return request.receive().aggregate().asByteArray().defaultIfEmpty(new byte[0]).flatMap(bytes -> {
                 lastBody.set(bytes);
                 response.status(request.fullPath().equals("/teapot") ? 418 : 200);
@@ -99,13 +116,27 @@ public final class FixtureServers implements AutoCloseable {
             });
         }).bindNow();
     }
-    public String issuer() { return issuer; }
-    public String pdpUrl() { return "http://127.0.0.1:" + pdp.port(); }
-    public String appUrl() { return "http://127.0.0.1:" + app.port(); }
-    public int appPort() { return app.port(); }
+
+    public String issuer() {
+        return issuer;
+    }
+
+    public String pdpUrl() {
+        return "http://127.0.0.1:" + pdp.port();
+    }
+
+    public String appUrl() {
+        return "http://127.0.0.1:" + app.port();
+    }
+
+    public int appPort() {
+        return app.port();
+    }
+
     public String token(String audience, String tokenIssuer, long seconds) {
         return token(audience, tokenIssuer, seconds, key.getKeyID());
     }
+
     public String token(String audience, String tokenIssuer, long seconds, String keyId) {
         try {
             var claims = new JWTClaimsSet.Builder().issuer(tokenIssuer).subject("fixture-user").audience(audience)
@@ -113,9 +144,17 @@ public final class FixtureServers implements AutoCloseable {
             SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(keyId).build(), claims);
             jwt.sign(new RSASSASigner(key));
             return jwt.serialize();
-        } catch (Exception e) { throw new IllegalStateException(e); }
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
-    @Override public void close() { pdp.disposeNow(); app.disposeNow(); }
+
+    @Override
+    public void close() {
+        pdp.disposeNow();
+        app.disposeNow();
+    }
+
     public static void main(String[] args) throws Exception {
         FixtureServers fixtures = new FixtureServers(18080, 18081);
         Runtime.getRuntime().addShutdownHook(new Thread(fixtures::close));

@@ -7,7 +7,13 @@
 - **Tipo:** Mixto (infraestructura + efecto secundario en dos casos de uso existentes)
 - **Fecha:** 2026-09-16
 - **Rama sugerida:** `feature/HU-022-revocacion-tokens-redis`
-- **Fuentes:** `pdp/docs/ai-harness/workspace/HU-022.md`, `security-platform-architecture/docs/01-governance/adr/ADR-026-redis-cache-and-token-revocation.md`, `ADR-018`, `ADR-025`, código real: `shared/config/SecurityConfiguration.java`, `KeycloakSecurityConfiguration.java`, `InternalSecurityConfiguration.java`, `shared/security/SecurityContext.java`, `PdpPrincipal.java`, `LocalUserPrincipal.java`, `pdp/identity/application/rule/validator/SubjectUserIdLookupValidator.java`. No hay event storming propio de BC-07 en `artefactos-referencia` (carpeta inexistente — tratado como no disponible, sb-fuentes). Decisiones de arquitectura confirmadas con Sebastián el 2026-09-16 (ver §11 — resueltas, no pendientes).
+- **Fuentes:** `pdp/docs/ai-harness/workspace/HU-022.md`,
+  `security-platform-architecture/docs/01-governance/adr/ADR-026-redis-cache-and-token-revocation.md`, `ADR-018`,
+  `ADR-025`, código real: `shared/config/SecurityConfiguration.java`, `KeycloakSecurityConfiguration.java`,
+  `InternalSecurityConfiguration.java`, `shared/security/SecurityContext.java`, `PdpPrincipal.java`,
+  `LocalUserPrincipal.java`, `pdp/identity/application/rule/validator/SubjectUserIdLookupValidator.java`. No hay event
+  storming propio de BC-07 en `artefactos-referencia` (carpeta inexistente — tratado como no disponible, sb-fuentes).
+  Decisiones de arquitectura confirmadas con Sebastián el 2026-09-16 (ver §11 — resueltas, no pendientes).
 - **Criterios de la línea base que toca:** 1, 2, 4, 7, 8, 9, 11, 12, 21, 22, 23
 
 ## 1. Resumen funcional
@@ -50,13 +56,13 @@ más piezas para el mismo resultado, y tarde: el request ya habría pasado la au
 
 ## 2. Criterios de aceptación
 
-| # | Criterio | Resultado esperado |
-|---|---|---|
-| 1 | Revocar invalida de inmediato | Tras `RevokeAssignmentUseCase`/`RemoveApplicationAdministratorUseCase`, cualquier JWT del sujeto afectado emitido antes de ese instante es rechazado (401) en el canal interno, aunque no haya expirado |
-| 2 | No revocado sigue pasando | Un JWT válido, no expirado y sin revocación activa para su sujeto se acepta sin cambios de comportamiento observable |
-| 3 | Fail-closed ante caída de Redis | Si Redis no responde (timeout, caído), la petición se rechaza — nunca se asume "no revocado" |
-| 4 | La entrada no persiste indefinidamente | La clave `revoked-since:{userId}` lleva TTL — nunca una clave sin expiración |
-| 5 | `verificar.ps1` (suite completa) sigue en verde | `mvnw -f pdp/pom.xml verify`, cobertura ≥ 50 % por paquete nuevo |
+| # | Criterio                                        | Resultado esperado                                                                                                                                                                                      |
+|---|-------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1 | Revocar invalida de inmediato                   | Tras `RevokeAssignmentUseCase`/`RemoveApplicationAdministratorUseCase`, cualquier JWT del sujeto afectado emitido antes de ese instante es rechazado (401) en el canal interno, aunque no haya expirado |
+| 2 | No revocado sigue pasando                       | Un JWT válido, no expirado y sin revocación activa para su sujeto se acepta sin cambios de comportamiento observable                                                                                    |
+| 3 | Fail-closed ante caída de Redis                 | Si Redis no responde (timeout, caído), la petición se rechaza — nunca se asume "no revocado"                                                                                                            |
+| 4 | La entrada no persiste indefinidamente          | La clave `revoked-since:{userId}` lleva TTL — nunca una clave sin expiración                                                                                                                            |
+| 5 | `verificar.ps1` (suite completa) sigue en verde | `mvnw -f pdp/pom.xml verify`, cobertura ≥ 50 % por paquete nuevo                                                                                                                                        |
 
 ## 3. Reglas de negocio
 
@@ -67,10 +73,10 @@ decide un booleano puro a partir de dos instantes (`issuedAt <= revokedSince`) �
 regla de negocio con excepción propia. Documentado aquí en vez de omitido para que quede explícito
 por qué la sección está casi vacía.
 
-| # | Regla | Dónde vive | Puerto que trae el dato | Excepción → HTTP |
-|---|---|---|---|---|
-| 1 | Un JWT cuyo `issuedAt` es anterior o igual al `revokedSince` de su sujeto se rechaza | `RevocationAwareJwtDecoder` (comparación síncrona sobre el resultado de `isRevoked`) | `TokenRevocationPort.isRevoked` | `JwtValidationException` (Spring Security) → **401**, vía `ApiAuthenticationEntryPoint` — no pasa por `ApiErrorHandler` |
-| 2 | Si Redis no responde, la petición se rechaza igual que si estuviera revocada | `RedisTokenRevocationAdapter.isRevoked` propaga el error; `RevocationAwareJwtDecoder` no distingue "revocado" de "no se pudo verificar" en el efecto (sí en el log) | — | mismo 401 |
+| # | Regla                                                                                | Dónde vive                                                                                                                                                          | Puerto que trae el dato         | Excepción → HTTP                                                                                                        |
+|---|--------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------|-------------------------------------------------------------------------------------------------------------------------|
+| 1 | Un JWT cuyo `issuedAt` es anterior o igual al `revokedSince` de su sujeto se rechaza | `RevocationAwareJwtDecoder` (comparación síncrona sobre el resultado de `isRevoked`)                                                                                | `TokenRevocationPort.isRevoked` | `JwtValidationException` (Spring Security) → **401**, vía `ApiAuthenticationEntryPoint` — no pasa por `ApiErrorHandler` |
+| 2 | Si Redis no responde, la petición se rechaza igual que si estuviera revocada         | `RedisTokenRevocationAdapter.isRevoked` propaga el error; `RevocationAwareJwtDecoder` no distingue "revocado" de "no se pudo verificar" en el efecto (sí en el log) | —                               | mismo 401                                                                                                               |
 
 ## 4. Modelo de dominio afectado
 
@@ -79,9 +85,9 @@ No hay entidad ni agregado nuevo. Ningún value object nuevo: el puerto habla di
 
 ### Value objects
 
-| VO | Nuevo o existente | Invariantes | Vive en |
-|---|---|---|---|
-| `UserId` | Existente | — | `pdp/commons/model/` |
+| VO       | Nuevo o existente | Invariantes | Vive en              |
+|----------|-------------------|-------------|----------------------|
+| `UserId` | Existente         | —           | `pdp/commons/model/` |
 
 ## 5. Persistencia — Redis, no SurrealDB
 
@@ -233,31 +239,32 @@ esta historia es enteramente `shared` + dos puntos de invocación en `assignment
 > `pdp/src/test` no lo toco yo (regla del planificador). Lo que sigue es lo que `@2-tester-spec`
 > debe escribir — descripción del caso, no el código.
 
-| Capa | Clase de prueba | Casos |
-|---|---|---|
-| `infrastructure` (unitaria, sin Spring) | `RevocationAwareJwtDecoderTests` | (a) `SubjectUserIdLookupValidator` no resuelve `UserId` para el `subject` → error, fail-closed (resuelto §11 — sin `UserId` no se puede demostrar que el token no esté revocado, mismo criterio que Redis caído); (b) `isRevoked` devuelve `false` → el `Jwt` pasa igual; (c) `isRevoked` devuelve `true` → error de tipo `JwtValidationException`; (d) `isRevoked` propaga un error (Redis caído) → error igual (fail-closed); (e) delegate falla (firma/issuer inválidos) → nunca se llega a consultar Redis ni al lookup de `UserId` |
-| `infrastructure` (Testcontainers, imagen `redis:7-alpine`, `GenericContainer` — sin módulo oficial, mismo criterio que SurrealDB) | `RedisTokenRevocationAdapterTests` | (a) `isRevoked` antes de cualquier `revokeAllSince` → `false`; (b) tras `revokeAllSince(subject, T)`, `isRevoked(subject, issuedAt < T)` → `true`; (c) `isRevoked(subject, issuedAt > T)` → `false` (token emitido después de la revocación es válido); (d) `revokeAllSince` dos veces con instantes distintos → prevalece el más reciente (`SET`, no acumula); (e) la clave tiene TTL (`ttl > 0` tras `revokeAllSince`) |
-| `application` (extiende pruebas existentes) | `RevokeAssignmentUseCaseImplTests` | + un caso: tras revocar, el fake de `TokenRevocationPort` capturó `revokeAllSince(userId, now)` con el `userId` correcto |
-| `application` (extiende pruebas existentes) | `RemoveApplicationAdministratorUseCaseImplTests` | + un caso equivalente |
-| `application` (extiende pruebas existentes, camino de fallo) | ambas de arriba | + un caso: si el fake de `TokenRevocationPort.revokeAllSince` falla, la operación completa falla (fail-closed en escritura, ver §7) |
+| Capa                                                                                                                              | Clase de prueba                                  | Casos                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+|-----------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `infrastructure` (unitaria, sin Spring)                                                                                           | `RevocationAwareJwtDecoderTests`                 | (a) `SubjectUserIdLookupValidator` no resuelve `UserId` para el `subject` → error, fail-closed (resuelto §11 — sin `UserId` no se puede demostrar que el token no esté revocado, mismo criterio que Redis caído); (b) `isRevoked` devuelve `false` → el `Jwt` pasa igual; (c) `isRevoked` devuelve `true` → error de tipo `JwtValidationException`; (d) `isRevoked` propaga un error (Redis caído) → error igual (fail-closed); (e) delegate falla (firma/issuer inválidos) → nunca se llega a consultar Redis ni al lookup de `UserId` |
+| `infrastructure` (Testcontainers, imagen `redis:7-alpine`, `GenericContainer` — sin módulo oficial, mismo criterio que SurrealDB) | `RedisTokenRevocationAdapterTests`               | (a) `isRevoked` antes de cualquier `revokeAllSince` → `false`; (b) tras `revokeAllSince(subject, T)`, `isRevoked(subject, issuedAt < T)` → `true`; (c) `isRevoked(subject, issuedAt > T)` → `false` (token emitido después de la revocación es válido); (d) `revokeAllSince` dos veces con instantes distintos → prevalece el más reciente (`SET`, no acumula); (e) la clave tiene TTL (`ttl > 0` tras `revokeAllSince`)                                                                                                                |
+| `application` (extiende pruebas existentes)                                                                                       | `RevokeAssignmentUseCaseImplTests`               | + un caso: tras revocar, el fake de `TokenRevocationPort` capturó `revokeAllSince(userId, now)` con el `userId` correcto                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `application` (extiende pruebas existentes)                                                                                       | `RemoveApplicationAdministratorUseCaseImplTests` | + un caso equivalente                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `application` (extiende pruebas existentes, camino de fallo)                                                                      | ambas de arriba                                  | + un caso: si el fake de `TokenRevocationPort.revokeAllSince` falla, la operación completa falla (fail-closed en escritura, ver §7)                                                                                                                                                                                                                                                                                                                                                                                                     |
 
 Necesita, además, un `AbstractRedisIntegrationTest` (mismo patrón que `AbstractSurrealDbIntegrationTest`,
 `GenericContainer` + `@DynamicPropertySource`) — no existe todavía; lo crea `@2-tester-spec`, no yo.
 
 ## 10. Trazabilidad
 
-| Fase | Estado | Fecha |
-|---|---|---|
-| Plan | ✅ Generado | 2026-09-16 |
-| Contrato aprobado (gate 1) | ✅ Cerrado | 2026-09-16 |
-| Pruebas en rojo | ✅ Confirmado | 2026-09-16 |
-| Implementación en verde | ✅ 736/736 | 2026-09-16 |
-| Validación | ⛔ RECHAZADO — ver REPORTE-HU-022.md (bloqueante ajeno: cobertura preexistente en `applications`) | 2026-09-16 |
-| Entrega (gate 2) | ⏳ Pendiente | |
+| Fase                       | Estado                                                                                           | Fecha      |
+|----------------------------|--------------------------------------------------------------------------------------------------|------------|
+| Plan                       | ✅ Generado                                                                                       | 2026-09-16 |
+| Contrato aprobado (gate 1) | ✅ Cerrado                                                                                        | 2026-09-16 |
+| Pruebas en rojo            | ✅ Confirmado                                                                                     | 2026-09-16 |
+| Implementación en verde    | ✅ 736/736                                                                                        | 2026-09-16 |
+| Validación                 | ⛔ RECHAZADO — ver REPORTE-HU-022.md (bloqueante ajeno: cobertura preexistente en `applications`) | 2026-09-16 |
+| Entrega (gate 2)           | ⏳ Pendiente                                                                                      |            |
 
 ## 11. Ambigüedades
 
 **Resueltas con Sebastián el 2026-09-16** (no reabrir):
+
 1. Punto de verificación → canal interno PEP→PDP, decorando `internalEvidenceJwtDecoder`.
 2. Quién dispara la revocación → efecto secundario automático de `RevokeAssignmentUseCase` (HU-018)
    y `RemoveApplicationAdministratorUseCase` (HU-020). Sin endpoint propio "cerrar sesión" en este

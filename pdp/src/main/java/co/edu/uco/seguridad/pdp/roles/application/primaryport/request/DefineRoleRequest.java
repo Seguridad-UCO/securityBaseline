@@ -6,7 +6,9 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
 
-/** Entrada tipada de DefineRoleUseCase. El alcance ya trae el inquilino del principal: aquí no queda nada que rechazar. */
+/**
+ * Entrada tipada de DefineRoleUseCase. El alcance ya trae el inquilino del principal: aquí no queda nada que rechazar.
+ */
 public record DefineRoleRequest(RoleName name, RoleScope scope) {
 
     public DefineRoleRequest {

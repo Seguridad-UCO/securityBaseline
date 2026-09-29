@@ -6,7 +6,9 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
 
-/** Entrada tipada de DefineProfileUseCase. El alcance ya trae el inquilino del principal. */
+/**
+ * Entrada tipada de DefineProfileUseCase. El alcance ya trae el inquilino del principal.
+ */
 public record DefineProfileRequest(ProfileName name, RoleScope scope) {
 
     public DefineProfileRequest {

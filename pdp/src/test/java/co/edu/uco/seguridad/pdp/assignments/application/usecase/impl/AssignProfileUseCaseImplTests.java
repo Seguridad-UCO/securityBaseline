@@ -3,7 +3,6 @@ package co.edu.uco.seguridad.pdp.assignments.application.usecase.impl;
 import co.edu.uco.seguridad.pdp.assignments.application.primaryport.request.AssignProfileRequest;
 import co.edu.uco.seguridad.pdp.assignments.application.primaryport.request.AssignRoleRequest;
 import co.edu.uco.seguridad.pdp.assignments.application.primaryport.response.AssignmentResponse;
-import co.edu.uco.seguridad.pdp.assignments.application.primaryport.response.ProfileAssignmentResponse;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.AssignProfileRulesValidator;
 import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository.ProfileAssignmentRepository;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.AssignRoleUseCase;
@@ -11,13 +10,7 @@ import co.edu.uco.seguridad.pdp.assignments.domain.ProfileAssignment;
 import co.edu.uco.seguridad.pdp.assignments.domain.ProfileAssignmentCriteria;
 import co.edu.uco.seguridad.pdp.assignments.domain.model.AssignmentId;
 import co.edu.uco.seguridad.pdp.assignments.domain.model.ProfileAssignmentId;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.model.ProfileId;
-import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
-import co.edu.uco.seguridad.pdp.commons.model.RoleId;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
-import co.edu.uco.seguridad.pdp.commons.model.UserId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -30,7 +23,9 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Espeja el presupuesto de AssignRoleUseCaseImplTests. */
+/**
+ * Espeja el presupuesto de AssignRoleUseCaseImplTests.
+ */
 class AssignProfileUseCaseImplTests {
 
     private static final TenantId TENANT = new TenantId("universidad-uco");
@@ -83,7 +78,9 @@ class AssignProfileUseCaseImplTests {
     void never_reaches_assign_role_use_case_when_the_rules_validator_rejects_the_request() {
         AssignProfileRulesValidator alwaysRejects = request -> Mono.error(new RuntimeException("perfil inexistente"));
         AssignProfileUseCaseImpl useCase = new AssignProfileUseCaseImpl(alwaysRejects,
-                request -> { throw new AssertionError("must not reach AssignRoleUseCase"); },
+                request -> {
+                    throw new AssertionError("must not reach AssignRoleUseCase");
+                },
                 unreachableRepository(), UUID::randomUUID, () -> NOW);
 
         StepVerifier.create(useCase.execute(new AssignProfileRequest(TENANT, USER, APPLICATION, PROFILE)))
@@ -95,7 +92,7 @@ class AssignProfileUseCaseImplTests {
         return new ProfileAssignmentRepository() {
             @Override
             public Mono<Boolean> existsActiveByUserApplicationProfile(UserId userId, ApplicationId applicationId,
-                    ProfileId profileId, Instant now) {
+                                                                      ProfileId profileId, Instant now) {
                 throw new UnsupportedOperationException();
             }
 
@@ -121,7 +118,7 @@ class AssignProfileUseCaseImplTests {
         return new ProfileAssignmentRepository() {
             @Override
             public Mono<Boolean> existsActiveByUserApplicationProfile(UserId userId, ApplicationId applicationId,
-                    ProfileId profileId, Instant now) {
+                                                                      ProfileId profileId, Instant now) {
                 throw new UnsupportedOperationException();
             }
 

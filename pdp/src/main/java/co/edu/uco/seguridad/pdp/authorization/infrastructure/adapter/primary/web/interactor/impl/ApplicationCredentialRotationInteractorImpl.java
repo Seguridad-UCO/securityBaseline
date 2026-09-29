@@ -25,7 +25,7 @@ public final class ApplicationCredentialRotationInteractorImpl implements Applic
     private final SubjectUserIdLookupValidator subjectUserIdLookup;
 
     public ApplicationCredentialRotationInteractorImpl(AdministerApplicationCredentialRotationUseCase useCase,
-            SubjectUserIdLookupValidator subjectUserIdLookup) {
+                                                       SubjectUserIdLookupValidator subjectUserIdLookup) {
         this.useCase = Objects.requireNonNull(useCase, RequiredArgumentMessages.ROTATE_APPLICATION_CREDENTIAL_USE_CASE);
         this.subjectUserIdLookup = Objects.requireNonNull(subjectUserIdLookup,
                 RequiredArgumentMessages.SUBJECT_USER_ID_LOOKUP_VALIDATOR);

@@ -14,7 +14,9 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/** HU-016: movido desde {@code roles}, mismos casos — ver PLAN-HU-016.md §7. */
+/**
+ * HU-016: movido desde {@code roles}, mismos casos — ver PLAN-HU-016.md §7.
+ */
 class GrantResourceRequestMapperTests {
 
     private static final TenantId TENANT = new TenantId("universidad-uco");

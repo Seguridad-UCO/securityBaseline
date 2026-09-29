@@ -1,12 +1,12 @@
 package co.edu.uco.seguridad.pep.enforcement.infrastructure.config;
 
 import co.edu.uco.seguridad.pep.enforcement.application.port.secondary.DecisionPort;
-import co.edu.uco.seguridad.pep.enforcement.application.usecase.EnforceAccessUseCase;
-import co.edu.uco.seguridad.pep.enforcement.application.usecase.impl.EnforceAccessUseCaseImpl;
 import co.edu.uco.seguridad.pep.enforcement.application.rule.EnforceAccessRequestMustBeCompleteRule;
 import co.edu.uco.seguridad.pep.enforcement.application.rule.impl.EnforceAccessRequestMustBeCompleteRuleImpl;
 import co.edu.uco.seguridad.pep.enforcement.application.rulesvalidator.EnforceAccessRulesValidator;
 import co.edu.uco.seguridad.pep.enforcement.application.rulesvalidator.impl.EnforceAccessRulesValidatorImpl;
+import co.edu.uco.seguridad.pep.enforcement.application.usecase.EnforceAccessUseCase;
+import co.edu.uco.seguridad.pep.enforcement.application.usecase.impl.EnforceAccessUseCaseImpl;
 import co.edu.uco.seguridad.pep.enforcement.infrastructure.adapter.secondary.http.WebClientDecisionAdapter;
 import co.edu.uco.seguridad.pep.enforcement.infrastructure.properties.PdpClientProperties;
 import co.edu.uco.seguridad.pep.enforcement.infrastructure.properties.ProxyProperties;

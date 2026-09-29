@@ -31,10 +31,10 @@ public final class SurrealProfileSchemaInitializer extends SurrealSchemaInitiali
         return client.ensureNamespaceAndDatabase()
                 .then(client.execute(
                         """
-                        DEFINE TABLE IF NOT EXISTS %1$s SCHEMALESS;
-                        DEFINE INDEX IF NOT EXISTS %2$s ON %1$s \
-                        COLUMNS level, tenantId, applicationId, name UNIQUE;\
-                        """.formatted(ProfileSchema.TABLE, ProfileSchema.INDEX_SCOPE_NAME),
+                                DEFINE TABLE IF NOT EXISTS %1$s SCHEMALESS;
+                                DEFINE INDEX IF NOT EXISTS %2$s ON %1$s \
+                                COLUMNS level, tenantId, applicationId, name UNIQUE;\
+                                """.formatted(ProfileSchema.TABLE, ProfileSchema.INDEX_SCOPE_NAME),
                         Map.of()))
                 .then();
     }

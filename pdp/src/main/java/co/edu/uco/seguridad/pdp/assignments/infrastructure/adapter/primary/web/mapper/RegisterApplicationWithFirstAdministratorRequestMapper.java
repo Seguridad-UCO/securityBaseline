@@ -9,7 +9,9 @@ import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.shared.web.RequestFieldParser;
 
-/** Mismo patrón que {@code RegisterApplicationRequestMapper} de {@code applications}, más el {@code UserId} del registrador. */
+/**
+ * Mismo patrón que {@code RegisterApplicationRequestMapper} de {@code applications}, más el {@code UserId} del registrador.
+ */
 public final class RegisterApplicationWithFirstAdministratorRequestMapper {
 
     private RegisterApplicationWithFirstAdministratorRequestMapper() {

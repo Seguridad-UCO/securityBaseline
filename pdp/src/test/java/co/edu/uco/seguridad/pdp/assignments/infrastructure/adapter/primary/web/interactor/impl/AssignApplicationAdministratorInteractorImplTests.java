@@ -55,7 +55,9 @@ class AssignApplicationAdministratorInteractorImplTests {
 
     @Test
     void never_reaches_the_use_case_when_the_application_does_not_exist() {
-        AssignApplicationAdministratorUseCase useCase = request -> { throw new AssertionError("must not reach the use case"); };
+        AssignApplicationAdministratorUseCase useCase = request -> {
+            throw new AssertionError("must not reach the use case");
+        };
         AssignApplicationAdministratorInteractorImpl interactor = new AssignApplicationAdministratorInteractorImpl(
                 ownerLookupFailing(), useCase);
 
@@ -67,7 +69,9 @@ class AssignApplicationAdministratorInteractorImplTests {
 
     @Test
     void rejects_a_user_id_that_is_not_a_valid_identifier_after_resolving_the_tenant() {
-        AssignApplicationAdministratorUseCase useCase = request -> { throw new AssertionError("must not reach the use case"); };
+        AssignApplicationAdministratorUseCase useCase = request -> {
+            throw new AssertionError("must not reach the use case");
+        };
         AssignApplicationAdministratorInteractorImpl interactor = new AssignApplicationAdministratorInteractorImpl(
                 ownerLookupResolving(TENANT), useCase);
 
@@ -82,8 +86,12 @@ class AssignApplicationAdministratorInteractorImplTests {
 
     @Test
     void requires_the_application_id_field() {
-        ApplicationOwnerLookupValidator ownerLookup = id -> { throw new AssertionError("must not look up the owner"); };
-        AssignApplicationAdministratorUseCase useCase = request -> { throw new AssertionError("must not reach the use case"); };
+        ApplicationOwnerLookupValidator ownerLookup = id -> {
+            throw new AssertionError("must not look up the owner");
+        };
+        AssignApplicationAdministratorUseCase useCase = request -> {
+            throw new AssertionError("must not reach the use case");
+        };
         AssignApplicationAdministratorInteractorImpl interactor = new AssignApplicationAdministratorInteractorImpl(
                 ownerLookup, useCase);
 

@@ -36,9 +36,9 @@ public final class AssignRoleRulesValidatorImpl implements AssignRoleRulesValida
     private final TimeProvider time;
 
     public AssignRoleRulesValidatorImpl(UserMustExistValidator userMustExist,
-            ApplicationMustExistForTenantValidator applicationMustExist,
-            RoleScopeMustCoverApplicationValidator roleScopeMustCoverApplication,
-            AssignmentMustNotDuplicateActiveRule mustNotDuplicate, AssignmentRepository repository, TimeProvider time) {
+                                        ApplicationMustExistForTenantValidator applicationMustExist,
+                                        RoleScopeMustCoverApplicationValidator roleScopeMustCoverApplication,
+                                        AssignmentMustNotDuplicateActiveRule mustNotDuplicate, AssignmentRepository repository, TimeProvider time) {
         this.userMustExist = Objects.requireNonNull(userMustExist, RequiredArgumentMessages.USER_MUST_EXIST_VALIDATOR);
         this.applicationMustExist = Objects.requireNonNull(applicationMustExist,
                 RequiredArgumentMessages.APPLICATION_EXISTS_VALIDATOR);

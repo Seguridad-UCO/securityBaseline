@@ -6,30 +6,30 @@ Estado del trabajo para retomarlo en cualquier máquina. Se actualiza al cerrar 
 
 ## Dónde estamos
 
-| Fase | Contenido | Estado |
-|---|---|---|
-| 1 | Skills, herramientas, `1-planificador`, `4-validador`, plantillas | ✅ |
-| 1b | Deriva doc↔código corregida y verificable · criterios realineados | ✅ |
-| 1c | Skills rescatadas de la PR #24 (`sb-reactivo`, `sb-fuentes`) · `CLAUDE.md` | ✅ |
-| HU-001 | Implementada: 225 pruebas, criterios 16-19 cerrados, 22/23 | ✅ |
-| 1d | Consistencia arquitectónica: `consistencia.ps1` + 9 divergencias corregidas | ✅ |
-| 1e | Capa `application` aplanada · resiliencia de arranque · DEV saludable | ✅ |
-| Fase A | Reglas de negocio movidas a `domain/{slice}/rule/`, puras y síncronas · `domain/` reorganizado por categoría | ✅ |
-| 2 | `2-tester-spec` y `3-implementador` ✅ · slash commands, mutation testing, `5-entrega` ⏳ | 🟡 |
-| 3 | Grafo nivel 1 y 2 | ⏳ |
-| Fase B | El PDP se muda a `pdp/`, sibling de `pep/` y `security-policy-engine/` | ✅ |
-| HU-002 → HU-011 | Endpoint interno PEP↔PDP (mTLS), roles, asignaciones, `OpaPolicyDecisionAdapter` real, auditoría de decisiones (`AccessEvent`), perfiles, administración de aplicaciones (HU-009), saga de compensación (criterio 10) | ✅ |
-| HU-012 → HU-014 | El PDP emite (HU-012), valida (HU-013) y rota (HU-014) su propia credencial de aplicación | ✅ |
-| HU-015 | Administración del catálogo: alta automática del primer administrador al registrar; borrar/rotar credencial exige serlo (gate vía OPA, mecanismo de HU-009); backfill manual para aplicaciones preexistentes | ✅ — fusionada a `develop`, PR #48 |
-| HU-016 | Gatea `DefineRole`/`GrantResourceToRole` (slice `roles`) por administración de aplicación | ✅ — fusionada a `develop`, PR #50 |
-| HU-017 | Gatea `RegisterProtectedResourceUseCase` (slice `resources`) por administración de aplicación | ✅ — fusionada a `develop`, PR #51 |
-| HU-018 | Gatea `AssignRoleUseCase`/`RevokeAssignmentUseCase` (slice `assignments`) por administración de aplicación | ✅ — comiteada (`92585ab`), pendiente push (gate 2) |
-| HU-019 | Gatea `DefineProfileUseCase`/`AddRoleToProfileUseCase`/`AssignProfileUseCase`/`RevokeProfileAssignmentUseCase` por administración de aplicación | ✅ — comiteada (`92585ab`), pendiente push (gate 2) |
-| HU-020 | Autoservicio de administradores: agregar/quitar/listar administradores de aplicación por HTTP público, sin pasar por el canal interno mTLS | ✅ — validada, ver REPORTE-HU-020.md, pendiente commit/push (gate 2) |
-| HU-021 | Auditoría de operaciones administrativas (`AdministrationEvent`, retrofit de 13 `Administer*UseCaseImpl`) | 🟡 — validación RECHAZADA (3 bloqueantes: persistencia SurrealDB y observabilidad Prometheus/logs sin implementar), ver REPORTE-HU-021.md |
-| HU-022 | Revocación de tokens con Redis: `TokenRevocationPort`/`RedisTokenRevocationAdapter`, `RevocationAwareJwtDecoder` decora `internalEvidenceJwtDecoder` (canal interno PEP→PDP), efecto secundario automático desde `RevokeAssignmentUseCase`/`RemoveApplicationAdministratorUseCase`, fail-closed | ✅ — validada, ver REPORTE-HU-022.md, pendiente commit/push (gate 2) |
-| HU-023 | Caché distribuida de roles activos: `DistributedCachePort`/`RedisDistributedCachePort` (fail-open, TTL de respaldo), `ObservedDistributedCachePort` (métrica), lectura caché-aside en `ResolveActiveRolesUseCaseImpl`, invalidación desde los dos puntos raíz de escritura (`AssignRoleUseCase`/`RevokeAssignmentUseCase` — cubren las 7 rutas de mutación de HU-015 a HU-020 sin tocar `roles`/`profiles`) | ✅ — validada, ver REPORTE-HU-023.md, pendiente commit/push (gate 2) |
-| HU-024 | MFA como step-up para operaciones administrativas: `AuthenticationContextEvidence`/`MfaEvidenceProperties` (`shared/security/mfa`), `MfaAwareApplicationAdministratorValidator` decora `PrincipalMustBeApplicationAdministratorValidator` en `AuthorizationConfiguration` (fail-closed mientras el realm de Keycloak no tenga MFA configurado), evidencia transportada desde el login (`OidcAuthenticationSuccessHandler`) hasta los 12 flujos administrativos gateados | ✅ — validada, ver REPORTE-HU-024.md, pendiente commit/push (gate 2) |
+| Fase            | Contenido                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Estado                                                                                                                                    |
+|-----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------|
+| 1               | Skills, herramientas, `1-planificador`, `4-validador`, plantillas                                                                                                                                                                                                                                                                                                                                                                                                       | ✅                                                                                                                                         |
+| 1b              | Deriva doc↔código corregida y verificable · criterios realineados                                                                                                                                                                                                                                                                                                                                                                                                       | ✅                                                                                                                                         |
+| 1c              | Skills rescatadas de la PR #24 (`sb-reactivo`, `sb-fuentes`) · `CLAUDE.md`                                                                                                                                                                                                                                                                                                                                                                                              | ✅                                                                                                                                         |
+| HU-001          | Implementada: 225 pruebas, criterios 16-19 cerrados, 22/23                                                                                                                                                                                                                                                                                                                                                                                                              | ✅                                                                                                                                         |
+| 1d              | Consistencia arquitectónica: `consistencia.ps1` + 9 divergencias corregidas                                                                                                                                                                                                                                                                                                                                                                                             | ✅                                                                                                                                         |
+| 1e              | Capa `application` aplanada · resiliencia de arranque · DEV saludable                                                                                                                                                                                                                                                                                                                                                                                                   | ✅                                                                                                                                         |
+| Fase A          | Reglas de negocio movidas a `domain/{slice}/rule/`, puras y síncronas · `domain/` reorganizado por categoría                                                                                                                                                                                                                                                                                                                                                            | ✅                                                                                                                                         |
+| 2               | `2-tester-spec` y `3-implementador` ✅ · slash commands, mutation testing, `5-entrega` ⏳                                                                                                                                                                                                                                                                                                                                                                                 | 🟡                                                                                                                                        |
+| 3               | Grafo nivel 1 y 2                                                                                                                                                                                                                                                                                                                                                                                                                                                       | ⏳                                                                                                                                         |
+| Fase B          | El PDP se muda a `pdp/`, sibling de `pep/` y `security-policy-engine/`                                                                                                                                                                                                                                                                                                                                                                                                  | ✅                                                                                                                                         |
+| HU-002 → HU-011 | Endpoint interno PEP↔PDP (mTLS), roles, asignaciones, `OpaPolicyDecisionAdapter` real, auditoría de decisiones (`AccessEvent`), perfiles, administración de aplicaciones (HU-009), saga de compensación (criterio 10)                                                                                                                                                                                                                                                   | ✅                                                                                                                                         |
+| HU-012 → HU-014 | El PDP emite (HU-012), valida (HU-013) y rota (HU-014) su propia credencial de aplicación                                                                                                                                                                                                                                                                                                                                                                               | ✅                                                                                                                                         |
+| HU-015          | Administración del catálogo: alta automática del primer administrador al registrar; borrar/rotar credencial exige serlo (gate vía OPA, mecanismo de HU-009); backfill manual para aplicaciones preexistentes                                                                                                                                                                                                                                                            | ✅ — fusionada a `develop`, PR #48                                                                                                         |
+| HU-016          | Gatea `DefineRole`/`GrantResourceToRole` (slice `roles`) por administración de aplicación                                                                                                                                                                                                                                                                                                                                                                               | ✅ — fusionada a `develop`, PR #50                                                                                                         |
+| HU-017          | Gatea `RegisterProtectedResourceUseCase` (slice `resources`) por administración de aplicación                                                                                                                                                                                                                                                                                                                                                                           | ✅ — fusionada a `develop`, PR #51                                                                                                         |
+| HU-018          | Gatea `AssignRoleUseCase`/`RevokeAssignmentUseCase` (slice `assignments`) por administración de aplicación                                                                                                                                                                                                                                                                                                                                                              | ✅ — comiteada (`92585ab`), pendiente push (gate 2)                                                                                        |
+| HU-019          | Gatea `DefineProfileUseCase`/`AddRoleToProfileUseCase`/`AssignProfileUseCase`/`RevokeProfileAssignmentUseCase` por administración de aplicación                                                                                                                                                                                                                                                                                                                         | ✅ — comiteada (`92585ab`), pendiente push (gate 2)                                                                                        |
+| HU-020          | Autoservicio de administradores: agregar/quitar/listar administradores de aplicación por HTTP público, sin pasar por el canal interno mTLS                                                                                                                                                                                                                                                                                                                              | ✅ — validada, ver REPORTE-HU-020.md, pendiente commit/push (gate 2)                                                                       |
+| HU-021          | Auditoría de operaciones administrativas (`AdministrationEvent`, retrofit de 13 `Administer*UseCaseImpl`)                                                                                                                                                                                                                                                                                                                                                               | 🟡 — validación RECHAZADA (3 bloqueantes: persistencia SurrealDB y observabilidad Prometheus/logs sin implementar), ver REPORTE-HU-021.md |
+| HU-022          | Revocación de tokens con Redis: `TokenRevocationPort`/`RedisTokenRevocationAdapter`, `RevocationAwareJwtDecoder` decora `internalEvidenceJwtDecoder` (canal interno PEP→PDP), efecto secundario automático desde `RevokeAssignmentUseCase`/`RemoveApplicationAdministratorUseCase`, fail-closed                                                                                                                                                                         | ✅ — validada, ver REPORTE-HU-022.md, pendiente commit/push (gate 2)                                                                       |
+| HU-023          | Caché distribuida de roles activos: `DistributedCachePort`/`RedisDistributedCachePort` (fail-open, TTL de respaldo), `ObservedDistributedCachePort` (métrica), lectura caché-aside en `ResolveActiveRolesUseCaseImpl`, invalidación desde los dos puntos raíz de escritura (`AssignRoleUseCase`/`RevokeAssignmentUseCase` — cubren las 7 rutas de mutación de HU-015 a HU-020 sin tocar `roles`/`profiles`)                                                             | ✅ — validada, ver REPORTE-HU-023.md, pendiente commit/push (gate 2)                                                                       |
+| HU-024          | MFA como step-up para operaciones administrativas: `AuthenticationContextEvidence`/`MfaEvidenceProperties` (`shared/security/mfa`), `MfaAwareApplicationAdministratorValidator` decora `PrincipalMustBeApplicationAdministratorValidator` en `AuthorizationConfiguration` (fail-closed mientras el realm de Keycloak no tenga MFA configurado), evidencia transportada desde el login (`OidcAuthenticationSuccessHandler`) hasta los 12 flujos administrativos gateados | ✅ — validada, ver REPORTE-HU-024.md, pendiente commit/push (gate 2)                                                                       |
 
 **Estado verificado el 2026-09-15 (working tree, sobre `develop` + HU-018/HU-019 sin comitear):**
 `mvnw clean verify` → **675 pruebas, 0 fallos, 0 errores**, cobertura ≥ 50 % por paquete,
@@ -114,11 +114,11 @@ Verificando `develop` tras fusionar HU-015 (`clean verify`, no `-Rapido`: el ún
 ajenos" sin investigar la causa real. Investigarlos en vez de solo revalidar mostró que dos de los
 tres eran síntoma de un bug real:
 
-| Síntoma reportado como "ajeno" | Causa real |
-|---|---|
-| `InternalSecurityChainIntegrationTests` falla por falta de `openssl` | No faltaba `openssl`: la variable de usuario `OPENSSL_CONF` apuntaba a un `openssl.cnf` de una instalación de PostgreSQL/psqlODBC ya desinstalada. Se corrigió borrando la variable, no el código |
+| Síntoma reportado como "ajeno"                                                                            | Causa real                                                                                                                                                                                                                                                                                                                                                              |
+|-----------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `InternalSecurityChainIntegrationTests` falla por falta de `openssl`                                      | No faltaba `openssl`: la variable de usuario `OPENSSL_CONF` apuntaba a un `openssl.cnf` de una instalación de PostgreSQL/psqlODBC ya desinstalada. Se corrigió borrando la variable, no el código                                                                                                                                                                       |
 | Dos pruebas de `SurrealRepositoryIntegrationTests` fallaban "por nombres fijos que chocan entre corridas" | Falso: el índice único `role_scope_name`/`profile_scope_name` no indexa ni aplica unicidad cuando `applicationId` está ausente (roles/perfiles de alcance `TENANT`/`GLOBAL`) — confirmado reproduciendo el caso contra SurrealDB directamente. `NONE` no es comparable vía índice; una cadena vacía sí. Corregido en `SurrealRoleRepository`/`SurrealProfileRepository` |
-| `PepRegistrationProperties` citada y "no encontrada" por `drift.ps1` | La clase sí existe, en `pep/starter/`. `drift.ps1` solo indexaba `pdp/src`. Ampliado a `pep/src` y `pep/starter/src` |
+| `PepRegistrationProperties` citada y "no encontrada" por `drift.ps1`                                      | La clase sí existe, en `pep/starter/`. `drift.ps1` solo indexaba `pdp/src`. Ampliado a `pep/src` y `pep/starter/src`                                                                                                                                                                                                                                                    |
 
 Además, `clean verify` (a diferencia de `-Rapido`, que ningún validador de HU-015 corrió hasta el
 final) reveló un cuarto problema real: dos paquetes al 0 % de cobertura porque dos métodos `default`
@@ -158,12 +158,12 @@ de ese repo. `securityBaseline-fr` se conserva como referencia, sin recibir camb
 
 ### Requisitos del entorno
 
-| Requisito | Por qué |
-|---|---|
-| **JDK 25** | El POM lo exige. `verificar.ps1` lo busca solo en `~/.jdks` y en `Program Files`, así que basta con tenerlo instalado aunque `JAVA_HOME` apunte a otro |
-| **Docker** | `mvnw verify` levanta SurrealDB con Testcontainers |
-| **PowerShell** | Las tres herramientas son `.ps1`. En Linux/macOS haría falta portarlas |
-| **`gh` autenticado** | Solo para PRs |
+| Requisito            | Por qué                                                                                                                                                |
+|----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **JDK 25**           | El POM lo exige. `verificar.ps1` lo busca solo en `~/.jdks` y en `Program Files`, así que basta con tenerlo instalado aunque `JAVA_HOME` apunte a otro |
+| **Docker**           | `mvnw verify` levanta SurrealDB con Testcontainers                                                                                                     |
+| **PowerShell**       | Las tres herramientas son `.ps1`. En Linux/macOS haría falta portarlas                                                                                 |
+| **`gh` autenticado** | Solo para PRs                                                                                                                                          |
 
 ### Comprobar que todo está sano
 
@@ -188,33 +188,33 @@ chat. En la máquina nueva basta con abrir el proyecto y decir:
 
 ## Decisiones tomadas (no volver a abrirlas sin motivo)
 
-| Decisión | Resuelto | Dónde está el porqué |
-|---|---|---|
-| Harness en Claude Code, no LangGraph | Un nodo de LangGraph es un prompt + herramientas + transición; eso ya es un subagente | `docs/ai-harness/README.md` §2 |
-| Sin agente orquestador | Un router LLM cuesta un turno para decidir lo que el humano ya sabe | §3 |
-| Sin agente que persista reportes ni `test-validator` | Un agente por artefacto; la calidad de las pruebas la mide el build | §3 |
-| Validador de 4 juicios, no de 13 niveles | Lo que una prueba puede ejecutar no se razona | §3.1 |
-| Grafo escalonado; nivel 0 ya | Con 226 archivos, Neo4j no resuelve un problema que tengamos | §4 |
-| Alcance solo backend | El frontend tiene 6 archivos | §10 |
-| Planes y reportes versionados en el repo | — | §10 |
-| Modelos: opus para planificar y validar, estándar para ejecutar | El juicio está en los extremos | §10 |
-| Dos gates humanos | Contrato, y salida del repositorio | §10 |
-| Español en agentes y skills | — | §10 |
-| `[N]` / `[M]` en la SPEC | El planificador no puede romper contratos existentes sin tocar `src/test` | `.claude/agents/1-planificador.md` |
-| `Optional` como componente en `ApplicationCriteria` | La alternativa obliga a sobrescribir el accessor y desalinea `equals` | Javadoc de la clase |
-| PR #24 cerrada, con rescate | Sus 6 agentes seguían un diseño ya descartado; su conocimiento de stack sí valía | Abajo |
+| Decisión                                                        | Resuelto                                                                              | Dónde está el porqué               |
+|-----------------------------------------------------------------|---------------------------------------------------------------------------------------|------------------------------------|
+| Harness en Claude Code, no LangGraph                            | Un nodo de LangGraph es un prompt + herramientas + transición; eso ya es un subagente | `docs/ai-harness/README.md` §2     |
+| Sin agente orquestador                                          | Un router LLM cuesta un turno para decidir lo que el humano ya sabe                   | §3                                 |
+| Sin agente que persista reportes ni `test-validator`            | Un agente por artefacto; la calidad de las pruebas la mide el build                   | §3                                 |
+| Validador de 4 juicios, no de 13 niveles                        | Lo que una prueba puede ejecutar no se razona                                         | §3.1                               |
+| Grafo escalonado; nivel 0 ya                                    | Con 226 archivos, Neo4j no resuelve un problema que tengamos                          | §4                                 |
+| Alcance solo backend                                            | El frontend tiene 6 archivos                                                          | §10                                |
+| Planes y reportes versionados en el repo                        | —                                                                                     | §10                                |
+| Modelos: opus para planificar y validar, estándar para ejecutar | El juicio está en los extremos                                                        | §10                                |
+| Dos gates humanos                                               | Contrato, y salida del repositorio                                                    | §10                                |
+| Español en agentes y skills                                     | —                                                                                     | §10                                |
+| `[N]` / `[M]` en la SPEC                                        | El planificador no puede romper contratos existentes sin tocar `src/test`             | `.claude/agents/1-planificador.md` |
+| `Optional` como componente en `ApplicationCriteria`             | La alternativa obliga a sobrescribir el accessor y desalinea `equals`                 | Javadoc de la clase                |
+| PR #24 cerrada, con rescate                                     | Sus 6 agentes seguían un diseño ya descartado; su conocimiento de stack sí valía      | Abajo                              |
 
 ---
 
 ## Lo que enseñó HU-001, la primera historia por el flujo
 
-| Hallazgo | Ajuste |
-|---|---|
-| El planificador no puede materializar cambios de firma sin romper `src/test`, que tiene prohibido tocar | Distinción **[N]** / **[M]** en la SPEC |
-| `drift.ps1` marcaba el propio plan | Un plan nombra por definición lo que aún no existe: `doc:…/planes/*` en el ignore |
-| Publicar esqueletos solos tumbó el pipeline: el Quality Gate exige ≥ 80 % de cobertura en código nuevo y un esqueleto no tiene ninguna | El ciclo completo llega junto a la rama; los esqueletos son estado local |
-| `drift.ps1` solo miraba `docs/`, así que una skill desactualizada pasaba desapercibida | Ampliado a `.claude/`: encontró dos hallazgos en las propias skills |
-| Al retirar un método del puerto se rompen todos los fakes que lo doblan | Documentado en `sb-testing` como trabajo del implementador |
+| Hallazgo                                                                                                                               | Ajuste                                                                            |
+|----------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
+| El planificador no puede materializar cambios de firma sin romper `src/test`, que tiene prohibido tocar                                | Distinción **[N]** / **[M]** en la SPEC                                           |
+| `drift.ps1` marcaba el propio plan                                                                                                     | Un plan nombra por definición lo que aún no existe: `doc:…/planes/*` en el ignore |
+| Publicar esqueletos solos tumbó el pipeline: el Quality Gate exige ≥ 80 % de cobertura en código nuevo y un esqueleto no tiene ninguna | El ciclo completo llega junto a la rama; los esqueletos son estado local          |
+| `drift.ps1` solo miraba `docs/`, así que una skill desactualizada pasaba desapercibida                                                 | Ampliado a `.claude/`: encontró dos hallazgos en las propias skills               |
+| Al retirar un método del puerto se rompen todos los fakes que lo doblan                                                                | Documentado en `sb-testing` como trabajo del implementador                        |
 
 La fase 2 del planificador funcionó como se esperaba: descubrió que el endpoint ya existía, que
 `ApplicationName.contains()` ya resolvía el filtro y que `PageWindow` estaba completo. Eso convirtió
@@ -229,11 +229,11 @@ trabajo descartó con razones (orquestador, validador monolítico, agente de per
 **tres piezas tenían conocimiento real** que no estaba en ningún otro sitio, y se rescataron
 verificándolas una a una contra el código:
 
-| Pieza | Destino | Corrección al rescatarla |
-|---|---|---|
-| `reactive-stack` | `sb-reactivo` | Ninguna: todas sus afirmaciones se verificaron (Jackson 3, `@EventListener`, `ReactiveJwtDecoder`…) |
-| `docs-reader` | `sb-fuentes` | **Sí**: describía `docs/09-artefactos`, que no existe. Los artefactos están en el repo hermano `artefactos-referencia` |
-| `CLAUDE.md` | `CLAUDE.md` | Actualizado al flujo actual, a las herramientas del harness y al estado real de la línea base |
+| Pieza            | Destino       | Corrección al rescatarla                                                                                               |
+|------------------|---------------|------------------------------------------------------------------------------------------------------------------------|
+| `reactive-stack` | `sb-reactivo` | Ninguna: todas sus afirmaciones se verificaron (Jackson 3, `@EventListener`, `ReactiveJwtDecoder`…)                    |
+| `docs-reader`    | `sb-fuentes`  | **Sí**: describía `docs/09-artefactos`, que no existe. Los artefactos están en el repo hermano `artefactos-referencia` |
+| `CLAUDE.md`      | `CLAUDE.md`   | Actualizado al flujo actual, a las herramientas del harness y al estado real de la línea base                          |
 
 Se descartó `pdp-context` (464 líneas) por solaparse con `sb-arquitectura` y `sb-estandares`, que
 además están verificadas contra el código.
@@ -259,10 +259,10 @@ Lo que se vio al hacerlo a mano:
 El diseño original dejaba las `[M]` al implementador, pero eso choca con su propia prohibición de
 tocar `src/test`: cambiar una firma rompe los fakes, y arreglarlos es tocar pruebas.
 
-| Agente | Hace | Deja |
-|---|---|---|
-| `2-tester-spec` | Aplica las firmas **[M]** con cuerpos que lanzan · escribe las pruebas de la sección 9 · arregla los fakes que el cambio rompió | **ROJO**, y solo por `UnsupportedOperationException` |
-| `3-implementador` | Rellena cuerpos en `src/main`. **No toca `src/test` jamás** | **VERDE** |
+| Agente            | Hace                                                                                                                            | Deja                                                 |
+|-------------------|---------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------|
+| `2-tester-spec`   | Aplica las firmas **[M]** con cuerpos que lanzan · escribe las pruebas de la sección 9 · arregla los fakes que el cambio rompió | **ROJO**, y solo por `UnsupportedOperationException` |
+| `3-implementador` | Rellena cuerpos en `src/main`. **No toca `src/test` jamás**                                                                     | **VERDE**                                            |
 
 Así cada uno tiene un contrato limpio y una condición de terminado medible:
 `verificar.ps1 -Prueba X` en rojo por la razón correcta para el primero, en verde para el segundo.
@@ -281,13 +281,13 @@ entrar en un módulo no se pareciera a entrar en el de al lado.
 `.claude/tools/consistencia.ps1` lo convierte en comprobación ejecutable. La primera pasada encontró
 **9 divergencias reales**, todas corregidas:
 
-| Slice | Divergencia | Corrección |
-|---|---|---|
-| `applications`, `identity` | El adaptador construía el agregado directamente desde el JSON, mientras `tenants` y `resources` pasaban por `Entity` + `Mapper` | `ApplicationEntity`, `SecurityUserEntity`, `ExternalIdentityEntity` y sus mappers |
-| `identity` | Sin `application/message`: el texto vivía como literal dentro de la excepción | `IdentityMessages` |
-| `identity` | `AssignTenantUseCaseImpl` hacía «busca o lanza» inline; en `tenants` eso es una `Rule` | `UserMustExistRule` |
-| `resources` | Consultaba el repositorio de `applications` y lanzaba su excepción inline | `applications` publica `ApplicationMustExistForTenantValidator` y `resources` lo consume |
-| `identity` | `toUser` / `toIdentity` frente a `toDomain` en el resto | `toSecurityUser` / `toExternalIdentity` |
+| Slice                      | Divergencia                                                                                                                     | Corrección                                                                               |
+|----------------------------|---------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------|
+| `applications`, `identity` | El adaptador construía el agregado directamente desde el JSON, mientras `tenants` y `resources` pasaban por `Entity` + `Mapper` | `ApplicationEntity`, `SecurityUserEntity`, `ExternalIdentityEntity` y sus mappers        |
+| `identity`                 | Sin `application/message`: el texto vivía como literal dentro de la excepción                                                   | `IdentityMessages`                                                                       |
+| `identity`                 | `AssignTenantUseCaseImpl` hacía «busca o lanza» inline; en `tenants` eso es una `Rule`                                          | `UserMustExistRule`                                                                      |
+| `resources`                | Consultaba el repositorio de `applications` y lanzaba su excepción inline                                                       | `applications` publica `ApplicationMustExistForTenantValidator` y `resources` lo consume |
+| `identity`                 | `toUser` / `toIdentity` frente a `toDomain` en el resto                                                                         | `toSecurityUser` / `toExternalIdentity`                                                  |
 
 El caso de `resources` **estrecha** la frontera de Modulith en vez de ampliarla: pasa de necesitar
 `applications :: repository` a `applications :: rule`. Es el mismo patrón con el que `tenants`
@@ -316,11 +316,11 @@ Encendida la VM y reiniciado el contenedor —los datos son `rocksdb` sobre volu
 
 ### Lo que se cambió para que no vuelva a ser mudo
 
-| Cambio | Por qué |
-|---|---|
+| Cambio                     | Por qué                                                                                                                                                                                                             |
+|----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `SurrealSchemaInitializer` | Los cuatro inicializadores hacían `.block()` **sin plazo** en un `ApplicationRunner`. Una base que no responde dejaba el arranque colgado. Ahora se espera 15 s y un fallo se registra en vez de tumbar el contexto |
-| `SurrealDbHealthIndicator` | No existía: `/actuator/health` no podía decir que la base estaba caída. Sigue dando `DOWN` —un deploy contra una base caída debe fallar— pero ahora **dice por qué** |
-| Mensaje del pipeline | Nombra a Keycloak como causa más probable, da el comando para encenderla, y vuelca el cuerpo de `/actuator/health` antes de salir |
+| `SurrealDbHealthIndicator` | No existía: `/actuator/health` no podía decir que la base estaba caída. Sigue dando `DOWN` —un deploy contra una base caída debe fallar— pero ahora **dice por qué**                                                |
+| Mensaje del pipeline       | Nombra a Keycloak como causa más probable, da el comando para encenderla, y vuelca el cuerpo de `/actuator/health` antes de salir                                                                                   |
 
 **Rutina de entorno:** antes de un deploy a DEV, `az vm start -g rg-pdp-shared-v1 -n vm-pdp-keycloak-shared`.
 
@@ -332,12 +332,12 @@ Tenía **11 paquetes para 23 archivos** y profundidad de 5 (`port/primary/dto/re
 `rulesvalidator` colgando suelto al lado de `rule`. Se tomó el empaquetado del proyecto de
 referencia, que agrupa por dirección del puerto:
 
-| Antes | Ahora |
-|---|---|
-| `application/port/primary/dto/request` | `application/primaryport/request` |
-| `application/port/primary/dto/response` | `application/primaryport/response` |
+| Antes                                   | Ahora                                  |
+|-----------------------------------------|----------------------------------------|
+| `application/port/primary/dto/request`  | `application/primaryport/request`      |
+| `application/port/primary/dto/response` | `application/primaryport/response`     |
 | `application/port/secondary/repository` | `application/secondaryport/repository` |
-| `application/rulesvalidator` | `application/rule/validator` |
+| `application/rulesvalidator`            | `application/rule/validator`           |
 
 La ruta de un DTO de entrada pasa de cinco segmentos a tres, y el coordinador de reglas queda
 dentro de lo que coordina. Los nombres de las interfaces nombradas de Modulith (`dto`, `repository`,
@@ -412,13 +412,13 @@ que `pep/` ya usaba (`-f pep/pom.xml`); no se inventó uno nuevo.
 
 **Lo que se reescribió**, porque apuntaba a rutas que dejaron de existir:
 
-| Pieza | Cambio |
-|---|---|
-| `pdp/Dockerfile` | Copiaba todo el repo (`COPY . .`) y corría `mvn` instalado aparte. Reescrito con el mismo patrón que `pep/Dockerfile`: contexto de build = raíz, copia solo `mvnw`+`.mvn`+`pdp/pom.xml`+`pdp/src`, y usa el wrapper (`./mvnw -f pdp/pom.xml`) |
-| `.claude/tools/{mapa,verificar,drift,consistencia}.ps1` | Sus constantes de ruta (`src/main/java/...`, `docs/ai-harness/...`, `pom.xml`) apuntan ahora a `pdp/`. `drift.ps1` además vigila la raíz `docs/` (hoy solo `PLATAFORMA.md`) además de `pdp/docs/` |
-| `.claude/agents/*.md`, `.claude/skills/*/SKILL.md` | Las instrucciones que decían «no tocas `src/test`» ahora dicen `pdp/src/test` — si un agente las sigue al pie de la letra, tiene que apuntar al lugar real |
-| `azure-pipelines.yml` (vía `ci/templates/*.yml`) | `mavenPomFile`, `pathToSources`, la caché de Maven, el empaquetado y `docker build` pasan a `pdp/pom.xml` / `pdp/Dockerfile` / `pdp/target/*.jar`. **Probado**: `docker build -f pdp/Dockerfile .` local reproduce exactamente el comando que corre el pipeline, construye y el contenedor arranca Spring Boot correctamente |
-| `pdp/docs/ai-harness/drift-ignore.txt` | Sus excepciones `doc:docs/...` pasan a `doc:pdp/docs/...` — si no, dejaban de aplicar y el detector volvía a reportar sus propios hallazgos ya resueltos |
+| Pieza                                                   | Cambio                                                                                                                                                                                                                                                                                                                       |
+|---------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `pdp/Dockerfile`                                        | Copiaba todo el repo (`COPY . .`) y corría `mvn` instalado aparte. Reescrito con el mismo patrón que `pep/Dockerfile`: contexto de build = raíz, copia solo `mvnw`+`.mvn`+`pdp/pom.xml`+`pdp/src`, y usa el wrapper (`./mvnw -f pdp/pom.xml`)                                                                                |
+| `.claude/tools/{mapa,verificar,drift,consistencia}.ps1` | Sus constantes de ruta (`src/main/java/...`, `docs/ai-harness/...`, `pom.xml`) apuntan ahora a `pdp/`. `drift.ps1` además vigila la raíz `docs/` (hoy solo `PLATAFORMA.md`) además de `pdp/docs/`                                                                                                                            |
+| `.claude/agents/*.md`, `.claude/skills/*/SKILL.md`      | Las instrucciones que decían «no tocas `src/test`» ahora dicen `pdp/src/test` — si un agente las sigue al pie de la letra, tiene que apuntar al lugar real                                                                                                                                                                   |
+| `azure-pipelines.yml` (vía `ci/templates/*.yml`)        | `mavenPomFile`, `pathToSources`, la caché de Maven, el empaquetado y `docker build` pasan a `pdp/pom.xml` / `pdp/Dockerfile` / `pdp/target/*.jar`. **Probado**: `docker build -f pdp/Dockerfile .` local reproduce exactamente el comando que corre el pipeline, construye y el contenedor arranca Spring Boot correctamente |
+| `pdp/docs/ai-harness/drift-ignore.txt`                  | Sus excepciones `doc:docs/...` pasan a `doc:pdp/docs/...` — si no, dejaban de aplicar y el detector volvía a reportar sus propios hallazgos ya resueltos                                                                                                                                                                     |
 
 **Lo que NO se movió, a propósito:** `.claude/` (agentes, skills, herramientas) se queda en la
 raíz. Sigue siendo una herramienta específica del PDP —ninguna skill conoce `pep/` ni
@@ -434,13 +434,13 @@ en verde.
 
 ## Deudas conocidas
 
-| Deuda | Dónde |
-|---|---|
-| Las herramientas son solo PowerShell | Si entra alguien en Linux/macOS, hay que portarlas |
-| `repository-structure.md` del repo de arquitectura sigue siendo un stub | Ahora que la estructura está verificada por herramienta, se puede elaborar |
-| El agente `5-entrega` no existe | Los commits y PRs se hacen a mano, con los dos gates igualmente |
-| Migrar `pep/starter` para consumir la credencial que el PDP ya emite/valida/rota | Historia del lado del PEP (David), no del PDP — ver `workspace/MAPA-PLATAFORMA-SEGURIDAD.md` P1 |
-| Política de aplicación real en OPA | `security-policy-engine/` (Laura) — sin ella, OPA sigue respondiendo `DENY`/`NO_APPLICABLE_POLICY` a cualquier decisión |
+| Deuda                                                                            | Dónde                                                                                                                   |
+|----------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------|
+| Las herramientas son solo PowerShell                                             | Si entra alguien en Linux/macOS, hay que portarlas                                                                      |
+| `repository-structure.md` del repo de arquitectura sigue siendo un stub          | Ahora que la estructura está verificada por herramienta, se puede elaborar                                              |
+| El agente `5-entrega` no existe                                                  | Los commits y PRs se hacen a mano, con los dos gates igualmente                                                         |
+| Migrar `pep/starter` para consumir la credencial que el PDP ya emite/valida/rota | Historia del lado del PEP (David), no del PDP — ver `workspace/MAPA-PLATAFORMA-SEGURIDAD.md` P1                         |
+| Política de aplicación real en OPA                                               | `security-policy-engine/` (Laura) — sin ella, OPA sigue respondiendo `DENY`/`NO_APPLICABLE_POLICY` a cualquier decisión |
 
 **Actualización 2026-09-14:** `develop` recibió la PR #49 (`feature/ajustes_integracion_completa`,
 David — PEP): el `pep/starter` ya valida la credencial de aplicación contra el PDP por mTLS

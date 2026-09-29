@@ -6,7 +6,9 @@ import reactor.core.publisher.Mono;
 
 import java.util.Optional;
 
-/** Resuelve el identificador local asociado a un {@code issuer + sub} de un IdP. */
+/**
+ * Resuelve el identificador local asociado a un {@code issuer + sub} de un IdP.
+ */
 public interface ResolveExternalIdentityUseCase {
 
     Mono<Optional<UserId>> execute(ResolveExternalIdentityRequest input);

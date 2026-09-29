@@ -8,7 +8,9 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
 
-/** Entrada tipada de AssignProfileUseCase. El tenant ya llega resuelto del principal. */
+/**
+ * Entrada tipada de AssignProfileUseCase. El tenant ya llega resuelto del principal.
+ */
 public record AssignProfileRequest(TenantId tenantId, UserId userId, ApplicationId applicationId, ProfileId profileId) {
 
     public AssignProfileRequest {

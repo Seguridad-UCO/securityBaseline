@@ -3,7 +3,9 @@ package co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.ma
 import co.edu.uco.seguridad.pdp.resources.application.primaryport.response.ApplicationWithInitialResourceRegistrationResponse;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.dto.response.ApplicationWithInitialResourceWebResponse;
 
-/** Traducción de salida: DTO de aplicación a carga útil HTTP (HU-010). Desenvuelve los objetos de valor. */
+/**
+ * Traducción de salida: DTO de aplicación a carga útil HTTP (HU-010). Desenvuelve los objetos de valor.
+ */
 public final class ApplicationWithInitialResourceResponseMapper {
 
     private ApplicationWithInitialResourceResponseMapper() {

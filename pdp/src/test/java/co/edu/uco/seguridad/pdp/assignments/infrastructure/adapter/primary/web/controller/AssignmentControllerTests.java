@@ -14,7 +14,9 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** HU-018: assign/revoke se movieron a AssignmentAdministrationControllerTests (authorization). */
+/**
+ * HU-018: assign/revoke se movieron a AssignmentAdministrationControllerTests (authorization).
+ */
 class AssignmentControllerTests {
 
     private static final AssignmentWebResponse EXPECTED = new AssignmentWebResponse(

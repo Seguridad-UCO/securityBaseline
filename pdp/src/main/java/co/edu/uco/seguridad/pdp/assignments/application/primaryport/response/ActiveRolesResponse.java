@@ -8,7 +8,9 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import java.util.Objects;
 import java.util.Set;
 
-/** El contexto resuelto que HU-006 enviará a OPA: qué roles tiene vigentes un sujeto en una aplicación. */
+/**
+ * El contexto resuelto que HU-006 enviará a OPA: qué roles tiene vigentes un sujeto en una aplicación.
+ */
 public record ActiveRolesResponse(UserId userId, ApplicationId applicationId, Set<RoleId> roleIds) {
 
     public ActiveRolesResponse {

@@ -26,7 +26,9 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** HU-019: gatea RevokeProfileAssignmentUseCase — la administración ya viene resuelta por el interactor. */
+/**
+ * HU-019: gatea RevokeProfileAssignmentUseCase — la administración ya viene resuelta por el interactor.
+ */
 class AdministerProfileAssignmentRevocationUseCaseImplTests {
 
     private static final TenantId TENANT = new TenantId("universidad-uco");

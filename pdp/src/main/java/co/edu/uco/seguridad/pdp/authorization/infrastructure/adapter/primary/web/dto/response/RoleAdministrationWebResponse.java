@@ -9,5 +9,5 @@ import java.util.List;
  * {@code applicationId} van nulos cuando el alcance no los tiene.
  */
 public record RoleAdministrationWebResponse(String id, String name, String scope, String tenantId,
-        String applicationId, List<String> resourceIds, String registeredAt) {
+                                            String applicationId, List<String> resourceIds, String registeredAt) {
 }

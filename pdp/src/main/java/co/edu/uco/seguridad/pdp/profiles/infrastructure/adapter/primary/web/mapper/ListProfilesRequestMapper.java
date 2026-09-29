@@ -13,7 +13,9 @@ import co.edu.uco.seguridad.shared.web.message.WebContractMessages;
 
 import java.util.Optional;
 
-/** Resuelve la ventana de paginación: copia exacta de la lógica de ListRolesRequestMapper. */
+/**
+ * Resuelve la ventana de paginación: copia exacta de la lógica de ListRolesRequestMapper.
+ */
 public final class ListProfilesRequestMapper {
 
     private static final String FIELD_PAGE = "page";

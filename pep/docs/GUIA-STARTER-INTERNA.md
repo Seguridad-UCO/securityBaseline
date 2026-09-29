@@ -12,11 +12,11 @@ llame directamente evita el punto de enforcement.
 
 ## Piezas del JAR
 
-| Pieza | Responsabilidad |
-|---|---|
-| `META-INF/spring/...AutoConfiguration.imports` | Permite el descubrimiento automático de Spring Boot. |
-| `PepRegistrationAutoConfiguration` | Crea el `ApplicationRunner` de alta. |
-| `PepRegistrationProperties` | Hace binding y valida `security.pep.registration.*`, incluida la credencial del PDP. |
+| Pieza                                          | Responsabilidad                                                                      |
+|------------------------------------------------|--------------------------------------------------------------------------------------|
+| `META-INF/spring/...AutoConfiguration.imports` | Permite el descubrimiento automático de Spring Boot.                                 |
+| `PepRegistrationAutoConfiguration`             | Crea el `ApplicationRunner` de alta.                                                 |
+| `PepRegistrationProperties`                    | Hace binding y valida `security.pep.registration.*`, incluida la credencial del PDP. |
 
 La auto-configuración crea el runner solamente con estas dos condiciones:
 
@@ -80,17 +80,17 @@ distinta ni ocupar prefijos que se solapen. `backendUrl` es un origen sin creden
 
 ## Configuración del starter
 
-| Propiedad | Obligatoria | Efecto |
-|---|---|---|
-| `security.enabled` | No; default true | Interruptor global del starter. |
-| `security.pep.registration.enabled` | Sí | Activa el runner. |
-| `pep-url` | Sí | Origen HTTPS del PEP; HTTP solo con permiso explícito. |
-| `application-id` | Sí | Identificador estable de la aplicación. |
-| `environment` | Sí | Entorno: `dev`, `test`, `prod`, etc. |
-| `backend-url` | Sí | Origen privado sin path/query/fragment/credenciales. |
-| `audience` | Sí | Audiencia JWT requerida por la ruta PEP. |
-| `token` | Sí | Credencial de aplicación emitida por el PDP y conservada en un secreto. |
-| `allow-insecure-http` | No; default false | Permite HTTP al PEP solo en desarrollo local. |
+| Propiedad                           | Obligatoria       | Efecto                                                                  |
+|-------------------------------------|-------------------|-------------------------------------------------------------------------|
+| `security.enabled`                  | No; default true  | Interruptor global del starter.                                         |
+| `security.pep.registration.enabled` | Sí                | Activa el runner.                                                       |
+| `pep-url`                           | Sí                | Origen HTTPS del PEP; HTTP solo con permiso explícito.                  |
+| `application-id`                    | Sí                | Identificador estable de la aplicación.                                 |
+| `environment`                       | Sí                | Entorno: `dev`, `test`, `prod`, etc.                                    |
+| `backend-url`                       | Sí                | Origen privado sin path/query/fragment/credenciales.                    |
+| `audience`                          | Sí                | Audiencia JWT requerida por la ruta PEP.                                |
+| `token`                             | Sí                | Credencial de aplicación emitida por el PDP y conservada en un secreto. |
+| `allow-insecure-http`               | No; default false | Permite HTTP al PEP solo en desarrollo local.                           |
 
 La validación se hace dentro del runner para no impedir el inicio por un error de properties. Si falla, queda un
 log sanitizado y no se realiza el registro. En producción `pep-url` debe usar HTTPS y el token no debe figurar en

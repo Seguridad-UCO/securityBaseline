@@ -5,5 +5,6 @@ import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.shared.contract.ReactiveOperationWithoutResult;
 
 public interface RemoveProtectedResourceUseCase extends ReactiveOperationWithoutResult<RemoveProtectedResourceUseCase.Request> {
-    record Request(TenantId tenantId, ResourceId resourceId) { }
+    record Request(TenantId tenantId, ResourceId resourceId) {
+    }
 }

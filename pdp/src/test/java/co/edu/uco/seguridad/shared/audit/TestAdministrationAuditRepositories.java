@@ -14,7 +14,9 @@ public final class TestAdministrationAuditRepositories {
     private TestAdministrationAuditRepositories() {
     }
 
-    /** Para pruebas que todavía no ejercitan la auditoría real. */
+    /**
+     * Para pruebas que todavía no ejercitan la auditoría real.
+     */
     public static AdministrationAuditRepository unreachable() {
         return new AdministrationAuditRepository() {
             @Override
@@ -29,7 +31,9 @@ public final class TestAdministrationAuditRepositories {
         };
     }
 
-    /** Guarda cada evento recibido en {@code captured}, sin fallar nunca. */
+    /**
+     * Guarda cada evento recibido en {@code captured}, sin fallar nunca.
+     */
     public static AdministrationAuditRepository capturing(List<AdministrationEvent> captured) {
         return new AdministrationAuditRepository() {
             @Override
@@ -45,7 +49,9 @@ public final class TestAdministrationAuditRepositories {
         };
     }
 
-    /** Siempre falla al guardar — para probar que un fallo de auditoría no bloquea el resultado. */
+    /**
+     * Siempre falla al guardar — para probar que un fallo de auditoría no bloquea el resultado.
+     */
     public static AdministrationAuditRepository failing() {
         return new AdministrationAuditRepository() {
             @Override

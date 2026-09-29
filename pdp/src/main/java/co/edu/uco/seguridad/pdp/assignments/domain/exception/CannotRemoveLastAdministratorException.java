@@ -4,7 +4,9 @@ import co.edu.uco.seguridad.pdp.assignments.domain.message.AssignmentsMessages;
 import co.edu.uco.seguridad.pdp.commons.exception.BusinessRuleViolationException;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 
-/** No se puede revocar al único administrador activo de la aplicación (HU-020). */
+/**
+ * No se puede revocar al único administrador activo de la aplicación (HU-020).
+ */
 public final class CannotRemoveLastAdministratorException extends BusinessRuleViolationException {
 
     public CannotRemoveLastAdministratorException(ApplicationId applicationId) {

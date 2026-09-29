@@ -3,7 +3,9 @@ package co.edu.uco.seguridad.pdp.resources.domain.model;
 import co.edu.uco.seguridad.pdp.commons.message.ValueObjectMessages;
 import co.edu.uco.seguridad.pdp.resources.domain.exception.UnsupportedHttpMethodException;
 
-/** Método HTTP protegido de un endpoint. Cerrado a los verbos que un recurso realmente expone. */
+/**
+ * Método HTTP protegido de un endpoint. Cerrado a los verbos que un recurso realmente expone.
+ */
 public enum HttpVerb {
 
     GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS;

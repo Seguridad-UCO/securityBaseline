@@ -23,16 +23,16 @@ una conversación con el negocio.
 **Toda regla vive en `domain/{slice}/rule/` y es una función pura**: recibe el dato ya resuelto en
 un `record` y o no dice nada, o lanza su excepción. Ninguna consulta nada, ninguna devuelve `Mono`.
 
-| Regla | Entrada ya resuelta | Excepción |
-|---|---|---|
-| `ApplicationNameMustNotBeReservedRule` | `ApplicationName` | `ReservedApplicationNameException` |
-| `ApplicationNameMustBeUniqueForTenantRule` | `ApplicationNameAvailability` | `DuplicateApplicationException` |
-| `ApplicationMustExistForTenantRule` | `ApplicationExistence` | `ApplicationNotFoundException` |
-| `TenantMustExistRule` | `TenantExistence` | `TenantNotFoundException` |
-| `TenantStatusMustBeActiveRule` | `TenantActivation` | `TenantNotActiveException` |
-| `TenantCodeMustBeUniqueRule` | `TenantCodeAvailability` | `DuplicateTenantException` |
-| `UserMustExistRule` | `UserExistence` | `UserNotFoundException` |
-| `ProtectedResourceMustBeUniqueRule` | `ProtectedResourceAvailability` | `DuplicateProtectedResourceException` |
+| Regla                                      | Entrada ya resuelta             | Excepción                             |
+|--------------------------------------------|---------------------------------|---------------------------------------|
+| `ApplicationNameMustNotBeReservedRule`     | `ApplicationName`               | `ReservedApplicationNameException`    |
+| `ApplicationNameMustBeUniqueForTenantRule` | `ApplicationNameAvailability`   | `DuplicateApplicationException`       |
+| `ApplicationMustExistForTenantRule`        | `ApplicationExistence`          | `ApplicationNotFoundException`        |
+| `TenantMustExistRule`                      | `TenantExistence`               | `TenantNotFoundException`             |
+| `TenantStatusMustBeActiveRule`             | `TenantActivation`              | `TenantNotActiveException`            |
+| `TenantCodeMustBeUniqueRule`               | `TenantCodeAvailability`        | `DuplicateTenantException`            |
+| `UserMustExistRule`                        | `UserExistence`                 | `UserNotFoundException`               |
+| `ProtectedResourceMustBeUniqueRule`        | `ProtectedResourceAvailability` | `DuplicateProtectedResourceException` |
 
 **Quien consulta es el validador**, en `application/{slice}/rule/validator/`: resuelve contra el
 puerto lo que cada regla necesita saber, construye el `record` y deja decidir a la regla. Ejecuta
@@ -57,11 +57,15 @@ registro de la aplicación. Repetirlo sería una segunda decisión sobre lo mism
 - [`applications/domain/rule`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/domain/rule)
 - [`tenants/domain/rule`](../../src/main/java/co/edu/uco/seguridad/pdp/tenants/domain/rule)
 - [`resources/domain/rule`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/domain/rule)
-- [`TenantMustBeActiveValidator.java`](../../src/main/java/co/edu/uco/seguridad/pdp/tenants/application/rule/validator/TenantMustBeActiveValidator.java)
-- Pruebas de las reglas (sin Reactor ni dobles): [`ApplicationRuleTests`](../../src/test/java/co/edu/uco/seguridad/pdp/applications/domain/rule/ApplicationRuleTests.java),
+- [
+  `TenantMustBeActiveValidator.java`](../../src/main/java/co/edu/uco/seguridad/pdp/tenants/application/rule/validator/TenantMustBeActiveValidator.java)
+- Pruebas de las reglas (sin Reactor ni dobles): [
+  `ApplicationRuleTests`](../../src/test/java/co/edu/uco/seguridad/pdp/applications/domain/rule/ApplicationRuleTests.java),
   [`TenantRuleTests`](../../src/test/java/co/edu/uco/seguridad/pdp/tenants/domain/rule/TenantRuleTests.java),
-  [`ProtectedResourceMustBeUniqueRuleTests`](../../src/test/java/co/edu/uco/seguridad/pdp/resources/domain/rule/ProtectedResourceMustBeUniqueRuleTests.java)
-- Pruebas de los validadores (ahí sí hay repositorio falso): [`TenantMustBeActiveValidatorTests`](../../src/test/java/co/edu/uco/seguridad/pdp/tenants/application/rule/validator/TenantMustBeActiveValidatorTests.java)
+  [
+  `ProtectedResourceMustBeUniqueRuleTests`](../../src/test/java/co/edu/uco/seguridad/pdp/resources/domain/rule/ProtectedResourceMustBeUniqueRuleTests.java)
+- Pruebas de los validadores (ahí sí hay repositorio falso): [
+  `TenantMustBeActiveValidatorTests`](../../src/test/java/co/edu/uco/seguridad/pdp/tenants/application/rule/validator/TenantMustBeActiveValidatorTests.java)
 
 ## Evidencia y límite
 

@@ -5,7 +5,9 @@ import co.edu.uco.seguridad.pdp.roles.application.primaryport.response.RoleRespo
 import co.edu.uco.seguridad.pdp.roles.domain.model.RoleScope;
 import co.edu.uco.seguridad.pdp.roles.infrastructure.adapter.primary.web.dto.response.RoleWebResponse;
 
-/** RoleResponse (value objects) a RoleWebResponse (plana): ningún VO ni enum de dominio cruza al cliente. */
+/**
+ * RoleResponse (value objects) a RoleWebResponse (plana): ningún VO ni enum de dominio cruza al cliente.
+ */
 public final class RoleResponseMapper {
 
     private RoleResponseMapper() {

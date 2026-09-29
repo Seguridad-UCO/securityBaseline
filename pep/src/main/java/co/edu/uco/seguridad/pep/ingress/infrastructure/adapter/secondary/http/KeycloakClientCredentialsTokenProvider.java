@@ -12,7 +12,9 @@ import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 
-/** Obtiene y renueva el access token del service account sin exponerlo en logs ni propiedades. */
+/**
+ * Obtiene y renueva el access token del service account sin exponerlo en logs ni propiedades.
+ */
 public final class KeycloakClientCredentialsTokenProvider implements PdpServiceTokenProvider {
     private static final Logger LOG = LoggerFactory.getLogger(KeycloakClientCredentialsTokenProvider.class);
     private final PdpServiceIdentityProperties properties;
@@ -54,7 +56,7 @@ public final class KeycloakClientCredentialsTokenProvider implements PdpServiceT
                         .with("client_id", properties.clientId()).with("client_secret", properties.clientSecret()))
                 .exchangeToMono(response -> response.statusCode().is2xxSuccessful()
                         ? response.bodyToMono(TokenResponse.class).flatMap(token -> valid(token)
-                                ? Mono.just(token.accessToken()) : unavailable())
+                                                                                    ? Mono.just(token.accessToken()) : unavailable())
                         : response.releaseBody().then(unavailable()))
                 .timeout(properties.timeout()).onErrorMap(error -> !(error instanceof EnforcementFailure), error ->
                         new EnforcementFailure(EnforcementFailure.Kind.UNAVAILABLE, "PDP_SERVICE_IDENTITY_UNAVAILABLE"));
@@ -84,11 +86,18 @@ public final class KeycloakClientCredentialsTokenProvider implements PdpServiceT
     }
 
     private record TokenResponse(String access_token, long expires_in) {
-        String accessToken() { return access_token; }
-        long expiresIn() { return expires_in; }
+        String accessToken() {
+            return access_token;
+        }
+
+        long expiresIn() {
+            return expires_in;
+        }
     }
 
     private record CachedToken(String value, Instant refreshAt) {
-        boolean validAt(Instant now) { return now.isBefore(refreshAt); }
+        boolean validAt(Instant now) {
+            return now.isBefore(refreshAt);
+        }
     }
 }

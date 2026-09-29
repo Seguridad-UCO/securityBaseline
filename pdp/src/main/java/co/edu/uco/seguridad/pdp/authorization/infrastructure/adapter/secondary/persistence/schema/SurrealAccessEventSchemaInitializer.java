@@ -31,9 +31,9 @@ public final class SurrealAccessEventSchemaInitializer extends SurrealSchemaInit
         return client.ensureNamespaceAndDatabase()
                 .then(client.execute(
                         """
-                        DEFINE TABLE IF NOT EXISTS %1$s SCHEMALESS;
-                        DEFINE INDEX IF NOT EXISTS %2$s ON %1$s COLUMNS correlationId;\
-                        """.formatted(AccessEventSchema.TABLE, AccessEventSchema.CORRELATION_INDEX),
+                                DEFINE TABLE IF NOT EXISTS %1$s SCHEMALESS;
+                                DEFINE INDEX IF NOT EXISTS %2$s ON %1$s COLUMNS correlationId;\
+                                """.formatted(AccessEventSchema.TABLE, AccessEventSchema.CORRELATION_INDEX),
                         Map.of()))
                 .then();
     }

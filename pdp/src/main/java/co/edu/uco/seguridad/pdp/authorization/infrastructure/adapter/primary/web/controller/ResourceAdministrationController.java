@@ -10,11 +10,7 @@ import co.edu.uco.seguridad.shared.web.RequestContext;
 import co.edu.uco.seguridad.shared.web.message.WebContractMessages;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -40,7 +36,7 @@ final class ResourceAdministrationController {
 
     @PostMapping
     Mono<ResponseEntity<ApiResponse<AdministeredResourceWebResponse>>> register(@PathVariable String applicationId,
-            @RequestBody RegisterProtectedResourceBodyRequest body, ServerWebExchange exchange) {
+                                                                                @RequestBody RegisterProtectedResourceBodyRequest body, ServerWebExchange exchange) {
         RequestContext context = CorrelationWebFilter.context(exchange);
         RegisterProtectedResourceRawRequest raw =
                 new RegisterProtectedResourceRawRequest(applicationId, body.path(), body.method());

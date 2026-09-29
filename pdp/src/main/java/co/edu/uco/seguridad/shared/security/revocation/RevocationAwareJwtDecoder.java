@@ -35,7 +35,7 @@ public final class RevocationAwareJwtDecoder implements ReactiveJwtDecoder {
     private final String technicalClientId;
 
     public RevocationAwareJwtDecoder(ReactiveJwtDecoder delegate, TokenRevocationPort revocation,
-            SubjectUserIdLookupValidator subjectUserIdLookup) {
+                                     SubjectUserIdLookupValidator subjectUserIdLookup) {
         this(delegate, revocation, subjectUserIdLookup, "");
     }
 
@@ -45,7 +45,7 @@ public final class RevocationAwareJwtDecoder implements ReactiveJwtDecoder {
      * identidades y por eso no participa en su lista de revocación.
      */
     public RevocationAwareJwtDecoder(ReactiveJwtDecoder delegate, TokenRevocationPort revocation,
-            SubjectUserIdLookupValidator subjectUserIdLookup, String technicalClientId) {
+                                     SubjectUserIdLookupValidator subjectUserIdLookup, String technicalClientId) {
         this.delegate = Objects.requireNonNull(delegate, RequiredArgumentMessages.REACTIVE_JWT_DECODER_DELEGATE);
         this.revocation = Objects.requireNonNull(revocation, RequiredArgumentMessages.TOKEN_REVOCATION_PORT);
         this.subjectUserIdLookup = Objects.requireNonNull(subjectUserIdLookup,

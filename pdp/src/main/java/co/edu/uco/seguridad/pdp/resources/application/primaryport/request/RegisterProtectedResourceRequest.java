@@ -8,9 +8,11 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
 
-/** DTO de entrada del puerto primario: intención tipada de registrar un endpoint protegido. */
+/**
+ * DTO de entrada del puerto primario: intención tipada de registrar un endpoint protegido.
+ */
 public record RegisterProtectedResourceRequest(TenantId tenantId, ApplicationId applicationId, ResourcePath path,
-        HttpVerb method) {
+                                               HttpVerb method) {
 
     public RegisterProtectedResourceRequest {
         Objects.requireNonNull(tenantId, RequiredArgumentMessages.TENANT_ID);

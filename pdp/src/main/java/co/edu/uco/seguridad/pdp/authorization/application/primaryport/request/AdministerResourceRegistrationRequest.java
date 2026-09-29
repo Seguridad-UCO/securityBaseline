@@ -12,7 +12,7 @@ import java.util.Objects;
  * una aplicación, así que el gate siempre se evalúa.
  */
 public record AdministerResourceRegistrationRequest(AdministrationRequest administration,
-        RegisterProtectedResourceRequest resource) {
+                                                    RegisterProtectedResourceRequest resource) {
 
     public AdministerResourceRegistrationRequest {
         Objects.requireNonNull(administration, RequiredArgumentMessages.ADMINISTRATION_REQUEST);

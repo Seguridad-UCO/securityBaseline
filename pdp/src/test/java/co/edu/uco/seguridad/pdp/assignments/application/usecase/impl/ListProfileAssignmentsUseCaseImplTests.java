@@ -5,12 +5,7 @@ import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository
 import co.edu.uco.seguridad.pdp.assignments.domain.ProfileAssignment;
 import co.edu.uco.seguridad.pdp.assignments.domain.ProfileAssignmentCriteria;
 import co.edu.uco.seguridad.pdp.assignments.domain.model.ProfileAssignmentId;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.model.ProfileId;
-import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
-import co.edu.uco.seguridad.pdp.commons.model.UserId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -86,11 +81,11 @@ class ListProfileAssignmentsUseCaseImplTests {
     }
 
     private static ProfileAssignmentRepository repositoryReturning(ResultPage<ProfileAssignment> page,
-            List<Object[]> received) {
+                                                                   List<Object[]> received) {
         return new ProfileAssignmentRepository() {
             @Override
             public Mono<Boolean> existsActiveByUserApplicationProfile(UserId userId, ApplicationId applicationId,
-                    ProfileId profileId, Instant now) {
+                                                                      ProfileId profileId, Instant now) {
                 throw new UnsupportedOperationException();
             }
 
@@ -101,7 +96,7 @@ class ListProfileAssignmentsUseCaseImplTests {
 
             @Override
             public Mono<ResultPage<ProfileAssignment>> findBy(ProfileAssignmentCriteria criteria, PageWindow window) {
-                received.add(new Object[] {criteria, window});
+                received.add(new Object[]{criteria, window});
                 return Mono.just(page);
             }
 

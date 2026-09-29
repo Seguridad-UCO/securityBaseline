@@ -14,7 +14,9 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** HU-019: define/addRole se movieron a ProfileAdministrationControllerTests (authorization). */
+/**
+ * HU-019: define/addRole se movieron a ProfileAdministrationControllerTests (authorization).
+ */
 class ProfileControllerTests {
 
     private static final ProfileWebResponse EXPECTED = new ProfileWebResponse(

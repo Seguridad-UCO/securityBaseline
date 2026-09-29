@@ -1,6 +1,8 @@
 package co.edu.uco.seguridad.shared.audit;
 
-/** Catálogo cerrado de operaciones administrativas auditables (HU-021). */
+/**
+ * Catálogo cerrado de operaciones administrativas auditables (HU-021).
+ */
 public enum AdministrationOperation {
     APPLICATION_REGISTERED,
     APPLICATION_REMOVED,

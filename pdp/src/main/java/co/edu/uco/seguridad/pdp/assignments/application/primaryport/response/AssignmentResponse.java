@@ -11,9 +11,11 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Salida del núcleo: value objects, sin aplanar. El aplanado es del adaptador web. */
+/**
+ * Salida del núcleo: value objects, sin aplanar. El aplanado es del adaptador web.
+ */
 public record AssignmentResponse(AssignmentId id, UserId userId, TenantId tenantId, ApplicationId applicationId,
-        RoleId roleId, Instant validFrom, Optional<Instant> validUntil) {
+                                 RoleId roleId, Instant validFrom, Optional<Instant> validUntil) {
 
     public AssignmentResponse {
         Objects.requireNonNull(id, RequiredArgumentMessages.ASSIGNMENT_ID);

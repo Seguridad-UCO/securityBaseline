@@ -6,7 +6,7 @@ import java.net.URI;
 
 @ConfigurationProperties("security.pep.registration")
 public record PepRegistrationProperties(boolean enabled, URI pepUrl, String applicationId, String environment,
-        URI backendUrl, String audience, String token, boolean allowInsecureHttp) {
+                                        URI backendUrl, String audience, String token, boolean allowInsecureHttp) {
     void validate() {
         if (pepUrl == null || applicationId == null || applicationId.isBlank() || environment == null || environment.isBlank()
                 || backendUrl == null || audience == null || audience.isBlank() || token == null || token.isBlank()) {

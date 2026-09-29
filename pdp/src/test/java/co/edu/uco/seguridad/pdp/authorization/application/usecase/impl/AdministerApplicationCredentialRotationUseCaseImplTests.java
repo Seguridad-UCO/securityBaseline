@@ -66,7 +66,9 @@ class AdministerApplicationCredentialRotationUseCaseImplTests {
     @Test
     void never_rotates_the_credential_when_the_principal_does_not_administer_the_application_and_audits_denied() {
         RotateApplicationCredentialUseCase rotateCredential =
-                request -> { throw new AssertionError("must not reach rotation"); };
+                request -> {
+                    throw new AssertionError("must not reach rotation");
+                };
         List<AdministrationEvent> audited = new ArrayList<>();
         AdministerApplicationCredentialRotationUseCaseImpl useCase = new AdministerApplicationCredentialRotationUseCaseImpl(
                 denies(), rotateCredential, TestAdministrationAuditRepositories.capturing(audited), () -> FIXED_UUID,

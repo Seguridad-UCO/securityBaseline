@@ -32,24 +32,27 @@ Dependencias Modulith: `applications → commons, tenants` y
 `shared` está fuera de `pdp` a propósito: capacidades técnicas, no vocabulario del PDP. El
 vocabulario de negocio vive en `pdp/commons` (Java puro, sin Reactor).
 
-Eventos de dominio ([ADR-017](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-017-domain-events-application-event-publisher.md)):
+Eventos de
+dominio ([ADR-017](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-017-domain-events-application-event-publisher.md)):
 `Application` / `ProtectedResource` registran hechos vía `registerWithEvent`;
 `DomainEventPublisher` usa `ApplicationEventPublisher` (sin Event Publication Registry: aunque ya hay
 persistencia real desde el Stage 4, Modulith no trae un backend de registry para SurrealDB — ver la
 actualización en la nota de implementación de ADR-017). Seguridad reactiva
-([ADR-018](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-018-jwt-reactive-security-implementation.md)) y persistencia real
-([ADR-019](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-019-surrealdb-implementation.md)) ya están implementadas:
+([ADR-018](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-018-jwt-reactive-security-implementation.md))
+y persistencia real
+([ADR-019](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-019-surrealdb-implementation.md))
+ya están implementadas:
 `SecurityWebFilterChain` exige JWT en toda ruta salvo `/actuator/health,info`, los interactores de
 `resources` leen el tenant del principal autenticado en vez de aceptarlo en el cuerpo o la query, y
 los tres repositorios secundarios hablan con SurrealDB por HTTP en vez de guardar en memoria.
 
 ## Contratos publicados por módulo
 
-| Módulo | Publica | No publica |
-|---|---|---|
-| `tenants` | `CreateTenantInteractor`, `ListTenantsInteractor`, `TenantMustBeActiveValidator`, DTOs, excepciones | `Tenant`, repositorio, adaptadores |
-| `applications` | `ListApplicationsInteractor`, `ValidateApplicationCredentialInteractor`, DTOs, excepciones | `Application`, repositorio, reglas internas |
-| `resources` | Interactores HTTP, DTOs de catálogo | dominio, reglas, puertos secundarios, adaptadores |
+| Módulo         | Publica                                                                                             | No publica                                        |
+|----------------|-----------------------------------------------------------------------------------------------------|---------------------------------------------------|
+| `tenants`      | `CreateTenantInteractor`, `ListTenantsInteractor`, `TenantMustBeActiveValidator`, DTOs, excepciones | `Tenant`, repositorio, adaptadores                |
+| `applications` | `ListApplicationsInteractor`, `ValidateApplicationCredentialInteractor`, DTOs, excepciones          | `Application`, repositorio, reglas internas       |
+| `resources`    | Interactores HTTP, DTOs de catálogo                                                                 | dominio, reglas, puertos secundarios, adaptadores |
 
 `ListTenantsInteractor` responde *qué* es un tenant; `TenantMustBeActiveValidator` decide *si* puede
 operar (carga + `TenantStatusMustBeActiveRule`). No se mezclan consulta y decisión en un solo método.

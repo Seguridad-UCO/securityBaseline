@@ -10,5 +10,5 @@ import java.util.Map;
  * todavía — el catálogo del PDP no modela esos conceptos hoy.
  */
 public record OpaSubject(String id, String type, String tenantId, List<String> roles, List<String> profiles,
-        List<String> entitlements, List<String> groups, Map<String, Object> attributes) {
+                         List<String> entitlements, List<String> groups, Map<String, Object> attributes) {
 }

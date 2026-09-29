@@ -6,17 +6,18 @@ import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
+import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
-import java.time.Instant;
 
 /**
  * Entrada de {@link co.edu.uco.seguridad.pdp.authorization.application.usecase.EvaluateInternalAccessUseCase}.
  * Como {@code AccessRequest}, pero sin {@code tenantId}: en el canal interno el inquilino se resuelve
  * antes, a partir de {@code applicationName} (HU-003, decisión D4 del HANDOFF).
  */
-public record InternalAccessRequest(String subject, Optional<UserId> subjectUserId, ApplicationName applicationName, ResourcePath resourcePath,
-        HttpVerb action, String requestId, String correlationId, RequestFacts facts) {
+public record InternalAccessRequest(String subject, Optional<UserId> subjectUserId, ApplicationName applicationName,
+                                    ResourcePath resourcePath,
+                                    HttpVerb action, String requestId, String correlationId, RequestFacts facts) {
 
     public InternalAccessRequest {
         Objects.requireNonNull(subject, RequiredArgumentMessages.SUBJECT);
@@ -30,7 +31,7 @@ public record InternalAccessRequest(String subject, Optional<UserId> subjectUser
     }
 
     public InternalAccessRequest(String subject, ApplicationName applicationName, ResourcePath resourcePath,
-            HttpVerb action, String requestId, String correlationId) {
+                                 HttpVerb action, String requestId, String correlationId) {
         this(subject, Optional.empty(), applicationName, resourcePath, action, requestId, correlationId,
                 new RequestFacts(Instant.EPOCH, "", action, "HTTP"));
     }

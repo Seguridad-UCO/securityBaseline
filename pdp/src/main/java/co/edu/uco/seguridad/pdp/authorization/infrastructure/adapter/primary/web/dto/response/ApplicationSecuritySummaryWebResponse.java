@@ -1,0 +1,2 @@
+package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response;
+public record ApplicationSecuritySummaryWebResponse(Application application, Counts counts) { public record Application(String id,String name,String description,String baseUrl){} public record Counts(long resources,long roles,long profiles,long administrators,long roleAssignments,long profileAssignments){} }

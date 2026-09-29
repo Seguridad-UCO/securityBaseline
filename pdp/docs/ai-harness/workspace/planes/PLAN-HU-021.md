@@ -3,25 +3,30 @@
 ## Metadata
 
 - **ID:** HU-021
-- **Slice:** `shared` (el puerto, el evento y su persistencia — capacidad técnica transversal, no vocabulario del PDP) + retrofit `[M]` de 15 casos de uso ya existentes en `authorization` y `assignments`
+- **Slice:** `shared` (el puerto, el evento y su persistencia — capacidad técnica transversal, no vocabulario del PDP) +
+  retrofit `[M]` de 15 casos de uso ya existentes en `authorization` y `assignments`
 - **Tipo:** Escritura (nueva capacidad) + modificación de casos de uso existentes
 - **Fecha:** 2026-09-15
 - **Rama sugerida:** `feature/HU-021-auditoria-operaciones-administrativas`
-- **Fuentes:** `pdp/docs/ai-harness/workspace/HU-021.md` (dictada), código real: `AccessEvent`/`AccessAuditRepository`/`SurrealAccessAuditRepository`/`ObservedAccessAuditRepository` (HU-007, precedente exacto de forma), `DomainEvent`/`DomainEventPublisher` (`shared/event`, precedente de "capacidad técnica en `shared`, no en un slice")
+- **Fuentes:** `pdp/docs/ai-harness/workspace/HU-021.md` (dictada), código real: `AccessEvent`/`AccessAuditRepository`/
+  `SurrealAccessAuditRepository`/`ObservedAccessAuditRepository` (HU-007, precedente exacto de forma), `DomainEvent`/
+  `DomainEventPublisher` (`shared/event`, precedente de "capacidad técnica en `shared`, no en un slice")
 - **Criterios de la línea base que toca:** 1, 4, 8 (ADR-0002), 9, 11, 12, 21, 22
-- **Depende de:** HU-015 a HU-020 (todas ya cerradas o planificadas en esta misma sesión) — este plan asume que HU-020 se implementa antes de que este se ejecute; si no, los ítems de HU-020 en la tabla de retrofit (§8) se difieren a una historia de seguimiento sin bloquear el resto.
+- **Depende de:** HU-015 a HU-020 (todas ya cerradas o planificadas en esta misma sesión) — este plan asume que HU-020
+  se implementa antes de que este se ejecute; si no, los ítems de HU-020 en la tabla de retrofit (§8) se difieren a una
+  historia de seguimiento sin bloquear el resto.
 
 ## 0. Decisiones tomadas antes de planificar (resuelven lo que `HU-021.md` dejaba abierto)
 
-| Pregunta de `HU-021.md` | Decisión | Por qué |
-|---|---|---|
-| ¿Dónde vive el puerto de auditoría? | **`shared`** (`shared/audit/AdministrationAuditRepository`, `shared/event/DomainEvent` como marcador) | Lo necesitan 5 slices (`applications` vía `authorization`, `roles`, `resources`, `assignments`, `profiles`); `shared` es `Type.OPEN` — cualquier módulo ya lo consume sin declarar un `allowedDependencies` nuevo, a diferencia de publicar esto desde `authorization` (que habría exigido `:: audit` en `roles`/`resources`/`profiles`/`assignments`, cuatro fronteras nuevas para una capacidad que no es vocabulario de ninguno de ellos) |
-| Forma del evento | `AdministrationEvent(eventId, correlationId, tenantId, applicationId, subject, operation, outcome, occurredOn)` | Mínimo necesario, mismo espíritu que `AccessEvent`: identificadores y resultado, nunca el cuerpo de la petición |
-| Catálogo de `operation` | Enum `AdministrationOperation`: `APPLICATION_REGISTERED, APPLICATION_REMOVED, APPLICATION_CREDENTIAL_ROTATED, ADMINISTRATOR_ASSIGNED, ADMINISTRATOR_REMOVED, ROLE_DEFINED, RESOURCE_REGISTERED, RESOURCE_GRANTED, ROLE_ASSIGNED, ROLE_REVOKED, PROFILE_DEFINED, PROFILE_ROLE_ADDED, PROFILE_ASSIGNED, PROFILE_REVOKED` — una por cada caso de uso `Administer*UseCaseImpl` existente que escribe (ver §8). Listar (HU-020) **no** audita — mismo criterio que `AccessEvent` nunca auditó una consulta |
-| `outcome` | Enum `AdministrationOutcome`: `ALLOWED`, `DENIED` — sin `ReasonCode` de `AccessEvent` (es vocabulario de decisión de acceso de negocio, no de administración); si se rechaza, `DENIED` alcanza, la razón siempre es "no administra la aplicación" hasta que exista una segunda razón de rechazo |
-| ¿Endpoint de consulta? | No — mismo criterio que HU-007: evidencia en SurrealDB, consultable directamente, sin endpoint HTTP propio |
-| ¿Retroactivo reabre HU-016 a HU-020? | No — este plan **modifica** (`[M]`) los `Administer*UseCaseImpl` ya construidos, con su propio contrato de prueba (nuevas pruebas que confirman la llamada a auditoría, no una reescritura de las pruebas existentes de gate) |
-| ¿Transaccional o best-effort? | **Best-effort respecto a la operación de negocio** — mismo criterio que HU-007 fijó para `AccessEvent`: si guardar la auditoría falla, la operación administrativa ya ocurrida no se deshace (verificado leyendo `AuthorizeUseCaseImpl`: la publicación de `AccessEvent` no está en el camino crítico de la respuesta) |
+| Pregunta de `HU-021.md`              | Decisión                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Por qué                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+|--------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ¿Dónde vive el puerto de auditoría?  | **`shared`** (`shared/audit/AdministrationAuditRepository`, `shared/event/DomainEvent` como marcador)                                                                                                                                                                                                                                                                                                                                                                                                 | Lo necesitan 5 slices (`applications` vía `authorization`, `roles`, `resources`, `assignments`, `profiles`); `shared` es `Type.OPEN` — cualquier módulo ya lo consume sin declarar un `allowedDependencies` nuevo, a diferencia de publicar esto desde `authorization` (que habría exigido `:: audit` en `roles`/`resources`/`profiles`/`assignments`, cuatro fronteras nuevas para una capacidad que no es vocabulario de ninguno de ellos) |
+| Forma del evento                     | `AdministrationEvent(eventId, correlationId, tenantId, applicationId, subject, operation, outcome, occurredOn)`                                                                                                                                                                                                                                                                                                                                                                                       | Mínimo necesario, mismo espíritu que `AccessEvent`: identificadores y resultado, nunca el cuerpo de la petición                                                                                                                                                                                                                                                                                                                              |
+| Catálogo de `operation`              | Enum `AdministrationOperation`: `APPLICATION_REGISTERED, APPLICATION_REMOVED, APPLICATION_CREDENTIAL_ROTATED, ADMINISTRATOR_ASSIGNED, ADMINISTRATOR_REMOVED, ROLE_DEFINED, RESOURCE_REGISTERED, RESOURCE_GRANTED, ROLE_ASSIGNED, ROLE_REVOKED, PROFILE_DEFINED, PROFILE_ROLE_ADDED, PROFILE_ASSIGNED, PROFILE_REVOKED` — una por cada caso de uso `Administer*UseCaseImpl` existente que escribe (ver §8). Listar (HU-020) **no** audita — mismo criterio que `AccessEvent` nunca auditó una consulta |
+| `outcome`                            | Enum `AdministrationOutcome`: `ALLOWED`, `DENIED` — sin `ReasonCode` de `AccessEvent` (es vocabulario de decisión de acceso de negocio, no de administración); si se rechaza, `DENIED` alcanza, la razón siempre es "no administra la aplicación" hasta que exista una segunda razón de rechazo                                                                                                                                                                                                       |
+| ¿Endpoint de consulta?               | No — mismo criterio que HU-007: evidencia en SurrealDB, consultable directamente, sin endpoint HTTP propio                                                                                                                                                                                                                                                                                                                                                                                            |
+| ¿Retroactivo reabre HU-016 a HU-020? | No — este plan **modifica** (`[M]`) los `Administer*UseCaseImpl` ya construidos, con su propio contrato de prueba (nuevas pruebas que confirman la llamada a auditoría, no una reescritura de las pruebas existentes de gate)                                                                                                                                                                                                                                                                         |
+| ¿Transaccional o best-effort?        | **Best-effort respecto a la operación de negocio** — mismo criterio que HU-007 fijó para `AccessEvent`: si guardar la auditoría falla, la operación administrativa ya ocurrida no se deshace (verificado leyendo `AuthorizeUseCaseImpl`: la publicación de `AccessEvent` no está en el camino crítico de la respuesta)                                                                                                                                                                                |
 
 ## 1. Resumen funcional
 
@@ -35,14 +40,14 @@ sea éxito o rechazo — sin bloquear la respuesta si el guardado falla.
 
 ## 2. Criterios de aceptación
 
-| # | Criterio | Resultado esperado |
-|---|---|---|
-| 1 | Una operación administrativa exitosa queda persistida con `outcome=ALLOWED` | `AdministrationAuditRepositoryImplTests`/pruebas de cada `Administer*UseCaseImpl` retrofitted |
-| 2 | Una operación administrativa rechazada (`NotAuthorizedToAdministerException`) queda persistida con `outcome=DENIED` | Ídem |
-| 3 | Un fallo al guardar la auditoría no impide que la operación de negocio ya resuelta se devuelva | Prueba dedicada por caso de uso retrofitted (best-effort) |
-| 4 | El evento queda expuesto a Prometheus y a los logs estructurados | `ObservedAdministrationAuditRepositoryImplTests` (mismo patrón que HU-007) |
-| 5 | Ningún endpoint HTTP nuevo | Sin controller nuevo en este plan |
-| 6 | Suite completa | `verificar.ps1` en verde |
+| # | Criterio                                                                                                            | Resultado esperado                                                                            |
+|---|---------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------|
+| 1 | Una operación administrativa exitosa queda persistida con `outcome=ALLOWED`                                         | `AdministrationAuditRepositoryImplTests`/pruebas de cada `Administer*UseCaseImpl` retrofitted |
+| 2 | Una operación administrativa rechazada (`NotAuthorizedToAdministerException`) queda persistida con `outcome=DENIED` | Ídem                                                                                          |
+| 3 | Un fallo al guardar la auditoría no impide que la operación de negocio ya resuelta se devuelva                      | Prueba dedicada por caso de uso retrofitted (best-effort)                                     |
+| 4 | El evento queda expuesto a Prometheus y a los logs estructurados                                                    | `ObservedAdministrationAuditRepositoryImplTests` (mismo patrón que HU-007)                    |
+| 5 | Ningún endpoint HTTP nuevo                                                                                          | Sin controller nuevo en este plan                                                             |
+| 6 | Suite completa                                                                                                      | `verificar.ps1` en verde                                                                      |
 
 ## 3. Reglas de negocio
 
@@ -53,11 +58,11 @@ HU-007).
 
 ### Nuevo, en `shared`
 
-| Tipo | Forma | Vive en |
-|---|---|---|
-| `AdministrationEvent` | `record(UUID eventId, String correlationId, TenantId tenantId, ApplicationId applicationId, String subject, AdministrationOperation operation, AdministrationOutcome outcome, Instant occurredOn)`, implementa `DomainEvent` | `shared/audit/` |
-| `AdministrationOperation` | enum, ver §0 | `shared/audit/` |
-| `AdministrationOutcome` | enum `ALLOWED`, `DENIED` | `shared/audit/` |
+| Tipo                      | Forma                                                                                                                                                                                                                        | Vive en         |
+|---------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------|
+| `AdministrationEvent`     | `record(UUID eventId, String correlationId, TenantId tenantId, ApplicationId applicationId, String subject, AdministrationOperation operation, AdministrationOutcome outcome, Instant occurredOn)`, implementa `DomainEvent` | `shared/audit/` |
+| `AdministrationOperation` | enum, ver §0                                                                                                                                                                                                                 | `shared/audit/` |
+| `AdministrationOutcome`   | enum `ALLOWED`, `DENIED`                                                                                                                                                                                                     | `shared/audit/` |
 
 `shared/audit` importa `TenantId`/`ApplicationId` de `pdp/commons` — mismo precedente que otras
 capacidades de `shared` (`shared/security/PdpPrincipal` ya importa `TenantId`), no es un ciclo porque
@@ -123,7 +128,8 @@ continuación natural, no un precedente nuevo:
 ### Retrofit `[M]` — 13 casos de uso existentes ganan la llamada a auditoría
 
 > **Corregido en una segunda pasada de `2-tester-spec`** (tras el primer intento de
-> `3-implementador`): la tabla original tenía 15 filas, incluyendo `RegisterApplicationWithFirstAdministratorUseCaseImpl`
+> `3-implementador`): la tabla original tenía 15 filas, incluyendo
+`RegisterApplicationWithFirstAdministratorUseCaseImpl`
 > y `AssignApplicationAdministratorUseCaseImpl` (slice `assignments`). Se retiran las dos: ninguna
 > de sus requests (`RegisterApplicationWithFirstAdministratorRequest`, `AssignApplicationAdministratorRequest`)
 > trae `subject` — no hay con qué construir un `AdministrationEvent` completo ahí — y auditar en
@@ -143,21 +149,21 @@ privado `audited(Mono<T> operation, AdministrationOperation kind, Administration
 reutilizable) lo fija `2-tester-spec`/`3-implementador` contra la firma real de cada clase, no este
 plan; lo que este plan fija es **la lista cerrada de quién cambia y con qué `operation`**:
 
-| Caso de uso `[M]` | Slice | `AdministrationOperation` |
-|---|---|---|
-| `AdministerApplicationRemovalUseCaseImpl` | `authorization` | `APPLICATION_REMOVED` |
-| `AdministerApplicationCredentialRotationUseCaseImpl` | `authorization` | `APPLICATION_CREDENTIAL_ROTATED` |
-| `AdministerRoleDefinitionUseCaseImpl` | `authorization` | `ROLE_DEFINED` |
-| `AdministerResourceGrantUseCaseImpl` | `authorization` | `RESOURCE_GRANTED` |
-| `AdministerResourceRegistrationUseCaseImpl` | `authorization` | `RESOURCE_REGISTERED` |
-| `AdministerAssignmentCreationUseCaseImpl` | `authorization` | `ROLE_ASSIGNED` |
-| `AdministerAssignmentRevocationUseCaseImpl` | `authorization` | `ROLE_REVOKED` |
-| `AdministerProfileDefinitionUseCaseImpl` | `authorization` | `PROFILE_DEFINED` |
-| `AdministerProfileRoleAdditionUseCaseImpl` | `authorization` | `PROFILE_ROLE_ADDED` |
-| `AdministerProfileAssignmentCreationUseCaseImpl` | `authorization` | `PROFILE_ASSIGNED` |
-| `AdministerProfileAssignmentRevocationUseCaseImpl` | `authorization` | `PROFILE_REVOKED` |
-| `AdministerApplicationAdministratorAssignmentUseCaseImpl` (HU-020) | `authorization` | `ADMINISTRATOR_ASSIGNED` |
-| `AdministerApplicationAdministratorRemovalUseCaseImpl` (HU-020) | `authorization` | `ADMINISTRATOR_REMOVED` |
+| Caso de uso `[M]`                                                  | Slice           | `AdministrationOperation`        |
+|--------------------------------------------------------------------|-----------------|----------------------------------|
+| `AdministerApplicationRemovalUseCaseImpl`                          | `authorization` | `APPLICATION_REMOVED`            |
+| `AdministerApplicationCredentialRotationUseCaseImpl`               | `authorization` | `APPLICATION_CREDENTIAL_ROTATED` |
+| `AdministerRoleDefinitionUseCaseImpl`                              | `authorization` | `ROLE_DEFINED`                   |
+| `AdministerResourceGrantUseCaseImpl`                               | `authorization` | `RESOURCE_GRANTED`               |
+| `AdministerResourceRegistrationUseCaseImpl`                        | `authorization` | `RESOURCE_REGISTERED`            |
+| `AdministerAssignmentCreationUseCaseImpl`                          | `authorization` | `ROLE_ASSIGNED`                  |
+| `AdministerAssignmentRevocationUseCaseImpl`                        | `authorization` | `ROLE_REVOKED`                   |
+| `AdministerProfileDefinitionUseCaseImpl`                           | `authorization` | `PROFILE_DEFINED`                |
+| `AdministerProfileRoleAdditionUseCaseImpl`                         | `authorization` | `PROFILE_ROLE_ADDED`             |
+| `AdministerProfileAssignmentCreationUseCaseImpl`                   | `authorization` | `PROFILE_ASSIGNED`               |
+| `AdministerProfileAssignmentRevocationUseCaseImpl`                 | `authorization` | `PROFILE_REVOKED`                |
+| `AdministerApplicationAdministratorAssignmentUseCaseImpl` (HU-020) | `authorization` | `ADMINISTRATOR_ASSIGNED`         |
+| `AdministerApplicationAdministratorRemovalUseCaseImpl` (HU-020)    | `authorization` | `ADMINISTRATOR_REMOVED`          |
 
 `AdministerApplicationAdministratorListUseCaseImpl` (HU-020) **no** se toca — es consulta, no
 escritura (ver §0). `RegisterApplicationWithFirstAdministratorUseCaseImpl` y
@@ -210,26 +216,26 @@ pdp/assignments/infrastructure/config/AssignmentsConfiguration.java         [M] 
 
 ## 9. Casos de prueba esperados
 
-| Capa | Clase de prueba | Casos |
-|---|---|---|
-| `shared` (dominio del evento) | `AdministrationEventTests` (si el record gana invariantes no triviales; si no, se cubre indirectamente) | construcción válida, `requireNonNull` por componente |
-| `infrastructure` (`shared`) | `SurrealAdministrationAuditRepositoryTests` | guarda y encuentra por `correlationId`, contra SurrealDB real (`AbstractSurrealDbIntegrationTest`) — mismo patrón que `SurrealRepositoryIntegrationTests` |
-| `infrastructure` (`shared`) | `ObservedAdministrationAuditRepositoryTests` | incrementa el contador correcto con las labels correctas; delega el guardado real |
-| `application`/`infrastructure` (por cada uno de los 15 `[M]`) | Se **extiende** la clase de prueba existente de cada caso de uso (no se reemplaza): un caso nuevo por clase — "audita `ALLOWED` en éxito", "audita `DENIED` en rechazo", "no bloquea el resultado si la auditoría falla" — usando un fake de `AdministrationAuditRepository` que captura lo recibido | ~15 × 2-3 casos nuevos = 30-45 casos |
+| Capa                                                          | Clase de prueba                                                                                                                                                                                                                                                                                      | Casos                                                                                                                                                     |
+|---------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `shared` (dominio del evento)                                 | `AdministrationEventTests` (si el record gana invariantes no triviales; si no, se cubre indirectamente)                                                                                                                                                                                              | construcción válida, `requireNonNull` por componente                                                                                                      |
+| `infrastructure` (`shared`)                                   | `SurrealAdministrationAuditRepositoryTests`                                                                                                                                                                                                                                                          | guarda y encuentra por `correlationId`, contra SurrealDB real (`AbstractSurrealDbIntegrationTest`) — mismo patrón que `SurrealRepositoryIntegrationTests` |
+| `infrastructure` (`shared`)                                   | `ObservedAdministrationAuditRepositoryTests`                                                                                                                                                                                                                                                         | incrementa el contador correcto con las labels correctas; delega el guardado real                                                                         |
+| `application`/`infrastructure` (por cada uno de los 15 `[M]`) | Se **extiende** la clase de prueba existente de cada caso de uso (no se reemplaza): un caso nuevo por clase — "audita `ALLOWED` en éxito", "audita `DENIED` en rechazo", "no bloquea el resultado si la auditoría falla" — usando un fake de `AdministrationAuditRepository` que captura lo recibido | ~15 × 2-3 casos nuevos = 30-45 casos                                                                                                                      |
 
 Presupuesto total estimado: **40-55 pruebas** — la historia más grande del backlog en superficie de
 prueba, precisamente porque toca 15 clases ya existentes en vez de construir una sola vez.
 
 ## 10. Trazabilidad
 
-| Fase | Estado | Fecha |
-|---|---|---|
-| Plan | ✅ Generado | 2026-09-15 |
-| Contrato aprobado (gate 1) | ✅ Aprobado | 2026-09-15 |
-| Pruebas en rojo | ✅ Confirmado (dos pasadas de `2-tester-spec`) | 2026-09-15 |
-| Implementación en verde | ⚠️ Verde en pruebas, incompleta contra el plan | 2026-09-15 |
-| Validación | ⛔ RECHAZADO — ver REPORTE-HU-021.md | 2026-09-15 |
-| Entrega (gate 2) | ⏳ Bloqueada hasta corregir los 3 bloqueantes | |
+| Fase                       | Estado                                         | Fecha      |
+|----------------------------|------------------------------------------------|------------|
+| Plan                       | ✅ Generado                                     | 2026-09-15 |
+| Contrato aprobado (gate 1) | ✅ Aprobado                                     | 2026-09-15 |
+| Pruebas en rojo            | ✅ Confirmado (dos pasadas de `2-tester-spec`)  | 2026-09-15 |
+| Implementación en verde    | ⚠️ Verde en pruebas, incompleta contra el plan | 2026-09-15 |
+| Validación                 | ⛔ RECHAZADO — ver REPORTE-HU-021.md            | 2026-09-15 |
+| Entrega (gate 2)           | ⏳ Bloqueada hasta corregir los 3 bloqueantes   |            |
 
 ## 11. Ambigüedades pendientes
 

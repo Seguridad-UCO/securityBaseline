@@ -25,7 +25,9 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** HU-020: gatea RemoveApplicationAdministratorUseCase tras HU-009. */
+/**
+ * HU-020: gatea RemoveApplicationAdministratorUseCase tras HU-009.
+ */
 class AdministerApplicationAdministratorRemovalUseCaseImplTests {
 
     private static final TenantId TENANT = new TenantId("universidad-uco");

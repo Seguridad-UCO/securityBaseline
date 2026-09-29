@@ -7,12 +7,7 @@ import co.edu.uco.seguridad.pdp.assignments.domain.model.AssignmentId;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.entity.AssignmentEntity;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.mapper.AssignmentPersistenceMapper;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.schema.AssignmentSchema;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
-import co.edu.uco.seguridad.pdp.commons.model.RoleId;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
-import co.edu.uco.seguridad.pdp.commons.model.UserId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealRecordId;
@@ -20,14 +15,12 @@ import reactor.core.publisher.Mono;
 import tools.jackson.databind.JsonNode;
 
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
-/** Adaptador real sobre SurrealDB. Lee la fila en AssignmentEntity y delega en AssignmentPersistenceMapper. */
+/**
+ * Adaptador real sobre SurrealDB. Lee la fila en AssignmentEntity y delega en AssignmentPersistenceMapper.
+ */
 public final class SurrealAssignmentRepository implements AssignmentRepository {
 
     private final SurrealDbClient client;
@@ -38,12 +31,12 @@ public final class SurrealAssignmentRepository implements AssignmentRepository {
 
     @Override
     public Mono<Boolean> existsActiveByUserApplicationRole(UserId userId, ApplicationId applicationId, RoleId roleId,
-            Instant now) {
+                                                           Instant now) {
         return client.execute(
                         """
-                        SELECT id FROM %s WHERE userId = $userId AND applicationId = $applicationId AND roleId = $roleId \
-                        AND validFrom <= <datetime>$now AND (validUntil = NONE OR validUntil > <datetime>$now) LIMIT 1;\
-                        """.formatted(AssignmentSchema.TABLE),
+                                SELECT id FROM %s WHERE userId = $userId AND applicationId = $applicationId AND roleId = $roleId \
+                                AND validFrom <= <datetime>$now AND (validUntil = NONE OR validUntil > <datetime>$now) LIMIT 1;\
+                                """.formatted(AssignmentSchema.TABLE),
                         Map.of("userId", userId.value().toString(), "applicationId", applicationId.value().toString(),
                                 "roleId", roleId.value().toString(), "now", now.toString()))
                 .map(results -> !results.get(0).isEmpty());
@@ -78,6 +71,39 @@ public final class SurrealAssignmentRepository implements AssignmentRepository {
                 });
     }
 
+    @Override
+    public Mono<ResultPage<Assignment>> findPageByApplication(TenantId tenantId, ApplicationId applicationId,
+                                                              PageWindow window) {
+        String query = """
+                SELECT * FROM %1$s WHERE tenantId = $tenantId AND applicationId = $applicationId \
+                ORDER BY validFrom DESC LIMIT %2$d START %3$d;
+                SELECT count() FROM %1$s WHERE tenantId = $tenantId AND applicationId = $applicationId GROUP ALL;
+                """.formatted(AssignmentSchema.TABLE, window.limit(), window.offset());
+        return client.execute(query, Map.of("tenantId", tenantId.value(), "applicationId", applicationId.value().toString()))
+                .map(results -> ResultPage.of(results.get(0).valueStream().map(SurrealAssignmentRepository::toDomain).toList(), totalOf(results.get(1)), window));
+    }
+
+    @Override public Mono<Long> countByApplication(TenantId tenantId, ApplicationId applicationId) {
+        return client.execute("SELECT count() FROM %s WHERE tenantId = $tenantId AND applicationId = $applicationId GROUP ALL;".formatted(AssignmentSchema.TABLE), Map.of("tenantId", tenantId.value(), "applicationId", applicationId.value().toString()))
+                .map(r -> totalOf(r.get(0)));
+    }
+
+    @Override
+    public Mono<ResultPage<Assignment>> findActivePageByRoleAndApplication(RoleId roleId, TenantId tenantId,
+            ApplicationId applicationId, Instant now, PageWindow window) {
+        String query = """
+                SELECT * FROM %1$s WHERE roleId = $roleId AND tenantId = $tenantId AND applicationId = $applicationId AND validFrom <= <datetime>$now AND (validUntil = NONE OR validUntil > <datetime>$now) ORDER BY validFrom DESC LIMIT %2$d START %3$d;
+                SELECT count() FROM %1$s WHERE roleId = $roleId AND tenantId = $tenantId AND applicationId = $applicationId AND validFrom <= <datetime>$now AND (validUntil = NONE OR validUntil > <datetime>$now) GROUP ALL;
+                """.formatted(AssignmentSchema.TABLE, window.limit(), window.offset());
+        return client.execute(query, Map.of("roleId", roleId.value().toString(), "tenantId", tenantId.value(), "applicationId", applicationId.value().toString(), "now", now.toString()))
+                .map(results -> ResultPage.of(results.get(0).valueStream().map(SurrealAssignmentRepository::toDomain).toList(), totalOf(results.get(1)), window));
+    }
+
+    @Override public Mono<Long> countActiveByRoleAndApplication(RoleId roleId, TenantId tenantId, ApplicationId applicationId, Instant now) {
+        return client.execute("SELECT count() FROM %s WHERE roleId = $roleId AND tenantId = $tenantId AND applicationId = $applicationId AND validFrom <= <datetime>$now AND (validUntil = NONE OR validUntil > <datetime>$now) GROUP ALL;".formatted(AssignmentSchema.TABLE), Map.of("roleId", roleId.value().toString(), "tenantId", tenantId.value(), "applicationId", applicationId.value().toString(), "now", now.toString()))
+                .map(r -> totalOf(r.get(0)));
+    }
+
     private static long totalOf(JsonNode countResult) {
         if (countResult.isEmpty()) {
             return 0L;
@@ -89,9 +115,9 @@ public final class SurrealAssignmentRepository implements AssignmentRepository {
     public Mono<Set<RoleId>> findActiveRoleIdsFor(UserId userId, ApplicationId applicationId, Instant now) {
         return client.execute(
                         """
-                        SELECT roleId FROM %s WHERE userId = $userId AND applicationId = $applicationId \
-                        AND validFrom <= <datetime>$now AND (validUntil = NONE OR validUntil > <datetime>$now);\
-                        """.formatted(AssignmentSchema.TABLE),
+                                SELECT roleId FROM %s WHERE userId = $userId AND applicationId = $applicationId \
+                                AND validFrom <= <datetime>$now AND (validUntil = NONE OR validUntil > <datetime>$now);\
+                                """.formatted(AssignmentSchema.TABLE),
                         Map.of("userId", userId.value().toString(), "applicationId", applicationId.value().toString(),
                                 "now", now.toString()))
                 .map(results -> results.get(0).valueStream()
@@ -125,9 +151,9 @@ public final class SurrealAssignmentRepository implements AssignmentRepository {
     @Override
     public Mono<Boolean> existsActiveByRoleId(RoleId roleId, Instant now) {
         return client.execute("""
-                        SELECT id FROM %s WHERE roleId = $roleId AND validFrom <= <datetime>$now \
-                        AND (validUntil = NONE OR validUntil > <datetime>$now) LIMIT 1;
-                        """.formatted(AssignmentSchema.TABLE),
+                                SELECT id FROM %s WHERE roleId = $roleId AND validFrom <= <datetime>$now \
+                                AND (validUntil = NONE OR validUntil > <datetime>$now) LIMIT 1;
+                                """.formatted(AssignmentSchema.TABLE),
                         Map.of("roleId", roleId.value().toString(), "now", now.toString()))
                 .map(results -> !results.get(0).isEmpty());
     }
@@ -135,7 +161,7 @@ public final class SurrealAssignmentRepository implements AssignmentRepository {
     @Override
     public Mono<Boolean> existsByApplicationId(ApplicationId applicationId) {
         return client.execute("SELECT id FROM %s WHERE applicationId = $applicationId LIMIT 1;"
-                        .formatted(AssignmentSchema.TABLE),
+                                .formatted(AssignmentSchema.TABLE),
                         Map.of("applicationId", applicationId.value().toString()))
                 .map(results -> !results.get(0).isEmpty());
     }

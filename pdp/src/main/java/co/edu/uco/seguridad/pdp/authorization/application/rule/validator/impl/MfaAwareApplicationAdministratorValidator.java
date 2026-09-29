@@ -25,7 +25,7 @@ public final class MfaAwareApplicationAdministratorValidator implements Principa
     private final MfaEvidenceProperties mfaProperties;
 
     public MfaAwareApplicationAdministratorValidator(PrincipalMustBeApplicationAdministratorValidator delegate,
-            MfaEvidenceProperties mfaProperties) {
+                                                     MfaEvidenceProperties mfaProperties) {
         this.delegate = Objects.requireNonNull(delegate, RequiredArgumentMessages.MFA_AWARE_VALIDATOR_DELEGATE);
         this.mfaProperties = Objects.requireNonNull(mfaProperties, RequiredArgumentMessages.MFA_EVIDENCE_PROPERTIES);
     }

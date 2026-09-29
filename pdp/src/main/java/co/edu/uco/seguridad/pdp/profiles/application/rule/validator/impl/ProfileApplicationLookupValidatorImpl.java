@@ -12,7 +12,9 @@ import reactor.core.publisher.Mono;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Implementación de {@link ProfileApplicationLookupValidator} (HU-019). */
+/**
+ * Implementación de {@link ProfileApplicationLookupValidator} (HU-019).
+ */
 public final class ProfileApplicationLookupValidatorImpl implements ProfileApplicationLookupValidator {
 
     private final ProfileRepository repository;

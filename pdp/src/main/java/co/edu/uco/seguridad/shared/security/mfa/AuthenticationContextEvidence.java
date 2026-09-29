@@ -17,7 +17,9 @@ public record AuthenticationContextEvidence(Optional<String> acr, List<String> a
     public AuthenticationContextEvidence {
     }
 
-    /** Sin evidencia — valor por defecto para sesiones que todavía no la resuelven (HU-024 §7). */
+    /**
+     * Sin evidencia — valor por defecto para sesiones que todavía no la resuelven (HU-024 §7).
+     */
     public static final AuthenticationContextEvidence NONE = new AuthenticationContextEvidence(Optional.empty(), List.of());
 
     /**

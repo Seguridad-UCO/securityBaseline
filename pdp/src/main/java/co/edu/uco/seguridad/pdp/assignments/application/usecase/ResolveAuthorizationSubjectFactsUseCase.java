@@ -4,4 +4,5 @@ import co.edu.uco.seguridad.pdp.assignments.application.primaryport.request.Reso
 import co.edu.uco.seguridad.pdp.assignments.application.primaryport.response.AuthorizationSubjectFactsResponse;
 import co.edu.uco.seguridad.shared.contract.ReactiveOperation;
 
-public interface ResolveAuthorizationSubjectFactsUseCase extends ReactiveOperation<ResolveAuthorizationSubjectFactsRequest, AuthorizationSubjectFactsResponse> { }
+public interface ResolveAuthorizationSubjectFactsUseCase extends ReactiveOperation<ResolveAuthorizationSubjectFactsRequest, AuthorizationSubjectFactsResponse> {
+}

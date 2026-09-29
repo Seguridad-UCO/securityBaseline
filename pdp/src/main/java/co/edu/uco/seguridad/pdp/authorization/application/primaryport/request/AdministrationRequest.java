@@ -19,7 +19,8 @@ import java.util.Set;
  * desde el principal — arrancan sin evidencia (fail-closed, PLAN-HU-024.md §7).
  */
 public record AdministrationRequest(TenantId tenantId, ApplicationId applicationId, UserId subjectUserId,
-        String subject, Set<String> subjectRoles, AuthenticationContextEvidence authenticationContext) {
+                                    String subject, Set<String> subjectRoles,
+                                    AuthenticationContextEvidence authenticationContext) {
 
     public AdministrationRequest {
         Objects.requireNonNull(tenantId, RequiredArgumentMessages.TENANT_ID);
@@ -31,11 +32,13 @@ public record AdministrationRequest(TenantId tenantId, ApplicationId application
     }
 
     public AdministrationRequest(TenantId tenantId, ApplicationId applicationId, UserId subjectUserId,
-            String subject, Set<String> subjectRoles) {
+                                 String subject, Set<String> subjectRoles) {
         this(tenantId, applicationId, subjectUserId, subject, subjectRoles, AuthenticationContextEvidence.NONE);
     }
 
-    /** Nuevo {@code AdministrationRequest} con los roles resueltos — el resto no cambia. */
+    /**
+     * Nuevo {@code AdministrationRequest} con los roles resueltos — el resto no cambia.
+     */
     public AdministrationRequest withSubjectRoles(Set<String> roles) {
         return new AdministrationRequest(tenantId, applicationId, subjectUserId, subject, roles, authenticationContext);
     }

@@ -11,12 +11,7 @@ import co.edu.uco.seguridad.shared.web.RequestContext;
 import co.edu.uco.seguridad.shared.web.message.WebContractMessages;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -36,14 +31,14 @@ final class ProfileAssignmentAdministrationController {
     private final AdministerProfileAssignmentRevocationInteractor revokeInteractor;
 
     ProfileAssignmentAdministrationController(AdministerProfileAssignmentCreationInteractor createInteractor,
-            AdministerProfileAssignmentRevocationInteractor revokeInteractor) {
+                                              AdministerProfileAssignmentRevocationInteractor revokeInteractor) {
         this.createInteractor = Objects.requireNonNull(createInteractor);
         this.revokeInteractor = Objects.requireNonNull(revokeInteractor);
     }
 
     @PostMapping
     Mono<ResponseEntity<ApiResponse<ProfileAssignmentAdministrationWebResponse>>> assign(@PathVariable String profileId,
-            @RequestBody AssignProfileRawRequest body, ServerWebExchange exchange) {
+                                                                                         @RequestBody AssignProfileRawRequest body, ServerWebExchange exchange) {
         RequestContext context = CorrelationWebFilter.context(exchange);
         return createInteractor.execute(new AssignProfileRawRequest(profileId, body.userId(), body.applicationId()))
                 .map(response -> ResponseEntity.status(HttpStatus.CREATED)
@@ -52,7 +47,7 @@ final class ProfileAssignmentAdministrationController {
 
     @DeleteMapping("/{profileAssignmentId}")
     Mono<ResponseEntity<ApiResponse<Void>>> revoke(@PathVariable String profileId,
-            @PathVariable String profileAssignmentId, ServerWebExchange exchange) {
+                                                   @PathVariable String profileAssignmentId, ServerWebExchange exchange) {
         RequestContext context = CorrelationWebFilter.context(exchange);
         return revokeInteractor.execute(new RevokeProfileAssignmentRawRequest(profileAssignmentId))
                 .then(Mono.just(ResponseEntity.ok(ApiResponse.<Void>success(

@@ -44,13 +44,13 @@ sí (`AuthorizeUseCase`/`AuthorizeAdministrationUseCase` — excluido explícita
 asignación, pero sí son los **únicos que tocan el repositorio directamente** — los otros cinco
 delegan en ellos, confirmado leyendo cada implementación:
 
-| Caso de uso (HU de origen) | Delega en |
-|---|---|
-| `AssignProfileUseCaseImpl` (HU-011) | `AssignRoleUseCase.execute(...)` por cada rol del perfil |
-| `AssignApplicationAdministratorUseCaseImpl` (HU-015) | `AssignRoleUseCase.execute(...)` |
-| `RegisterApplicationWithFirstAdministratorUseCaseImpl` (HU-015) | `AssignRoleUseCase.execute(...)` |
-| `RevokeProfileAssignmentUseCaseImpl` (HU-011) | `RevokeAssignmentUseCase.execute(...)` por cada asignación generada |
-| `RemoveApplicationAdministratorUseCaseImpl` (HU-020) | `RevokeAssignmentUseCase.execute(...)` |
+| Caso de uso (HU de origen)                                      | Delega en                                                           |
+|-----------------------------------------------------------------|---------------------------------------------------------------------|
+| `AssignProfileUseCaseImpl` (HU-011)                             | `AssignRoleUseCase.execute(...)` por cada rol del perfil            |
+| `AssignApplicationAdministratorUseCaseImpl` (HU-015)            | `AssignRoleUseCase.execute(...)`                                    |
+| `RegisterApplicationWithFirstAdministratorUseCaseImpl` (HU-015) | `AssignRoleUseCase.execute(...)`                                    |
+| `RevokeProfileAssignmentUseCaseImpl` (HU-011)                   | `RevokeAssignmentUseCase.execute(...)` por cada asignación generada |
+| `RemoveApplicationAdministratorUseCaseImpl` (HU-020)            | `RevokeAssignmentUseCase.execute(...)`                              |
 
 Invalidar dentro de `AssignRoleUseCaseImpl.execute()` y `RevokeAssignmentUseCaseImpl.execute()`
 cubre las 7 rutas de escritura del catálogo (HU-015 a HU-020) sin agregar una sola línea a los otros
@@ -67,14 +67,14 @@ hay una caché debajo.
 
 ## 2. Criterios de aceptación
 
-| # | Criterio | Resultado esperado |
-|---|---|---|
-| 1 | Segunda lectura sirve desde caché | Dos llamadas seguidas a `ResolveActiveRolesUseCase.execute` con el mismo `(userId, applicationId)`, sin cambios de asignación entre medio: la segunda no consulta `AssignmentRepository` |
-| 2 | Invalidación inmediata | Tras `AssignRoleUseCase`/`RevokeAssignmentUseCase` (y, transitivamente, los 5 casos de uso que delegan en ellos), una consulta inmediatamente posterior para el mismo `(userId, applicationId)` refleja el cambio, nunca un dato obsoleto |
-| 3 | Fail-open ante caída de Redis | Si Redis no responde, `ResolveActiveRolesUseCase` sigue resolviendo contra `AssignmentRepository` sin fallar — cero regresión funcional. Una escritura (`evict`) que falla no bloquea `AssignRoleUseCase`/`RevokeAssignmentUseCase`: es best-effort, respaldado por el TTL corto |
-| 4 | La entrada no persiste indefinidamente | La clave `active-roles:{userId}:{applicationId}` lleva TTL (`pdp.cache.active-roles.retention`, default `PT60S`), incluso siendo invalidada por evento |
-| 5 | Métrica de acierto/fallo | `ObservedDistributedCachePort` registra un contador por resultado (`hit`/`miss`/`evict`) en Micrometer, expuesto en `/actuator/metrics` |
-| 6 | `verificar.ps1` (suite completa) sigue en verde | `mvnw -f pdp/pom.xml verify`, cobertura ≥ 50 % por paquete nuevo |
+| # | Criterio                                        | Resultado esperado                                                                                                                                                                                                                                                               |
+|---|-------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1 | Segunda lectura sirve desde caché               | Dos llamadas seguidas a `ResolveActiveRolesUseCase.execute` con el mismo `(userId, applicationId)`, sin cambios de asignación entre medio: la segunda no consulta `AssignmentRepository`                                                                                         |
+| 2 | Invalidación inmediata                          | Tras `AssignRoleUseCase`/`RevokeAssignmentUseCase` (y, transitivamente, los 5 casos de uso que delegan en ellos), una consulta inmediatamente posterior para el mismo `(userId, applicationId)` refleja el cambio, nunca un dato obsoleto                                        |
+| 3 | Fail-open ante caída de Redis                   | Si Redis no responde, `ResolveActiveRolesUseCase` sigue resolviendo contra `AssignmentRepository` sin fallar — cero regresión funcional. Una escritura (`evict`) que falla no bloquea `AssignRoleUseCase`/`RevokeAssignmentUseCase`: es best-effort, respaldado por el TTL corto |
+| 4 | La entrada no persiste indefinidamente          | La clave `active-roles:{userId}:{applicationId}` lleva TTL (`pdp.cache.active-roles.retention`, default `PT60S`), incluso siendo invalidada por evento                                                                                                                           |
+| 5 | Métrica de acierto/fallo                        | `ObservedDistributedCachePort` registra un contador por resultado (`hit`/`miss`/`evict`) en Micrometer, expuesto en `/actuator/metrics`                                                                                                                                          |
+| 6 | `verificar.ps1` (suite completa) sigue en verde | `mvnw -f pdp/pom.xml verify`, cobertura ≥ 50 % por paquete nuevo                                                                                                                                                                                                                 |
 
 ## 3. Reglas de negocio
 
@@ -249,24 +249,24 @@ capa correcta.
 > `pdp/src/test` no lo toco yo (regla del planificador). Lo que sigue es lo que `@2-tester-spec`
 > debe escribir — descripción del caso, no el código.
 
-| Capa | Clase de prueba | Casos |
-|---|---|---|
-| `infrastructure` (unitaria, sin Spring) | `ObservedDistributedCachePortTests` | (a) `get` que resuelve con un conjunto → delega, registra `outcome=hit`; (b) `get` vacío → delega, registra `outcome=miss`; (c) `evict` → delega, registra `outcome=evict`; verificado con `SimpleMeterRegistry` real y un delegado fake (lambdas), mismo patrón que `ObservedAccessAuditRepositoryTests` |
-| `infrastructure` (Testcontainers, reutiliza `AbstractRedisIntegrationTest` de HU-022 — no crea uno nuevo) | `RedisDistributedCachePortTests` | (a) `get` antes de cualquier `put` → vacío (miss); (b) `put` con un conjunto no vacío y luego `get` → el mismo conjunto; (c) `put` con conjunto vacío y luego `get` → conjunto vacío (hit, no miss — distingue de (a)); (d) `evict` tras `put` → `get` vuelve a vacío; (e) tras `put`, la clave tiene TTL (`ttl > 0`); (f) contra un `ReactiveRedisTemplate` construido con un host/puerto que no responde, `get`/`put`/`evict` completan sin propagar error (fail-open, §7) |
-| `application` (extiende pruebas existentes) | `AssignRoleUseCaseImplTests` | + un caso: tras asignar, el fake de `DistributedCachePort` capturó `evict(userId, applicationId)` con los valores correctos de la respuesta |
-| `application` (extiende pruebas existentes) | `RevokeAssignmentUseCaseImplTests` | + un caso equivalente, con el `userId`/`applicationId` de la asignación revocada |
-| `application` (extiende pruebas existentes) | `ResolveActiveRolesUseCaseImplTests` | + dos casos: (a) `DistributedCachePort.get` resuelve con un conjunto → el resultado sale de ahí, el fake de `AssignmentRepository` nunca se consulta (verificado con un repositorio *unreachable*, mismo patrón que ya usan las pruebas de `assignments`); (b) `get` vacío → consulta `AssignmentRepository` como hoy, y el fake de `DistributedCachePort` capturó `put(userId, applicationId, roleIds)` con el resultado |
+| Capa                                                                                                      | Clase de prueba                      | Casos                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|-----------------------------------------------------------------------------------------------------------|--------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `infrastructure` (unitaria, sin Spring)                                                                   | `ObservedDistributedCachePortTests`  | (a) `get` que resuelve con un conjunto → delega, registra `outcome=hit`; (b) `get` vacío → delega, registra `outcome=miss`; (c) `evict` → delega, registra `outcome=evict`; verificado con `SimpleMeterRegistry` real y un delegado fake (lambdas), mismo patrón que `ObservedAccessAuditRepositoryTests`                                                                                                                                                                    |
+| `infrastructure` (Testcontainers, reutiliza `AbstractRedisIntegrationTest` de HU-022 — no crea uno nuevo) | `RedisDistributedCachePortTests`     | (a) `get` antes de cualquier `put` → vacío (miss); (b) `put` con un conjunto no vacío y luego `get` → el mismo conjunto; (c) `put` con conjunto vacío y luego `get` → conjunto vacío (hit, no miss — distingue de (a)); (d) `evict` tras `put` → `get` vuelve a vacío; (e) tras `put`, la clave tiene TTL (`ttl > 0`); (f) contra un `ReactiveRedisTemplate` construido con un host/puerto que no responde, `get`/`put`/`evict` completan sin propagar error (fail-open, §7) |
+| `application` (extiende pruebas existentes)                                                               | `AssignRoleUseCaseImplTests`         | + un caso: tras asignar, el fake de `DistributedCachePort` capturó `evict(userId, applicationId)` con los valores correctos de la respuesta                                                                                                                                                                                                                                                                                                                                  |
+| `application` (extiende pruebas existentes)                                                               | `RevokeAssignmentUseCaseImplTests`   | + un caso equivalente, con el `userId`/`applicationId` de la asignación revocada                                                                                                                                                                                                                                                                                                                                                                                             |
+| `application` (extiende pruebas existentes)                                                               | `ResolveActiveRolesUseCaseImplTests` | + dos casos: (a) `DistributedCachePort.get` resuelve con un conjunto → el resultado sale de ahí, el fake de `AssignmentRepository` nunca se consulta (verificado con un repositorio *unreachable*, mismo patrón que ya usan las pruebas de `assignments`); (b) `get` vacío → consulta `AssignmentRepository` como hoy, y el fake de `DistributedCachePort` capturó `put(userId, applicationId, roleIds)` con el resultado                                                    |
 
 ## 10. Trazabilidad
 
-| Fase | Estado | Fecha |
-|---|---|---|
-| Plan | ✅ Generado | 2026-09-16 |
-| Contrato aprobado (gate 1) | ✅ Cerrado | 2026-09-16 |
-| Pruebas en rojo | ✅ Confirmado (13 pruebas nuevas, color correcto) | 2026-09-16 |
-| Implementación en verde | ✅ 750/750, `clean verify` | 2026-09-16 |
-| Validación | ✅ APROBADO — ver REPORTE-HU-023.md | 2026-09-16 |
-| Entrega (gate 2) | ⏳ Pendiente | |
+| Fase                       | Estado                                           | Fecha      |
+|----------------------------|--------------------------------------------------|------------|
+| Plan                       | ✅ Generado                                       | 2026-09-16 |
+| Contrato aprobado (gate 1) | ✅ Cerrado                                        | 2026-09-16 |
+| Pruebas en rojo            | ✅ Confirmado (13 pruebas nuevas, color correcto) | 2026-09-16 |
+| Implementación en verde    | ✅ 750/750, `clean verify`                        | 2026-09-16 |
+| Validación                 | ✅ APROBADO — ver REPORTE-HU-023.md               | 2026-09-16 |
+| Entrega (gate 2)           | ⏳ Pendiente                                      |            |
 
 ## 11. Ambigüedades pendientes
 

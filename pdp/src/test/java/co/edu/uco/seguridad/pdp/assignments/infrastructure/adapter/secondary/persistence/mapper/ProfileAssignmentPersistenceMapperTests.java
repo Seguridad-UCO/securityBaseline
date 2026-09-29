@@ -10,7 +10,9 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Espejo de AssignmentPersistenceMapperTests. */
+/**
+ * Espejo de AssignmentPersistenceMapperTests.
+ */
 class ProfileAssignmentPersistenceMapperTests {
 
     private static final String ID = UUID.randomUUID().toString();

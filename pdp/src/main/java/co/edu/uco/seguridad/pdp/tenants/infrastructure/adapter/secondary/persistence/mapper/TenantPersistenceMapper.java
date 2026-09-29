@@ -19,7 +19,9 @@ public final class TenantPersistenceMapper {
         return new Tenant(new TenantId(entity.id()), new TenantName(entity.name()), toStatus(entity.status()));
     }
 
-    /** Para la proyección de estado, que lee la columna sin reconstruir el agregado. */
+    /**
+     * Para la proyección de estado, que lee la columna sin reconstruir el agregado.
+     */
     public static TenantStatus toStatus(String status) {
         return TenantStatus.valueOf(status);
     }

@@ -3,8 +3,8 @@ package co.edu.uco.seguridad.pdp.applications.application.rule.validator.impl;
 import co.edu.uco.seguridad.pdp.applications.application.primaryport.request.ApplicationOwnershipQuery;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationMustExistForTenantValidator;
 import co.edu.uco.seguridad.pdp.applications.application.secondaryport.repository.ApplicationRepository;
-import co.edu.uco.seguridad.pdp.applications.domain.rule.model.ApplicationExistence;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationMustExistForTenantRule;
+import co.edu.uco.seguridad.pdp.applications.domain.rule.model.ApplicationExistence;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import reactor.core.publisher.Mono;
 

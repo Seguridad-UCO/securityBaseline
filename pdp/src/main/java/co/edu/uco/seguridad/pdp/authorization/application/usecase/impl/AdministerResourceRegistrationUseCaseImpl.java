@@ -4,8 +4,8 @@ import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.Ad
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministrationRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.PrincipalMustBeApplicationAdministratorValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerResourceRegistrationUseCase;
-import co.edu.uco.seguridad.pdp.resources.application.primaryport.response.RegisteredProtectedResourceResponse;
 import co.edu.uco.seguridad.pdp.authorization.domain.exception.NotAuthorizedToAdministerException;
+import co.edu.uco.seguridad.pdp.resources.application.primaryport.response.RegisteredProtectedResourceResponse;
 import co.edu.uco.seguridad.pdp.resources.application.usecase.RegisterProtectedResourceUseCase;
 import co.edu.uco.seguridad.shared.audit.AdministrationAuditRepository;
 import co.edu.uco.seguridad.shared.audit.AdministrationEvent;
@@ -34,8 +34,8 @@ public final class AdministerResourceRegistrationUseCaseImpl implements Administ
     private final TimeProvider time;
 
     public AdministerResourceRegistrationUseCaseImpl(PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator,
-            RegisterProtectedResourceUseCase registerResource, AdministrationAuditRepository audit,
-            IdentifierGenerator identifiers, TimeProvider time) {
+                                                     RegisterProtectedResourceUseCase registerResource, AdministrationAuditRepository audit,
+                                                     IdentifierGenerator identifiers, TimeProvider time) {
         this.mustBeAdministrator = Objects.requireNonNull(mustBeAdministrator,
                 RequiredArgumentMessages.PRINCIPAL_MUST_BE_APPLICATION_ADMINISTRATOR_VALIDATOR);
         this.registerResource = Objects.requireNonNull(registerResource, RequiredArgumentMessages.REGISTER_USE_CASE);

@@ -7,7 +7,9 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
 
-/** Hecho ya resuelto para {@code AssignmentMustNotDuplicateActiveRule}: si ya hay una asignación activa para la tripleta. */
+/**
+ * Hecho ya resuelto para {@code AssignmentMustNotDuplicateActiveRule}: si ya hay una asignación activa para la tripleta.
+ */
 public record ActiveAssignmentAvailability(UserId userId, ApplicationId applicationId, RoleId roleId, boolean taken) {
 
     public ActiveAssignmentAvailability {

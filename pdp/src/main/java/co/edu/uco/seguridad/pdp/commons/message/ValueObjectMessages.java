@@ -6,7 +6,9 @@ package co.edu.uco.seguridad.pdp.commons.message;
  */
 public final class ValueObjectMessages {
 
-    /** Razón genérica cuando el campo llega nulo o vacío. Usada por todos los objetos de valor. */
+    /**
+     * Razón genérica cuando el campo llega nulo o vacío. Usada por todos los objetos de valor.
+     */
     public static final String VALUE_REQUIRED = "se requiere un valor";
 
     public static final class ApplicationName {

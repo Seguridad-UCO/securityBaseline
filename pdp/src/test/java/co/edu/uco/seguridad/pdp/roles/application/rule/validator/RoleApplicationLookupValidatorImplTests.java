@@ -1,10 +1,6 @@
 package co.edu.uco.seguridad.pdp.roles.application.rule.validator;
 
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
-import co.edu.uco.seguridad.pdp.commons.model.RoleId;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.pdp.roles.application.primaryport.request.RoleOwnershipQuery;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.impl.RoleApplicationLookupValidatorImpl;
 import co.edu.uco.seguridad.pdp.roles.application.secondaryport.repository.RoleRepository;
@@ -24,7 +20,9 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** HU-016: resuelve a qué aplicación pertenece un rol, para gatear GrantResourceToRole. */
+/**
+ * HU-016: resuelve a qué aplicación pertenece un rol, para gatear GrantResourceToRole.
+ */
 class RoleApplicationLookupValidatorImplTests {
 
     private static final TenantId TENANT = new TenantId("universidad-uco");

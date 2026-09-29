@@ -10,7 +10,9 @@ import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 
-/** Consulta paginada del catálogo de asignaciones de un perfil. Delega y proyecta; el orden lo fija el adaptador. */
+/**
+ * Consulta paginada del catálogo de asignaciones de un perfil. Delega y proyecta; el orden lo fija el adaptador.
+ */
 public final class ListProfileAssignmentsUseCaseImpl implements ListProfileAssignmentsUseCase {
 
     private final ProfileAssignmentRepository repository;

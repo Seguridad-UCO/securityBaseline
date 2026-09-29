@@ -1,12 +1,12 @@
 package co.edu.uco.seguridad.pdp.identity.application.usecase.impl;
 
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
+import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.pdp.identity.application.primaryport.request.ProvisionIdentityRequest;
 import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.SecurityUserRepository;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.ProvisionIdentityUseCase;
-import co.edu.uco.seguridad.pdp.identity.domain.model.ExternalIdentity;
 import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;
-import co.edu.uco.seguridad.pdp.commons.model.UserId;
+import co.edu.uco.seguridad.pdp.identity.domain.model.ExternalIdentity;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
@@ -28,7 +28,7 @@ public final class ProvisionIdentityUseCaseImpl implements ProvisionIdentityUseC
     private final TimeProvider time;
 
     public ProvisionIdentityUseCaseImpl(SecurityUserRepository repository, TenantId defaultTenantId,
-            IdentifierGenerator identifiers, TimeProvider time) {
+                                        IdentifierGenerator identifiers, TimeProvider time) {
         this.repository = Objects.requireNonNull(repository);
         this.defaultTenantId = Objects.requireNonNull(defaultTenantId, RequiredArgumentMessages.TENANT_ID);
         this.identifiers = Objects.requireNonNull(identifiers, RequiredArgumentMessages.IDENTIFIER_GENERATOR);

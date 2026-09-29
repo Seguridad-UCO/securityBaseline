@@ -5,7 +5,8 @@ package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.we
  * desnudos, sin anotaciones — la validación vive en {@code AccessDecisionRawRequestMapper}.
  */
 public record AccessDecisionRawRequest(String version, String requestId, String correlationId,
-        String timestamp, RawApplication application, RawResource resource, RawContext context) {
+                                       String timestamp, RawApplication application, RawResource resource,
+                                       RawContext context) {
 
     public record RawApplication(String name, String environment) {
     }

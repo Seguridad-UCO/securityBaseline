@@ -1,6 +1,8 @@
 package co.edu.uco.seguridad.pdp.profiles.domain.message;
 
-/** Catálogo de mensajes de las excepciones de negocio del módulo {@code profiles}. Espejo de {@code RolesMessages}. */
+/**
+ * Catálogo de mensajes de las excepciones de negocio del módulo {@code profiles}. Espejo de {@code RolesMessages}.
+ */
 public final class ProfilesMessages {
 
     public static String profileNameTaken(String name, String scope) {

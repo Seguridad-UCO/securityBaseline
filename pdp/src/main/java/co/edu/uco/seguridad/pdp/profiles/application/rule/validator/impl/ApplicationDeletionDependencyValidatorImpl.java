@@ -8,7 +8,14 @@ import reactor.core.publisher.Mono;
 
 public final class ApplicationDeletionDependencyValidatorImpl implements ApplicationDeletionDependencyValidator {
     private final ProfileRepository repository;
-    public ApplicationDeletionDependencyValidatorImpl(ProfileRepository repository) { this.repository = repository; }
-    @Override public Mono<Void> execute(ApplicationId id) { return repository.existsByApplicationId(id)
-            .flatMap(inUse -> inUse ? Mono.error(new CatalogItemInUseException("la aplicación")) : Mono.empty()); }
+
+    public ApplicationDeletionDependencyValidatorImpl(ProfileRepository repository) {
+        this.repository = repository;
+    }
+
+    @Override
+    public Mono<Void> execute(ApplicationId id) {
+        return repository.existsByApplicationId(id)
+                .flatMap(inUse -> inUse ? Mono.error(new CatalogItemInUseException("la aplicación")) : Mono.empty());
+    }
 }

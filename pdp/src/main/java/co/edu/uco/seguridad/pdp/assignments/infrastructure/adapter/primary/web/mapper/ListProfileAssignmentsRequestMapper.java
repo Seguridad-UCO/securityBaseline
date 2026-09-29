@@ -14,7 +14,9 @@ import co.edu.uco.seguridad.shared.web.message.WebContractMessages;
 
 import java.util.Optional;
 
-/** Misma lógica que ListAssignmentsRequestMapper (barrera C1): copia exacta, sobre profileId en vez de roleId. */
+/**
+ * Misma lógica que ListAssignmentsRequestMapper (barrera C1): copia exacta, sobre profileId en vez de roleId.
+ */
 public final class ListProfileAssignmentsRequestMapper {
 
     private static final String FIELD_PAGE = "page";

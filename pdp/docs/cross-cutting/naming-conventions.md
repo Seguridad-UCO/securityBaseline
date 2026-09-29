@@ -23,14 +23,14 @@ técnica) y `pdp/commons` (vocabulario del negocio) — ver
 
 ## Implementación
 
-| Elemento | Idioma | Ejemplo |
-|---|---|---|
-| Paquetes | inglés | `pdp.applications`, `pdp.resources`, `pdp.tenants`, `pdp.identity` |
-| Clases, métodos, variables | inglés | `RegisterApplicationUseCase`, `tenantId` |
-| Javadoc y comentarios | español | explican el porqué, igual que esta documentación |
-| Mensajes de error y catálogos (`{Slice}Messages`, `ValueObjectMessages`) | español | texto que ve el usuario final |
-| Nombres de tests | inglés descriptivo | `reports_a_missing_field_by_name` |
-| Documentación (`docs/`) | español | este archivo |
+| Elemento                                                                 | Idioma             | Ejemplo                                                            |
+|--------------------------------------------------------------------------|--------------------|--------------------------------------------------------------------|
+| Paquetes                                                                 | inglés             | `pdp.applications`, `pdp.resources`, `pdp.tenants`, `pdp.identity` |
+| Clases, métodos, variables                                               | inglés             | `RegisterApplicationUseCase`, `tenantId`                           |
+| Javadoc y comentarios                                                    | español            | explican el porqué, igual que esta documentación                   |
+| Mensajes de error y catálogos (`{Slice}Messages`, `ValueObjectMessages`) | español            | texto que ve el usuario final                                      |
+| Nombres de tests                                                         | inglés descriptivo | `reports_a_missing_field_by_name`                                  |
+| Documentación (`docs/`)                                                  | español            | este archivo                                                       |
 
 Los paquetes que nacieron en español (`applications`, `resources`) ya se renombraron a `applications`
 y `resources`. No queda ningún paquete en español.

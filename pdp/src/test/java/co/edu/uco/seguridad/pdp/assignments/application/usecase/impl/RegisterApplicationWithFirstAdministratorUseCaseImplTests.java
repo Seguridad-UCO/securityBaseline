@@ -10,11 +10,7 @@ import co.edu.uco.seguridad.pdp.assignments.application.primaryport.request.Regi
 import co.edu.uco.seguridad.pdp.assignments.application.primaryport.response.AssignmentResponse;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.AssignRoleUseCase;
 import co.edu.uco.seguridad.pdp.assignments.domain.model.AssignmentId;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
-import co.edu.uco.seguridad.pdp.commons.model.RoleId;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
-import co.edu.uco.seguridad.pdp.commons.model.UserId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.pdp.roles.application.primaryport.request.DefineRoleRequest;
 import co.edu.uco.seguridad.pdp.roles.application.primaryport.response.RoleResponse;
 import co.edu.uco.seguridad.pdp.roles.application.usecase.DefineRoleUseCase;
@@ -80,8 +76,12 @@ class RegisterApplicationWithFirstAdministratorUseCaseImplTests {
     void never_defines_a_role_or_assigns_it_when_the_application_registration_fails() {
         RuntimeException failure = new RuntimeException("nombre reservado");
         RegisterApplicationUseCase registerApplication = dto -> Mono.error(failure);
-        DefineRoleUseCase defineRole = request -> { throw new AssertionError("must not reach role definition"); };
-        AssignRoleUseCase assignRole = request -> { throw new AssertionError("must not reach role assignment"); };
+        DefineRoleUseCase defineRole = request -> {
+            throw new AssertionError("must not reach role definition");
+        };
+        AssignRoleUseCase assignRole = request -> {
+            throw new AssertionError("must not reach role assignment");
+        };
         RegisterApplicationWithFirstAdministratorUseCaseImpl useCase = new RegisterApplicationWithFirstAdministratorUseCaseImpl(
                 registerApplication, defineRole, assignRole);
 

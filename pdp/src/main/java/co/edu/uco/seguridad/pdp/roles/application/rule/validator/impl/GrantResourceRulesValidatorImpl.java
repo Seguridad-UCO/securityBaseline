@@ -33,8 +33,8 @@ public final class GrantResourceRulesValidatorImpl implements GrantResourceRules
     private final RoleScopeMustCoverResourceRule scopeMustCover;
 
     public GrantResourceRulesValidatorImpl(RoleRepository repository, RoleMustExistForTenantRule roleMustExist,
-            ProtectedResourceOwnerLookupValidator resourceOwner, ApplicationOwnerLookupValidator applicationOwner,
-            RoleScopeMustCoverResourceRule scopeMustCover) {
+                                           ProtectedResourceOwnerLookupValidator resourceOwner, ApplicationOwnerLookupValidator applicationOwner,
+                                           RoleScopeMustCoverResourceRule scopeMustCover) {
         this.repository = Objects.requireNonNull(repository, RequiredArgumentMessages.ROLE_REPOSITORY);
         this.roleMustExist = Objects.requireNonNull(roleMustExist, RequiredArgumentMessages.ROLE_EXISTS_RULE);
         this.resourceOwner = Objects.requireNonNull(resourceOwner,

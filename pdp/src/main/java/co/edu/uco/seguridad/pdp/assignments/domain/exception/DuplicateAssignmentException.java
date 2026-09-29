@@ -6,7 +6,9 @@ import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.RoleId;
 import co.edu.uco.seguridad.pdp.commons.model.UserId;
 
-/** Ya existe una asignación activa para la misma tripleta (usuario, aplicación, rol). */
+/**
+ * Ya existe una asignación activa para la misma tripleta (usuario, aplicación, rol).
+ */
 public final class DuplicateAssignmentException extends ConflictBusinessRuleException {
 
     public DuplicateAssignmentException(UserId userId, ApplicationId applicationId, RoleId roleId) {

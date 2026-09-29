@@ -7,7 +7,9 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
 
-/** Solicitud para retirar un recurso de un rol existente. */
+/**
+ * Solicitud para retirar un recurso de un rol existente.
+ */
 public record RevokeResourceRequest(TenantId tenantId, RoleId roleId, ResourceId resourceId) {
     public RevokeResourceRequest {
         Objects.requireNonNull(tenantId, RequiredArgumentMessages.TENANT_ID);

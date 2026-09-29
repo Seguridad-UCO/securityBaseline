@@ -19,7 +19,9 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
-/** Lista los administradores activos (asignaciones del rol ADMIN) de una aplicación (HU-020). */
+/**
+ * Lista los administradores activos (asignaciones del rol ADMIN) de una aplicación (HU-020).
+ */
 public final class ListApplicationAdministratorsUseCaseImpl implements ListApplicationAdministratorsUseCase {
 
     private static final RoleName ADMIN_ROLE_NAME = new RoleName("ADMIN");
@@ -29,7 +31,7 @@ public final class ListApplicationAdministratorsUseCaseImpl implements ListAppli
     private final TimeProvider time;
 
     public ListApplicationAdministratorsUseCaseImpl(RoleLookupByNameInScopeValidator roleLookup,
-            AssignmentRepository repository, TimeProvider time) {
+                                                    AssignmentRepository repository, TimeProvider time) {
         this.roleLookup = Objects.requireNonNull(roleLookup, RequiredArgumentMessages.ROLE_LOOKUP_BY_NAME_IN_SCOPE_VALIDATOR);
         this.repository = Objects.requireNonNull(repository, RequiredArgumentMessages.ASSIGNMENT_REPOSITORY);
         this.time = Objects.requireNonNull(time, RequiredArgumentMessages.TIME_PROVIDER);
@@ -43,7 +45,7 @@ public final class ListApplicationAdministratorsUseCaseImpl implements ListAppli
     }
 
     private Mono<List<AssignmentResponse>> activeAdministrators(ListApplicationAdministratorsRequest input,
-            RoleId adminRoleId) {
+                                                                RoleId adminRoleId) {
         Instant now = time.now();
         return repository.findBy(AssignmentCriteria.of(adminRoleId, input.tenantId()), PageWindow.defaultWindow())
                 .map(page -> page.content().stream()

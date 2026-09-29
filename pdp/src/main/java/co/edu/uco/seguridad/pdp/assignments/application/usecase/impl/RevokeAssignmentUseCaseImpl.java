@@ -34,7 +34,7 @@ public final class RevokeAssignmentUseCaseImpl implements RevokeAssignmentUseCas
     private final DistributedCachePort cache;
 
     public RevokeAssignmentUseCaseImpl(RevokeAssignmentRulesValidator rules, AssignmentRepository repository, TimeProvider time,
-            TokenRevocationPort revocation, DistributedCachePort cache) {
+                                       TokenRevocationPort revocation, DistributedCachePort cache) {
         this.rules = Objects.requireNonNull(rules, RequiredArgumentMessages.REVOKE_ASSIGNMENT_RULES_VALIDATOR);
         this.repository = Objects.requireNonNull(repository, RequiredArgumentMessages.ASSIGNMENT_REPOSITORY);
         this.time = Objects.requireNonNull(time, RequiredArgumentMessages.TIME_PROVIDER);

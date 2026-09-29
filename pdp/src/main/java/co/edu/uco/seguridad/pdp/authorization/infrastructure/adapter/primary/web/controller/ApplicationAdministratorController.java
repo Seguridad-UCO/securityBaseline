@@ -13,13 +13,7 @@ import co.edu.uco.seguridad.shared.web.RequestContext;
 import co.edu.uco.seguridad.shared.web.message.WebContractMessages;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -40,8 +34,8 @@ final class ApplicationAdministratorController {
     private final AdministerApplicationAdministratorListInteractor listInteractor;
 
     ApplicationAdministratorController(AdministerApplicationAdministratorAssignmentInteractor assignInteractor,
-            AdministerApplicationAdministratorRemovalInteractor removeInteractor,
-            AdministerApplicationAdministratorListInteractor listInteractor) {
+                                       AdministerApplicationAdministratorRemovalInteractor removeInteractor,
+                                       AdministerApplicationAdministratorListInteractor listInteractor) {
         this.assignInteractor = Objects.requireNonNull(assignInteractor);
         this.removeInteractor = Objects.requireNonNull(removeInteractor);
         this.listInteractor = Objects.requireNonNull(listInteractor);
@@ -49,7 +43,7 @@ final class ApplicationAdministratorController {
 
     @PostMapping
     Mono<ResponseEntity<ApiResponse<ApplicationAdministratorWebResponse>>> assign(@PathVariable String applicationId,
-            @RequestBody AssignApplicationAdministratorRawRequest body, ServerWebExchange exchange) {
+                                                                                  @RequestBody AssignApplicationAdministratorRawRequest body, ServerWebExchange exchange) {
         RequestContext context = CorrelationWebFilter.context(exchange);
         return assignInteractor.execute(new AssignApplicationAdministratorRawRequest(applicationId, body.userId()))
                 .map(response -> ResponseEntity.status(HttpStatus.CREATED)
@@ -59,7 +53,7 @@ final class ApplicationAdministratorController {
 
     @DeleteMapping("/{userId}")
     Mono<ResponseEntity<ApiResponse<Void>>> remove(@PathVariable String applicationId, @PathVariable String userId,
-            ServerWebExchange exchange) {
+                                                   ServerWebExchange exchange) {
         RequestContext context = CorrelationWebFilter.context(exchange);
         return removeInteractor.execute(new RemoveApplicationAdministratorRawRequest(applicationId, userId))
                 .then(Mono.just(ResponseEntity.ok(ApiResponse.<Void>success("APPLICATION_ADMINISTRATOR_REMOVED",

@@ -6,7 +6,9 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
 
-/** Hecho ya resuelto para {@code AssignmentMustExistForTenantRule}: si la asignación existe para ese tenant. */
+/**
+ * Hecho ya resuelto para {@code AssignmentMustExistForTenantRule}: si la asignación existe para ese tenant.
+ */
 public record AssignmentExistence(AssignmentId assignmentId, TenantId tenantId, boolean registered) {
 
     public AssignmentExistence {

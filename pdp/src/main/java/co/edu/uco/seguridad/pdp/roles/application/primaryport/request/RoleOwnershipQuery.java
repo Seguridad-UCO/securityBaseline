@@ -6,7 +6,9 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
 
-/** Entrada de {@code RoleMustExistForTenantValidator} (HU-011): el rol y el inquilino que pregunta por él. */
+/**
+ * Entrada de {@code RoleMustExistForTenantValidator} (HU-011): el rol y el inquilino que pregunta por él.
+ */
 public record RoleOwnershipQuery(RoleId roleId, TenantId tenantId) {
 
     public RoleOwnershipQuery {

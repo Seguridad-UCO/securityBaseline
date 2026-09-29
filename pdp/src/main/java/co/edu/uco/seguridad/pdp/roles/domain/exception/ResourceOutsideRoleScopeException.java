@@ -5,7 +5,9 @@ import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.ResourceId;
 import co.edu.uco.seguridad.pdp.roles.domain.message.RolesMessages;
 
-/** El alcance del rol no cubre la aplicación (o el inquilino) del recurso: INV-DAT-01. */
+/**
+ * El alcance del rol no cubre la aplicación (o el inquilino) del recurso: INV-DAT-01.
+ */
 public final class ResourceOutsideRoleScopeException extends BusinessRuleViolationException {
 
     public ResourceOutsideRoleScopeException(ResourceId resourceId) {

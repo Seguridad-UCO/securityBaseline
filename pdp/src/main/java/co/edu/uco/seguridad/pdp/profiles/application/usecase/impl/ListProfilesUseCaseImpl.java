@@ -5,7 +5,6 @@ import co.edu.uco.seguridad.pdp.profiles.application.primaryport.request.ListPro
 import co.edu.uco.seguridad.pdp.profiles.application.primaryport.response.ProfileResponse;
 import co.edu.uco.seguridad.pdp.profiles.application.secondaryport.repository.ProfileRepository;
 import co.edu.uco.seguridad.pdp.profiles.application.usecase.ListProfilesUseCase;
-import co.edu.uco.seguridad.pdp.profiles.domain.Profile;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import reactor.core.publisher.Mono;
 

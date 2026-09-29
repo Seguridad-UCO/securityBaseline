@@ -16,7 +16,9 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** HU-016: mismas rutas y códigos que el antiguo {@code RoleController.define/grantResource}. */
+/**
+ * HU-016: mismas rutas y códigos que el antiguo {@code RoleController.define/grantResource}.
+ */
 class RoleAdministrationControllerTests {
 
     private static final RoleAdministrationWebResponse EXPECTED = new RoleAdministrationWebResponse(

@@ -78,7 +78,8 @@ class OpaAdministrationDecisionAdapterTests {
 
     @Test
     void sends_the_subject_tenant_and_application_without_resource_or_action() {
-        StepVerifier.create(adapter().execute(REQUEST)).assertNext(decision -> { }).verifyComplete();
+        StepVerifier.create(adapter().execute(REQUEST)).assertNext(decision -> {
+        }).verifyComplete();
 
         JsonNode sent = new ObjectMapper().readTree(fixture.lastRequestBody());
         JsonNode input = sent.path("input");

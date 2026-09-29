@@ -1,13 +1,15 @@
 package co.edu.uco.seguridad.pep;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.modulith.core.ApplicationModules;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
+import org.junit.jupiter.api.Test;
+import org.springframework.modulith.core.ApplicationModules;
+
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 class PepArchitectureTests {
-    @Test void module_boundaries_and_clean_layers_are_enforced() {
+    @Test
+    void module_boundaries_and_clean_layers_are_enforced() {
         ApplicationModules.of(PepApplication.class).verify();
         var classes = new ClassFileImporter().withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
                 .importPackages("co.edu.uco.seguridad.pep");

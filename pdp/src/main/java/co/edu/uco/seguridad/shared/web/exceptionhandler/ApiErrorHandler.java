@@ -47,7 +47,9 @@ public class ApiErrorHandler {
     ResponseEntity<ProblemDetail> businessRule(BusinessRuleViolationException exception, ServerWebExchange exchange) {
         HttpStatus status = exception instanceof ConflictBusinessRuleException
                 ? HttpStatus.CONFLICT
-                : HttpStatus.BAD_REQUEST;
+                : "NOT_AUTHORIZED_TO_ADMINISTER".equals(exception.code())
+                        ? HttpStatus.FORBIDDEN
+                        : HttpStatus.BAD_REQUEST;
         return ResponseEntity.status(status)
                 .body(problem(status, exception.code(), exception.getMessage(), exchange));
     }

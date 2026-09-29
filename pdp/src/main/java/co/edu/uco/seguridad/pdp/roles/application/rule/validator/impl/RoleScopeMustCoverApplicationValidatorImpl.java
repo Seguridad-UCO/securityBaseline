@@ -19,7 +19,7 @@ public final class RoleScopeMustCoverApplicationValidatorImpl implements RoleSco
     private final RoleScopeMustCoverApplicationRule coverageRule;
 
     public RoleScopeMustCoverApplicationValidatorImpl(RoleRepository repository, RoleMustExistForTenantRule roleMustExist,
-            RoleScopeMustCoverApplicationRule coverageRule) {
+                                                      RoleScopeMustCoverApplicationRule coverageRule) {
         this.repository = Objects.requireNonNull(repository, RequiredArgumentMessages.ROLE_REPOSITORY);
         this.roleMustExist = Objects.requireNonNull(roleMustExist, RequiredArgumentMessages.ROLE_EXISTS_RULE);
         this.coverageRule = Objects.requireNonNull(coverageRule, RequiredArgumentMessages.ROLE_SCOPE_COVERS_APPLICATION_RULE);

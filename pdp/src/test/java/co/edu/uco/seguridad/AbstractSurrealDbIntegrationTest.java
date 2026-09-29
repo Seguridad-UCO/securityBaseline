@@ -12,11 +12,11 @@ import co.edu.uco.seguridad.shared.security.TestJwtSupport;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
+import reactor.core.publisher.Mono;
 import tools.jackson.databind.ObjectMapper;
 
 import java.time.Instant;

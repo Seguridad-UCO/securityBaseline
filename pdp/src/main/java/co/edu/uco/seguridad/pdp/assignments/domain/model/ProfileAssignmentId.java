@@ -6,7 +6,9 @@ import co.edu.uco.seguridad.pdp.commons.message.ValueObjectMessages;
 import java.util.Objects;
 import java.util.UUID;
 
-/** Identificador de la asignación de un perfil a un usuario (HU-011). */
+/**
+ * Identificador de la asignación de un perfil a un usuario (HU-011).
+ */
 public record ProfileAssignmentId(UUID value) {
 
     public ProfileAssignmentId {

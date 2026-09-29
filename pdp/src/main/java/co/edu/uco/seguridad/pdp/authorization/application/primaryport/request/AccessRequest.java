@@ -7,10 +7,10 @@ import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
+import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.time.Instant;
 
 /**
  * Entrada normalizada del PEP a evaluar (corresponde a {@code SolicitudAcceso} del dominio
@@ -21,9 +21,10 @@ import java.time.Instant;
  * {@code subjectUserId} antes de llamar a {@code PolicyDecisionPort} — arranca vacío.
  */
 public record AccessRequest(TenantId tenantId, String subject, ApplicationId applicationId,
-        ResourcePath resourcePath, HttpVerb action, String requestId, String correlationId,
-        Optional<UserId> subjectUserId, Set<String> subjectRoles, Instant timestamp, String environment,
-        HttpVerb contextMethod, String channel) {
+                            ResourcePath resourcePath, HttpVerb action, String requestId, String correlationId,
+                            Optional<UserId> subjectUserId, Set<String> subjectRoles, Instant timestamp,
+                            String environment,
+                            HttpVerb contextMethod, String channel) {
 
     public AccessRequest {
         Objects.requireNonNull(tenantId, RequiredArgumentMessages.TENANT_ID);
@@ -38,13 +39,15 @@ public record AccessRequest(TenantId tenantId, String subject, ApplicationId app
     }
 
     public AccessRequest(TenantId tenantId, String subject, ApplicationId applicationId, ResourcePath resourcePath,
-            HttpVerb action, String requestId, String correlationId, Optional<UserId> subjectUserId,
-            Set<String> subjectRoles) {
+                         HttpVerb action, String requestId, String correlationId, Optional<UserId> subjectUserId,
+                         Set<String> subjectRoles) {
         this(tenantId, subject, applicationId, resourcePath, action, requestId, correlationId, subjectUserId,
                 subjectRoles, null, null, null, null);
     }
 
-    /** Nuevo {@code AccessRequest} con los roles resueltos — el resto de los campos no cambia. */
+    /**
+     * Nuevo {@code AccessRequest} con los roles resueltos — el resto de los campos no cambia.
+     */
     public AccessRequest withSubjectRoles(Set<String> roles) {
         return new AccessRequest(tenantId, subject, applicationId, resourcePath, action, requestId, correlationId,
                 subjectUserId, roles, timestamp, environment, contextMethod, channel);

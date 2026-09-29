@@ -5,5 +5,5 @@ package co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persi
  * El agregado se reconstruye en {@code SecurityUserPersistenceMapper}.
  */
 public record SecurityUserEntity(String id, String tenantId, String email, String name, String createdAt,
-        String lastLoginAt) {
+                                 String lastLoginAt) {
 }

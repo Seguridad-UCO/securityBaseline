@@ -3,12 +3,19 @@
 ## Metadata
 
 - **ID:** HU-015
-- **Slice:** `applications` (sin cambios propios) + `assignments` (nueva orquestación) + `authorization` (nuevos endpoints gateados) — ver §0 para por qué se reparte en tres módulos
-- **Tipo:** Mixto (dos endpoints nuevos que gatean escrituras existentes, uno nuevo que orquesta un alta compuesta, uno interno para el backfill)
+- **Slice:** `applications` (sin cambios propios) + `assignments` (nueva orquestación) + `authorization` (nuevos
+  endpoints gateados) — ver §0 para por qué se reparte en tres módulos
+- **Tipo:** Mixto (dos endpoints nuevos que gatean escrituras existentes, uno nuevo que orquesta un alta compuesta, uno
+  interno para el backfill)
 - **Fecha:** 2026-09-13
 - **Rama sugerida:** `feature/HU-015-administracion-aplicaciones`
-- **Fuentes:** `pdp/docs/ai-harness/workspace/HU-015.md` (decisiones ya cerradas con Sebastián), `PLAN-HU-009.md` (mecanismo y hallazgo 6), código real (`package-info.java` de los 9 slices, vía `Read`) — no se consultó `security-platform-architecture` porque esta historia no introduce vocabulario de dominio nuevo, solo cablea un mecanismo ya aceptado
-- **Criterios de la línea base que toca:** 1, 2, 3, 9, 11, 12, 20, 21, 22 (estructurales + reglas + endpoint sin persistencia nueva). No toca 13/14/16-19 (no hay DTO crudo con VOs nuevos ni consulta paginada nueva) ni 7/4 (no hay tabla nueva; sí usa `IdentifierGenerator`/`TimeProvider` ya existentes, no en líneas nuevas)
+- **Fuentes:** `pdp/docs/ai-harness/workspace/HU-015.md` (decisiones ya cerradas con Sebastián), `PLAN-HU-009.md` (
+  mecanismo y hallazgo 6), código real (`package-info.java` de los 9 slices, vía `Read`) — no se consultó
+  `security-platform-architecture` porque esta historia no introduce vocabulario de dominio nuevo, solo cablea un
+  mecanismo ya aceptado
+- **Criterios de la línea base que toca:** 1, 2, 3, 9, 11, 12, 20, 21, 22 (estructurales + reglas + endpoint sin
+  persistencia nueva). No toca 13/14/16-19 (no hay DTO crudo con VOs nuevos ni consulta paginada nueva) ni 7/4 (no hay
+  tabla nueva; sí usa `IdentifierGenerator`/`TimeProvider` ya existentes, no en líneas nuevas)
 
 ## 0. Por qué esta historia se reparte en tres módulos, no uno
 
@@ -32,11 +39,11 @@ build, no en la revisión de código.
 **Resolución (acordada con Sebastián), mismo principio que HU-010** (*"vive en `resources`, no en
 `applications`: es el módulo que ya tenía permiso de mirar al otro"*):
 
-| Necesidad | Vive en | Por qué ese módulo y no otro |
-|---|---|---|
+| Necesidad                                                                                                 | Vive en             | Por qué ese módulo y no otro                                                                                                                                                                                                                                                     |
+|-----------------------------------------------------------------------------------------------------------|---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Gatear `RemoveApplicationUseCase`/`RotateApplicationCredentialUseCase` con el validador de administración | **`authorization`** | Ya depende de `applications`. Consume el validador (que ya es suyo) y delega en `applications :: usecase` — sin tocar ninguna frontera nueva salvo publicar `applications :: usecase` como dependencia permitida (ya lo consume `resources`; no es la primera vez que se expone) |
-| Orquestar "registrar app + crear rol ADMIN + asignárselo al registrador" | **`assignments`** | Ya depende de `applications :: rule/dto/exception` **y** de `roles :: rule/dto/exception`. Es el único módulo del grafo que ya ve a los dos que esta orquestación necesita tocar |
-| Backfill manual del primer administrador de una app ya existente | **`assignments`** | Misma orquestación que el punto anterior, menos el paso de registrar — mismo dueño |
+| Orquestar "registrar app + crear rol ADMIN + asignárselo al registrador"                                  | **`assignments`**   | Ya depende de `applications :: rule/dto/exception` **y** de `roles :: rule/dto/exception`. Es el único módulo del grafo que ya ve a los dos que esta orquestación necesita tocar                                                                                                 |
+| Backfill manual del primer administrador de una app ya existente                                          | **`assignments`**   | Misma orquestación que el punto anterior, menos el paso de registrar — mismo dueño                                                                                                                                                                                               |
 
 **Consecuencia que hay que aceptar, documentada aquí para que no se lea como un descuido:**
 `RegisterApplicationUseCaseImpl`, `RemoveApplicationUseCaseImpl` y `RotateApplicationCredentialUseCaseImpl`
@@ -58,13 +65,13 @@ nombre de rol `ADMIN`, ni auditar estas decisiones (todo ya fuera de alcance por
 
 ## 2. Criterios de aceptación
 
-| # | Criterio | Resultado esperado |
-|---|---|---|
-| 1 | Registrar una aplicación deja a su registrador como administrador | `RegisterApplicationWithFirstAdministratorUseCaseImpl.execute` registra la app, define el rol `ADMIN` en su alcance y se lo asigna al `userId` del principal, en ese orden, en el mismo request |
-| 2 | Un no-administrador no puede eliminar ni rotar la credencial de una aplicación | `AdministerApplicationRemovalUseCaseImpl`/`AdministerApplicationCredentialRotationUseCaseImpl` terminan en `NotAuthorizedToAdministerException` (400) cuando `PrincipalMustBeApplicationAdministratorValidator` rechaza |
-| 3 | Un administrador sí puede eliminar y rotar | Los mismos casos de uso, con el validador en `ALLOW`, delegan en `RemoveApplicationUseCase`/`RotateApplicationCredentialUseCase` de `applications` sin modificarlos |
-| 4 | Una aplicación ya existente puede recibir su primer administrador a mano | `AssignApplicationAdministratorUseCaseImpl`, expuesto en `/internal/v1/applications/{applicationId}/administrators`, define (o reutiliza) el rol `ADMIN` de esa aplicación y lo asigna al `userId` recibido |
-| 5 | Cero regresión | `RegisterApplicationUseCase`, `RemoveApplicationUseCase`, `RotateApplicationCredentialUseCase` (los tres en `applications`) no cambian de firma ni de comportamiento; sus pruebas existentes siguen en verde sin tocarlas |
+| # | Criterio                                                                       | Resultado esperado                                                                                                                                                                                                        |
+|---|--------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1 | Registrar una aplicación deja a su registrador como administrador              | `RegisterApplicationWithFirstAdministratorUseCaseImpl.execute` registra la app, define el rol `ADMIN` en su alcance y se lo asigna al `userId` del principal, en ese orden, en el mismo request                           |
+| 2 | Un no-administrador no puede eliminar ni rotar la credencial de una aplicación | `AdministerApplicationRemovalUseCaseImpl`/`AdministerApplicationCredentialRotationUseCaseImpl` terminan en `NotAuthorizedToAdministerException` (400) cuando `PrincipalMustBeApplicationAdministratorValidator` rechaza   |
+| 3 | Un administrador sí puede eliminar y rotar                                     | Los mismos casos de uso, con el validador en `ALLOW`, delegan en `RemoveApplicationUseCase`/`RotateApplicationCredentialUseCase` de `applications` sin modificarlos                                                       |
+| 4 | Una aplicación ya existente puede recibir su primer administrador a mano       | `AssignApplicationAdministratorUseCaseImpl`, expuesto en `/internal/v1/applications/{applicationId}/administrators`, define (o reutiliza) el rol `ADMIN` de esa aplicación y lo asigna al `userId` recibido               |
+| 5 | Cero regresión                                                                 | `RegisterApplicationUseCase`, `RemoveApplicationUseCase`, `RotateApplicationCredentialUseCase` (los tres en `applications`) no cambian de firma ni de comportamiento; sus pruebas existentes siguen en verde sin tocarlas |
 
 ## 3. Reglas de negocio
 
@@ -72,8 +79,8 @@ Ninguna regla pura nueva (ningún VO ni restricción de conjunto que decidir en 
 "¿administra?" ya la toma OPA desde HU-009). Las únicas piezas de negocio son composiciones de casos
 de uso ya validados, más un rechazo que ya existe.
 
-| # | Regla | Dónde vive (VO / Rule) | Puerto que trae el dato | Excepción → HTTP |
-|---|---|---|---|---|
+| # | Regla                                                                    | Dónde vive (VO / Rule)                                                                  | Puerto que trae el dato                                               | Excepción → HTTP                                                       |
+|---|--------------------------------------------------------------------------|-----------------------------------------------------------------------------------------|-----------------------------------------------------------------------|------------------------------------------------------------------------|
 | — | Un sujeto sin `ALLOW` de administración no elimina ni rota la credencial | Reutilizada: `PrincipalMustBeApplicationAdministratorValidatorImpl` (ya existe, HU-009) | `AuthorizeAdministrationUseCase` → `AdministrationDecisionPort` (OPA) | `NotAuthorizedToAdministerException` → 400 (ya definida, no se reabre) |
 
 ## 4. Modelo de dominio afectado
@@ -112,21 +119,23 @@ intención administrativa" — `security-policy-engine/docs/policies/administrat
 
 ## 6. Endpoint
 
-| Verbo | Ruta | Código de éxito | Cuerpo de entrada | Cuerpo de salida | Módulo dueño (nuevo) |
-|---|---|---|---|---|---|
-| POST | `/api/v1/applications` | 201 | `{name, description, baseUrl}` (igual que hoy) | Igual que hoy + rol/asignación creados de forma transparente | `assignments` (**se muda** desde `applications`) |
-| DELETE | `/api/v1/applications/{applicationId}` | 200 | — | `ApiResponse<Void>` (mismo patrón que `DELETE /api/v1/roles/{roleId}/assignments/{assignmentId}`) | `authorization` (**nuevo**, no existía) |
-| POST | `/api/v1/applications/{applicationId}/credential-rotations` | 201 | — | Igual que hoy | `authorization` (**se muda** desde `applications`) |
-| POST | `/internal/v1/applications/{applicationId}/administrators` | 201 | `{userId}` | `ApiResponse<AssignmentResponse>` aplanado | `assignments` (**nuevo**) |
+| Verbo  | Ruta                                                        | Código de éxito | Cuerpo de entrada                              | Cuerpo de salida                                                                                  | Módulo dueño (nuevo)                               |
+|--------|-------------------------------------------------------------|-----------------|------------------------------------------------|---------------------------------------------------------------------------------------------------|----------------------------------------------------|
+| POST   | `/api/v1/applications`                                      | 201             | `{name, description, baseUrl}` (igual que hoy) | Igual que hoy + rol/asignación creados de forma transparente                                      | `assignments` (**se muda** desde `applications`)   |
+| DELETE | `/api/v1/applications/{applicationId}`                      | 200             | —                                              | `ApiResponse<Void>` (mismo patrón que `DELETE /api/v1/roles/{roleId}/assignments/{assignmentId}`) | `authorization` (**nuevo**, no existía)            |
+| POST   | `/api/v1/applications/{applicationId}/credential-rotations` | 201             | —                                              | Igual que hoy                                                                                     | `authorization` (**se muda** desde `applications`) |
+| POST   | `/internal/v1/applications/{applicationId}/administrators`  | 201             | `{userId}`                                     | `ApiResponse<AssignmentResponse>` aplanado                                                        | `assignments` (**nuevo**)                          |
 
 - **Autorización:**
-  - Los tres primeros: requieren sesión BFF (igual que hoy); el inquilino sale del principal.
-  - El backfill vive bajo `/internal/v1/**`: hereda automáticamente la cadena mTLS + evidencia JWT
-    de `InternalSecurityConfiguration` (`securityMatcher("/internal/v1/**")`, ya existente desde
-    HU-003) — **no requiere ninguna configuración de seguridad nueva**, solo registrar la ruta bajo
-    ese prefijo. El tenant se resuelve del catálogo (`ApplicationOwnerLookupValidator`), nunca del
-    cuerpo, igual que el resto del canal interno.
-- **Errores esperados:** `NotAuthorizedToAdministerException` → 400 (remove/rotate); `ApplicationNotFoundException` → 404 (backfill, aplicación inexistente — regla ya existente); el resto, igual que sus respectivos casos de uso ya documentan.
+    - Los tres primeros: requieren sesión BFF (igual que hoy); el inquilino sale del principal.
+    - El backfill vive bajo `/internal/v1/**`: hereda automáticamente la cadena mTLS + evidencia JWT
+      de `InternalSecurityConfiguration` (`securityMatcher("/internal/v1/**")`, ya existente desde
+      HU-003) — **no requiere ninguna configuración de seguridad nueva**, solo registrar la ruta bajo
+      ese prefijo. El tenant se resuelve del catálogo (`ApplicationOwnerLookupValidator`), nunca del
+      cuerpo, igual que el resto del canal interno.
+- **Errores esperados:** `NotAuthorizedToAdministerException` → 400 (remove/rotate); `ApplicationNotFoundException` →
+  404 (backfill, aplicación inexistente — regla ya existente); el resto, igual que sus respectivos casos de uso ya
+  documentan.
 
 ## 7. SPEC — el contrato
 
@@ -309,30 +318,30 @@ pdp/applications/
 
 ## 9. Casos de prueba esperados
 
-| Capa | Clase de prueba | Casos |
-|---|---|---|
-| `application` (`assignments`) | `RegisterApplicationWithFirstAdministratorUseCaseImplTests` | camino feliz (verifica las tres llamadas en orden vía fakes capturadores); propaga el error si `RegisterApplicationUseCase` falla (no llama a los otros dos) |
-| `application` (`assignments`) | `AssignApplicationAdministratorUseCaseImplTests` | rol `ADMIN` no existe → lo crea y asigna; rol `ADMIN` ya existe → lo reutiliza y solo asigna; aplicación inexistente → `ApplicationNotFoundException` |
-| `application` (`authorization`) | `AdministerApplicationRemovalUseCaseImplTests` | administrador → delega en `RemoveApplicationUseCase`; no administrador → `NotAuthorizedToAdministerException`, sin llamar a `RemoveApplicationUseCase` |
-| `application` (`authorization`) | `AdministerApplicationCredentialRotationUseCaseImplTests` | mismos dos casos que arriba, afirmando también el `ApplicationRegistrationResponse` devuelto |
-| `infrastructure` (`assignments`) | `RegisterApplicationWithFirstAdministratorRequestMapperTests`, `AssignApplicationAdministratorRequestMapperTests`(vía interactor) | campo ausente/mal formado/válido, patrón estándar |
-| `infrastructure` (`assignments`) | `InternalApplicationAdministratorControllerTests` | delega al interactor, responde el código esperado |
-| `infrastructure` (`authorization`) | `ApplicationAdministrationControllerTests` | `DELETE` → 200 sin cuerpo |
-| `infrastructure` (`roles`) | Extiende `SurrealRepositoryIntegrationTests` o equivalente | `findByNameInScope`: encontrado / vacío (Testcontainers) |
+| Capa                               | Clase de prueba                                                                                                                   | Casos                                                                                                                                                        |
+|------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `application` (`assignments`)      | `RegisterApplicationWithFirstAdministratorUseCaseImplTests`                                                                       | camino feliz (verifica las tres llamadas en orden vía fakes capturadores); propaga el error si `RegisterApplicationUseCase` falla (no llama a los otros dos) |
+| `application` (`assignments`)      | `AssignApplicationAdministratorUseCaseImplTests`                                                                                  | rol `ADMIN` no existe → lo crea y asigna; rol `ADMIN` ya existe → lo reutiliza y solo asigna; aplicación inexistente → `ApplicationNotFoundException`        |
+| `application` (`authorization`)    | `AdministerApplicationRemovalUseCaseImplTests`                                                                                    | administrador → delega en `RemoveApplicationUseCase`; no administrador → `NotAuthorizedToAdministerException`, sin llamar a `RemoveApplicationUseCase`       |
+| `application` (`authorization`)    | `AdministerApplicationCredentialRotationUseCaseImplTests`                                                                         | mismos dos casos que arriba, afirmando también el `ApplicationRegistrationResponse` devuelto                                                                 |
+| `infrastructure` (`assignments`)   | `RegisterApplicationWithFirstAdministratorRequestMapperTests`, `AssignApplicationAdministratorRequestMapperTests`(vía interactor) | campo ausente/mal formado/válido, patrón estándar                                                                                                            |
+| `infrastructure` (`assignments`)   | `InternalApplicationAdministratorControllerTests`                                                                                 | delega al interactor, responde el código esperado                                                                                                            |
+| `infrastructure` (`authorization`) | `ApplicationAdministrationControllerTests`                                                                                        | `DELETE` → 200 sin cuerpo                                                                                                                                    |
+| `infrastructure` (`roles`)         | Extiende `SurrealRepositoryIntegrationTests` o equivalente                                                                        | `findByNameInScope`: encontrado / vacío (Testcontainers)                                                                                                     |
 
 Presupuesto total estimado: ~22-26 pruebas (historia grande por el reparto en tres módulos, no por
 complejidad de cada pieza individual).
 
 ## 10. Trazabilidad
 
-| Fase | Estado | Fecha |
-|---|---|---|
-| Plan | ✅ Generado (con enmiendas §13, §14, §15) | 2026-09-13 |
-| Contrato aprobado (gate 1) | ✅ Aprobado, tras las tres enmiendas | 2026-09-13 |
-| Pruebas en rojo | ✅ SPEC materializada, rojo por `UnsupportedOperationException` | 2026-09-13 |
-| Implementación en verde | ✅ Verde | 2026-09-13 |
-| Validación | ✅ Los cuatro juicios en verde en la 2ª vuelta; único bloqueante (deriva doc↔código) corregido el mismo día — ver el addendum en REPORTE-HU-015.md | 2026-09-13 |
-| Entrega (gate 2) | ✅ Fusionado a `develop` (PR #48) + fix de índice único y de cobertura sobre `develop` (commits `56891ca`, `ff4774f`) | 2026-09-13 |
+| Fase                       | Estado                                                                                                                                            | Fecha      |
+|----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|------------|
+| Plan                       | ✅ Generado (con enmiendas §13, §14, §15)                                                                                                          | 2026-09-13 |
+| Contrato aprobado (gate 1) | ✅ Aprobado, tras las tres enmiendas                                                                                                               | 2026-09-13 |
+| Pruebas en rojo            | ✅ SPEC materializada, rojo por `UnsupportedOperationException`                                                                                    | 2026-09-13 |
+| Implementación en verde    | ✅ Verde                                                                                                                                           | 2026-09-13 |
+| Validación                 | ✅ Los cuatro juicios en verde en la 2ª vuelta; único bloqueante (deriva doc↔código) corregido el mismo día — ver el addendum en REPORTE-HU-015.md | 2026-09-13 |
+| Entrega (gate 2)           | ✅ Fusionado a `develop` (PR #48) + fix de índice único y de cobertura sobre `develop` (commits `56891ca`, `ff4774f`)                              | 2026-09-13 |
 
 ## 11. Ambigüedades pendientes
 

@@ -3,31 +3,15 @@ package co.edu.uco.seguridad.pdp.resources.infrastructure.config;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationMustExistForTenantValidator;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RegisterApplicationUseCase;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RemoveApplicationUseCase;
+import co.edu.uco.seguridad.pdp.resources.application.rule.validator.*;
+import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.*;
 import co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository.ProtectedResourceRepository;
+import co.edu.uco.seguridad.pdp.resources.application.usecase.*;
+import co.edu.uco.seguridad.pdp.resources.application.usecase.impl.*;
 import co.edu.uco.seguridad.pdp.resources.domain.rule.ProtectedResourceMustBeUniqueRule;
 import co.edu.uco.seguridad.pdp.resources.domain.rule.ProtectedResourceMustExistRule;
 import co.edu.uco.seguridad.pdp.resources.domain.rule.impl.ProtectedResourceMustBeUniqueRuleImpl;
 import co.edu.uco.seguridad.pdp.resources.domain.rule.impl.ProtectedResourceMustExistRuleImpl;
-import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceMustExistValidator;
-import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ApplicationDeletionDependencyValidator;
-import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceOwnerLookupValidator;
-import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceIdLookupValidator;
-import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.ProtectedResourceMustExistValidatorImpl;
-import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.ApplicationDeletionDependencyValidatorImpl;
-import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.ProtectedResourceOwnerLookupValidatorImpl;
-import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.ProtectedResourceIdLookupValidatorImpl;
-import co.edu.uco.seguridad.pdp.resources.application.rule.validator.RegisterProtectedResourceRulesValidator;
-import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.RegisterProtectedResourceRulesValidatorImpl;
-import co.edu.uco.seguridad.pdp.resources.application.usecase.ListProtectedResourcesUseCase;
-import co.edu.uco.seguridad.pdp.resources.application.usecase.RegisterApplicationWithInitialResourceUseCase;
-import co.edu.uco.seguridad.pdp.resources.application.usecase.RegisterProtectedResourceUseCase;
-import co.edu.uco.seguridad.pdp.resources.application.usecase.RemoveProtectedResourceUseCase;
-import co.edu.uco.seguridad.pdp.resources.application.usecase.UpdateProtectedResourceUseCase;
-import co.edu.uco.seguridad.pdp.resources.application.usecase.impl.ListProtectedResourcesUseCaseImpl;
-import co.edu.uco.seguridad.pdp.resources.application.usecase.impl.RegisterApplicationWithInitialResourceUseCaseImpl;
-import co.edu.uco.seguridad.pdp.resources.application.usecase.impl.RegisterProtectedResourceUseCaseImpl;
-import co.edu.uco.seguridad.pdp.resources.application.usecase.impl.RemoveProtectedResourceUseCaseImpl;
-import co.edu.uco.seguridad.pdp.resources.application.usecase.impl.UpdateProtectedResourceUseCaseImpl;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.interactor.ListProtectedResourcesInteractor;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.interactor.RegisterApplicationWithInitialResourceInteractor;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.interactor.impl.ListProtectedResourcesInteractorImpl;
@@ -83,7 +67,7 @@ public class ResourcesConfiguration {
 
     @Bean
     ProtectedResourceMustExistValidator protectedResourceMustExistValidator(ProtectedResourceRepository repository,
-            ProtectedResourceMustExistRule mustExist) {
+                                                                            ProtectedResourceMustExistRule mustExist) {
         return new ProtectedResourceMustExistValidatorImpl(repository, mustExist);
     }
 
@@ -106,14 +90,24 @@ public class ResourcesConfiguration {
 
     @Bean
     RegisterProtectedResourceUseCase registerProtectedResourceUseCase(ApplicationMustExistForTenantValidator applicationMustExist,
-            RegisterProtectedResourceRulesValidator rules, ProtectedResourceRepository resources,
-            DomainEventPublisher events, IdentifierGenerator identifiers, TimeProvider time) {
+                                                                      RegisterProtectedResourceRulesValidator rules, ProtectedResourceRepository resources,
+                                                                      DomainEventPublisher events, IdentifierGenerator identifiers, TimeProvider time) {
         return new RegisterProtectedResourceUseCaseImpl(applicationMustExist, rules, resources, events, identifiers, time);
     }
 
     @Bean
     ListProtectedResourcesUseCase listProtectedResourcesUseCase(ProtectedResourceRepository resources) {
         return new ListProtectedResourcesUseCaseImpl(resources);
+    }
+
+    @Bean
+    ListProtectedResourcesPageUseCase listProtectedResourcesPageUseCase(ProtectedResourceRepository resources) {
+        return new ListProtectedResourcesPageUseCaseImpl(resources);
+    }
+
+    @Bean
+    CountApplicationProtectedResourcesUseCase countApplicationProtectedResourcesUseCase(ProtectedResourceRepository resources) {
+        return new CountApplicationProtectedResourcesUseCaseImpl(resources);
     }
 
     @Bean

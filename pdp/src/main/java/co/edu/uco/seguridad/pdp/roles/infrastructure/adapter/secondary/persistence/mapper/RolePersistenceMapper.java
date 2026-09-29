@@ -14,7 +14,9 @@ import java.time.Instant;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/** Fila a dominio. Los value objects validan aquí; el alcance se reconstruye desde level + ids. */
+/**
+ * Fila a dominio. Los value objects validan aquí; el alcance se reconstruye desde level + ids.
+ */
 public final class RolePersistenceMapper {
 
     private RolePersistenceMapper() {

@@ -1,6 +1,7 @@
 package co.edu.uco.seguridad.pdp.roles.infrastructure.adapter.secondary.persistence.repository;
 
 import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
+import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
 import co.edu.uco.seguridad.pdp.commons.model.RoleId;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
@@ -18,14 +19,12 @@ import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealRecordId;
 import reactor.core.publisher.Mono;
 import tools.jackson.databind.JsonNode;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
-/** Adaptador real sobre SurrealDB. Lee la fila en RoleEntity y delega en RolePersistenceMapper. */
+/**
+ * Adaptador real sobre SurrealDB. Lee la fila en RoleEntity y delega en RolePersistenceMapper.
+ */
 public final class SurrealRoleRepository implements RoleRepository {
 
     private final SurrealDbClient client;
@@ -93,6 +92,16 @@ public final class SurrealRoleRepository implements RoleRepository {
 
     @Override
     public Mono<ResultPage<Role>> findBy(RoleCriteria criteria, PageWindow window) {
+        if (criteria.applicationId().isPresent()) {
+            String applicationId = criteria.applicationId().orElseThrow().value().toString();
+            String query = """
+                    SELECT * FROM %1$s WHERE tenantId = $tenantId AND applicationId = $applicationId \
+                    ORDER BY registeredAt DESC LIMIT %2$d START %3$d;
+                    SELECT count() FROM %1$s WHERE tenantId = $tenantId AND applicationId = $applicationId GROUP ALL;\
+                    """.formatted(RoleSchema.TABLE, window.limit(), window.offset());
+            return client.execute(query, Map.of("tenantId", criteria.tenantId().value(), "applicationId", applicationId))
+                    .map(results -> ResultPage.of(results.get(0).valueStream().map(SurrealRoleRepository::toDomain).toList(), totalOf(results.get(1)), window));
+        }
         String query = """
                 SELECT * FROM %1$s WHERE tenantId = $tenantId OR level = 'GLOBAL' \
                 ORDER BY registeredAt DESC LIMIT %2$d START %3$d;
@@ -104,6 +113,11 @@ public final class SurrealRoleRepository implements RoleRepository {
                     List<Role> content = results.get(0).valueStream().map(SurrealRoleRepository::toDomain).toList();
                     return ResultPage.of(content, totalOf(results.get(1)), window);
                 });
+    }
+
+    @Override public Mono<Long> countByApplication(TenantId tenantId, ApplicationId applicationId) {
+        return client.execute("SELECT count() FROM %s WHERE tenantId = $tenantId AND applicationId = $applicationId GROUP ALL;".formatted(RoleSchema.TABLE), Map.of("tenantId", tenantId.value(), "applicationId", applicationId.value().toString()))
+                .map(r -> totalOf(r.get(0)));
     }
 
     private static long totalOf(JsonNode countResult) {

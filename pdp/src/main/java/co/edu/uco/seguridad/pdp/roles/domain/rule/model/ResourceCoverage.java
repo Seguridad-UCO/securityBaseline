@@ -7,7 +7,9 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
 
-/** Hecho ya resuelto para RoleScopeMustCoverResourceRule: el alcance del rol y a quién pertenece el recurso. */
+/**
+ * Hecho ya resuelto para RoleScopeMustCoverResourceRule: el alcance del rol y a quién pertenece el recurso.
+ */
 public record ResourceCoverage(RoleScope scope, ApplicationId resourceApplicationId, TenantId resourceTenantId) {
 
     public ResourceCoverage {

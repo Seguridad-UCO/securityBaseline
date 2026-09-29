@@ -1,13 +1,16 @@
 package co.edu.uco.seguridad.shared.auth.service;
 
-import java.net.URI;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-/** Valida retornos post-login contra orígenes de aplicaciones registradas para evitar open redirects. */
+import java.net.URI;
+import java.util.List;
+
+/**
+ * Valida retornos post-login contra orígenes de aplicaciones registradas para evitar open redirects.
+ */
 @Service
 public final class OidcReturnTargetPolicy {
     private final List<String> allowedOrigins;

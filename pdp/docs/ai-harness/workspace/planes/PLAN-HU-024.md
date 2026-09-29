@@ -75,14 +75,14 @@ Evita además una consulta a OPA innecesaria si el sujeto ni siquiera tiene el r
 
 ## 2. Criterios de aceptación
 
-| # | Criterio | Resultado esperado |
-|---|---|---|
-| 1 | Rechazo distinguible sin evidencia de MFA | Un administrador autorizado por rol pero sin `acr`/`amr` aceptado recibe `MfaEvidenceRequiredException` (400, code `MFA_REQUIRED`) — nunca `NOT_AUTHORIZED_TO_ADMINISTER` |
-| 2 | Con evidencia, sin fricción | Un administrador autorizado por rol y con `acr`/`amr` aceptado completa la operación exactamente igual que hoy — cero cambio de comportamiento observable |
-| 3 | Sin MFA en no-administrativo | Catálogos y `/api/v1/authorize` no invocan `MfaAwareApplicationAdministratorValidator` en absoluto — no hay cambio en esas rutas (no se tocan) |
-| 4 | Sin excepción de operación | Los 12 `Administer*UseCaseImpl` (hoy) y cualquiera futuro que use `PrincipalMustBeApplicationAdministratorValidator` quedan cubiertos por construcción, al ser un decorador de la interfaz que todos comparten |
-| 5 | Fail-closed sin configuración | Con `pdp.security.mfa.claim`/`accepted-values` sin configurar (antes de que el realm esté listo), `MfaEvidenceProperties.satisfiedBy` nunca es `true` — toda operación administrativa queda bloqueada hasta configurar el realm. Es la consecuencia esperada y documentada de ADR-027 (ver Alcance de HU-024.md), no un defecto |
-| 6 | `verificar.ps1` (suite completa) sigue en verde | `mvnw -f pdp/pom.xml verify`, cobertura ≥ 50 % por paquete nuevo |
+| # | Criterio                                        | Resultado esperado                                                                                                                                                                                                                                                                                                              |
+|---|-------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1 | Rechazo distinguible sin evidencia de MFA       | Un administrador autorizado por rol pero sin `acr`/`amr` aceptado recibe `MfaEvidenceRequiredException` (400, code `MFA_REQUIRED`) — nunca `NOT_AUTHORIZED_TO_ADMINISTER`                                                                                                                                                       |
+| 2 | Con evidencia, sin fricción                     | Un administrador autorizado por rol y con `acr`/`amr` aceptado completa la operación exactamente igual que hoy — cero cambio de comportamiento observable                                                                                                                                                                       |
+| 3 | Sin MFA en no-administrativo                    | Catálogos y `/api/v1/authorize` no invocan `MfaAwareApplicationAdministratorValidator` en absoluto — no hay cambio en esas rutas (no se tocan)                                                                                                                                                                                  |
+| 4 | Sin excepción de operación                      | Los 12 `Administer*UseCaseImpl` (hoy) y cualquiera futuro que use `PrincipalMustBeApplicationAdministratorValidator` quedan cubiertos por construcción, al ser un decorador de la interfaz que todos comparten                                                                                                                  |
+| 5 | Fail-closed sin configuración                   | Con `pdp.security.mfa.claim`/`accepted-values` sin configurar (antes de que el realm esté listo), `MfaEvidenceProperties.satisfiedBy` nunca es `true` — toda operación administrativa queda bloqueada hasta configurar el realm. Es la consecuencia esperada y documentada de ADR-027 (ver Alcance de HU-024.md), no un defecto |
+| 6 | `verificar.ps1` (suite completa) sigue en verde | `mvnw -f pdp/pom.xml verify`, cobertura ≥ 50 % por paquete nuevo                                                                                                                                                                                                                                                                |
 
 ## 3. Reglas de negocio
 
@@ -93,18 +93,18 @@ criterio que `PrincipalMustBeApplicationAdministratorValidatorImpl` ya aplica ho
 `NOT_AUTHORIZED_TO_ADMINISTER` sin una `Rule` separada (la decisión ya viene resuelta, sin I/O
 adicional que justifique un validador con Rule propia).
 
-| # | Regla | Dónde vive | Puerto que trae el dato | Excepción → HTTP |
-|---|---|---|---|---|
+| # | Regla                                                                                               | Dónde vive                                                                                                                                           | Puerto que trae el dato                      | Excepción → HTTP                                              |
+|---|-----------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------|---------------------------------------------------------------|
 | 1 | Autorizado por rol pero sin evidencia de MFA aceptada → se rechaza, distinguible de "no autorizado" | `MfaAwareApplicationAdministratorValidator` (comparación sobre `AuthenticationContextEvidence` ya resuelta, vía `MfaEvidenceProperties.satisfiedBy`) | — (dato ya viaja en `AdministrationRequest`) | `MfaEvidenceRequiredException` → **400**, code `MFA_REQUIRED` |
 
 ## 4. Modelo de dominio afectado
 
 ### Value objects
 
-| VO | Nuevo o existente | Invariantes | Vive en |
-|---|---|---|---|
-| `AuthenticationContextEvidence` | Nuevo | Ninguno de formato — transporta lo que el JWT trae, incluida la ausencia | `shared/security/mfa/` |
-| `MfaEvidenceProperties` | Nuevo | Ninguno que bloquee el arranque — ver nota en §7 sobre por qué **no** lleva `requireNonNull` como el resto de `@ConfigurationProperties` del proyecto | `shared/security/mfa/` |
+| VO                              | Nuevo o existente | Invariantes                                                                                                                                           | Vive en                |
+|---------------------------------|-------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------|
+| `AuthenticationContextEvidence` | Nuevo             | Ninguno de formato — transporta lo que el JWT trae, incluida la ausencia                                                                              | `shared/security/mfa/` |
+| `MfaEvidenceProperties`         | Nuevo             | Ninguno que bloquee el arranque — ver nota en §7 sobre por qué **no** lleva `requireNonNull` como el resto de `@ConfigurationProperties` del proyecto | `shared/security/mfa/` |
 
 ## 5. Persistencia
 
@@ -295,24 +295,24 @@ No se toca `identity` (salvo el success handler, que ya vive en `shared/auth`, n
 > `PdpPrincipalSecurityContextTests`, `SessionControllerTests`) — dejarán de compilar con el nuevo
 > componente y hay que arreglarlos (agregar el argumento), igual que en HU-022/023.
 
-| Capa | Clase de prueba | Casos |
-|---|---|---|
-| `infrastructure` (unitaria, sin Spring) | `MfaEvidencePropertiesTests` | (a) `claim="acr"`, `acr` presente y en `acceptedValues` → `true`; (b) `claim="acr"`, presente pero no en `acceptedValues` → `false`; (c) `claim="acr"`, `acr` ausente (`Optional.empty()`) → `false`; (d) `claim="amr"`, algún valor de `amr` está en `acceptedValues` → `true`; (e) `claim="amr"`, `amr` vacío o sin intersección → `false`; (f) `claim`/`acceptedValues` sin configurar (cadena vacía / conjunto vacío) → `false` siempre, incluso con evidencia presente (fail-closed, criterio 5) |
-| `application` (unitaria, sin Spring) | `MfaAwareApplicationAdministratorValidatorTests` | (a) delegado rechaza (`NotAuthorizedToAdministerException`) → el error se propaga tal cual, `MfaEvidenceProperties.satisfiedBy` nunca se evalúa (delegado *unreachable* para MFA — verificar con un fake que lanzaría si se llamara); (b) delegado permite + evidencia satisface → `Mono.empty()`; (c) delegado permite + evidencia no satisface → `MfaEvidenceRequiredException` con el `tenantId`/`applicationId` correctos |
-| `infrastructure` (unitaria) | `ApplicationAdministrationRequestMapperTests` (extiende existente) | + un caso: el `authenticationContext` del `PdpPrincipal` viaja intacto al `AdministrationRequest` resultante |
-| `infrastructure` (unitaria) | `OidcAuthenticationSuccessHandlerTests` (extiende existente) | + un caso: el `LocalUserPrincipal` persistido en sesión lleva la `AuthenticationContextEvidence` extraída del `oidc.getIdToken()` (con `acr`/`amr` sintéticos en el ID token de prueba) |
-| `infrastructure` (unitaria) | `PdpPrincipalSecurityContextTests` (extiende existente) | + casos: `PdpPrincipal.from(Jwt)` con `acr`/`amr` presentes y ausentes; `SecurityContext.currentPrincipal()` para un `LocalUserPrincipal` propaga su `authenticationContext()` sin alterarlo |
+| Capa                                    | Clase de prueba                                                    | Casos                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+|-----------------------------------------|--------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `infrastructure` (unitaria, sin Spring) | `MfaEvidencePropertiesTests`                                       | (a) `claim="acr"`, `acr` presente y en `acceptedValues` → `true`; (b) `claim="acr"`, presente pero no en `acceptedValues` → `false`; (c) `claim="acr"`, `acr` ausente (`Optional.empty()`) → `false`; (d) `claim="amr"`, algún valor de `amr` está en `acceptedValues` → `true`; (e) `claim="amr"`, `amr` vacío o sin intersección → `false`; (f) `claim`/`acceptedValues` sin configurar (cadena vacía / conjunto vacío) → `false` siempre, incluso con evidencia presente (fail-closed, criterio 5) |
+| `application` (unitaria, sin Spring)    | `MfaAwareApplicationAdministratorValidatorTests`                   | (a) delegado rechaza (`NotAuthorizedToAdministerException`) → el error se propaga tal cual, `MfaEvidenceProperties.satisfiedBy` nunca se evalúa (delegado *unreachable* para MFA — verificar con un fake que lanzaría si se llamara); (b) delegado permite + evidencia satisface → `Mono.empty()`; (c) delegado permite + evidencia no satisface → `MfaEvidenceRequiredException` con el `tenantId`/`applicationId` correctos                                                                         |
+| `infrastructure` (unitaria)             | `ApplicationAdministrationRequestMapperTests` (extiende existente) | + un caso: el `authenticationContext` del `PdpPrincipal` viaja intacto al `AdministrationRequest` resultante                                                                                                                                                                                                                                                                                                                                                                                          |
+| `infrastructure` (unitaria)             | `OidcAuthenticationSuccessHandlerTests` (extiende existente)       | + un caso: el `LocalUserPrincipal` persistido en sesión lleva la `AuthenticationContextEvidence` extraída del `oidc.getIdToken()` (con `acr`/`amr` sintéticos en el ID token de prueba)                                                                                                                                                                                                                                                                                                               |
+| `infrastructure` (unitaria)             | `PdpPrincipalSecurityContextTests` (extiende existente)            | + casos: `PdpPrincipal.from(Jwt)` con `acr`/`amr` presentes y ausentes; `SecurityContext.currentPrincipal()` para un `LocalUserPrincipal` propaga su `authenticationContext()` sin alterarlo                                                                                                                                                                                                                                                                                                          |
 
 ## 10. Trazabilidad
 
-| Fase | Estado | Fecha |
-|---|---|---|
-| Plan | ✅ Generado | 2026-09-16 |
-| Contrato aprobado (gate 1) | ✅ Aprobado | 2026-09-17 |
-| Pruebas en rojo | ✅ Confirmado (9 casos, `UnsupportedOperationException`) | 2026-09-17 |
-| Implementación en verde | ✅ Verde en las pruebas de la historia | 2026-09-17 |
-| Validación | ✅ Aprobada — ver REPORTE-HU-024.md | 2026-09-17 |
-| Entrega (gate 2) | ⏳ Pendiente — confirmación humana para commit/push | |
+| Fase                       | Estado                                                  | Fecha      |
+|----------------------------|---------------------------------------------------------|------------|
+| Plan                       | ✅ Generado                                              | 2026-09-16 |
+| Contrato aprobado (gate 1) | ✅ Aprobado                                              | 2026-09-17 |
+| Pruebas en rojo            | ✅ Confirmado (9 casos, `UnsupportedOperationException`) | 2026-09-17 |
+| Implementación en verde    | ✅ Verde en las pruebas de la historia                   | 2026-09-17 |
+| Validación                 | ✅ Aprobada — ver REPORTE-HU-024.md                      | 2026-09-17 |
+| Entrega (gate 2)           | ⏳ Pendiente — confirmación humana para commit/push      |            |
 
 ## 11. Ambigüedades pendientes
 

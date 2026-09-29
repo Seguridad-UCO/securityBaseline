@@ -3,12 +3,15 @@
 ## Metadata
 
 - **ID:** HU-017
-- **Slice:** `resources` (pierde una escritura) y `authorization` (la recibe, orquestada) — mismo patrón de HU-015/HU-016
+- **Slice:** `resources` (pierde una escritura) y `authorization` (la recibe, orquestada) — mismo patrón de
+  HU-015/HU-016
 - **Tipo:** Escritura
 - **Fecha:** 2026-09-14
 - **Rama sugerida:** `feature/HU-017-gatear-registro-recursos`
-- **Fuentes:** `pdp/docs/ai-harness/workspace/HU-017.md` (dictada), `ADR-023` (`security-platform-architecture`), código real: `resources/*`, `authorization/*`, precedente directo de HU-016 (mismo mecanismo, slice distinto)
-- **Criterios de la línea base que toca:** 1, 2, 9, 11, 12, 21, 22 (estructurales) — sin 3 nuevo (ninguna `Rule` nueva, mismo argumento que HU-016 §3)
+- **Fuentes:** `pdp/docs/ai-harness/workspace/HU-017.md` (dictada), `ADR-023` (`security-platform-architecture`), código
+  real: `resources/*`, `authorization/*`, precedente directo de HU-016 (mismo mecanismo, slice distinto)
+- **Criterios de la línea base que toca:** 1, 2, 9, 11, 12, 21, 22 (estructurales) — sin 3 nuevo (ninguna `Rule` nueva,
+  mismo argumento que HU-016 §3)
 
 ## 1. Resumen funcional
 
@@ -24,13 +27,13 @@ hay administrador antes de que la aplicación exista.
 
 ## 2. Criterios de aceptación
 
-| # | Criterio | Resultado esperado |
-|---|---|---|
-| 1 | Registrar un recurso como administrador de la aplicación | `201`, recurso creado, igual que hoy |
-| 2 | Registrar un recurso sin ser administrador de esa aplicación | `400 NOT_AUTHORIZED_TO_ADMINISTER`, el recurso **no** se crea |
-| 3 | `POST /api/v1/applications/with-initial-resource` (HU-010) | Sin cambios — sigue sin gate, cero regresión |
-| 4 | `GET /api/v1/applications/{applicationId}/resources` (listar) | Sin cambios — no gateado, sigue en `resources` |
-| 5 | Suite completa | `verificar.ps1` en verde |
+| # | Criterio                                                      | Resultado esperado                                            |
+|---|---------------------------------------------------------------|---------------------------------------------------------------|
+| 1 | Registrar un recurso como administrador de la aplicación      | `201`, recurso creado, igual que hoy                          |
+| 2 | Registrar un recurso sin ser administrador de esa aplicación  | `400 NOT_AUTHORIZED_TO_ADMINISTER`, el recurso **no** se crea |
+| 3 | `POST /api/v1/applications/with-initial-resource` (HU-010)    | Sin cambios — sigue sin gate, cero regresión                  |
+| 4 | `GET /api/v1/applications/{applicationId}/resources` (listar) | Sin cambios — no gateado, sigue en `resources`                |
+| 5 | Suite completa                                                | `verificar.ps1` en verde                                      |
 
 ## 3. Reglas de negocio
 
@@ -38,8 +41,8 @@ Ninguna regla nueva: reutiliza el mecanismo completo de HU-009 (`AuthorizeAdmini
 `AdministrationDecisionPort` → OPA, fail-closed) a través de `PrincipalMustBeApplicationAdministratorValidator`,
 ya implementado. Esta historia solo cablea ese validador en un punto nuevo.
 
-| # | Regla | Dónde vive | Excepción → HTTP |
-|---|---|---|---|
+| #  | Regla                                                          | Dónde vive                                                               | Excepción → HTTP                                       |
+|----|----------------------------------------------------------------|--------------------------------------------------------------------------|--------------------------------------------------------|
 | R1 | Quien registra un recurso debe administrar la aplicación dueña | Reutiliza `PrincipalMustBeApplicationAdministratorValidator` (ya existe) | `NotAuthorizedToAdministerException` → 400 (ya existe) |
 
 > A diferencia de HU-016 (R3), aquí no hace falta una decisión de "¿hay algo que gatear?": el
@@ -53,9 +56,9 @@ Ninguna entidad, value object ni enum nuevo. Se reutilizan `RegisterProtectedRes
 
 ### DTO nuevo (primaryport de `authorization`)
 
-| DTO | Nuevo o existente | Invariantes | Vive en |
-|---|---|---|---|
-| `AdministerResourceRegistrationRequest(AdministrationRequest administration, RegisterProtectedResourceRequest resource)` | Nuevo | Ambos componentes `requireNonNull` — sin `Optional`, a diferencia de HU-016 | `authorization/application/primaryport/request/` |
+| DTO                                                                                                                      | Nuevo o existente | Invariantes                                                                 | Vive en                                          |
+|--------------------------------------------------------------------------------------------------------------------------|-------------------|-----------------------------------------------------------------------------|--------------------------------------------------|
+| `AdministerResourceRegistrationRequest(AdministrationRequest administration, RegisterProtectedResourceRequest resource)` | Nuevo             | Ambos componentes `requireNonNull` — sin `Optional`, a diferencia de HU-016 | `authorization/application/primaryport/request/` |
 
 ## 5. Persistencia
 
@@ -63,10 +66,10 @@ Sin cambios. No hay tabla, campo ni consulta nueva.
 
 ## 6. Endpoint
 
-| Verbo | Ruta | Código de éxito | Cuerpo de entrada | Cuerpo de salida |
-|---|---|---|---|---|
+| Verbo  | Ruta                                             | Código de éxito    | Cuerpo de entrada                                            | Cuerpo de salida                                                                                                                                                                       |
+|--------|--------------------------------------------------|--------------------|--------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `POST` | `/api/v1/applications/{applicationId}/resources` | `201` (sin cambio) | `RegisterProtectedResourceBodyRequest` (sin cambio de forma) | `AdministeredResourceWebResponse` (misma forma que `ProtectedResourceWebResponse`, nueva clase — mismo criterio de nombre distinto que `AdministeredApplicationWebResponse` en HU-015) |
-| `GET` | `/api/v1/applications/{applicationId}/resources` | `200` (sin cambio) | — | — (permanece en `resources`, sin tocar) |
+| `GET`  | `/api/v1/applications/{applicationId}/resources` | `200` (sin cambio) | —                                                            | — (permanece en `resources`, sin tocar)                                                                                                                                                |
 
 **La escritura se mueve físicamente de `ProtectedResourceController` (`resources`) a un nuevo
 `ResourceAdministrationController` (`authorization`)** — mismas rutas, mismos verbos, mismo código,
@@ -182,13 +185,13 @@ resto es `[M]` de un solo paso para el implementador/tester, exactamente como HU
 > `RegisterProtectedResourceRequestMapperTests` (si existe en `resources`) se mueve a `authorization`
 > — trabajo de `pdp/src/test`, del tester/implementador, no del planificador.
 
-| Capa | Clase de prueba | Casos |
-|---|---|---|
-| `application` (`authorization`) | `AdministerResourceRegistrationUseCaseImplTests` | administrador → delega y devuelve la respuesta; no administrador → `NotAuthorizedToAdministerException`, `RegisterProtectedResourceUseCase` **no** se invoca |
-| `infrastructure` (`authorization`) | `AdministerResourceRegistrationInteractorImplTests` | construye `AdministrationRequest` con el `applicationId` de la propia petición (sin consulta adicional); resuelve `UserId` vía `SubjectUserIdLookupValidator` cuando el principal no lo trae |
-| `infrastructure` (`authorization`) | `RegisterProtectedResourceRequestMapperTests` (movido, si existía) | mismos casos que antes |
-| `infrastructure` (`authorization`) | `ResourceAdministrationControllerTests` | delega al interactor y responde `201`; no decide reglas |
-| `infrastructure` (`resources`) | `ProtectedResourceControllerTests` (ajustado, si existía con casos de `register`) | ya no prueba `register` (movido); sigue probando `list` si aplica |
+| Capa                               | Clase de prueba                                                                   | Casos                                                                                                                                                                                        |
+|------------------------------------|-----------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `application` (`authorization`)    | `AdministerResourceRegistrationUseCaseImplTests`                                  | administrador → delega y devuelve la respuesta; no administrador → `NotAuthorizedToAdministerException`, `RegisterProtectedResourceUseCase` **no** se invoca                                 |
+| `infrastructure` (`authorization`) | `AdministerResourceRegistrationInteractorImplTests`                               | construye `AdministrationRequest` con el `applicationId` de la propia petición (sin consulta adicional); resuelve `UserId` vía `SubjectUserIdLookupValidator` cuando el principal no lo trae |
+| `infrastructure` (`authorization`) | `RegisterProtectedResourceRequestMapperTests` (movido, si existía)                | mismos casos que antes                                                                                                                                                                       |
+| `infrastructure` (`authorization`) | `ResourceAdministrationControllerTests`                                           | delega al interactor y responde `201`; no decide reglas                                                                                                                                      |
+| `infrastructure` (`resources`)     | `ProtectedResourceControllerTests` (ajustado, si existía con casos de `register`) | ya no prueba `register` (movido); sigue probando `list` si aplica                                                                                                                            |
 
 Presupuesto estimado: **8–11 pruebas** — menor que HU-016 porque no hace falta el validador de
 resolución adicional (`RoleApplicationLookupValidator` no tiene equivalente aquí: el `applicationId`
@@ -196,14 +199,14 @@ ya viene en la petición).
 
 ## 10. Trazabilidad
 
-| Fase | Estado | Fecha |
-|---|---|---|
-| Plan | ✅ Generado | 2026-09-14 |
-| Contrato aprobado (gate 1) | ✅ Aprobado | 2026-09-14 |
-| Pruebas en rojo | ✅ Confirmado | 2026-09-14 |
-| Implementación en verde | ✅ Verde (671 pruebas) | 2026-09-14 |
-| Validación | ✅ APROBADO — ver `REPORTE-HU-017.md` | 2026-09-14 |
-| Entrega (gate 2) | ⏳ Pendiente de confirmación para commit y push | |
+| Fase                       | Estado                                         | Fecha      |
+|----------------------------|------------------------------------------------|------------|
+| Plan                       | ✅ Generado                                     | 2026-09-14 |
+| Contrato aprobado (gate 1) | ✅ Aprobado                                     | 2026-09-14 |
+| Pruebas en rojo            | ✅ Confirmado                                   | 2026-09-14 |
+| Implementación en verde    | ✅ Verde (671 pruebas)                          | 2026-09-14 |
+| Validación                 | ✅ APROBADO — ver `REPORTE-HU-017.md`           | 2026-09-14 |
+| Entrega (gate 2)           | ⏳ Pendiente de confirmación para commit y push |            |
 
 ## 11. Ambigüedades pendientes
 

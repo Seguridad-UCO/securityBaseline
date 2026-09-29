@@ -6,7 +6,9 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
 
-/** Hecho ya resuelto para ProfileMustExistForTenantRule: si el perfil existe para ese inquilino. */
+/**
+ * Hecho ya resuelto para ProfileMustExistForTenantRule: si el perfil existe para ese inquilino.
+ */
 public record ProfileExistence(ProfileId profileId, TenantId tenantId, boolean registered) {
 
     public ProfileExistence {

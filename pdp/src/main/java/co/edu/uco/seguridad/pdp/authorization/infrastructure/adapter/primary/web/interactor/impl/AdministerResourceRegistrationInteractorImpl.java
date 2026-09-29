@@ -32,7 +32,7 @@ public final class AdministerResourceRegistrationInteractorImpl implements Admin
     private final SubjectUserIdLookupValidator subjectUserIdLookup;
 
     public AdministerResourceRegistrationInteractorImpl(AdministerResourceRegistrationUseCase useCase,
-            SubjectUserIdLookupValidator subjectUserIdLookup) {
+                                                        SubjectUserIdLookupValidator subjectUserIdLookup) {
         this.useCase = Objects.requireNonNull(useCase, RequiredArgumentMessages.ADMINISTER_RESOURCE_REGISTRATION_USE_CASE);
         this.subjectUserIdLookup = Objects.requireNonNull(subjectUserIdLookup,
                 RequiredArgumentMessages.SUBJECT_USER_ID_LOOKUP_VALIDATOR);
@@ -48,7 +48,7 @@ public final class AdministerResourceRegistrationInteractorImpl implements Admin
     }
 
     private static AdministerResourceRegistrationRequest toAdministerRequest(RegisterProtectedResourceRawRequest raw,
-            PdpPrincipal principal, UserId userId) {
+                                                                             PdpPrincipal principal, UserId userId) {
         RegisterProtectedResourceRequest resource = RegisterProtectedResourceRequestMapper.toRequest(raw,
                 principal.tenantId());
         AdministrationRequest administration = new AdministrationRequest(principal.tenantId(),

@@ -4,4 +4,5 @@ import co.edu.uco.seguridad.pdp.resources.application.primaryport.request.Update
 import co.edu.uco.seguridad.pdp.resources.application.primaryport.response.RegisteredProtectedResourceResponse;
 import co.edu.uco.seguridad.shared.contract.ReactiveOperation;
 
-public interface UpdateProtectedResourceUseCase extends ReactiveOperation<UpdateProtectedResourceRequest, RegisteredProtectedResourceResponse> { }
+public interface UpdateProtectedResourceUseCase extends ReactiveOperation<UpdateProtectedResourceRequest, RegisteredProtectedResourceResponse> {
+}

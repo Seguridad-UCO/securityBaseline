@@ -37,7 +37,7 @@ public final class AdministerProfileRoleAdditionInteractorImpl implements Admini
     private final ProfileApplicationLookupValidator profileApplicationLookup;
 
     public AdministerProfileRoleAdditionInteractorImpl(AdministerProfileRoleAdditionUseCase useCase,
-            SubjectUserIdLookupValidator subjectUserIdLookup, ProfileApplicationLookupValidator profileApplicationLookup) {
+                                                       SubjectUserIdLookupValidator subjectUserIdLookup, ProfileApplicationLookupValidator profileApplicationLookup) {
         this.useCase = Objects.requireNonNull(useCase, RequiredArgumentMessages.ADMINISTER_PROFILE_ROLE_ADDITION_USE_CASE);
         this.subjectUserIdLookup = Objects.requireNonNull(subjectUserIdLookup,
                 RequiredArgumentMessages.SUBJECT_USER_ID_LOOKUP_VALIDATOR);
@@ -62,7 +62,7 @@ public final class AdministerProfileRoleAdditionInteractorImpl implements Admini
                     RoleId roleId = RequestFieldParser.parse("roleId", input.roleId(), RoleId::of);
                     AddRoleToProfileRequest addition = new AddRoleToProfileRequest(principal.tenantId(), profileId, roleId);
                     return Mono.zip(resolveUserId(principal),
-                            profileApplicationLookup.execute(new ProfileOwnershipQuery(principal.tenantId(), profileId)))
+                                    profileApplicationLookup.execute(new ProfileOwnershipQuery(principal.tenantId(), profileId)))
                             .map(tuple -> new AdministerProfileRoleAdditionRequest(
                                     tuple.getT2().map(applicationId -> new AdministrationRequest(principal.tenantId(),
                                             applicationId, tuple.getT1(), principal.subject(), Set.of(),

@@ -22,7 +22,9 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Con las reglas sustituidas por un dummy que siempre aprueba: aquí se prueba la construcción y la persistencia, no las reglas. */
+/**
+ * Con las reglas sustituidas por un dummy que siempre aprueba: aquí se prueba la construcción y la persistencia, no las reglas.
+ */
 class DefineRoleUseCaseImplTests {
 
     private static final TenantId TENANT = new TenantId("universidad-uco");

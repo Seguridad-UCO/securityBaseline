@@ -5,7 +5,9 @@ import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.
 
 import java.util.List;
 
-/** Traducción de salida: DTO de aplicación a carga útil HTTP. Desenvuelve los objetos de valor. */
+/**
+ * Traducción de salida: DTO de aplicación a carga útil HTTP. Desenvuelve los objetos de valor.
+ */
 public final class ApplicationResponseMapper {
 
     private ApplicationResponseMapper() {

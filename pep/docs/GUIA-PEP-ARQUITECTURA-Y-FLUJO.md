@@ -16,12 +16,12 @@ es aplicable, el backend no recibe la solicitud.
 
 ## Componentes
 
-| Componente | Responsabilidad |
-|---|---|
-| Cliente | Obtiene un Bearer JWT de su IdP y usa la URL pública del PEP. |
-| PEP | Autentica JWT, aplica límites, normaliza acceso, consulta PDP y hace proxy tras `ALLOW`. |
-| PDP | Autentica el PEP por mTLS, vuelve a validar evidencia, resuelve contexto confiable, consulta catálogo/OPA y audita. |
-| Backend | Ejecuta lógica de negocio solo cuando el PEP reenvía una solicitud autorizada. |
+| Componente | Responsabilidad                                                                                                     |
+|------------|---------------------------------------------------------------------------------------------------------------------|
+| Cliente    | Obtiene un Bearer JWT de su IdP y usa la URL pública del PEP.                                                       |
+| PEP        | Autentica JWT, aplica límites, normaliza acceso, consulta PDP y hace proxy tras `ALLOW`.                            |
+| PDP        | Autentica el PEP por mTLS, vuelve a validar evidencia, resuelve contexto confiable, consulta catálogo/OPA y audita. |
+| Backend    | Ejecuta lógica de negocio solo cuando el PEP reenvía una solicitud autorizada.                                      |
 
 ```mermaid
 sequenceDiagram
@@ -118,12 +118,12 @@ explícita `pep.pdp.allow-insecure-http=true`.
 solicitud. Un `ALLOW` con `TOKEN_INVALID`, obligaciones no vacías, respuesta nula, JSON inválido, campos
 obligatorios ausentes, IDs distintos o errores de transporte nunca se pueden aplicar.
 
-| Resultado PDP/integración | Respuesta PEP | ¿Reenvía? |
-|---|---:|---|
-| `ALLOW` correlacionado y sin obligaciones | respuesta backend | Sí |
-| `DENY` | 403 | No |
-| `DENY` con `TOKEN_INVALID` o HTTP 401 PDP | 401 | No |
-| `INDETERMINATE`, 5xx, timeout o contrato inválido | 503 | No |
+| Resultado PDP/integración                         |     Respuesta PEP | ¿Reenvía? |
+|---------------------------------------------------|------------------:|-----------|
+| `ALLOW` correlacionado y sin obligaciones         | respuesta backend | Sí        |
+| `DENY`                                            |               403 | No        |
+| `DENY` con `TOKEN_INVALID` o HTTP 401 PDP         |               401 | No        |
+| `INDETERMINATE`, 5xx, timeout o contrato inválido |               503 | No        |
 
 ### 5. Proxy tras el ALLOW
 
@@ -146,12 +146,12 @@ Liveness representa el proceso. Readiness incluye `GET /actuator/health` al PDP.
 readiness abajo y devolver 503 para solicitudes protegidas, no reiniciar el PEP ni permitir acceso. Las métricas
 son `pep.http.duration`, `pep.pdp.duration` y `pep.pdp.decisions`.
 
-| Grupo | Propiedades principales |
-|---|---|
-| Ingress | `pep.ingress.issuer`, `jwks-uri`, rutas, límites, CORS. |
-| PDP | `pep.pdp.base-url`, CA/certificado/clave mTLS, timeouts, límite de respuesta. |
-| Proxy | `pep.proxy.connect-timeout`, `timeout`, `max-body-bytes`. |
-| Alta | `pep.integration.enabled`, `registry-file`, `public-base-url`, credenciales BCrypt. |
+| Grupo   | Propiedades principales                                                             |
+|---------|-------------------------------------------------------------------------------------|
+| Ingress | `pep.ingress.issuer`, `jwks-uri`, rutas, límites, CORS.                             |
+| PDP     | `pep.pdp.base-url`, CA/certificado/clave mTLS, timeouts, límite de respuesta.       |
+| Proxy   | `pep.proxy.connect-timeout`, `timeout`, `max-body-bytes`.                           |
+| Alta    | `pep.integration.enabled`, `registry-file`, `public-base-url`, credenciales BCrypt. |
 
 En producción use HTTPS para listener, IdP/JWKS, PDP y backend. Las propiedades `allow-insecure-http` son solo
 para desarrollo. La alta dinámica se persiste atómicamente en archivo local: esta versión es de una única

@@ -16,7 +16,9 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** HU-020: rutas y códigos del autoservicio de administradores. */
+/**
+ * HU-020: rutas y códigos del autoservicio de administradores.
+ */
 class ApplicationAdministratorControllerTests {
 
     private static final ApplicationAdministratorWebResponse EXPECTED =

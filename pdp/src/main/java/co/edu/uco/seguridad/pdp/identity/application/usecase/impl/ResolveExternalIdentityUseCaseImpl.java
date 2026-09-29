@@ -9,7 +9,9 @@ import reactor.core.publisher.Mono;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Adaptación del vínculo persistido de identidad externa al identificador usado por autorización. */
+/**
+ * Adaptación del vínculo persistido de identidad externa al identificador usado por autorización.
+ */
 public final class ResolveExternalIdentityUseCaseImpl implements ResolveExternalIdentityUseCase {
 
     private final SecurityUserRepository repository;

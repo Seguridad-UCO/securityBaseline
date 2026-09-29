@@ -10,10 +10,18 @@ import reactor.core.publisher.Mono;
 public final class ApplicationDeletionDependencyValidatorImpl implements ApplicationDeletionDependencyValidator {
     private final AssignmentRepository assignments;
     private final ProfileAssignmentRepository profileAssignments;
+
     public ApplicationDeletionDependencyValidatorImpl(AssignmentRepository assignments,
-            ProfileAssignmentRepository profileAssignments) { this.assignments = assignments; this.profileAssignments = profileAssignments; }
-    @Override public Mono<Void> execute(ApplicationId id) { return assignments.existsByApplicationId(id)
-            .flatMap(inUse -> inUse ? Mono.error(new CatalogItemInUseException("la aplicación"))
-                    : profileAssignments.existsByApplicationId(id))
-            .flatMap(inUse -> inUse ? Mono.error(new CatalogItemInUseException("la aplicación")) : Mono.empty()); }
+                                                      ProfileAssignmentRepository profileAssignments) {
+        this.assignments = assignments;
+        this.profileAssignments = profileAssignments;
+    }
+
+    @Override
+    public Mono<Void> execute(ApplicationId id) {
+        return assignments.existsByApplicationId(id)
+                .flatMap(inUse -> inUse ? Mono.error(new CatalogItemInUseException("la aplicación"))
+                        : profileAssignments.existsByApplicationId(id))
+                .flatMap(inUse -> inUse ? Mono.error(new CatalogItemInUseException("la aplicación")) : Mono.empty());
+    }
 }

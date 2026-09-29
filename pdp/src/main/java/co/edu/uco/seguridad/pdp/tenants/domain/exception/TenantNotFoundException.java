@@ -1,7 +1,7 @@
 package co.edu.uco.seguridad.pdp.tenants.domain.exception;
 
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.commons.exception.BusinessRuleViolationException;
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.tenants.domain.message.TenantsMessages;
 
 /**

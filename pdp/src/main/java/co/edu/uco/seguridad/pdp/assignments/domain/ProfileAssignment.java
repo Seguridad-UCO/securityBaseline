@@ -20,7 +20,7 @@ import java.util.Set;
  * revocarlos en cascada (HU-011, decisión confirmada). Espejo de {@code Assignment}.
  */
 public record ProfileAssignment(ProfileAssignmentId id, UserId userId, TenantId tenantId, ApplicationId applicationId,
-        ProfileId profileId, Set<AssignmentId> generatedAssignmentIds, Validity validity) {
+                                ProfileId profileId, Set<AssignmentId> generatedAssignmentIds, Validity validity) {
 
     public ProfileAssignment {
         Objects.requireNonNull(id, RequiredArgumentMessages.PROFILE_ASSIGNMENT_ID);
@@ -34,7 +34,7 @@ public record ProfileAssignment(ProfileAssignmentId id, UserId userId, TenantId 
     }
 
     public static ProfileAssignment grant(ProfileAssignmentId id, UserId userId, TenantId tenantId,
-            ApplicationId applicationId, ProfileId profileId, Set<AssignmentId> generatedAssignmentIds, Instant now) {
+                                          ApplicationId applicationId, ProfileId profileId, Set<AssignmentId> generatedAssignmentIds, Instant now) {
         return new ProfileAssignment(id, userId, tenantId, applicationId, profileId, generatedAssignmentIds,
                 Validity.startingNow(now));
     }

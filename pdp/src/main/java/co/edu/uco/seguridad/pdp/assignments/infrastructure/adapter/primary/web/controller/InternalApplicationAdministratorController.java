@@ -9,11 +9,7 @@ import co.edu.uco.seguridad.shared.web.RequestContext;
 import co.edu.uco.seguridad.shared.web.message.WebContractMessages;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -38,7 +34,7 @@ final class InternalApplicationAdministratorController {
 
     @PostMapping("/{applicationId}/administrators")
     Mono<ResponseEntity<ApiResponse<AssignmentWebResponse>>> assign(@PathVariable String applicationId,
-            @RequestBody AssignApplicationAdministratorRawRequest body, ServerWebExchange exchange) {
+                                                                    @RequestBody AssignApplicationAdministratorRawRequest body, ServerWebExchange exchange) {
         RequestContext context = CorrelationWebFilter.context(exchange);
         return interactor.execute(new AssignApplicationAdministratorRawRequest(applicationId, body.userId()))
                 .map(response -> ResponseEntity.status(HttpStatus.CREATED)

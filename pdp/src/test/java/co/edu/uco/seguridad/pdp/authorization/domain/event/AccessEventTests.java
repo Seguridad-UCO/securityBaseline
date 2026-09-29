@@ -23,8 +23,8 @@ class AccessEventTests {
     private static final Instant OCCURRED_ON = Instant.parse("2026-09-12T00:00:00Z");
 
     private static AccessEvent event(UUID eventId, UUID decisionId, String requestId, String correlationId,
-            TenantId tenantId, ApplicationId applicationId, String subject, ResourcePath resourcePath,
-            HttpVerb action, DecisionState state, ReasonCode reasonCode, Instant occurredOn) {
+                                     TenantId tenantId, ApplicationId applicationId, String subject, ResourcePath resourcePath,
+                                     HttpVerb action, DecisionState state, ReasonCode reasonCode, Instant occurredOn) {
         return new AccessEvent(eventId, decisionId, requestId, correlationId, tenantId, applicationId, subject,
                 resourcePath, action, state, reasonCode, occurredOn);
     }

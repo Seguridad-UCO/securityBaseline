@@ -4,6 +4,9 @@ import co.edu.uco.seguridad.pdp.identity.domain.model.Email;
 import co.edu.uco.seguridad.pdp.identity.domain.model.ExternalIdentity;
 import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;
 import co.edu.uco.seguridad.pdp.commons.model.UserId;
+import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
+import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -30,4 +33,9 @@ public interface SecurityUserRepository {
     Mono<Void> linkIdentity(ExternalIdentity identity);
 
     Flux<SecurityUser> findAll();
+
+    /** Búsqueda administrativa paginada y aislada por tenant para autocompletados. */
+    default Mono<ResultPage<SecurityUser>> findPageByTenant(TenantId tenantId, String query, PageWindow window) {
+        return Mono.error(new UnsupportedOperationException("La búsqueda paginada no está implementada"));
+    }
 }

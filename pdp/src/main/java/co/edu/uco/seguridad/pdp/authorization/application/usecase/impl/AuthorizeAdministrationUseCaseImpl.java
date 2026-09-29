@@ -26,7 +26,7 @@ public final class AuthorizeAdministrationUseCaseImpl implements AuthorizeAdmini
     private final AdministrationDecisionPort policyDecisionPort;
 
     public AuthorizeAdministrationUseCaseImpl(ActiveRoleNamesLookupValidator rolesLookup,
-            AdministrationDecisionPort policyDecisionPort) {
+                                              AdministrationDecisionPort policyDecisionPort) {
         this.rolesLookup = Objects.requireNonNull(rolesLookup, RequiredArgumentMessages.ACTIVE_ROLE_NAMES_LOOKUP_VALIDATOR);
         this.policyDecisionPort = Objects.requireNonNull(policyDecisionPort,
                 RequiredArgumentMessages.ADMINISTRATION_DECISION_PORT);

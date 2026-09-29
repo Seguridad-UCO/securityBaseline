@@ -6,6 +6,8 @@ import co.edu.uco.seguridad.shared.contract.ReactiveOperation;
 
 import java.util.Set;
 
-/** Devuelve el conjunto de roles ya validado (perfil existente, sin asignación activa duplicada). */
+/**
+ * Devuelve el conjunto de roles ya validado (perfil existente, sin asignación activa duplicada).
+ */
 public interface AssignProfileRulesValidator extends ReactiveOperation<AssignProfileRequest, Set<RoleId>> {
 }

@@ -1,7 +1,7 @@
 package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.mapper;
 
-import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.ApplicationAdministrationRawRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministrationRequest;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.ApplicationAdministrationRawRequest;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.shared.security.PdpPrincipal;
@@ -22,7 +22,7 @@ public final class ApplicationAdministrationRequestMapper {
     }
 
     public static AdministrationRequest toAdministrationRequest(ApplicationAdministrationRawRequest raw,
-            PdpPrincipal principal, UserId resolvedUserId) {
+                                                                PdpPrincipal principal, UserId resolvedUserId) {
         ApplicationId applicationId = RequestFieldParser.parse("applicationId", raw.applicationId(), ApplicationId::of);
         return new AdministrationRequest(principal.tenantId(), applicationId, resolvedUserId, principal.subject(),
                 Set.of(), principal.authenticationContext());

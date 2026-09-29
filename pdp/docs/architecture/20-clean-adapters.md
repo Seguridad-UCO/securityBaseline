@@ -2,7 +2,6 @@
 
 [← SOLID](12-solid.md) · [Siguiente: modelo →](21-refined-model.md)
 
-
 ## Decisión arquitectónica
 
 Los adaptadores conectan protocolos o tecnologías; no contienen decisiones de registro, unicidad,
@@ -24,19 +23,22 @@ el motor real. La auditoría (aún dummy) registra identificadores, nunca el pay
 
 Las decisiones que podrían haberse filtrado al adaptador y no lo hicieron:
 
-| Decisión | Dónde vive realmente |
-|---|---|
-| Formato de un código de recurso | `ResourceCode` |
-| Comparación de nombres sin distinguir mayúsculas | `ApplicationName.sameAs` |
-| Qué significa que un filtro esté ausente | `ApplicationCriteria` |
-| Límite máximo de una ventana | `PageWindow` |
-| Unicidad de una concesión | `ProtectedResourceMustBeUniqueRule` |
+| Decisión                                         | Dónde vive realmente                |
+|--------------------------------------------------|-------------------------------------|
+| Formato de un código de recurso                  | `ResourceCode`                      |
+| Comparación de nombres sin distinguir mayúsculas | `ApplicationName.sameAs`            |
+| Qué significa que un filtro esté ausente         | `ApplicationCriteria`               |
+| Límite máximo de una ventana                     | `PageWindow`                        |
+| Unicidad de una concesión                        | `ProtectedResourceMustBeUniqueRule` |
 
 ## Ubicación verificable
 
-- Web: [`resources/infrastructure/adapter/primary/web`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure/adapter/primary/web)
-- Persistencia real: [`SurrealProtectedResourceRepository.java`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure/adapter/secondary/persistence/repository/SurrealProtectedResourceRepository.java)
-- Auditoría dummy: [`InMemoryAuditAdapter.java`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure/adapter/secondary/audit/InMemoryAuditAdapter.java)
+- Web: [
+  `resources/infrastructure/adapter/primary/web`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure/adapter/primary/web)
+- Persistencia real: [
+  `SurrealProtectedResourceRepository.java`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure/adapter/secondary/persistence/repository/SurrealProtectedResourceRepository.java)
+- Auditoría dummy: [
+  `InMemoryAuditAdapter.java`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure/adapter/secondary/audit/InMemoryAuditAdapter.java)
 
 ## Evidencia y límite
 
@@ -45,7 +47,9 @@ SurrealDB real), y las pruebas de dominio rechazan un código inválido sin WebF
 formatos, pero nunca toma decisiones de negocio: cuando una traducción necesite un `if` sobre
 significado, ese `if` pertenece a una regla.
 
-Desde el Stage 2 ([ADR-017](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-017-domain-events-application-event-publisher.md)), "a
+Desde el Stage
+2 ([ADR-017](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-017-domain-events-application-event-publisher.md)), "
+a
 quién le importa que algo se registró" tampoco es una decisión del adaptador web ni del caso de uso:
 la decide quien escucha `ProtectedResourceRegistered` como listener (`InMemoryAuditAdapter`, aún
 dummy en su contenido — solo identificadores, nunca el payload).

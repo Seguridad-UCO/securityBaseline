@@ -24,7 +24,7 @@ public final class ApplicationRemovalInteractorImpl implements ApplicationRemova
     private final SubjectUserIdLookupValidator subjectUserIdLookup;
 
     public ApplicationRemovalInteractorImpl(AdministerApplicationRemovalUseCase useCase,
-            SubjectUserIdLookupValidator subjectUserIdLookup) {
+                                            SubjectUserIdLookupValidator subjectUserIdLookup) {
         this.useCase = Objects.requireNonNull(useCase, RequiredArgumentMessages.REMOVE_USE_CASE);
         this.subjectUserIdLookup = Objects.requireNonNull(subjectUserIdLookup,
                 RequiredArgumentMessages.SUBJECT_USER_ID_LOOKUP_VALIDATOR);

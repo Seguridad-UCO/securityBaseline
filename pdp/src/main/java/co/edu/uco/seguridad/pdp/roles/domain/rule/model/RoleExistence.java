@@ -6,7 +6,9 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
 
-/** Hecho ya resuelto para RoleMustExistForTenantRule: si el rol existe para ese inquilino. */
+/**
+ * Hecho ya resuelto para RoleMustExistForTenantRule: si el rol existe para ese inquilino.
+ */
 public record RoleExistence(RoleId roleId, TenantId tenantId, boolean registered) {
 
     public RoleExistence {

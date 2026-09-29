@@ -1,18 +1,18 @@
 package co.edu.uco.seguridad.pdp.tenants.infrastructure.config;
 
-import co.edu.uco.seguridad.pdp.tenants.application.secondaryport.repository.TenantRepository;
 import co.edu.uco.seguridad.pdp.tenants.application.rule.validator.TenantMustBeActiveValidator;
 import co.edu.uco.seguridad.pdp.tenants.application.rule.validator.impl.TenantMustBeActiveValidatorImpl;
+import co.edu.uco.seguridad.pdp.tenants.application.secondaryport.repository.TenantRepository;
+import co.edu.uco.seguridad.pdp.tenants.application.usecase.CreateTenantUseCase;
+import co.edu.uco.seguridad.pdp.tenants.application.usecase.ListTenantsUseCase;
+import co.edu.uco.seguridad.pdp.tenants.application.usecase.impl.CreateTenantUseCaseImpl;
+import co.edu.uco.seguridad.pdp.tenants.application.usecase.impl.ListTenantsUseCaseImpl;
 import co.edu.uco.seguridad.pdp.tenants.domain.rule.TenantCodeMustBeUniqueRule;
 import co.edu.uco.seguridad.pdp.tenants.domain.rule.TenantMustExistRule;
 import co.edu.uco.seguridad.pdp.tenants.domain.rule.TenantStatusMustBeActiveRule;
 import co.edu.uco.seguridad.pdp.tenants.domain.rule.impl.TenantCodeMustBeUniqueRuleImpl;
 import co.edu.uco.seguridad.pdp.tenants.domain.rule.impl.TenantMustExistRuleImpl;
 import co.edu.uco.seguridad.pdp.tenants.domain.rule.impl.TenantStatusMustBeActiveRuleImpl;
-import co.edu.uco.seguridad.pdp.tenants.application.usecase.CreateTenantUseCase;
-import co.edu.uco.seguridad.pdp.tenants.application.usecase.ListTenantsUseCase;
-import co.edu.uco.seguridad.pdp.tenants.application.usecase.impl.CreateTenantUseCaseImpl;
-import co.edu.uco.seguridad.pdp.tenants.application.usecase.impl.ListTenantsUseCaseImpl;
 import co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.primary.web.interactor.CreateTenantInteractor;
 import co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.primary.web.interactor.ListTenantsInteractor;
 import co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.primary.web.interactor.impl.CreateTenantInteractorImpl;

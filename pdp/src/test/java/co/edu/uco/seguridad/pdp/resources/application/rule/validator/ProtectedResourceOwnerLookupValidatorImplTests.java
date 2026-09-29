@@ -42,7 +42,7 @@ class ProtectedResourceOwnerLookupValidatorImplTests {
         return new ProtectedResourceRepository() {
             @Override
             public Mono<Boolean> existsByApplicationPathAndMethod(ApplicationId applicationId, ResourcePath path,
-                    HttpVerb method) {
+                                                                  HttpVerb method) {
                 throw new UnsupportedOperationException();
             }
 

@@ -2,8 +2,8 @@ package co.edu.uco.seguridad.pdp.authorization.application.usecase.impl;
 
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.RevokeProfileAssignmentUseCase;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministerProfileAssignmentRevocationRequest;
-import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.PrincipalMustBeApplicationAdministratorValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministrationRequest;
+import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.PrincipalMustBeApplicationAdministratorValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerProfileAssignmentRevocationUseCase;
 import co.edu.uco.seguridad.pdp.authorization.domain.exception.NotAuthorizedToAdministerException;
 import co.edu.uco.seguridad.shared.audit.AdministrationAuditRepository;

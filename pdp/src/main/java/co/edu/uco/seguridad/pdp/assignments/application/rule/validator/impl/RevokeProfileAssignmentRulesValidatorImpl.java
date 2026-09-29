@@ -17,7 +17,7 @@ public final class RevokeProfileAssignmentRulesValidatorImpl implements RevokePr
     private final ProfileAssignmentMustExistForTenantRule mustExist;
 
     public RevokeProfileAssignmentRulesValidatorImpl(ProfileAssignmentRepository repository,
-            ProfileAssignmentMustExistForTenantRule mustExist) {
+                                                     ProfileAssignmentMustExistForTenantRule mustExist) {
         this.repository = Objects.requireNonNull(repository, RequiredArgumentMessages.PROFILE_ASSIGNMENT_REPOSITORY);
         this.mustExist = Objects.requireNonNull(mustExist, RequiredArgumentMessages.PROFILE_ASSIGNMENT_EXISTS_RULE);
     }

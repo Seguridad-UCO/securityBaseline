@@ -4,11 +4,7 @@ import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.Ad
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministrationRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerProfileRoleAdditionUseCase;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.AddRoleToProfileRawRequest;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.ProfileId;
-import co.edu.uco.seguridad.pdp.commons.model.RoleId;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
-import co.edu.uco.seguridad.pdp.commons.model.UserId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserIdLookupValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.primaryport.request.ProfileOwnershipQuery;
 import co.edu.uco.seguridad.pdp.profiles.application.primaryport.response.ProfileResponse;
@@ -22,11 +18,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -105,7 +97,7 @@ class AdministerProfileRoleAdditionInteractorImplTests {
     }
 
     private static AdministerProfileRoleAdditionUseCase useCaseCapturing(List<AdministerProfileRoleAdditionRequest> received,
-            ProfileResponse response) {
+                                                                         ProfileResponse response) {
         return input -> {
             received.add(input);
             return Mono.just(response);

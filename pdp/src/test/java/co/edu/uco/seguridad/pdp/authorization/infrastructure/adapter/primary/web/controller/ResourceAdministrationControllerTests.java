@@ -15,7 +15,9 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** HU-017: misma ruta y código que el antiguo {@code ProtectedResourceController.register}. */
+/**
+ * HU-017: misma ruta y código que el antiguo {@code ProtectedResourceController.register}.
+ */
 class ResourceAdministrationControllerTests {
 
     @Test

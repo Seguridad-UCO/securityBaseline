@@ -8,22 +8,22 @@
 - **Fecha:** 2026-09-13
 - **Rama sugerida:** `feature/HU-009-mecanismo-administracion-aplicacion`
 - **Fuentes:**
-  - `pdp/docs/ai-harness/workspace/HU-009.md` (borrador original — marcado explícitamente "necesita
-    una decisión de dominio (ADR) antes de planificarse", con 5 preguntas abiertas)
-  - Decisiones tomadas interactivamente con Sebastián en esta sesión de planificación (ver §0)
-  - Código real leído antes de planificar: `Role.java`/`RoleScopeLevel.java` (confirma que `Role` ya
-    soporta 3 niveles de alcance desde HU-004), `Assignment.java` (confirma que `applicationId` es
-    **obligatorio** — hoy no existe forma de representar una asignación global), `AccessRequest.java`
-    (confirma que está modelado específicamente para acceso a `ResourcePath`+`HttpVerb`, no sirve
-    para "puede administrar"), `PolicyDecisionPort`/`OpaPolicyDecisionAdapter`/DTOs de
-    `policy/dto/*` (confirma que están atados al contrato versionado `pdp-opa/v1`), `AuthorizeUseCaseImpl`
-    (patrón a espejar: resolver roles → delegar en el puerto de decisión → fail-closed),
-    `ActiveRoleNamesLookupValidator`/`Impl` (reutilizable tal cual: ya resuelve
-    (usuario, aplicación) → nombres de roles activos), `ApplicationMustExistForTenantValidator`
-    (patrón de validador publicado con `@NamedInterface("rule")` a espejar), `OpaProperties.java`
-    (confirma un único `@ConfigurationProperties(prefix = "pdp.opa")` con `baseUrl`/`decisionPath`/`timeout`)
-  - `pdp/docs/ai-harness/workspace/HU-004.md` (confirma que "quién administra el catálogo" ya se
-    difirió aquí, y que los roles globales existen en el modelo pero no se pueden crear por HTTP)
+    - `pdp/docs/ai-harness/workspace/HU-009.md` (borrador original — marcado explícitamente "necesita
+      una decisión de dominio (ADR) antes de planificarse", con 5 preguntas abiertas)
+    - Decisiones tomadas interactivamente con Sebastián en esta sesión de planificación (ver §0)
+    - Código real leído antes de planificar: `Role.java`/`RoleScopeLevel.java` (confirma que `Role` ya
+      soporta 3 niveles de alcance desde HU-004), `Assignment.java` (confirma que `applicationId` es
+      **obligatorio** — hoy no existe forma de representar una asignación global), `AccessRequest.java`
+      (confirma que está modelado específicamente para acceso a `ResourcePath`+`HttpVerb`, no sirve
+      para "puede administrar"), `PolicyDecisionPort`/`OpaPolicyDecisionAdapter`/DTOs de
+      `policy/dto/*` (confirma que están atados al contrato versionado `pdp-opa/v1`), `AuthorizeUseCaseImpl`
+      (patrón a espejar: resolver roles → delegar en el puerto de decisión → fail-closed),
+      `ActiveRoleNamesLookupValidator`/`Impl` (reutilizable tal cual: ya resuelve
+      (usuario, aplicación) → nombres de roles activos), `ApplicationMustExistForTenantValidator`
+      (patrón de validador publicado con `@NamedInterface("rule")` a espejar), `OpaProperties.java`
+      (confirma un único `@ConfigurationProperties(prefix = "pdp.opa")` con `baseUrl`/`decisionPath`/`timeout`)
+    - `pdp/docs/ai-harness/workspace/HU-004.md` (confirma que "quién administra el catálogo" ya se
+      difirió aquí, y que los roles globales existen en el modelo pero no se pueden crear por HTTP)
 - **Criterios de la línea base que toca:** 1, 2, 3, 4, 9, 11, 12, 21, 22
 
 ## 0. Hallazgos y decisiones tomadas antes de planificar
@@ -32,16 +32,16 @@ El borrador de `HU-009.md` dejaba 5 preguntas abiertas y pedía explícitamente 
 planificarse. En vez de inventar esas respuestas, se resolvieron interactivamente con Sebastián,
 más dos hallazgos de código que obligaron a ajustar el mecanismo elegido y a recortar el alcance:
 
-| # | Pregunta / hallazgo | Decisión |
-|---|---|---|
-| 1 | ¿Rol global, por aplicación, o ambos? | Ambos, en principio — pero ver hallazgo 6 |
-| 2 | ¿Uno o varios administradores por aplicación? ¿Quién es el primero? | Varios; quien registra la aplicación queda como su primer administrador — **queda fuera de esta historia** (ver §Alcance): es un cambio a `RegisterApplicationUseCaseImpl`, y esta historia no cablea casos de uso existentes |
-| 3 | ¿Delegación? | No — fuera de alcance. Un administrador asigna/revoca otros administradores como cualquier asignación de rol (HU-005), sin modelar de dónde vino el permiso |
-| 4 | ¿Cómo se expresa la regla? | Como decisión de OPA, nunca como `if (rol == ADMIN)` en Java — consistente con la filosofía ya fijada en HU-004 ("el catálogo es dato de entrada para la política, jamás una decisión en Java") |
-| 5 | ¿Quién crea roles globales? | Solo el ADMIN global — pero como el hallazgo 6 retira el ADMIN global de esta historia, **ese desbloqueo no ocurre todavía**: los roles globales siguen respondiendo 400 hasta una historia futura |
-| 6 | **Hallazgo de código** — `Assignment.applicationId` es obligatorio (`Objects.requireNonNull`): hoy **no existe forma de asignarle un rol global a nadie**, aunque `Role` sí modele el nivel `GLOBAL` desde HU-004 | Se retira el ADMIN global de esta historia. Tocar `Assignment` para admitir asignaciones sin aplicación es un cambio a un agregado ya enviado (HU-005/006/008) — se pospone a una historia futura que asuma ese costo explícitamente |
+| # | Pregunta / hallazgo                                                                                                                                                                                                                                                                                                    | Decisión                                                                                                                                                                                                                                  |
+|---|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1 | ¿Rol global, por aplicación, o ambos?                                                                                                                                                                                                                                                                                  | Ambos, en principio — pero ver hallazgo 6                                                                                                                                                                                                 |
+| 2 | ¿Uno o varios administradores por aplicación? ¿Quién es el primero?                                                                                                                                                                                                                                                    | Varios; quien registra la aplicación queda como su primer administrador — **queda fuera de esta historia** (ver §Alcance): es un cambio a `RegisterApplicationUseCaseImpl`, y esta historia no cablea casos de uso existentes             |
+| 3 | ¿Delegación?                                                                                                                                                                                                                                                                                                           | No — fuera de alcance. Un administrador asigna/revoca otros administradores como cualquier asignación de rol (HU-005), sin modelar de dónde vino el permiso                                                                               |
+| 4 | ¿Cómo se expresa la regla?                                                                                                                                                                                                                                                                                             | Como decisión de OPA, nunca como `if (rol == ADMIN)` en Java — consistente con la filosofía ya fijada en HU-004 ("el catálogo es dato de entrada para la política, jamás una decisión en Java")                                           |
+| 5 | ¿Quién crea roles globales?                                                                                                                                                                                                                                                                                            | Solo el ADMIN global — pero como el hallazgo 6 retira el ADMIN global de esta historia, **ese desbloqueo no ocurre todavía**: los roles globales siguen respondiendo 400 hasta una historia futura                                        |
+| 6 | **Hallazgo de código** — `Assignment.applicationId` es obligatorio (`Objects.requireNonNull`): hoy **no existe forma de asignarle un rol global a nadie**, aunque `Role` sí modele el nivel `GLOBAL` desde HU-004                                                                                                      | Se retira el ADMIN global de esta historia. Tocar `Assignment` para admitir asignaciones sin aplicación es un cambio a un agregado ya enviado (HU-005/006/008) — se pospone a una historia futura que asuma ese costo explícitamente      |
 | 7 | **Hallazgo de código** — `AccessRequest`/`PolicyDecisionPort` están modelados para "¿puede este sujeto acceder a esta `ResourcePath` con este `HttpVerb`?", con DTOs atados al contrato versionado `pdp-opa/v1`. Forzar una decisión de "¿puede administrar?" en esa forma exigiría inventar una ruta/verbo sintéticos | Puerto de decisión propio (`AdministrationDecisionPort`), mismo patrón de integración con OPA que `PolicyDecisionPort` mismo adaptador HTTP, pero con su propio payload y su propia ruta de decisión — sin tocar el contrato `pdp-opa/v1` |
-| 8 | **Tamaño** — "todo el catálogo" (gatear los ~12 casos de uso de escritura de `applications`, `roles`, `resources`, `assignments`, `profiles`) es demasiado grande para un solo `PLAN.md` revisable en el Gate 1 | Esta historia entrega **solo el modelo y el mecanismo reutilizable**. Cablearlo en cada slice existente queda para historias futuras, una por slice, reutilizando el validador publicado aquí — mismo ritmo que el resto del backlog |
+| 8 | **Tamaño** — "todo el catálogo" (gatear los ~12 casos de uso de escritura de `applications`, `roles`, `resources`, `assignments`, `profiles`) es demasiado grande para un solo `PLAN.md` revisable en el Gate 1                                                                                                        | Esta historia entrega **solo el modelo y el mecanismo reutilizable**. Cablearlo en cada slice existente queda para historias futuras, una por slice, reutilizando el validador publicado aquí — mismo ritmo que el resto del backlog      |
 
 ## 1. Resumen funcional
 
@@ -65,12 +65,12 @@ mientras tanto — ver ADR-012).
 
 ## 2. Criterios de aceptación
 
-| # | Criterio | Resultado esperado |
-|---|---|---|
-| 1 | Un sujeto con el rol reconocido como administrador para una aplicación es autorizado | `AuthorizeAdministrationUseCase.execute` resuelve `ALLOW` cuando `AdministrationDecisionPort` responde `ALLOW` |
-| 2 | Un sujeto sin ese rol es rechazado | El validador publicado lanza `NotAuthorizedToAdministerException` cuando la decisión es `DENY` |
-| 3 | Fail-closed ante un fallo del motor de políticas | Un error de `AdministrationDecisionPort` (red, timeout, mapeo) se traduce a `INDETERMINATE` — nunca a `ALLOW`, nunca a un error que escape sin tipar — y el validador lo rechaza igual que un `DENY` |
-| 4 | Cero regresión | `verificar.ps1` (suite completa) sigue en verde: ningún endpoint existente cambia de comportamiento, porque nada nuevo está cableado todavía |
+| # | Criterio                                                                             | Resultado esperado                                                                                                                                                                                   |
+|---|--------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1 | Un sujeto con el rol reconocido como administrador para una aplicación es autorizado | `AuthorizeAdministrationUseCase.execute` resuelve `ALLOW` cuando `AdministrationDecisionPort` responde `ALLOW`                                                                                       |
+| 2 | Un sujeto sin ese rol es rechazado                                                   | El validador publicado lanza `NotAuthorizedToAdministerException` cuando la decisión es `DENY`                                                                                                       |
+| 3 | Fail-closed ante un fallo del motor de políticas                                     | Un error de `AdministrationDecisionPort` (red, timeout, mapeo) se traduce a `INDETERMINATE` — nunca a `ALLOW`, nunca a un error que escape sin tipar — y el validador lo rechaza igual que un `DENY` |
+| 4 | Cero regresión                                                                       | `verificar.ps1` (suite completa) sigue en verde: ningún endpoint existente cambia de comportamiento, porque nada nuevo está cableado todavía                                                         |
 
 ## 3. Reglas de negocio
 
@@ -80,8 +80,8 @@ decisión ya tomada por el puerto a una excepción — mismo criterio que "con u
 otro consumidor, el propio caso de uso hace de validador", aplicado aquí a nivel de módulo: el
 validador no decide, solo traduce.
 
-| # | Regla | Dónde vive | Puerto que trae el dato | Excepción → HTTP |
-|---|---|---|---|---|
+| # | Regla                                                       | Dónde vive                                                                  | Puerto que trae el dato                                               | Excepción → HTTP                                                                                                                      |
+|---|-------------------------------------------------------------|-----------------------------------------------------------------------------|-----------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
 | — | Un sujeto sin la decisión ALLOW no administra la aplicación | `PrincipalMustBeApplicationAdministratorValidatorImpl` (traduce, no decide) | `AuthorizeAdministrationUseCase` → `AdministrationDecisionPort` (OPA) | `NotAuthorizedToAdministerException` → 400 (`BusinessRuleViolationException`; no hay 403 en este proyecto todavía — ver Ambigüedades) |
 
 ## 4. Modelo de dominio afectado
@@ -270,24 +270,24 @@ pdp/src/main/java/co/edu/uco/seguridad/
 
 ## 9. Casos de prueba esperados
 
-| Capa | Clase de prueba | Casos |
-|---|---|---|
-| `authorization` domain | `NotAuthorizedToAdministerExceptionTests` (nueva) | Extiende `BusinessRuleViolationException`; el mensaje viene de `AuthorizationMessages.notAuthorizedToAdminister` (nunca un literal) |
-| `authorization` application | `AuthorizeAdministrationUseCaseImplTests` (nueva) | Roles resueltos + decisión `ALLOW` del puerto → `AdministrationDecision.permits()` verdadero; decisión `DENY` → `permits()` falso; error del puerto (red/timeout) → `INDETERMINATE`/`CONTEXT_UNAVAILABLE`, nunca una excepción sin tipar propagada |
-| `authorization` application | `PrincipalMustBeApplicationAdministratorValidatorImplTests` (nueva) | `permits()` verdadero → completa sin error; `permits()` falso (por `DENY` o por `INDETERMINATE`, fail-closed) → `NotAuthorizedToAdministerException` |
-| `authorization` infrastructure | `OpaAdministrationDecisionAdapterTests` (nueva) | Mismo patrón que `OpaPolicyDecisionAdapterTests`: construye el payload esperado (`subject`/`tenant`/`application`, sin `resource`/`action`), parsea `result.effect`/`result.reasonCode` a `AdministrationDecision`, propaga el error si la llamada HTTP falla (sin capturarlo — lo captura `AuthorizeAdministrationUseCaseImpl`) |
-| `authorization` infrastructure | `OpaPolicyDecisionAdapterTests` (existente, ajustada por el tester) | El único `new OpaProperties(...)` de la suite gana el nuevo argumento `administrationDecisionPath` |
+| Capa                           | Clase de prueba                                                     | Casos                                                                                                                                                                                                                                                                                                                            |
+|--------------------------------|---------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `authorization` domain         | `NotAuthorizedToAdministerExceptionTests` (nueva)                   | Extiende `BusinessRuleViolationException`; el mensaje viene de `AuthorizationMessages.notAuthorizedToAdminister` (nunca un literal)                                                                                                                                                                                              |
+| `authorization` application    | `AuthorizeAdministrationUseCaseImplTests` (nueva)                   | Roles resueltos + decisión `ALLOW` del puerto → `AdministrationDecision.permits()` verdadero; decisión `DENY` → `permits()` falso; error del puerto (red/timeout) → `INDETERMINATE`/`CONTEXT_UNAVAILABLE`, nunca una excepción sin tipar propagada                                                                               |
+| `authorization` application    | `PrincipalMustBeApplicationAdministratorValidatorImplTests` (nueva) | `permits()` verdadero → completa sin error; `permits()` falso (por `DENY` o por `INDETERMINATE`, fail-closed) → `NotAuthorizedToAdministerException`                                                                                                                                                                             |
+| `authorization` infrastructure | `OpaAdministrationDecisionAdapterTests` (nueva)                     | Mismo patrón que `OpaPolicyDecisionAdapterTests`: construye el payload esperado (`subject`/`tenant`/`application`, sin `resource`/`action`), parsea `result.effect`/`result.reasonCode` a `AdministrationDecision`, propaga el error si la llamada HTTP falla (sin capturarlo — lo captura `AuthorizeAdministrationUseCaseImpl`) |
+| `authorization` infrastructure | `OpaPolicyDecisionAdapterTests` (existente, ajustada por el tester) | El único `new OpaProperties(...)` de la suite gana el nuevo argumento `administrationDecisionPath`                                                                                                                                                                                                                               |
 
 ## 10. Trazabilidad
 
-| Fase | Estado | Fecha |
-|---|---|---|
-| Plan | ✅ Generado | 2026-09-13 |
-| Contrato aprobado (gate 1) | ⏳ Pendiente | |
-| Pruebas en rojo | ⏳ Pendiente | |
-| Implementación en verde | ⏳ Pendiente | |
-| Validación | ✅ Aprobada | 2026-09-13 |
-| Entrega (gate 2) | ⏳ Pendiente | |
+| Fase                       | Estado      | Fecha      |
+|----------------------------|-------------|------------|
+| Plan                       | ✅ Generado  | 2026-09-13 |
+| Contrato aprobado (gate 1) | ⏳ Pendiente |            |
+| Pruebas en rojo            | ⏳ Pendiente |            |
+| Implementación en verde    | ⏳ Pendiente |            |
+| Validación                 | ✅ Aprobada  | 2026-09-13 |
+| Entrega (gate 2)           | ⏳ Pendiente |            |
 
 ## 11. Ambigüedades pendientes
 

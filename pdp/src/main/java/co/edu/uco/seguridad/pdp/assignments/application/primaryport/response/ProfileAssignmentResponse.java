@@ -15,8 +15,9 @@ import java.util.Optional;
 import java.util.Set;
 
 public record ProfileAssignmentResponse(ProfileAssignmentId id, UserId userId, TenantId tenantId,
-        ApplicationId applicationId, ProfileId profileId, Set<AssignmentId> generatedAssignmentIds,
-        Instant validFrom, Optional<Instant> validUntil) {
+                                        ApplicationId applicationId, ProfileId profileId,
+                                        Set<AssignmentId> generatedAssignmentIds,
+                                        Instant validFrom, Optional<Instant> validUntil) {
 
     public ProfileAssignmentResponse {
         Objects.requireNonNull(id, RequiredArgumentMessages.PROFILE_ASSIGNMENT_ID);

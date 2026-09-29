@@ -11,7 +11,9 @@ import co.edu.uco.seguridad.shared.contract.ReactiveOperation;
  */
 public interface PolicyDecisionPort extends ReactiveOperation<AccessRequest, AccessDecision> {
 
-    /** Frontera nueva para hechos enriquecidos; el método heredado permanece durante la migración interna. */
+    /**
+     * Frontera nueva para hechos enriquecidos; el método heredado permanece durante la migración interna.
+     */
     default reactor.core.publisher.Mono<AccessDecision> decide(PolicyEvaluationInput input) {
         return execute(new AccessRequest(new co.edu.uco.seguridad.pdp.commons.model.TenantId(input.tenantId()),
                 input.subjectId(), co.edu.uco.seguridad.pdp.commons.model.ApplicationId.of(input.applicationId()),

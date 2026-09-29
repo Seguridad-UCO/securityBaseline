@@ -5,7 +5,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.net.URI;
 import java.util.List;
 
-/** Configuración mínima que identifica una aplicación ante el PEP desde el starter embebido. */
+/**
+ * Configuración mínima que identifica una aplicación ante el PEP desde el starter embebido.
+ */
 @ConfigurationProperties("security.pep.enforcement")
 public record PepEnforcementProperties(boolean enabled, URI pepUrl, String applicationName, String environment,
                                        String applicationCredential, List<String> publicPaths,

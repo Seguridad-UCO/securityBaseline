@@ -11,14 +11,16 @@ import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 
-/** Implementación de {@link ProfileAssignmentApplicationLookupValidator} (HU-019). */
+/**
+ * Implementación de {@link ProfileAssignmentApplicationLookupValidator} (HU-019).
+ */
 public final class ProfileAssignmentApplicationLookupValidatorImpl implements ProfileAssignmentApplicationLookupValidator {
 
     private final ProfileAssignmentRepository repository;
     private final ProfileAssignmentMustExistForTenantRule mustExist;
 
     public ProfileAssignmentApplicationLookupValidatorImpl(ProfileAssignmentRepository repository,
-            ProfileAssignmentMustExistForTenantRule mustExist) {
+                                                           ProfileAssignmentMustExistForTenantRule mustExist) {
         this.repository = Objects.requireNonNull(repository, RequiredArgumentMessages.PROFILE_ASSIGNMENT_REPOSITORY);
         this.mustExist = Objects.requireNonNull(mustExist, RequiredArgumentMessages.PROFILE_ASSIGNMENT_EXISTS_RULE);
     }

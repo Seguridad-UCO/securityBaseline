@@ -6,10 +6,10 @@ import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.resources.application.primaryport.request.RegisterProtectedResourceRequest;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.RegisterProtectedResourceRulesValidatorImpl;
 import co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository.ProtectedResourceRepository;
-import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.ProtectedResource;
-import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
 import co.edu.uco.seguridad.pdp.resources.domain.exception.DuplicateProtectedResourceException;
+import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
+import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
 import co.edu.uco.seguridad.pdp.resources.domain.rule.impl.ProtectedResourceMustBeUniqueRuleImpl;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
@@ -52,7 +52,7 @@ class RegisterProtectedResourceRulesValidatorTests {
         return new ProtectedResourceRepository() {
             @Override
             public Mono<Boolean> existsByApplicationPathAndMethod(ApplicationId applicationId, ResourcePath path,
-                    HttpVerb method) {
+                                                                  HttpVerb method) {
                 return Mono.just(exists);
             }
 

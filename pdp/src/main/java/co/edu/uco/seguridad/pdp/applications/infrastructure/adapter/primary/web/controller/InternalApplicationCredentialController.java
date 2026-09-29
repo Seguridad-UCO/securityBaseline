@@ -5,11 +5,7 @@ import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.ValidateApplicationCredentialInteractor;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.util.Objects;
@@ -35,7 +31,7 @@ final class InternalApplicationCredentialController {
 
     @PostMapping("/names/{applicationName}/credential-validations")
     Mono<ResponseEntity<ApplicationCredentialValidationWebResponse>> validate(@PathVariable String applicationName,
-            @RequestBody ValidateApplicationCredentialRawRequest body) {
+                                                                              @RequestBody ValidateApplicationCredentialRawRequest body) {
         return interactor.execute(new ValidateApplicationCredentialRawRequest(applicationName, body.secret()))
                 .map(ResponseEntity::ok);
     }

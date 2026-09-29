@@ -1,9 +1,9 @@
 package co.edu.uco.seguridad.pdp.applications.domain.exception;
 
 import co.edu.uco.seguridad.pdp.applications.domain.message.ApplicationsMessages;
+import co.edu.uco.seguridad.pdp.commons.exception.ConflictBusinessRuleException;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
-import co.edu.uco.seguridad.pdp.commons.exception.ConflictBusinessRuleException;
 
 /**
  * Generada por {@code ApplicationNameMustBeUniqueForTenantRule} y por nada más.

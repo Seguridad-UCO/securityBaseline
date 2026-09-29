@@ -1,11 +1,11 @@
 package co.edu.uco.seguridad.pdp.resources.domain.rule;
 
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
-import co.edu.uco.seguridad.pdp.resources.domain.rule.model.ProtectedResourceAvailability;
-import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
 import co.edu.uco.seguridad.pdp.resources.domain.exception.DuplicateProtectedResourceException;
+import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
+import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
 import co.edu.uco.seguridad.pdp.resources.domain.rule.impl.ProtectedResourceMustBeUniqueRuleImpl;
+import co.edu.uco.seguridad.pdp.resources.domain.rule.model.ProtectedResourceAvailability;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;

@@ -20,7 +20,9 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Espejo de ListRolesUseCaseImplTests: la página que produce el puerto (tenant + globales) viaja sin cambios. */
+/**
+ * Espejo de ListRolesUseCaseImplTests: la página que produce el puerto (tenant + globales) viaja sin cambios.
+ */
 class ListProfilesUseCaseImplTests {
 
     private static final TenantId UCO = new TenantId("universidad-uco");

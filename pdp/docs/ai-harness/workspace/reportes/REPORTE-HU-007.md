@@ -29,13 +29,13 @@ no introducida por este cambio**: pertenece a un documento sobre el registro del
 de HU-007 lo toca ni lo cita. Se registra como observación, no como bloqueante (regla invariante 5
 del validador).
 
-| Comprobacion | Resultado |
-|---|---|
-| Compilacion | ✅ |
-| Pruebas | ✅ 496 pruebas, 0 fallos |
-| Cobertura (≥ 50 % por paquete) | ✅ |
-| `LayeredArchitectureTests` | ✅ |
-| `ModulithStructureTests` | ✅ |
+| Comprobacion                   | Resultado               |
+|--------------------------------|-------------------------|
+| Compilacion                    | ✅                       |
+| Pruebas                        | ✅ 496 pruebas, 0 fallos |
+| Cobertura (≥ 50 % por paquete) | ✅                       |
+| `LayeredArchitectureTests`     | ✅                       |
+| `ModulithStructureTests`       | ✅                       |
 
 ## Estado final
 
@@ -57,28 +57,28 @@ Ninguno.
 
 ## Los cuatro juicios
 
-| # | Juicio | Resultado | Evidencia |
-|---|---|---|---|
-| 1 | ¿Cumple los criterios de aceptacion del plan (no solo compila)? | ✅ | Ver tabla de criterios de aceptación abajo |
-| 2 | ¿Convencion de idioma? (codigo en ingles, mensajes en espanol) | ✅ | Identificadores nuevos (`AccessEvent`, `AccessAuditRepository`, `AccessEventEntity`, `AccessEventPersistenceMapper`, `SurrealAccessAuditRepository`, `AccessEventSchema`, `SurrealAccessEventSchemaInitializer`) en inglés; Javadoc en español (`AccessEvent.java:16-24`, `SurrealAccessEventSchemaInitializer.java:11-14`); constantes nuevas de `RequiredArgumentMessages.java:179-180` (`EVENT_ID`, `ACCESS_AUDIT_REPOSITORY`) en español |
-| 3 | ¿Introdujo deriva doc↔codigo? | ✅ | `drift.ps1` solo reporta el hallazgo preexistente de `PepRegistrationProperties`, ajeno a esta historia (ver observación arriba). Ningún documento de `pdp/docs/` referencia por ruta algo que HU-007 haya renombrado o movido |
-| 4 | ¿La logica quedo en la capa correcta? | ✅ | Sin `if` de negocio nuevo en el use case (el plan declara "ninguna regla nueva" en §3, y `recordAudit(...)` solo arma y guarda, no decide); `AccessEventPersistenceMapper` delega el formato a los value objects (`new TenantId(...)`, `ApplicationId.of(...)`, `new ResourcePath(...)`, `HttpVerb.valueOf(...)`); `SurrealAccessAuditRepository` no toma decisiones de negocio, solo traduce a SurrealQL parametrizado; cero anotaciones de Spring en `domain`/`application` (`AccessEvent.java`, `AccessAuditRepository.java`, `AuthorizeUseCaseImpl.java` sin imports de `org.springframework`); `authorization/package-info.java` sin cambios en `allowedDependencies` |
+| # | Juicio                                                          | Resultado | Evidencia                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+|---|-----------------------------------------------------------------|-----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1 | ¿Cumple los criterios de aceptacion del plan (no solo compila)? | ✅         | Ver tabla de criterios de aceptación abajo                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 2 | ¿Convencion de idioma? (codigo en ingles, mensajes en espanol)  | ✅         | Identificadores nuevos (`AccessEvent`, `AccessAuditRepository`, `AccessEventEntity`, `AccessEventPersistenceMapper`, `SurrealAccessAuditRepository`, `AccessEventSchema`, `SurrealAccessEventSchemaInitializer`) en inglés; Javadoc en español (`AccessEvent.java:16-24`, `SurrealAccessEventSchemaInitializer.java:11-14`); constantes nuevas de `RequiredArgumentMessages.java:179-180` (`EVENT_ID`, `ACCESS_AUDIT_REPOSITORY`) en español                                                                                                                                                                                                                               |
+| 3 | ¿Introdujo deriva doc↔codigo?                                   | ✅         | `drift.ps1` solo reporta el hallazgo preexistente de `PepRegistrationProperties`, ajeno a esta historia (ver observación arriba). Ningún documento de `pdp/docs/` referencia por ruta algo que HU-007 haya renombrado o movido                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| 4 | ¿La logica quedo en la capa correcta?                           | ✅         | Sin `if` de negocio nuevo en el use case (el plan declara "ninguna regla nueva" en §3, y `recordAudit(...)` solo arma y guarda, no decide); `AccessEventPersistenceMapper` delega el formato a los value objects (`new TenantId(...)`, `ApplicationId.of(...)`, `new ResourcePath(...)`, `HttpVerb.valueOf(...)`); `SurrealAccessAuditRepository` no toma decisiones de negocio, solo traduce a SurrealQL parametrizado; cero anotaciones de Spring en `domain`/`application` (`AccessEvent.java`, `AccessAuditRepository.java`, `AuthorizeUseCaseImpl.java` sin imports de `org.springframework`); `authorization/package-info.java` sin cambios en `allowedDependencies` |
 
 ## Criterios de la linea base
 
 > Declarados en el plan: 1, 2, 4, 7, 9, 11, 12, 21, 22.
 
-| # | Criterio | Resultado | Punto de control comprobado |
-|---|---|---|---|
-| 1 🤖 | Clean Architecture | ✅ | `LayeredArchitectureTests`/`ModulithStructureTests` verdes; cero Spring en `domain`/`application` (inspección de imports) |
-| 2 | Contratos de servicios | ✅ | `AccessAuditRepository` es un puerto de salida explícito en `application/secondaryport/`, mismo patrón que `TenantRepository`/`AssignmentRepository` (puertos multi-método, no de un solo `execute`) |
-| 4 | Capacidades transversales | ✅ | Sin `Instant.now()`/`UUID.randomUUID()` en línea — `recordAudit(...)` usa `identifiers.next()`/`time.now()` inyectados (`AuthorizeUseCaseImpl.java:87-97`) |
-| 7 | Adaptadores de persistencia | ✅ | `SurrealAccessAuditRepository` implementa el puerto, tabla desde `AccessEventSchema.TABLE`, valores como parámetros (`Map.ofEntries`), sin decisión de negocio |
-| 9 | Excepciones | N/A | Esta historia no introduce excepciones nuevas (ninguna regla que rechace); no viola la jerarquía existente |
-| 11 | Interacción entre capas | ✅ | `AuthorizeUseCaseImpl` llama directo al puerto `AccessAuditRepository`, igual que ya hace con `PolicyDecisionPort` — sin controller nuevo, sin HTTP en esta historia (hallazgo 3 del plan) |
-| 12 | SOLID | ✅ | Dependencias inyectadas por constructor contra interfaces (`AccessAuditRepository audit` en `AuthorizeUseCaseImpl`); `AuthorizationConfiguration` cablea con `@Bean` explícito |
-| 21 | Modelo refinado | ✅ | `AccessEvent` es un `record` inmutable, sin Lombok, con validación en constructor compacto (`Objects.requireNonNull` por los 12 componentes); sin fábrica nombrada por diseño documentado (SPEC, evita violar `domain`→`application`) |
-| 22 | Arquitectura reactiva | ✅ | `Mono`/`Flux` en toda la cadena (`AccessAuditRepository`, `SurrealAccessAuditRepository`); sin `block()` fuera del `ApplicationRunner` de arranque (`SurrealAccessEventSchemaInitializer`, patrón ya establecido) |
+| #    | Criterio                    | Resultado | Punto de control comprobado                                                                                                                                                                                                           |
+|------|-----------------------------|-----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1 🤖 | Clean Architecture          | ✅         | `LayeredArchitectureTests`/`ModulithStructureTests` verdes; cero Spring en `domain`/`application` (inspección de imports)                                                                                                             |
+| 2    | Contratos de servicios      | ✅         | `AccessAuditRepository` es un puerto de salida explícito en `application/secondaryport/`, mismo patrón que `TenantRepository`/`AssignmentRepository` (puertos multi-método, no de un solo `execute`)                                  |
+| 4    | Capacidades transversales   | ✅         | Sin `Instant.now()`/`UUID.randomUUID()` en línea — `recordAudit(...)` usa `identifiers.next()`/`time.now()` inyectados (`AuthorizeUseCaseImpl.java:87-97`)                                                                            |
+| 7    | Adaptadores de persistencia | ✅         | `SurrealAccessAuditRepository` implementa el puerto, tabla desde `AccessEventSchema.TABLE`, valores como parámetros (`Map.ofEntries`), sin decisión de negocio                                                                        |
+| 9    | Excepciones                 | N/A       | Esta historia no introduce excepciones nuevas (ninguna regla que rechace); no viola la jerarquía existente                                                                                                                            |
+| 11   | Interacción entre capas     | ✅         | `AuthorizeUseCaseImpl` llama directo al puerto `AccessAuditRepository`, igual que ya hace con `PolicyDecisionPort` — sin controller nuevo, sin HTTP en esta historia (hallazgo 3 del plan)                                            |
+| 12   | SOLID                       | ✅         | Dependencias inyectadas por constructor contra interfaces (`AccessAuditRepository audit` en `AuthorizeUseCaseImpl`); `AuthorizationConfiguration` cablea con `@Bean` explícito                                                        |
+| 21   | Modelo refinado             | ✅         | `AccessEvent` es un `record` inmutable, sin Lombok, con validación en constructor compacto (`Objects.requireNonNull` por los 12 componentes); sin fábrica nombrada por diseño documentado (SPEC, evita violar `domain`→`application`) |
+| 22   | Arquitectura reactiva       | ✅         | `Mono`/`Flux` en toda la cadena (`AccessAuditRepository`, `SurrealAccessAuditRepository`); sin `block()` fuera del `ApplicationRunner` de arranque (`SurrealAccessEventSchemaInitializer`, patrón ya establecido)                     |
 
 ## Desviaciones respecto al plan
 

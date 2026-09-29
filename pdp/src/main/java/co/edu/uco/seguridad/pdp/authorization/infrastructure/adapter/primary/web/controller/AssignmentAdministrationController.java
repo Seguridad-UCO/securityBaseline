@@ -11,12 +11,7 @@ import co.edu.uco.seguridad.shared.web.RequestContext;
 import co.edu.uco.seguridad.shared.web.message.WebContractMessages;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -36,14 +31,14 @@ final class AssignmentAdministrationController {
     private final AdministerAssignmentRevocationInteractor revokeInteractor;
 
     AssignmentAdministrationController(AdministerAssignmentCreationInteractor createInteractor,
-            AdministerAssignmentRevocationInteractor revokeInteractor) {
+                                       AdministerAssignmentRevocationInteractor revokeInteractor) {
         this.createInteractor = Objects.requireNonNull(createInteractor);
         this.revokeInteractor = Objects.requireNonNull(revokeInteractor);
     }
 
     @PostMapping
     Mono<ResponseEntity<ApiResponse<AssignmentAdministrationWebResponse>>> assign(@PathVariable String roleId,
-            @RequestBody AssignRoleRawRequest body, ServerWebExchange exchange) {
+                                                                                  @RequestBody AssignRoleRawRequest body, ServerWebExchange exchange) {
         RequestContext context = CorrelationWebFilter.context(exchange);
         return createInteractor.execute(new AssignRoleRawRequest(roleId, body.userId(), body.applicationId()))
                 .map(response -> ResponseEntity.status(HttpStatus.CREATED)
@@ -52,7 +47,7 @@ final class AssignmentAdministrationController {
 
     @DeleteMapping("/{assignmentId}")
     Mono<ResponseEntity<ApiResponse<Void>>> revoke(@PathVariable String roleId, @PathVariable String assignmentId,
-            ServerWebExchange exchange) {
+                                                   ServerWebExchange exchange) {
         RequestContext context = CorrelationWebFilter.context(exchange);
         return revokeInteractor.execute(new RevokeAssignmentRawRequest(assignmentId))
                 .then(Mono.just(ResponseEntity.ok(ApiResponse.<Void>success(

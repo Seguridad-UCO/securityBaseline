@@ -10,7 +10,9 @@ import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 
-/** Consulta paginada del catálogo visible para un inquilino. Delega y proyecta; el orden lo fija el adaptador. */
+/**
+ * Consulta paginada del catálogo visible para un inquilino. Delega y proyecta; el orden lo fija el adaptador.
+ */
 public final class ListRolesUseCaseImpl implements ListRolesUseCase {
 
     private final RoleRepository repository;

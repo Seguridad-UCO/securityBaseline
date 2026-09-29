@@ -32,8 +32,8 @@ public final class AdministerAssignmentCreationUseCaseImpl implements Administer
     private final TimeProvider time;
 
     public AdministerAssignmentCreationUseCaseImpl(PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator,
-            AssignRoleUseCase assignRole, AdministrationAuditRepository audit, IdentifierGenerator identifiers,
-            TimeProvider time) {
+                                                   AssignRoleUseCase assignRole, AdministrationAuditRepository audit, IdentifierGenerator identifiers,
+                                                   TimeProvider time) {
         this.mustBeAdministrator = Objects.requireNonNull(mustBeAdministrator,
                 RequiredArgumentMessages.PRINCIPAL_MUST_BE_APPLICATION_ADMINISTRATOR_VALIDATOR);
         this.assignRole = Objects.requireNonNull(assignRole, RequiredArgumentMessages.ASSIGN_ROLE_USE_CASE);

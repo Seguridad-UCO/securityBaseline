@@ -6,7 +6,9 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
 
-/** Entrada tipada de RevokeProfileAssignmentUseCase. El tenant ya llega resuelto del principal. */
+/**
+ * Entrada tipada de RevokeProfileAssignmentUseCase. El tenant ya llega resuelto del principal.
+ */
 public record RevokeProfileAssignmentRequest(ProfileAssignmentId profileAssignmentId, TenantId tenantId) {
 
     public RevokeProfileAssignmentRequest {

@@ -1,13 +1,13 @@
 package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl;
 
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.EvaluateInternalAccessUseCase;
-import co.edu.uco.seguridad.pdp.identity.application.primaryport.request.ResolveExternalIdentityRequest;
-import co.edu.uco.seguridad.pdp.identity.application.usecase.ResolveExternalIdentityUseCase;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.AccessDecisionRawRequest;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.AccessDecisionInternalWebResponse;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.InternalAccessDecisionInteractor;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.mapper.AccessDecisionInternalResponseMapper;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.mapper.AccessDecisionRawRequestMapper;
+import co.edu.uco.seguridad.pdp.identity.application.primaryport.request.ResolveExternalIdentityRequest;
+import co.edu.uco.seguridad.pdp.identity.application.usecase.ResolveExternalIdentityUseCase;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.web.exception.ConflictingRequestParametersException;
 import co.edu.uco.seguridad.shared.web.message.WebContractMessages;
@@ -35,7 +35,7 @@ public final class InternalAccessDecisionInteractorImpl implements InternalAcces
     private final ResolveExternalIdentityUseCase identities;
 
     public InternalAccessDecisionInteractorImpl(EvaluateInternalAccessUseCase useCase,
-            ResolveExternalIdentityUseCase identities) {
+                                                ResolveExternalIdentityUseCase identities) {
         this.useCase = Objects.requireNonNull(useCase, RequiredArgumentMessages.EVALUATE_INTERNAL_ACCESS_USE_CASE);
         this.identities = Objects.requireNonNull(identities);
     }
@@ -55,7 +55,7 @@ public final class InternalAccessDecisionInteractorImpl implements InternalAcces
             }
             return currentEvidence()
                     .flatMap(evidence -> identities.execute(new ResolveExternalIdentityRequest(
-                            evidence.issuer(), evidence.subject()))
+                                    evidence.issuer(), evidence.subject()))
                             .map(userId -> AccessDecisionRawRequestMapper.toRequest(input, evidence.subject(), userId)))
                     .flatMap(useCase::execute)
                     .map(AccessDecisionInternalResponseMapper::toResponse);

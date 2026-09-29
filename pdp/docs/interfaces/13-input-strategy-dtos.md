@@ -2,7 +2,6 @@
 
 [← Parámetros](06-parameter-handling.md) · [Siguiente: DTOs seguros →](14-secure-dtos.md)
 
-
 ## Decisión arquitectónica
 
 Toda entrada empieza como un **Raw Request** (`record`, todos los campos `String`, sin anotaciones de
@@ -91,7 +90,8 @@ exactamente la misma garantía que daban los setters del Web Request que se elim
 mutable que solo iba a vivir para volver a copiarse en un record. `tenantId` no pasa por
 `RequestFieldParser` porque no es texto sin analizar: para cuando el interactor lo lee, el
 `ReactiveJwtDecoder` ya verificó la firma del token y `PdpPrincipal.from` ya construyó el
-`TenantId` a partir del claim (ver [ADR-018](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-018-jwt-reactive-security-implementation.md)).
+`TenantId` a partir del claim (
+ver [ADR-018](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-018-jwt-reactive-security-implementation.md)).
 
 ### Búsqueda — el Web Request sigue siendo mutable a propósito
 
@@ -114,7 +114,8 @@ cualificados cuando hace falta.
 
 ## Ubicación verificable
 
-- Crudo: [`RegisterApplicationWithFirstAdministratorRawRequest.java`](../../src/main/java/co/edu/uco/seguridad/pdp/assignments/infrastructure/adapter/primary/web/dto/request/raw/RegisterApplicationWithFirstAdministratorRawRequest.java)
+- Crudo: [
+  `RegisterApplicationWithFirstAdministratorRawRequest.java`](../../src/main/java/co/edu/uco/seguridad/pdp/assignments/infrastructure/adapter/primary/web/dto/request/raw/RegisterApplicationWithFirstAdministratorRawRequest.java)
   (HU-015: el registro se trasladó de `applications` a `assignments`, que orquesta también el alta
   del primer administrador — ver `pdp/docs/ai-harness/workspace/planes/PLAN-HU-015.md` §0),
   `SearchProtectedApplicationsRawRequest.java`
@@ -123,12 +124,15 @@ cualificados cuando hace falta.
   — utilidad compartida del adaptador web; el interactor invoca los mappers que la usan
 - Tenant: [`PdpPrincipal.java`](../../src/main/java/co/edu/uco/seguridad/shared/security/PdpPrincipal.java),
   [`SecurityContext.java`](../../src/main/java/co/edu/uco/seguridad/shared/security/SecurityContext.java)
-- App Request: [`application/primaryport/request`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/application/primaryport/request)
-- Mappers: [`RegisterApplicationWithFirstAdministratorRequestMapper.java`](../../src/main/java/co/edu/uco/seguridad/pdp/assignments/infrastructure/adapter/primary/web/mapper/RegisterApplicationWithFirstAdministratorRequestMapper.java),
+- App Request: [
+  `application/primaryport/request`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/application/primaryport/request)
+- Mappers: [
+  `RegisterApplicationWithFirstAdministratorRequestMapper.java`](../../src/main/java/co/edu/uco/seguridad/pdp/assignments/infrastructure/adapter/primary/web/mapper/RegisterApplicationWithFirstAdministratorRequestMapper.java),
   `ListApplicationsRequestMapper.java`
 - Interactores: `RegisterApplicationWithFirstAdministratorInteractorImpl.java`,
   `SearchProtectedApplicationsInteractorImpl.java`
-- Pruebas: [`RegisterApplicationWithFirstAdministratorRequestMapperTests`](../../src/test/java/co/edu/uco/seguridad/pdp/assignments/infrastructure/adapter/primary/web/mapper/RegisterApplicationWithFirstAdministratorRequestMapperTests.java),
+- Pruebas: [
+  `RegisterApplicationWithFirstAdministratorRequestMapperTests`](../../src/test/java/co/edu/uco/seguridad/pdp/assignments/infrastructure/adapter/primary/web/mapper/RegisterApplicationWithFirstAdministratorRequestMapperTests.java),
   `ListApplicationsRequestMapperTests`
 
 ## Evidencia y límite

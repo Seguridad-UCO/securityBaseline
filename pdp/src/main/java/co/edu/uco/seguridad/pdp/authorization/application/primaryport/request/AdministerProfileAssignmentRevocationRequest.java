@@ -10,7 +10,8 @@ import java.util.Objects;
  * resuelta vía {@code ProfileAssignmentApplicationLookupValidator}, mismo criterio que
  * {@code AdministerAssignmentRevocationRequest} (HU-018).
  */
-public record AdministerProfileAssignmentRevocationRequest(AdministrationRequest administration, RevokeProfileAssignmentRequest revocation) {
+public record AdministerProfileAssignmentRevocationRequest(AdministrationRequest administration,
+                                                           RevokeProfileAssignmentRequest revocation) {
 
     public AdministerProfileAssignmentRevocationRequest {
         Objects.requireNonNull(administration, RequiredArgumentMessages.ADMINISTRATION_REQUEST);

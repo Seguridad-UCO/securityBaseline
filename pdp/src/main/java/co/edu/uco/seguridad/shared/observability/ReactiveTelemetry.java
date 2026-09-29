@@ -1,26 +1,30 @@
 package co.edu.uco.seguridad.shared.observability;
 
-import io.micrometer.observation.Observation;
 import io.micrometer.common.KeyValues;
+import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
 import io.micrometer.observation.contextpropagation.ObservationThreadLocalAccessor;
-import java.util.function.BiConsumer;
-import java.util.function.Supplier;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.SignalType;
 
-/** Una observación por suscripción, cerrada también ante error o cancelación. */
+import java.util.function.BiConsumer;
+import java.util.function.Supplier;
+
+/**
+ * Una observación por suscripción, cerrada también ante error o cancelación.
+ */
 public final class ReactiveTelemetry {
-    private ReactiveTelemetry() { }
+    private ReactiveTelemetry() {
+    }
 
     public static <T> Mono<T> observe(String operation, ObservationRegistry registry,
-            Supplier<Mono<T>> work, BiConsumer<Observation, T> resultTags) {
+                                      Supplier<Mono<T>> work, BiConsumer<Observation, T> resultTags) {
         return observe(operation, registry, KeyValues.empty(), work, resultTags);
     }
 
     public static <T> Mono<T> observe(String operation, ObservationRegistry registry, KeyValues initialTags,
-            Supplier<Mono<T>> work, BiConsumer<Observation, T> resultTags) {
+                                      Supplier<Mono<T>> work, BiConsumer<Observation, T> resultTags) {
         return Mono.deferContextual(context -> {
             Observation parent = context.getOrDefault(ObservationThreadLocalAccessor.KEY, null);
             Observation observation = Observation.createNotStarted(operation, registry)

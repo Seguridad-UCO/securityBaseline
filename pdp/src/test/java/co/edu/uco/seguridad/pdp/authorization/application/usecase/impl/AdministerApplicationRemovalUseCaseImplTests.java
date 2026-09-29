@@ -42,7 +42,8 @@ class AdministerApplicationRemovalUseCaseImplTests {
         List<ApplicationId> removed = new ArrayList<>();
         List<AdministrationEvent> audited = new ArrayList<>();
         AdministerApplicationRemovalUseCaseImpl useCase = new AdministerApplicationRemovalUseCaseImpl(
-                allows(), removeApplicationCapturing(removed), TestAdministrationAuditRepositories.capturing(audited),
+                allows(), noResourceDependencies(), noRoleDependencies(), noProfileDependencies(), noAssignmentDependencies(),
+                removeApplicationCapturing(removed), TestAdministrationAuditRepositories.capturing(audited),
                 () -> FIXED_UUID, () -> FIXED_INSTANT);
 
         StepVerifier.create(useCase.execute(REQUEST)).verifyComplete();
@@ -55,9 +56,11 @@ class AdministerApplicationRemovalUseCaseImplTests {
 
     @Test
     void never_removes_the_application_when_the_principal_does_not_administer_it_and_audits_denied() {
-        RemoveApplicationUseCase removeApplication = id -> { throw new AssertionError("must not reach removal"); };
+        RemoveApplicationUseCase removeApplication = id -> {
+            throw new AssertionError("must not reach removal");
+        };
         List<AdministrationEvent> audited = new ArrayList<>();
-        AdministerApplicationRemovalUseCaseImpl useCase = new AdministerApplicationRemovalUseCaseImpl(denies(), removeApplication,
+        AdministerApplicationRemovalUseCaseImpl useCase = new AdministerApplicationRemovalUseCaseImpl(denies(), noResourceDependencies(), noRoleDependencies(), noProfileDependencies(), noAssignmentDependencies(), removeApplication,
                 TestAdministrationAuditRepositories.capturing(audited), () -> FIXED_UUID, () -> FIXED_INSTANT);
 
         StepVerifier.create(useCase.execute(REQUEST))
@@ -72,7 +75,8 @@ class AdministerApplicationRemovalUseCaseImplTests {
     void does_not_block_the_result_when_the_audit_repository_fails() {
         List<ApplicationId> removed = new ArrayList<>();
         AdministerApplicationRemovalUseCaseImpl useCase = new AdministerApplicationRemovalUseCaseImpl(
-                allows(), removeApplicationCapturing(removed), TestAdministrationAuditRepositories.failing(),
+                allows(), noResourceDependencies(), noRoleDependencies(), noProfileDependencies(), noAssignmentDependencies(),
+                removeApplicationCapturing(removed), TestAdministrationAuditRepositories.failing(),
                 () -> FIXED_UUID, () -> FIXED_INSTANT);
 
         StepVerifier.create(useCase.execute(REQUEST)).verifyComplete();
@@ -93,5 +97,21 @@ class AdministerApplicationRemovalUseCaseImplTests {
             received.add(id);
             return Mono.empty();
         };
+    }
+
+    private static co.edu.uco.seguridad.pdp.resources.application.rule.validator.ApplicationDeletionDependencyValidator noResourceDependencies() {
+        return id -> Mono.empty();
+    }
+
+    private static co.edu.uco.seguridad.pdp.roles.application.rule.validator.ApplicationDeletionDependencyValidator noRoleDependencies() {
+        return id -> Mono.empty();
+    }
+
+    private static co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ApplicationDeletionDependencyValidator noProfileDependencies() {
+        return id -> Mono.empty();
+    }
+
+    private static co.edu.uco.seguridad.pdp.assignments.application.rule.validator.ApplicationDeletionDependencyValidator noAssignmentDependencies() {
+        return id -> Mono.empty();
     }
 }

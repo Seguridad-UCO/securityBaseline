@@ -9,13 +9,7 @@ import co.edu.uco.seguridad.pdp.assignments.domain.Assignment;
 import co.edu.uco.seguridad.pdp.assignments.domain.AssignmentCriteria;
 import co.edu.uco.seguridad.pdp.assignments.domain.exception.DuplicateAssignmentException;
 import co.edu.uco.seguridad.pdp.assignments.domain.model.AssignmentId;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
-import co.edu.uco.seguridad.pdp.commons.model.RoleId;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
-import co.edu.uco.seguridad.pdp.commons.model.UserId;
-import co.edu.uco.seguridad.pdp.identity.application.rule.validator.UserMustExistValidator;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.pdp.identity.domain.exception.UserNotFoundException;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleScopeMustCoverApplicationValidator;
 import co.edu.uco.seguridad.pdp.roles.domain.exception.ApplicationOutsideRoleScopeException;
@@ -50,7 +44,8 @@ class AssignRoleRulesValidatorImplTests {
     void rejects_when_the_user_does_not_exist() {
         AssignRoleRulesValidatorImpl validator = new AssignRoleRulesValidatorImpl(
                 userId -> Mono.error(new UserNotFoundException(userId)), NEVER_CALLED_APPLICATION_VALIDATOR,
-                NEVER_CALLED_ROLE_VALIDATOR, coverage -> { }, unreachableRepository(), () -> NOW);
+                NEVER_CALLED_ROLE_VALIDATOR, coverage -> {
+        }, unreachableRepository(), () -> NOW);
 
         StepVerifier.create(validator.execute(request()))
                 .expectError(UserNotFoundException.class)
@@ -61,7 +56,8 @@ class AssignRoleRulesValidatorImplTests {
     void rejects_when_the_application_does_not_exist() {
         AssignRoleRulesValidatorImpl validator = new AssignRoleRulesValidatorImpl(
                 userId -> Mono.empty(), query -> Mono.error(new ApplicationNotFoundException(query.applicationId())),
-                NEVER_CALLED_ROLE_VALIDATOR, coverage -> { }, unreachableRepository(), () -> NOW);
+                NEVER_CALLED_ROLE_VALIDATOR, coverage -> {
+        }, unreachableRepository(), () -> NOW);
 
         StepVerifier.create(validator.execute(request()))
                 .expectError(ApplicationNotFoundException.class)
@@ -72,7 +68,8 @@ class AssignRoleRulesValidatorImplTests {
     void rejects_when_the_role_does_not_cover_the_application() {
         AssignRoleRulesValidatorImpl validator = new AssignRoleRulesValidatorImpl(
                 userId -> Mono.empty(), query -> Mono.empty(),
-                query -> Mono.error(new ApplicationOutsideRoleScopeException(APPLICATION)), coverage -> { },
+                query -> Mono.error(new ApplicationOutsideRoleScopeException(APPLICATION)), coverage -> {
+        },
                 unreachableRepository(), () -> NOW);
 
         StepVerifier.create(validator.execute(request()))
@@ -84,7 +81,9 @@ class AssignRoleRulesValidatorImplTests {
     void rejects_when_the_assignment_is_already_active() {
         AssignRoleRulesValidatorImpl validator = new AssignRoleRulesValidatorImpl(
                 userId -> Mono.empty(), query -> Mono.empty(), query -> Mono.empty(),
-                input -> { throw new DuplicateAssignmentException(USER, APPLICATION, ROLE); },
+                input -> {
+                    throw new DuplicateAssignmentException(USER, APPLICATION, ROLE);
+                },
                 repositoryReporting(true), () -> NOW);
 
         StepVerifier.create(validator.execute(request()))
@@ -95,7 +94,8 @@ class AssignRoleRulesValidatorImplTests {
     @Test
     void completes_when_every_rule_passes() {
         AssignRoleRulesValidatorImpl validator = new AssignRoleRulesValidatorImpl(
-                userId -> Mono.empty(), query -> Mono.empty(), query -> Mono.empty(), input -> { },
+                userId -> Mono.empty(), query -> Mono.empty(), query -> Mono.empty(), input -> {
+        },
                 repositoryReporting(false), () -> NOW);
 
         StepVerifier.create(validator.execute(request())).verifyComplete();
@@ -109,7 +109,7 @@ class AssignRoleRulesValidatorImplTests {
         return new AssignmentRepository() {
             @Override
             public Mono<Boolean> existsActiveByUserApplicationRole(UserId userId, ApplicationId applicationId, RoleId roleId,
-                    Instant now) {
+                                                                   Instant now) {
                 return Mono.just(active);
             }
 
@@ -139,7 +139,7 @@ class AssignRoleRulesValidatorImplTests {
         return new AssignmentRepository() {
             @Override
             public Mono<Boolean> existsActiveByUserApplicationRole(UserId userId, ApplicationId applicationId, RoleId roleId,
-                    Instant now) {
+                                                                   Instant now) {
                 throw new AssertionError("must not check for a duplicate before the earlier rules pass");
             }
 

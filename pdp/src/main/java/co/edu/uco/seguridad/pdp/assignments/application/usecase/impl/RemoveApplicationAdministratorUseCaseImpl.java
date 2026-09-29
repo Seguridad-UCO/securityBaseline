@@ -46,8 +46,8 @@ public final class RemoveApplicationAdministratorUseCaseImpl implements RemoveAp
     private final TokenRevocationPort revocation;
 
     public RemoveApplicationAdministratorUseCaseImpl(RoleLookupByNameInScopeValidator roleLookup,
-            AssignmentRepository repository, LastAdministratorMustNotBeRevokedRule mustNotBeLastAdministrator,
-            RevokeAssignmentUseCase revokeAssignment, TimeProvider time, TokenRevocationPort revocation) {
+                                                     AssignmentRepository repository, LastAdministratorMustNotBeRevokedRule mustNotBeLastAdministrator,
+                                                     RevokeAssignmentUseCase revokeAssignment, TimeProvider time, TokenRevocationPort revocation) {
         this.roleLookup = Objects.requireNonNull(roleLookup, RequiredArgumentMessages.ROLE_LOOKUP_BY_NAME_IN_SCOPE_VALIDATOR);
         this.repository = Objects.requireNonNull(repository, RequiredArgumentMessages.ASSIGNMENT_REPOSITORY);
         this.mustNotBeLastAdministrator = Objects.requireNonNull(mustNotBeLastAdministrator,

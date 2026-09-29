@@ -17,7 +17,7 @@ import java.util.Objects;
  * {@code baseUrl} de esa aplicación.
  */
 public record ProtectedResource(ResourceId id, ApplicationId applicationId, TenantId tenantId, ResourcePath path,
-        HttpVerb method, Instant registeredAt) {
+                                HttpVerb method, Instant registeredAt) {
 
     public ProtectedResource {
         Objects.requireNonNull(id, RequiredArgumentMessages.RESOURCE_ID);
@@ -29,24 +29,30 @@ public record ProtectedResource(ResourceId id, ApplicationId applicationId, Tena
     }
 
     public static ProtectedResource register(ResourceId id, ApplicationId applicationId, TenantId tenantId,
-            ResourcePath path, HttpVerb method, Instant registeredAt) {
+                                             ResourcePath path, HttpVerb method, Instant registeredAt) {
         return new ProtectedResource(id, applicationId, tenantId, path, method, registeredAt);
     }
 
-    /** Igual que {@link #register}, pero empareja el recurso con su evento — usar al escribir, no al leer. */
+    /**
+     * Igual que {@link #register}, pero empareja el recurso con su evento — usar al escribir, no al leer.
+     */
     public static AggregateRoot<ProtectedResource, ProtectedResourceRegistered> registerWithEvent(ResourceId id,
-            ApplicationId applicationId, TenantId tenantId, ResourcePath path, HttpVerb method,
-            Instant registeredAt) {
+                                                                                                  ApplicationId applicationId, TenantId tenantId, ResourcePath path, HttpVerb method,
+                                                                                                  Instant registeredAt) {
         ProtectedResource resource = register(id, applicationId, tenantId, path, method, registeredAt);
         return AggregateRoot.of(resource, ProtectedResourceRegistered.of(resource));
     }
 
-    /** Identidad funcional de un endpoint: el mismo método sobre la misma ruta no puede registrarse dos veces. */
+    /**
+     * Identidad funcional de un endpoint: el mismo método sobre la misma ruta no puede registrarse dos veces.
+     */
     public boolean isSameEndpointAs(ResourcePath otherPath, HttpVerb otherMethod) {
         return path.equals(otherPath) && method == otherMethod;
     }
 
-    /** Conserva identidad, dueño y fecha de registro al editar el endpoint. */
+    /**
+     * Conserva identidad, dueño y fecha de registro al editar el endpoint.
+     */
     public ProtectedResource withEndpoint(ResourcePath path, HttpVerb method) {
         return new ProtectedResource(id, applicationId, tenantId, path, method, registeredAt);
     }
