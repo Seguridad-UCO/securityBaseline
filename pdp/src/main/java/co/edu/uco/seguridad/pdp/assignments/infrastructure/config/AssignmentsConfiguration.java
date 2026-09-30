@@ -109,8 +109,8 @@ public class AssignmentsConfiguration {
 
     @Bean
     RevokeAssignmentUseCase revokeAssignmentUseCase(RevokeAssignmentRulesValidator rules, AssignmentRepository repository,
-                                                    TimeProvider time, TokenRevocationPort revocation, DistributedCachePort cache) {
-        return new RevokeAssignmentUseCaseImpl(rules, repository, time, revocation, cache);
+                                                    TimeProvider time, DistributedCachePort cache) {
+        return new RevokeAssignmentUseCaseImpl(rules, repository, time, cache);
     }
 
     @Bean
