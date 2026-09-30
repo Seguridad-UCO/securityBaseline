@@ -36,6 +36,11 @@ public interface ProfileAssignmentRepository {
     }
     default Mono<Long> countByApplication(TenantId tenantId, ApplicationId applicationId) { return Mono.error(new UnsupportedOperationException()); }
 
+    default Mono<ResultPage<ProfileAssignment>> findActivePageByProfileAndApplication(ProfileId profileId, TenantId tenantId,
+            ApplicationId applicationId, Instant now, PageWindow window) { return Mono.error(new UnsupportedOperationException()); }
+    default Mono<ResultPage<ProfileAssignment>> findActivePageByUserAndApplication(UserId userId, TenantId tenantId,
+            ApplicationId applicationId, Instant now, PageWindow window) { return Mono.error(new UnsupportedOperationException()); }
+
     /**
      * Identificadores de perfiles asignados y vigentes para el sujeto y la aplicación.
      */

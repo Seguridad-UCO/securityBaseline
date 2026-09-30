@@ -90,6 +90,17 @@ public final class SurrealProfileAssignmentRepository implements ProfileAssignme
                 .map(r -> totalOf(r.get(0)));
     }
 
+    @Override public Mono<ResultPage<ProfileAssignment>> findActivePageByProfileAndApplication(ProfileId profileId, TenantId tenantId, ApplicationId applicationId, Instant now, PageWindow window) {
+        return findActive("profileId", profileId.value().toString(), tenantId, applicationId, now, window);
+    }
+    @Override public Mono<ResultPage<ProfileAssignment>> findActivePageByUserAndApplication(UserId userId, TenantId tenantId, ApplicationId applicationId, Instant now, PageWindow window) {
+        return findActive("userId", userId.value().toString(), tenantId, applicationId, now, window);
+    }
+    private Mono<ResultPage<ProfileAssignment>> findActive(String field, String id, TenantId tenantId, ApplicationId applicationId, Instant now, PageWindow window) {
+        String query = "SELECT * FROM %1$s WHERE %2$s = $id AND tenantId = $tenantId AND applicationId = $applicationId AND validFrom <= <datetime>$now AND (validUntil = NONE OR validUntil > <datetime>$now) ORDER BY validFrom DESC LIMIT %3$d START %4$d; SELECT count() FROM %1$s WHERE %2$s = $id AND tenantId = $tenantId AND applicationId = $applicationId AND validFrom <= <datetime>$now AND (validUntil = NONE OR validUntil > <datetime>$now) GROUP ALL;".formatted(ProfileAssignmentSchema.TABLE, field, window.limit(), window.offset());
+        return client.execute(query, Map.of("id",id,"tenantId",tenantId.value(),"applicationId",applicationId.value().toString(),"now",now.toString())).map(rows -> ResultPage.of(rows.get(0).valueStream().map(SurrealProfileAssignmentRepository::toDomain).toList(), totalOf(rows.get(1)), window));
+    }
+
     private static long totalOf(JsonNode countResult) {
         if (countResult.isEmpty()) {
             return 0L;

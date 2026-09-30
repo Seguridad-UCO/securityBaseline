@@ -8,6 +8,7 @@ import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.Ad
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerApplicationAdministratorListUseCase;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.ListApplicationAdministratorsRawRequest;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.ApplicationAdministratorWebResponse;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.ApplicationSecurityUserWebResponse;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.AdministerApplicationAdministratorListInteractor;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.UserId;
@@ -56,7 +57,7 @@ public final class AdministerApplicationAdministratorListInteractorImpl
     }
 
     private static ApplicationAdministratorWebResponse toWebResponse(AssignmentResponse response) {
-        return new ApplicationAdministratorWebResponse(response.userId().value().toString(),
+        return new ApplicationAdministratorWebResponse(new ApplicationSecurityUserWebResponse(response.userId().value().toString(), "", ""),
                 response.validFrom().toString(), response.validUntil().map(Object::toString).orElse(null));
     }
 

@@ -86,6 +86,11 @@ class ApplicationSecurityHttpTests extends AbstractSurrealDbIntegrationTest {
         opa.respondWithForPath(ADMIN_PATH, 200, DENY);
         client().get().uri(security("roles") + "?page=0&size=20").header("Authorization", bearer()).exchange()
                 .expectStatus().isForbidden();
+        String id = UUID.randomUUID().toString();
+        for (String route : new String[] { "users/" + id + "/assignments", "roles/" + id + "/assignments", "profiles/" + id + "/assignments" }) {
+            client().get().uri(security(route) + "?page=0&size=20").header("Authorization", bearer()).exchange()
+                    .expectStatus().isForbidden();
+        }
     }
 
     @Test void relationship_routes_are_application_scoped_and_paged() throws Exception {
@@ -110,6 +115,26 @@ class ApplicationSecurityHttpTests extends AbstractSurrealDbIntegrationTest {
                 .bodyValue("{\"roleId\":\"%s\"}".formatted(roleId)).exchange().expectStatus().isOk();
         client().get().uri(security("profiles/" + profileId + "/roles?page=0&size=1")).header("Authorization", bearer()).exchange()
                 .expectStatus().isOk().expectBody().jsonPath("$.data.content[0].id").isEqualTo(roleId).jsonPath("$.data.total").isEqualTo(1).jsonPath("$.data.limit").isEqualTo(1);
+    }
+
+    @Test void assignment_detail_routes_are_authorized_paginated_and_enriched() throws Exception {
+        String userId = JSON.readTree(client().get().uri(security("users") + "?query=&page=0&size=20")
+                .header("Authorization", bearer()).exchange().expectStatus().isOk().expectBody().returnResult().getResponseBody())
+                .path("data").path("content").get(0).path("id").asString();
+        String roleId = idOf(client().post().uri("/api/v1/roles").header("Authorization", bearer()).contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("{\"name\":\"OPERADOR\",\"scope\":\"APPLICATION\",\"applicationId\":\"%s\"}".formatted(applicationId)).exchange().expectStatus().isCreated().expectBody().returnResult().getResponseBody());
+        String profileId = idOf(client().post().uri("/api/v1/profiles").header("Authorization", bearer()).contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("{\"name\":\"OPERADORES\",\"scope\":\"APPLICATION\",\"applicationId\":\"%s\"}".formatted(applicationId)).exchange().expectStatus().isCreated().expectBody().returnResult().getResponseBody());
+        client().post().uri("/api/v1/roles/" + roleId + "/assignments").header("Authorization", bearer()).contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("{\"userId\":\"%s\",\"applicationId\":\"%s\"}".formatted(userId, applicationId)).exchange().expectStatus().isCreated();
+        client().post().uri("/api/v1/profiles/" + profileId + "/assignments").header("Authorization", bearer()).contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("{\"userId\":\"%s\",\"applicationId\":\"%s\"}".formatted(userId, applicationId)).exchange().expectStatus().isCreated();
+        client().get().uri(security("roles/" + roleId + "/assignments?page=0&size=1")).header("Authorization", bearer()).exchange()
+                .expectStatus().isOk().expectBody().jsonPath("$.data.content[0].user.name").isNotEmpty().jsonPath("$.data.content[0].user.email").isNotEmpty().jsonPath("$.data.content[0].role.name").isEqualTo("OPERADOR");
+        client().get().uri(security("profiles/" + profileId + "/assignments?page=0&size=1")).header("Authorization", bearer()).exchange()
+                .expectStatus().isOk().expectBody().jsonPath("$.data.content[0].user.name").isNotEmpty().jsonPath("$.data.content[0].profile.name").isEqualTo("OPERADORES");
+        client().get().uri(security("users/" + userId + "/assignments?page=0&size=1")).header("Authorization", bearer()).exchange()
+                .expectStatus().isOk().expectBody().jsonPath("$.data.user.name").isNotEmpty().jsonPath("$.data.roleAssignments.content[0].role.name").isEqualTo("OPERADOR").jsonPath("$.data.profileAssignments.content[0].profile.name").isEqualTo("OPERADORES");
     }
 
     private String security(String suffix) { return "/api/v1/applications/" + applicationId + "/security/" + suffix; }

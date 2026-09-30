@@ -7,7 +7,6 @@ import co.edu.uco.seguridad.pdp.assignments.application.usecase.RevokeAssignment
 import co.edu.uco.seguridad.shared.cache.DistributedCachePort;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
-import co.edu.uco.seguridad.shared.security.revocation.TokenRevocationPort;
 import reactor.core.publisher.Mono;
 
 import java.util.Objects;
@@ -15,13 +14,13 @@ import java.util.Objects;
 /**
  * Transforma lo que el validador ya encontró (Assignment.revoke) y lo guarda. No decide nada.
  *
- * <p>HU-022 (PLAN-HU-022.md §7): tras guardar, invoca
- * {@code revocation.revokeAllSince(assignment.userId(), time.now())} — fail-closed también en
- * escritura: si la revocación falla, la operación completa falla, porque un "removido pero no
- * revocado" es exactamente el hueco de seguridad que esta historia cierra (a diferencia del puerto
- * de caché de HU-023, que sí es fail-open).</p>
+ * <p>Una asignación no es una credencial. Revocarla no invalida el JWT ni la sesión del usuario:
+ * el PDP vuelve a resolver los hechos de autorización para cada decisión. De ese modo, la
+ * denegación es inmediata y una reasignación posterior funciona con la misma sesión. La revocación
+ * de tokens queda reservada para eventos de identidad, como compromiso de cuenta o cierre global
+ * de sesión.</p>
  *
- * <p>HU-023 (PLAN-HU-023.md §7): tras revocar, invoca además
+ * <p>Tras revocar, invoca
  * {@code cache.evict(assignment.userId(), assignment.applicationId())} — best-effort, el puerto
  * nunca propaga error (fail-open también en escritura, ver {@code DistributedCachePort}).</p>
  */
@@ -30,15 +29,13 @@ public final class RevokeAssignmentUseCaseImpl implements RevokeAssignmentUseCas
     private final RevokeAssignmentRulesValidator rules;
     private final AssignmentRepository repository;
     private final TimeProvider time;
-    private final TokenRevocationPort revocation;
     private final DistributedCachePort cache;
 
     public RevokeAssignmentUseCaseImpl(RevokeAssignmentRulesValidator rules, AssignmentRepository repository, TimeProvider time,
-                                       TokenRevocationPort revocation, DistributedCachePort cache) {
+                                       DistributedCachePort cache) {
         this.rules = Objects.requireNonNull(rules, RequiredArgumentMessages.REVOKE_ASSIGNMENT_RULES_VALIDATOR);
         this.repository = Objects.requireNonNull(repository, RequiredArgumentMessages.ASSIGNMENT_REPOSITORY);
         this.time = Objects.requireNonNull(time, RequiredArgumentMessages.TIME_PROVIDER);
-        this.revocation = Objects.requireNonNull(revocation, RequiredArgumentMessages.TOKEN_REVOCATION_PORT);
         this.cache = Objects.requireNonNull(cache, RequiredArgumentMessages.DISTRIBUTED_CACHE_PORT);
     }
 
@@ -47,7 +44,6 @@ public final class RevokeAssignmentUseCaseImpl implements RevokeAssignmentUseCas
         return rules.execute(input)
                 .map(assignment -> assignment.revoke(time.now()))
                 .flatMap(repository::save)
-                .flatMap(assignment -> revocation.revokeAllSince(assignment.userId(), time.now())
-                        .then(Mono.defer(() -> cache.evict(assignment.userId(), assignment.applicationId()))));
+                .flatMap(assignment -> cache.evict(assignment.userId(), assignment.applicationId()));
     }
 }

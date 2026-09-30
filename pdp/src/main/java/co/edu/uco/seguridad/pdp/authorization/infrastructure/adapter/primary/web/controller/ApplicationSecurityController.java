@@ -11,6 +11,8 @@ import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.ApplicationSecurityRoleWebResponse;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.ApplicationSecuritySummaryWebResponse;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.ApplicationSecurityUserWebResponse;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.ApplicationSecurityUserAssignmentsWebResponse;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.AssignmentDetailReadInteractor;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.ListApplicationProfileAssignmentsInteractor;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.ListApplicationRoleAssignmentsInteractor;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.ListApplicationSecurityAdministratorsInteractor;
@@ -50,6 +52,7 @@ final class ApplicationSecurityController {
     private final SearchApplicationSecurityUsersInteractor users;
     private final ListRoleResourcesInteractor roleResources;
     private final ListProfileRolesInteractor profileRoles;
+    private final AssignmentDetailReadInteractor assignmentDetails;
 
     ApplicationSecurityController(
             ReadApplicationSecuritySummaryInteractor summary,
@@ -60,7 +63,7 @@ final class ApplicationSecurityController {
             ListApplicationRoleAssignmentsInteractor roleAssignments,
             ListApplicationProfileAssignmentsInteractor profileAssignments,
             SearchApplicationSecurityUsersInteractor users, ListRoleResourcesInteractor roleResources,
-            ListProfileRolesInteractor profileRoles) {
+            ListProfileRolesInteractor profileRoles, AssignmentDetailReadInteractor assignmentDetails) {
         this.summary = summary;
         this.resources = resources;
         this.roles = roles;
@@ -71,6 +74,7 @@ final class ApplicationSecurityController {
         this.users = users;
         this.roleResources = roleResources;
         this.profileRoles = profileRoles;
+        this.assignmentDetails = assignmentDetails;
     }
 
     @GetMapping("/summary")
@@ -131,6 +135,33 @@ final class ApplicationSecurityController {
             @RequestParam(required = false) String size, @RequestParam(required = false) String offset,
             @RequestParam(required = false) String limit, ServerWebExchange exchange) {
         return profileAssignments.execute(pageRequest(applicationId, page, size, offset, limit))
+                .map(data -> ok("APPLICATION_SECURITY_PROFILE_ASSIGNMENTS_LISTED", data, exchange));
+    }
+
+    @GetMapping("/users/{userId}/assignments")
+    Mono<ResponseEntity<ApiResponse<ApplicationSecurityUserAssignmentsWebResponse>>> userAssignments(
+            @PathVariable String applicationId, @PathVariable String userId, @RequestParam(required = false) String page,
+            @RequestParam(required = false) String size, @RequestParam(required = false) String offset,
+            @RequestParam(required = false) String limit, ServerWebExchange exchange) {
+        return assignmentDetails.user(new ListApplicationSecurityRelationRawRequest(applicationId, userId, page, size, offset, limit))
+                .map(data -> ok("APPLICATION_SECURITY_USER_ASSIGNMENTS_LISTED", data, exchange));
+    }
+
+    @GetMapping("/roles/{roleId}/assignments")
+    Mono<ResponseEntity<ApiResponse<PageResponse<ApplicationSecurityRoleAssignmentWebResponse>>>> assignmentsForRole(
+            @PathVariable String applicationId, @PathVariable String roleId, @RequestParam(required = false) String page,
+            @RequestParam(required = false) String size, @RequestParam(required = false) String offset,
+            @RequestParam(required = false) String limit, ServerWebExchange exchange) {
+        return assignmentDetails.roles(new ListApplicationSecurityRelationRawRequest(applicationId, roleId, page, size, offset, limit))
+                .map(data -> ok("APPLICATION_SECURITY_ROLE_ASSIGNMENTS_LISTED", data, exchange));
+    }
+
+    @GetMapping("/profiles/{profileId}/assignments")
+    Mono<ResponseEntity<ApiResponse<PageResponse<ApplicationSecurityProfileAssignmentWebResponse>>>> assignmentsForProfile(
+            @PathVariable String applicationId, @PathVariable String profileId, @RequestParam(required = false) String page,
+            @RequestParam(required = false) String size, @RequestParam(required = false) String offset,
+            @RequestParam(required = false) String limit, ServerWebExchange exchange) {
+        return assignmentDetails.profiles(new ListApplicationSecurityRelationRawRequest(applicationId, profileId, page, size, offset, limit))
                 .map(data -> ok("APPLICATION_SECURITY_PROFILE_ASSIGNMENTS_LISTED", data, exchange));
     }
 
