@@ -15,6 +15,7 @@ RUN ./mvnw -f pdp/pom.xml -B -DskipTests package
 # Runtime stage: Java 25 runtime
 FROM eclipse-temurin:25-jre
 WORKDIR /app
+RUN apt-get update && apt-get install --no-install-recommends -y curl && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /build/pdp/target/*.jar app.jar
 
 # Health check for Azure App Service
