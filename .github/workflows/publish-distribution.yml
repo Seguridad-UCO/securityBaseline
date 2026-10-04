@@ -17,6 +17,9 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build the immutable OPA policy bundle
+        working-directory: security-policy-engine
+        run: docker compose run --rm opa-tools ./scripts/bundle
       - uses: docker/bake-action@v6
         with:
           push: true
