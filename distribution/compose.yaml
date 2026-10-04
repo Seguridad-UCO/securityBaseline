@@ -7,9 +7,9 @@ services:
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
-      KC_HOSTNAME: http://keycloak.localhost:${KEYCLOAK_PORT:-9090}
+      KC_HOSTNAME: http://keycloak.localhost:${KEYCLOAK_PORT:-19090}
       KC_HOSTNAME_STRICT: "true"
-    ports: ["${KEYCLOAK_PORT:-9090}:8080"]
+    ports: ["${KEYCLOAK_PORT:-19090}:8080"]
     healthcheck:
       test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8080'"]
       interval: 5s
@@ -50,13 +50,13 @@ services:
       PDP_REDIS_HOST: redis
       PDP_OPA_BASE_URL: http://opa:8181
       PDP_INTERNAL_MTLS_ENABLED: "false"
-      PDP_KEYCLOAK_ISSUER: http://keycloak.localhost:${KEYCLOAK_PORT:-9090}/realms/security-baseline
+      PDP_KEYCLOAK_ISSUER: http://keycloak.localhost:${KEYCLOAK_PORT:-19090}/realms/security-baseline
       PDP_KEYCLOAK_CLIENT_ID: security-baseline-bff
       PDP_KEYCLOAK_CLIENT_SECRET: TPoYOEY5rzn11VxWtCq5m0cv9mIbSeEM1Tf0CuOezPK6UXr1xT9mWhTiW1u84fJ9l8fU9iUT3GqPTT4wzwXkVW
       PDP_KEYCLOAK_BEARER_AUDIENCE: security-baseline-pdp
       PDP_SECURITY_SESSION_SECURE_COOKIES: "false"
     extra_hosts: ["keycloak.localhost:host-gateway"]
-    ports: ["${PDP_PORT:-8080}:8080"]
+    ports: ["${PDP_PORT:-18080}:8080"]
     depends_on:
       keycloak: {condition: service_healthy}
       surrealdb: {condition: service_healthy}
@@ -66,12 +66,12 @@ services:
     image: ${SECURITY_DOCKER_ORG:?Configure SECURITY_DOCKER_ORG}/security-pep:${SECURITY_VERSION:?Configure SECURITY_VERSION}
     environment:
       PEP_INGRESS_ALLOWINSECUREHTTP: "true"
-      PEP_INGRESS_ISSUER: http://keycloak.localhost:${KEYCLOAK_PORT:-9090}/realms/security-baseline
-      PEP_INGRESS_JWKSURI: http://keycloak.localhost:${KEYCLOAK_PORT:-9090}/realms/security-baseline/protocol/openid-connect/certs
+      PEP_INGRESS_ISSUER: http://keycloak.localhost:${KEYCLOAK_PORT:-19090}/realms/security-baseline
+      PEP_INGRESS_JWKSURI: http://keycloak.localhost:${KEYCLOAK_PORT:-19090}/realms/security-baseline/protocol/openid-connect/certs
       PEP_PDP_ALLOWINSECUREHTTP: "true"
       PEP_PDP_BASE_URL: http://pdp:8080
     extra_hosts: ["keycloak.localhost:host-gateway"]
-    ports: ["${PEP_PORT:-8081}:8081"]
+    ports: ["${PEP_PORT:-18081}:8081"]
     depends_on:
       keycloak: {condition: service_healthy}
       pdp: {condition: service_started}
