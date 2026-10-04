@@ -36,6 +36,8 @@ jobs:
           server-username: GITHUB_ACTOR
           server-password: GITHUB_TOKEN
       - run: ./mvnw -f pep/starter/pom.xml -B -DskipTests -Drevision="${{ steps.version.outputs.value }}" deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: softprops/action-gh-release@v2
         with:
           files: |
