@@ -10,11 +10,18 @@
     </parent>
     <groupId>co.edu.uco</groupId>
     <artifactId>security-pep-integration-spring-boot-starter</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>${revision}</version>
     <name>Security PEP integration Spring Boot starter</name>
     <properties>
         <java.version>25</java.version>
+        <revision>0.1.0-SNAPSHOT</revision>
     </properties>
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <url>https://maven.pkg.github.com/Seguridad-UCO/securityBaseline</url>
+        </repository>
+    </distributionManagement>
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>

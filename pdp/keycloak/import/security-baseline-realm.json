@@ -1,0 +1,56 @@
+{
+  "realm": "security-baseline",
+  "enabled": true,
+  "displayName": "Security Baseline local",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "accessTokenLifespan": 300,
+  "clientScopes": [
+    {
+      "name": "security-baseline-claims",
+      "protocol": "openid-connect",
+      "attributes": {"include.in.token.scope": "true", "display.on.consent.screen": "false"},
+      "protocolMappers": [
+        {"name": "subject", "protocol": "openid-connect", "protocolMapper": "oidc-usermodel-attribute-mapper", "config": {"user.attribute": "security_subject", "claim.name": "sub", "jsonType.label": "String", "access.token.claim": "true"}},
+        {"name": "tenant", "protocol": "openid-connect", "protocolMapper": "oidc-hardcoded-claim-mapper", "config": {"claim.name": "tenant", "claim.value": "universidad-uco", "jsonType.label": "String", "access.token.claim": "true"}},
+        {"name": "pdp-audience", "protocol": "openid-connect", "protocolMapper": "oidc-audience-mapper", "config": {"included.client.audience": "security-baseline-pdp", "access.token.claim": "true"}},
+        {"name": "bff-audience", "protocol": "openid-connect", "protocolMapper": "oidc-audience-mapper", "config": {"included.client.audience": "security-baseline-bff", "access.token.claim": "true"}}
+      ]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "security-baseline-bff",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "TPoYOEY5rzn11VxWtCq5m0cv9mIbSeEM1Tf0CuOezPK6UXr1xT9mWhTiW1u84fJ9l8fU9iUT3GqPTT4wzwXkVW",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": ["http://localhost:8080/*"],
+      "webOrigins": ["http://localhost:5173"],
+      "defaultClientScopes": ["security-baseline-claims"]
+    },
+    {
+      "clientId": "security-pep-internal",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "ynUBeUNULUAkXUOwqBnAOG35vVrwI0zwTwP11hYD8OSdZQsHeqWjBTkhKb6b09Gcsj9o2Lgy8VIUu58nQnL3Kv",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "defaultClientScopes": ["security-baseline-claims"]
+    }
+  ],
+  "users": [
+    {
+      "id": "4fc64417-05ef-42f6-a458-a2ac168b2a29",
+      "username": "security-demo",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {"security_subject": ["security-demo"]},
+      "credentials": [{"type": "password", "value": "security-demo", "temporary": false}]
+    }
+  ]
+}

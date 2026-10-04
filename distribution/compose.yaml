@@ -1,0 +1,81 @@
+name: security-baseline
+
+services:
+  keycloak:
+    image: ${SECURITY_DOCKER_ORG:?Configure SECURITY_DOCKER_ORG}/security-keycloak-local:${SECURITY_VERSION:?Configure SECURITY_VERSION}
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HOSTNAME: http://keycloak.localhost:${KEYCLOAK_PORT:-9090}
+      KC_HOSTNAME_STRICT: "true"
+    ports: ["${KEYCLOAK_PORT:-9090}:8080"]
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8080'"]
+      interval: 5s
+      timeout: 3s
+      retries: 24
+
+  surrealdb:
+    image: surrealdb/surrealdb:v3.3.0
+    user: root
+    command: start --user root --pass root rocksdb:/data/database
+    volumes: ["surrealdb-data:/data"]
+    healthcheck:
+      test: ["CMD", "/surreal", "is-ready", "--endpoint", "http://localhost:8000"]
+      interval: 5s
+      timeout: 3s
+      retries: 24
+
+  redis:
+    image: redis:7.4-alpine
+    command: redis-server --appendonly yes
+    volumes: ["redis-data:/data"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 24
+
+  opa:
+    image: ${SECURITY_DOCKER_ORG:?Configure SECURITY_DOCKER_ORG}/security-opa:${SECURITY_VERSION:?Configure SECURITY_VERSION}
+
+  pdp:
+    image: ${SECURITY_DOCKER_ORG:?Configure SECURITY_DOCKER_ORG}/security-pdp:${SECURITY_VERSION:?Configure SECURITY_VERSION}
+    environment:
+      SPRING_PROFILES_ACTIVE: prod,keycloak
+      PDP_DATASOURCE_URL: http://surrealdb:8000
+      PDP_DATASOURCE_USERNAME: root
+      PDP_DATASOURCE_PASSWORD: root
+      PDP_REDIS_HOST: redis
+      PDP_OPA_BASE_URL: http://opa:8181
+      PDP_INTERNAL_MTLS_ENABLED: "false"
+      PDP_KEYCLOAK_ISSUER: http://keycloak.localhost:${KEYCLOAK_PORT:-9090}/realms/security-baseline
+      PDP_KEYCLOAK_CLIENT_ID: security-baseline-bff
+      PDP_KEYCLOAK_CLIENT_SECRET: TPoYOEY5rzn11VxWtCq5m0cv9mIbSeEM1Tf0CuOezPK6UXr1xT9mWhTiW1u84fJ9l8fU9iUT3GqPTT4wzwXkVW
+      PDP_KEYCLOAK_BEARER_AUDIENCE: security-baseline-pdp
+      PDP_SECURITY_SESSION_SECURE_COOKIES: "false"
+    extra_hosts: ["keycloak.localhost:host-gateway"]
+    ports: ["${PDP_PORT:-8080}:8080"]
+    depends_on:
+      keycloak: {condition: service_healthy}
+      surrealdb: {condition: service_healthy}
+      redis: {condition: service_healthy}
+
+  pep:
+    image: ${SECURITY_DOCKER_ORG:?Configure SECURITY_DOCKER_ORG}/security-pep:${SECURITY_VERSION:?Configure SECURITY_VERSION}
+    environment:
+      PEP_INGRESS_ALLOWINSECUREHTTP: "true"
+      PEP_INGRESS_ISSUER: http://keycloak.localhost:${KEYCLOAK_PORT:-9090}/realms/security-baseline
+      PEP_INGRESS_JWKSURI: http://keycloak.localhost:${KEYCLOAK_PORT:-9090}/realms/security-baseline/protocol/openid-connect/certs
+      PEP_PDP_ALLOWINSECUREHTTP: "true"
+      PEP_PDP_BASE_URL: http://pdp:8080
+    extra_hosts: ["keycloak.localhost:host-gateway"]
+    ports: ["${PEP_PORT:-8081}:8081"]
+    depends_on:
+      keycloak: {condition: service_healthy}
+      pdp: {condition: service_started}
+
+volumes:
+  surrealdb-data:
+  redis-data:
