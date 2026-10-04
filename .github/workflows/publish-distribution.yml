@@ -1,10 +1,9 @@
-name: Publish security distribution
+name: Publish security Docker distribution
 on:
   push:
     tags: ['v*']
 permissions:
   contents: write
-  packages: write
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -28,16 +27,6 @@ jobs:
         env:
           VERSION: ${{ steps.version.outputs.value }}
           DOCKERHUB_NAMESPACE: ${{ secrets.DOCKERHUB_NAMESPACE }}
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '25'
-          server-id: github
-          server-username: GITHUB_ACTOR
-          server-password: GITHUB_TOKEN
-      - run: ./mvnw -f pep/starter/pom.xml -B -DskipTests -Drevision="${{ steps.version.outputs.value }}" deploy
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: softprops/action-gh-release@v2
         with:
           files: |

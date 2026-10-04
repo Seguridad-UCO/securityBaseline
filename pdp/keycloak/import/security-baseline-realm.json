@@ -28,7 +28,7 @@
       "secret": "TPoYOEY5rzn11VxWtCq5m0cv9mIbSeEM1Tf0CuOezPK6UXr1xT9mWhTiW1u84fJ9l8fU9iUT3GqPTT4wzwXkVW",
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": true,
-      "redirectUris": ["http://localhost:8080/*"],
+      "redirectUris": ["http://localhost:18080/*"],
       "webOrigins": ["http://localhost:5173"],
       "defaultClientScopes": ["security-baseline-claims"]
     },
@@ -49,6 +49,10 @@
       "username": "security-demo",
       "enabled": true,
       "emailVerified": true,
+      "firstName": "Security",
+      "lastName": "Demo",
+      "email": "security-demo@local.test",
+      "requiredActions": [],
       "attributes": {"security_subject": ["security-demo"]},
       "credentials": [{"type": "password", "value": "security-demo", "temporary": false}]
     }
