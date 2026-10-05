@@ -17,9 +17,12 @@ import java.util.Set;
  * (fail-closed), no lanzar al arrancar el contexto de Spring.</p>
  */
 @ConfigurationProperties(prefix = "pdp.security.mfa")
-public record MfaEvidenceProperties(String claim, Set<String> acceptedValues) {
+public record MfaEvidenceProperties(boolean enabled, String claim, Set<String> acceptedValues) {
 
     public boolean satisfiedBy(AuthenticationContextEvidence evidence) {
+        if (!enabled) {
+            return true;
+        }
         if (claim == null || claim.isBlank() || acceptedValues == null || acceptedValues.isEmpty()) {
             return false;
         }

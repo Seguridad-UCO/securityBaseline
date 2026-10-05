@@ -2,11 +2,36 @@
   "realm": "security-baseline",
   "enabled": true,
   "displayName": "Security Baseline local",
-  "registrationAllowed": false,
+  "registrationAllowed": true,
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
   "accessTokenLifespan": 300,
   "clientScopes": [
+    {
+      "name": "profile",
+      "protocol": "openid-connect",
+      "attributes": {"include.in.token.scope": "true", "display.on.consent.screen": "false"}
+    },
+    {
+      "name": "email",
+      "protocol": "openid-connect",
+      "attributes": {"include.in.token.scope": "true", "display.on.consent.screen": "false"},
+      "protocolMappers": [
+        {
+          "name": "email",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "config": {
+            "user.attribute": "email",
+            "claim.name": "email",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
     {
       "name": "security-baseline-claims",
       "protocol": "openid-connect",
@@ -30,7 +55,8 @@
       "directAccessGrantsEnabled": true,
       "redirectUris": ["http://localhost:18080/*"],
       "webOrigins": ["http://localhost:5173"],
-      "defaultClientScopes": ["security-baseline-claims"]
+      "attributes": {"post.logout.redirect.uris": "http://localhost:5173/*"},
+      "defaultClientScopes": ["profile", "email", "security-baseline-claims"]
     },
     {
       "clientId": "security-pep-internal",

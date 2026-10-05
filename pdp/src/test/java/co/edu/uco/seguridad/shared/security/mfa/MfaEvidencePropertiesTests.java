@@ -17,7 +17,7 @@ class MfaEvidencePropertiesTests {
 
     @Test
     void accepts_an_acr_claim_present_and_within_the_accepted_values() {
-        var properties = new MfaEvidenceProperties("acr", Set.of("urn:mfa:otp"));
+        var properties = new MfaEvidenceProperties(true, "acr", Set.of("urn:mfa:otp"));
         var evidence = new AuthenticationContextEvidence(Optional.of("urn:mfa:otp"), List.of());
 
         assertThat(properties.satisfiedBy(evidence)).isTrue();
@@ -25,7 +25,7 @@ class MfaEvidencePropertiesTests {
 
     @Test
     void rejects_an_acr_claim_present_but_outside_the_accepted_values() {
-        var properties = new MfaEvidenceProperties("acr", Set.of("urn:mfa:otp"));
+        var properties = new MfaEvidenceProperties(true, "acr", Set.of("urn:mfa:otp"));
         var evidence = new AuthenticationContextEvidence(Optional.of("urn:mfa:password-only"), List.of());
 
         assertThat(properties.satisfiedBy(evidence)).isFalse();
@@ -33,7 +33,7 @@ class MfaEvidencePropertiesTests {
 
     @Test
     void rejects_an_absent_acr_claim() {
-        var properties = new MfaEvidenceProperties("acr", Set.of("urn:mfa:otp"));
+        var properties = new MfaEvidenceProperties(true, "acr", Set.of("urn:mfa:otp"));
         var evidence = new AuthenticationContextEvidence(Optional.empty(), List.of());
 
         assertThat(properties.satisfiedBy(evidence)).isFalse();
@@ -41,7 +41,7 @@ class MfaEvidencePropertiesTests {
 
     @Test
     void accepts_an_amr_claim_when_any_of_its_values_is_within_the_accepted_values() {
-        var properties = new MfaEvidenceProperties("amr", Set.of("otp"));
+        var properties = new MfaEvidenceProperties(true, "amr", Set.of("otp"));
         var evidence = new AuthenticationContextEvidence(Optional.empty(), List.of("pwd", "otp"));
 
         assertThat(properties.satisfiedBy(evidence)).isTrue();
@@ -49,7 +49,7 @@ class MfaEvidencePropertiesTests {
 
     @Test
     void rejects_an_amr_claim_that_is_empty_or_has_no_intersection_with_the_accepted_values() {
-        var properties = new MfaEvidenceProperties("amr", Set.of("otp"));
+        var properties = new MfaEvidenceProperties(true, "amr", Set.of("otp"));
 
         assertThat(properties.satisfiedBy(new AuthenticationContextEvidence(Optional.empty(), List.of()))).isFalse();
         assertThat(properties.satisfiedBy(new AuthenticationContextEvidence(Optional.empty(), List.of("pwd"))))
@@ -60,9 +60,15 @@ class MfaEvidencePropertiesTests {
     void is_always_unsatisfied_when_the_claim_or_the_accepted_values_are_not_configured_even_with_evidence_present() {
         var evidence = new AuthenticationContextEvidence(Optional.of("urn:mfa:otp"), List.of("otp"));
 
-        assertThat(new MfaEvidenceProperties("", Set.of()).satisfiedBy(evidence)).isFalse();
-        assertThat(new MfaEvidenceProperties(null, Set.of("urn:mfa:otp")).satisfiedBy(evidence)).isFalse();
-        assertThat(new MfaEvidenceProperties("acr", Set.of()).satisfiedBy(evidence)).isFalse();
-        assertThat(new MfaEvidenceProperties(null, null).satisfiedBy(evidence)).isFalse();
+        assertThat(new MfaEvidenceProperties(true, "", Set.of()).satisfiedBy(evidence)).isFalse();
+        assertThat(new MfaEvidenceProperties(true, null, Set.of("urn:mfa:otp")).satisfiedBy(evidence)).isFalse();
+        assertThat(new MfaEvidenceProperties(true, "acr", Set.of()).satisfiedBy(evidence)).isFalse();
+        assertThat(new MfaEvidenceProperties(true, null, null).satisfiedBy(evidence)).isFalse();
+    }
+
+    @Test
+    void allows_administration_when_mfa_is_explicitly_disabled_for_the_local_environment() {
+        assertThat(new MfaEvidenceProperties(false, null, null)
+                .satisfiedBy(AuthenticationContextEvidence.NONE)).isTrue();
     }
 }
