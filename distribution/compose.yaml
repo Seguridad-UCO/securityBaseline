@@ -55,6 +55,7 @@ services:
       PDP_KEYCLOAK_CLIENT_SECRET: TPoYOEY5rzn11VxWtCq5m0cv9mIbSeEM1Tf0CuOezPK6UXr1xT9mWhTiW1u84fJ9l8fU9iUT3GqPTT4wzwXkVW
       PDP_KEYCLOAK_BEARER_AUDIENCE: security-baseline-pdp
       PDP_SECURITY_SESSION_SECURE_COOKIES: "false"
+      PDP_SECURITY_MFA_ENABLED: ${PDP_SECURITY_MFA_ENABLED:-false}
     extra_hosts: ["keycloak.localhost:host-gateway"]
     ports: ["${PDP_PORT:-18080}:8080"]
     depends_on:

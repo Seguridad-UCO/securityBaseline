@@ -46,3 +46,6 @@ __MACOSX/
 # Telemetría local: datos operacionales y credenciales no se versionan.
 observability/.env
 observability/logs/*
+
+# La configuración local se genera como asset en cada release; no versionar la copia usada aquí.
+distribution/.env
