@@ -37,7 +37,6 @@
       "protocol": "openid-connect",
       "attributes": {"include.in.token.scope": "true", "display.on.consent.screen": "false"},
       "protocolMappers": [
-        {"name": "subject", "protocol": "openid-connect", "protocolMapper": "oidc-usermodel-attribute-mapper", "config": {"user.attribute": "security_subject", "claim.name": "sub", "jsonType.label": "String", "access.token.claim": "true"}},
         {"name": "tenant", "protocol": "openid-connect", "protocolMapper": "oidc-hardcoded-claim-mapper", "config": {"claim.name": "tenant", "claim.value": "universidad-uco", "jsonType.label": "String", "access.token.claim": "true"}},
         {"name": "pdp-audience", "protocol": "openid-connect", "protocolMapper": "oidc-audience-mapper", "config": {"included.client.audience": "security-baseline-pdp", "access.token.claim": "true"}},
         {"name": "bff-audience", "protocol": "openid-connect", "protocolMapper": "oidc-audience-mapper", "config": {"included.client.audience": "security-baseline-bff", "access.token.claim": "true"}}

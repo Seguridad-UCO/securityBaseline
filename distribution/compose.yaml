@@ -71,6 +71,9 @@ services:
       PEP_INGRESS_JWKSURI: http://keycloak.localhost:${KEYCLOAK_PORT:-19090}/realms/security-baseline/protocol/openid-connect/certs
       PEP_PDP_ALLOWINSECUREHTTP: "true"
       PEP_PDP_BASE_URL: http://pdp:8080
+        # El PEP se autentica como cliente técnico ante Keycloak desde la red Docker.
+      # `localhost` dentro del contenedor no corresponde al Keycloak publicado en el host.
+      PEP_KEYCLOAK_TOKEN_URI: http://keycloak:8080/realms/security-baseline/protocol/openid-connect/token
     extra_hosts: ["keycloak.localhost:host-gateway"]
     ports: ["${PEP_PORT:-18081}:8081"]
     depends_on:
