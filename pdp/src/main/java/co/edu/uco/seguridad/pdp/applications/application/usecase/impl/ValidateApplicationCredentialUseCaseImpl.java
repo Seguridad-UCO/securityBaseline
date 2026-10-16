@@ -37,7 +37,8 @@ public final class ValidateApplicationCredentialUseCaseImpl implements ValidateA
         return repository.findUniqueByName(input.applicationName())
                 .flatMap(application -> Mono.fromCallable(() -> {
                     rule.execute(new ApplicationCredentialValidity(application.id(),
-                            hasher.matches(input.secret(), application.credentialHash().value())));
+                            application.enabledEnvironments().contains(input.environment())
+                                    && hasher.matches(input.secret(), application.credentialHash().value())));
                     return application.tenantId();
                 }))
                 .onErrorMap(AmbiguousApplicationNameException.class, error -> new InvalidApplicationCredentialException())

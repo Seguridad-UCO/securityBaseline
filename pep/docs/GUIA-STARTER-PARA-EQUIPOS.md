@@ -52,6 +52,9 @@ security.pep.registration.token=${PDP_APPLICATION_CREDENTIAL}
 security.pep.registration.allow-insecure-http=false
 ```
 
+El valor de `security.pep.registration.environment` debe ser `dev`, `lab` o `prod` y estar
+habilitado para la aplicación en el PDP. Una combinación no habilitada es rechazada al registrar la integración.
+
 `backend-url` debe ser solo origen. Son inválidos `https://academic.internal/api`, una URL con query, fragmento o
 credenciales. El PEP asigna automáticamente `/apps/academic`; no incluir ese prefijo en `backend-url`.
 

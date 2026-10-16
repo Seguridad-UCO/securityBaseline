@@ -3,6 +3,7 @@ package co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.p
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash;
+import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationEnvironment;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.entity.ApplicationEntity;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
@@ -10,6 +11,7 @@ import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 
 import java.time.Instant;
 import java.util.UUID;
+import java.util.Set;
 
 /**
  * Traduce la fila de persistencia al agregado. Los value objects validan aquí: una fila corrupta se
@@ -28,6 +30,7 @@ public final class ApplicationPersistenceMapper {
                 entity.description(),
                 new ApplicationBaseUrl(entity.baseUrl()),
                 new ApplicationCredentialHash(entity.credentialHash()),
-                Instant.parse(entity.registeredAt()));
+                Instant.parse(entity.registeredAt()),
+                entity.enabledEnvironments().stream().map(ApplicationEnvironment::from).collect(java.util.stream.Collectors.toUnmodifiableSet()));
     }
 }

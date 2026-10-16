@@ -1,6 +1,7 @@
 package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.controller;
 
 import co.edu.uco.seguridad.pdp.applications.application.primaryport.request.UpdateApplicationRequest;
+import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationEnvironment;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.UpdateApplicationUseCase;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.ProfileDeletionDependencyValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministrationRequest;
@@ -84,7 +85,10 @@ final class CatalogMaintenanceController {
         ApplicationId id = id(applicationId);
         return principal().flatMap(p -> gate(p, id).then(applications.execute(new UpdateApplicationRequest(p.tenantId(), id,
                 RequestFieldParser.parse("name", body.name(), co.edu.uco.seguridad.pdp.commons.model.ApplicationName::new), body.description(),
-                RequestFieldParser.parse("baseUrl", body.baseUrl(), co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl::new))))).map(r -> ok("APPLICATION_UPDATED", r, exchange));
+                RequestFieldParser.parse("baseUrl", body.baseUrl(), co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl::new),
+                body.enabledEnvironments() == null ? Set.of() : body.enabledEnvironments().stream()
+                        .map(value -> RequestFieldParser.parse("enabledEnvironments", value, ApplicationEnvironment::from))
+                        .collect(java.util.stream.Collectors.toUnmodifiableSet()))))).map(r -> ok("APPLICATION_UPDATED", r, exchange));
     }
 
     @PatchMapping("/api/v1/applications/{applicationId}/resources/{resourceId}")
@@ -162,7 +166,7 @@ final class CatalogMaintenanceController {
         return ResponseEntity.ok(ApiResponse.success(code, code, body, context));
     }
 
-    record ApplicationPatch(String name, String description, String baseUrl) {
+    record ApplicationPatch(String name, String description, String baseUrl, Set<String> enabledEnvironments) {
     }
 
     record ResourcePatch(String path, String method) {

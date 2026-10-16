@@ -26,8 +26,8 @@ public final class UpdateApplicationUseCaseImpl implements UpdateApplicationUseC
                         .filter(taken -> taken && !current.name().equals(input.name()))
                         .flatMap(taken -> Mono.<co.edu.uco.seguridad.pdp.applications.domain.Application>error(
                                 new DuplicateApplicationException(input.tenantId(), input.name())))
-                        .switchIfEmpty(repository.update(current.withDetails(input.name(), input.description(), input.baseUrl()))))
+                        .switchIfEmpty(repository.update(current.withDetails(input.name(), input.description(), input.baseUrl(), input.enabledEnvironments()))))
                 .map(application -> new RegisteredApplicationResponse(application.id(), application.tenantId(),
-                        application.name(), application.description(), application.baseUrl(), application.registeredAt()));
+                        application.name(), application.description(), application.baseUrl(), application.registeredAt(), application.enabledEnvironments()));
     }
 }

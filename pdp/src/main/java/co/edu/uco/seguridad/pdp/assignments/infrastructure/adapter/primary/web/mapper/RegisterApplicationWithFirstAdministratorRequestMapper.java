@@ -2,6 +2,7 @@ package co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.
 
 import co.edu.uco.seguridad.pdp.applications.application.primaryport.request.RegisterApplicationRequest;
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
+import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationEnvironment;
 import co.edu.uco.seguridad.pdp.assignments.application.primaryport.request.RegisterApplicationWithFirstAdministratorRequest;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.dto.request.raw.RegisterApplicationWithFirstAdministratorRawRequest;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
@@ -23,7 +24,10 @@ public final class RegisterApplicationWithFirstAdministratorRequestMapper {
                 tenantId,
                 RequestFieldParser.parse("name", raw.name(), ApplicationName::new),
                 raw.description() == null ? "" : raw.description().trim(),
-                RequestFieldParser.parse("baseUrl", raw.baseUrl(), ApplicationBaseUrl::new));
+                RequestFieldParser.parse("baseUrl", raw.baseUrl(), ApplicationBaseUrl::new),
+                raw.enabledEnvironments() == null ? java.util.Set.of() : raw.enabledEnvironments().stream()
+                        .map(value -> RequestFieldParser.parse("enabledEnvironments", value, ApplicationEnvironment::from))
+                        .collect(java.util.stream.Collectors.toUnmodifiableSet()));
         return new RegisterApplicationWithFirstAdministratorRequest(application, registrarUserId);
     }
 }

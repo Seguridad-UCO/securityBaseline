@@ -56,6 +56,6 @@ public final class RotateApplicationCredentialUseCaseImpl implements RotateAppli
 
     private static RegisteredApplicationResponse toRegistered(Application application) {
         return new RegisteredApplicationResponse(application.id(), application.tenantId(), application.name(),
-                application.description(), application.baseUrl(), application.registeredAt());
+                application.description(), application.baseUrl(), application.registeredAt(), application.enabledEnvironments());
     }
 }

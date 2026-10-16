@@ -10,6 +10,9 @@ services:
       KC_HOSTNAME: http://keycloak.localhost:${KEYCLOAK_PORT:-19090}
       KC_HOSTNAME_STRICT: "true"
     ports: ["${KEYCLOAK_PORT:-19090}:8080"]
+    # Conserva usuarios, contraseñas y configuración local al recrear el contenedor.
+    # Se persiste únicamente H2 para no ocultar el realm incluido en la imagen.
+    volumes: ["keycloak-data:/opt/keycloak/data/h2"]
     healthcheck:
       test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8080'"]
       interval: 5s
@@ -81,5 +84,6 @@ services:
       pdp: {condition: service_started}
 
 volumes:
+  keycloak-data:
   surrealdb-data:
   redis-data:

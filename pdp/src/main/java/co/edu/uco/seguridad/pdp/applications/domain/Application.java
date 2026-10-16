@@ -2,12 +2,15 @@ package co.edu.uco.seguridad.pdp.applications.domain;
 
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash;
+import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationEnvironment;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.time.Instant;
+import java.util.EnumSet;
+import java.util.Set;
 import java.util.Objects;
 
 /**
@@ -18,7 +21,8 @@ import java.util.Objects;
  * son rutas relativas a esa base — el endpoint completo es {@code baseUrl + path}.</p>
  */
 public record Application(ApplicationId id, TenantId tenantId, ApplicationName name, String description,
-                          ApplicationBaseUrl baseUrl, ApplicationCredentialHash credentialHash, Instant registeredAt) {
+                          ApplicationBaseUrl baseUrl, ApplicationCredentialHash credentialHash, Instant registeredAt,
+                          Set<ApplicationEnvironment> enabledEnvironments) {
 
     private static final int MAX_DESCRIPTION_LENGTH = 500;
 
@@ -30,9 +34,21 @@ public record Application(ApplicationId id, TenantId tenantId, ApplicationName n
         Objects.requireNonNull(credentialHash, RequiredArgumentMessages.APPLICATION_CREDENTIAL_HASH);
         Objects.requireNonNull(registeredAt, RequiredArgumentMessages.REGISTERED_AT);
         description = description == null ? "" : description.trim();
+        enabledEnvironments = enabledEnvironments == null ? Set.of() : Set.copyOf(enabledEnvironments);
         if (description.length() > MAX_DESCRIPTION_LENGTH) {
             description = description.substring(0, MAX_DESCRIPTION_LENGTH);
         }
+    }
+
+    public Application(ApplicationId id, TenantId tenantId, ApplicationName name, String description,
+                       ApplicationBaseUrl baseUrl, ApplicationCredentialHash credentialHash, Instant registeredAt) {
+        this(id, tenantId, name, description, baseUrl, credentialHash, registeredAt, EnumSet.allOf(ApplicationEnvironment.class));
+    }
+
+    public static Application register(ApplicationId id, TenantId tenantId, ApplicationName name,
+                                       String description, ApplicationBaseUrl baseUrl, ApplicationCredentialHash credentialHash,
+                                       Instant registeredAt, Set<ApplicationEnvironment> enabledEnvironments) {
+        return new Application(id, tenantId, name, description, baseUrl, credentialHash, registeredAt, enabledEnvironments);
     }
 
     public static Application register(ApplicationId id, TenantId tenantId, ApplicationName name,
@@ -42,13 +58,14 @@ public record Application(ApplicationId id, TenantId tenantId, ApplicationName n
     }
 
     public Application withCredentialHash(ApplicationCredentialHash credentialHash) {
-        return new Application(id, tenantId, name, description, baseUrl, credentialHash, registeredAt);
+        return new Application(id, tenantId, name, description, baseUrl, credentialHash, registeredAt, enabledEnvironments);
     }
 
     /**
      * Conserva identidad, credencial y fecha de registro al editar el catálogo.
      */
-    public Application withDetails(ApplicationName name, String description, ApplicationBaseUrl baseUrl) {
-        return new Application(id, tenantId, name, description, baseUrl, credentialHash, registeredAt);
+    public Application withDetails(ApplicationName name, String description, ApplicationBaseUrl baseUrl,
+                                   Set<ApplicationEnvironment> environments) {
+        return new Application(id, tenantId, name, description, baseUrl, credentialHash, registeredAt, environments);
     }
 }
