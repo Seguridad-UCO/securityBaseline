@@ -6,6 +6,8 @@ import co.edu.uco.seguridad.pdp.applications.application.secondaryport.repositor
 import co.edu.uco.seguridad.pdp.applications.application.usecase.UpdateApplicationUseCase;
 import co.edu.uco.seguridad.pdp.applications.domain.exception.ApplicationNotFoundException;
 import co.edu.uco.seguridad.pdp.applications.domain.exception.DuplicateApplicationException;
+import co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationMustHaveAtLeastOneEnabledEnvironmentRule;
+import co.edu.uco.seguridad.pdp.applications.domain.rule.model.ApplicationEnvironmentSelection;
 import reactor.core.publisher.Mono;
 
 /**
@@ -13,14 +15,19 @@ import reactor.core.publisher.Mono;
  */
 public final class UpdateApplicationUseCaseImpl implements UpdateApplicationUseCase {
     private final ApplicationRepository repository;
+    private final ApplicationMustHaveAtLeastOneEnabledEnvironmentRule mustHaveEnabledEnvironment;
 
-    public UpdateApplicationUseCaseImpl(ApplicationRepository repository) {
+    public UpdateApplicationUseCaseImpl(ApplicationRepository repository,
+                                        ApplicationMustHaveAtLeastOneEnabledEnvironmentRule mustHaveEnabledEnvironment) {
         this.repository = repository;
+        this.mustHaveEnabledEnvironment = mustHaveEnabledEnvironment;
     }
 
     @Override
     public Mono<RegisteredApplicationResponse> execute(UpdateApplicationRequest input) {
-        return repository.findByIdForTenant(input.tenantId(), input.applicationId())
+        return Mono.fromRunnable(() -> mustHaveEnabledEnvironment.execute(
+                        new ApplicationEnvironmentSelection(input.enabledEnvironments())))
+                .then(repository.findByIdForTenant(input.tenantId(), input.applicationId()))
                 .switchIfEmpty(Mono.error(() -> new ApplicationNotFoundException(input.applicationId())))
                 .flatMap(current -> repository.existsByTenantAndName(input.tenantId(), input.name())
                         .filter(taken -> taken && !current.name().equals(input.name()))

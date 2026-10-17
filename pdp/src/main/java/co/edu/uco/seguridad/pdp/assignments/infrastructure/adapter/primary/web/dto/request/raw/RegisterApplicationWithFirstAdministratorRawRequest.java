@@ -8,6 +8,6 @@ package co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.
 public record RegisterApplicationWithFirstAdministratorRawRequest(String name, String description, String baseUrl,
                                                                    java.util.Set<String> enabledEnvironments) {
     public RegisterApplicationWithFirstAdministratorRawRequest(String name, String description, String baseUrl) {
-        this(name, description, baseUrl, java.util.Set.of());
+        this(name, description, baseUrl, null);
     }
 }

@@ -86,7 +86,7 @@ final class CatalogMaintenanceController {
         return principal().flatMap(p -> gate(p, id).then(applications.execute(new UpdateApplicationRequest(p.tenantId(), id,
                 RequestFieldParser.parse("name", body.name(), co.edu.uco.seguridad.pdp.commons.model.ApplicationName::new), body.description(),
                 RequestFieldParser.parse("baseUrl", body.baseUrl(), co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl::new),
-                body.enabledEnvironments() == null ? Set.of() : body.enabledEnvironments().stream()
+                body.enabledEnvironments() == null ? java.util.EnumSet.allOf(ApplicationEnvironment.class) : body.enabledEnvironments().stream()
                         .map(value -> RequestFieldParser.parse("enabledEnvironments", value, ApplicationEnvironment::from))
                         .collect(java.util.stream.Collectors.toUnmodifiableSet()))))).map(r -> ok("APPLICATION_UPDATED", r, exchange));
     }

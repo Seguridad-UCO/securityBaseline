@@ -25,7 +25,7 @@ public final class RegisterApplicationWithFirstAdministratorRequestMapper {
                 RequestFieldParser.parse("name", raw.name(), ApplicationName::new),
                 raw.description() == null ? "" : raw.description().trim(),
                 RequestFieldParser.parse("baseUrl", raw.baseUrl(), ApplicationBaseUrl::new),
-                raw.enabledEnvironments() == null ? java.util.Set.of() : raw.enabledEnvironments().stream()
+                raw.enabledEnvironments() == null ? java.util.EnumSet.allOf(ApplicationEnvironment.class) : raw.enabledEnvironments().stream()
                         .map(value -> RequestFieldParser.parse("enabledEnvironments", value, ApplicationEnvironment::from))
                         .collect(java.util.stream.Collectors.toUnmodifiableSet()));
         return new RegisterApplicationWithFirstAdministratorRequest(application, registrarUserId);
