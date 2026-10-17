@@ -27,7 +27,6 @@ class PdpApplicationCredentialValidationAdapterTests {
         StepVerifier.create(adapter(exchange).validate("app-1", "application-secret"))
                 .verifyComplete();
     }
-
     @Test
     void turns_an_invalid_application_credential_into_unauthenticated() {
         StepVerifier.create(adapter(request -> Mono.just(ClientResponse.create(HttpStatus.BAD_REQUEST).build()))

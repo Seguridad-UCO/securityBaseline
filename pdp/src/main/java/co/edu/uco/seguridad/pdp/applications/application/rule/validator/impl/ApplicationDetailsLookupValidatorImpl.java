@@ -23,7 +23,7 @@ public final class ApplicationDetailsLookupValidatorImpl implements ApplicationD
     @Override
     public Mono<RegisteredApplicationResponse> execute(ApplicationId id) {
         return repository.findTenantIdById(id).flatMap(tenantId -> repository.findByIdForTenant(tenantId, id)
-                        .map(application -> new RegisteredApplicationResponse(application.id(), application.tenantId(), application.name(), application.description(), application.baseUrl(), application.registeredAt())))
+                        .map(application -> new RegisteredApplicationResponse(application.id(), application.tenantId(), application.name(), application.description(), application.baseUrl(), application.registeredAt(), application.enabledEnvironments())))
                 .switchIfEmpty(Mono.error(() -> new ApplicationNotFoundException(id)));
     }
 }

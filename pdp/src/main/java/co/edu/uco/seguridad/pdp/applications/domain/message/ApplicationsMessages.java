@@ -29,6 +29,10 @@ public final class ApplicationsMessages {
         return "El nombre de aplicación corresponde a más de un tenant: " + name;
     }
 
+    public static String applicationWithoutEnabledEnvironment() {
+        return "La aplicación debe tener al menos un ambiente habilitado (dev, lab o prod)";
+    }
+
     // HU-013 — validación de credencial de aplicación.
     public static String invalidApplicationCredential() {
         return "La aplicación o la credencial no son válidas";

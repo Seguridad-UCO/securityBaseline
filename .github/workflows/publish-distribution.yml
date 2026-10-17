@@ -34,3 +34,4 @@ jobs:
             distribution/.env.example
             distribution/README.md
             distribution/MANUAL.md
+            distribution/GUIA-INTEGRACION.md

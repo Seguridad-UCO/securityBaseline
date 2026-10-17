@@ -32,7 +32,7 @@ final class InternalApplicationCredentialController {
     @PostMapping("/names/{applicationName}/credential-validations")
     Mono<ResponseEntity<ApplicationCredentialValidationWebResponse>> validate(@PathVariable String applicationName,
                                                                               @RequestBody ValidateApplicationCredentialRawRequest body) {
-        return interactor.execute(new ValidateApplicationCredentialRawRequest(applicationName, body.secret()))
+        return interactor.execute(new ValidateApplicationCredentialRawRequest(applicationName, body.environment(), body.secret()))
                 .map(ResponseEntity::ok);
     }
 }

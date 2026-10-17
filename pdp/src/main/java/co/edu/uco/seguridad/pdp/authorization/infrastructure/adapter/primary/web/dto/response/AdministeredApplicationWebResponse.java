@@ -9,5 +9,10 @@ import java.time.Instant;
  * de otro módulo.
  */
 public record AdministeredApplicationWebResponse(String id, String tenantId, String name, String description,
-                                                 String baseUrl, String credential, Instant registeredAt) {
+                                                 String baseUrl, String credential, Instant registeredAt,
+                                                 java.util.Set<String> enabledEnvironments) {
+    public AdministeredApplicationWebResponse(String id, String tenantId, String name, String description,
+                                              String baseUrl, String credential, Instant registeredAt) {
+        this(id, tenantId, name, description, baseUrl, credential, registeredAt, java.util.Set.of());
+    }
 }

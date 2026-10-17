@@ -1,6 +1,6 @@
 # Security Baseline local
 
-Esta es la única guía de arranque. Keycloak importa automáticamente el realm, sus clientes y claims; no requiere certificados porque este laboratorio usa HTTP local.
+Guía rápida de arranque. Para la integración completa de una aplicación, Maven/GitHub Packages, credenciales, roles, recursos, actualización y solución de problemas, lea [GUIA-INTEGRACION.md](GUIA-INTEGRACION.md).
 
 ## Descargar y ejecutar
 
