@@ -136,6 +136,11 @@ public class ApplicationsConfiguration {
         return new ApplicationNameLookupValidatorImpl(repository);
     }
 
+    @Bean
+    ApplicationNameForTenantLookupValidator applicationNameForTenantLookupValidator(ApplicationRepository repository) {
+        return new ApplicationNameForTenantLookupValidatorImpl(repository);
+    }
+
     // HU-013 — canal interno de validación de credenciales.
     @Bean
     ApplicationCredentialMustBeValidRule applicationCredentialMustBeValidRule() {

@@ -6,6 +6,7 @@ import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import java.util.List;
 
 /**
  * Puerto secundario para almacenamiento de recursos protegidos, expresado solo en tipos de dominio.
@@ -32,6 +33,11 @@ public interface ProtectedResourceRepository {
     default Mono<Long> countByApplication(ApplicationId applicationId) { return Mono.error(new UnsupportedOperationException()); }
 
     Mono<ProtectedResource> save(ProtectedResource resource);
+
+    /** Inserta el lote como una sola unidad de persistencia; ante conflicto no deja altas parciales. */
+    default Mono<Void> saveAllAtomically(List<ProtectedResource> resources) {
+        return Mono.error(new UnsupportedOperationException("La inserción atómica por lote no está implementada"));
+    }
 
     default Mono<ProtectedResource> findByIdForTenant(ResourceId resourceId, TenantId tenantId) {
         return Mono.empty();

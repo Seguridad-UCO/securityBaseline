@@ -2,6 +2,7 @@ package co.edu.uco.seguridad.pdp.authorization.infrastructure.config;
 
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationMustExistForTenantValidator;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationNameLookupValidator;
+import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationNameForTenantLookupValidator;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationOwnerLookupValidator;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationDetailsLookupValidator;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RemoveApplicationUseCase;
@@ -25,6 +26,8 @@ import co.edu.uco.seguridad.pdp.authorization.application.usecase.*;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.impl.*;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.*;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.*;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkResourceImportService;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkResourceWorkbookService;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.observability.ObservedAccessAuditRepository;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.observability.ObservedAdministrationAuditRepository;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.persistence.repository.SurrealAccessAuditRepository;
@@ -62,6 +65,7 @@ import co.edu.uco.seguridad.pdp.profiles.application.usecase.CountApplicationPro
 import co.edu.uco.seguridad.shared.audit.AdministrationAuditRepository;
 import co.edu.uco.seguridad.shared.observability.ReactiveTelemetry;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
+import co.edu.uco.seguridad.shared.event.DomainEventPublisher;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
 import co.edu.uco.seguridad.shared.security.mfa.MfaEvidenceProperties;
@@ -80,6 +84,17 @@ import tools.jackson.databind.ObjectMapper;
 @Configuration
 @EnableConfigurationProperties({OpaProperties.class, MfaEvidenceProperties.class})
 public class AuthorizationConfiguration {
+
+    @Bean
+    BulkResourceWorkbookService bulkResourceWorkbookService() { return new BulkResourceWorkbookService(); }
+
+    @Bean
+    BulkResourceImportService bulkResourceImportService(BulkResourceWorkbookService workbooks,
+            ApplicationNameForTenantLookupValidator applications,
+            PrincipalMustBeApplicationAdministratorValidator administrators, ProtectedResourceRepository resources,
+            IdentifierGenerator identifiers, TimeProvider time, DomainEventPublisher events) {
+        return new BulkResourceImportService(workbooks, applications, administrators, resources, identifiers, time, events);
+    }
 
     // HU-006 (D9 del handoff PDP-PEP-OPA): reemplaza a DenyByDefaultPolicyDecisionAdapter, que se
     // elimina — la denegacion por defecto pasa a vivir en la politica Rego, no en el PDP.

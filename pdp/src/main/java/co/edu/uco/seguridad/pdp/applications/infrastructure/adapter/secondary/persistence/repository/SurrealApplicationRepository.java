@@ -74,6 +74,13 @@ public final class SurrealApplicationRepository implements ApplicationRepository
     }
 
     @Override
+    public Mono<Application> findByTenantAndName(TenantId tenantId, ApplicationName name) {
+        return client.execute("SELECT * FROM %s WHERE tenantId = $tenantId AND string::lowercase(name) = string::lowercase($name) LIMIT 1;"
+                        .formatted(ApplicationSchema.TABLE), Map.of("tenantId", tenantId.value(), "name", name.value()))
+                .flatMap(results -> results.get(0).isEmpty() ? Mono.empty() : Mono.just(toDomain(results.get(0).get(0))));
+    }
+
+    @Override
     public Mono<ApplicationCredentialHash> findCredentialHashById(ApplicationId applicationId) {
         return client.execute(
                         "SELECT credentialHash FROM type::record('%s', $id);".formatted(ApplicationSchema.TABLE),

@@ -17,6 +17,8 @@ import tools.jackson.databind.JsonNode;
 
 import java.time.Instant;
 import java.util.Map;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -91,6 +93,26 @@ public final class SurrealProtectedResourceRepository implements ProtectedResour
                                 "method", resource.method().name(),
                                 "registeredAt", resource.registeredAt().toString()))
                 .thenReturn(resource);
+    }
+
+    @Override
+    public Mono<Void> saveAllAtomically(List<ProtectedResource> resources) {
+        if (resources.isEmpty()) return Mono.empty();
+        StringBuilder query = new StringBuilder("BEGIN TRANSACTION; ");
+        Map<String, String> parameters = new HashMap<>();
+        for (int index = 0; index < resources.size(); index++) {
+            ProtectedResource resource = resources.get(index);
+            String suffix = String.valueOf(index);
+            query.append("CREATE type::record('").append(ProtectedResourceSchema.TABLE).append("', $id").append(suffix)
+                    .append(") SET applicationId=$applicationId").append(suffix).append(", tenantId=$tenantId").append(suffix)
+                    .append(", path=$path").append(suffix).append(", method=$method").append(suffix)
+                    .append(", registeredAt=<datetime>$registeredAt").append(suffix).append("; ");
+            parameters.put("id" + suffix, resource.id().value().toString()); parameters.put("applicationId" + suffix, resource.applicationId().value().toString());
+            parameters.put("tenantId" + suffix, resource.tenantId().value()); parameters.put("path" + suffix, resource.path().value());
+            parameters.put("method" + suffix, resource.method().name()); parameters.put("registeredAt" + suffix, resource.registeredAt().toString());
+        }
+        query.append("COMMIT TRANSACTION;");
+        return client.execute(query.toString(), parameters).then();
     }
 
     @Override
