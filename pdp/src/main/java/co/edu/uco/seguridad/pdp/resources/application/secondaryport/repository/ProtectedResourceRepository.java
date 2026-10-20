@@ -56,5 +56,22 @@ public interface ProtectedResourceRepository {
      */
     Mono<ApplicationId> findApplicationIdById(ResourceId resourceId);
 
-    Mono<ResourceId> findIdByApplicationPathAndMethod(ApplicationId applicationId, ResourcePath path, HttpVerb method);
+    /**
+     * Finds the registered resource covering a concrete request path. A template segment such as
+     * {@code {id}} covers exactly one segment of the request path.
+     */
+    default Mono<ProtectedResource> findByApplicationPathAndMethod(ApplicationId applicationId, ResourcePath path,
+                                                                   HttpVerb method) {
+        return findAllByApplication(applicationId)
+                .filter(resource -> resource.method() == method)
+                .filter(resource -> resource.path().matches(path))
+                // A literal path is more specific than a template and must always win.
+                .sort((left, right) -> Boolean.compare(right.path().equals(path), left.path().equals(path)))
+                .next();
+    }
+
+    default Mono<ResourceId> findIdByApplicationPathAndMethod(ApplicationId applicationId, ResourcePath path,
+                                                               HttpVerb method) {
+        return findByApplicationPathAndMethod(applicationId, path, method).map(ProtectedResource::id);
+    }
 }

@@ -1,5 +1,8 @@
 package co.edu.uco.seguridad.shared.web.session;
 
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
+import co.edu.uco.seguridad.shared.security.LocalUserPrincipal;
+import co.edu.uco.seguridad.shared.security.mfa.AuthenticationContextEvidence;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.http.HttpStatus;
@@ -46,6 +49,26 @@ class InternalBffSessionTokenControllerTests {
         ArgumentCaptor<Authentication> principal = ArgumentCaptor.forClass(Authentication.class);
         verify(clients).loadAuthorizedClient(eq("keycloak"), principal.capture(), eq(exchange));
         assertThat(principal.getValue().getName()).isEqualTo("bff-user");
+    }
+
+    @Test
+    void resolves_the_authorized_client_with_the_keycloak_subject_after_the_session_uses_a_local_principal() {
+        ServerOAuth2AuthorizedClientRepository clients = mock(ServerOAuth2AuthorizedClientRepository.class);
+        MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/internal/v1/bff-session-token"));
+        LocalUserPrincipal localUser = new LocalUserPrincipal("local-id", "keycloak-subject", new TenantId("universidad-uco"),
+                "user@example.edu", "Usuario", AuthenticationContextEvidence.NONE);
+        Authentication bffPrincipal = new UsernamePasswordAuthenticationToken(localUser, null, List.of());
+        new WebSessionServerSecurityContextRepository().save(exchange, new SecurityContextImpl(bffPrincipal)).block();
+
+        OAuth2AccessToken accessToken = new OAuth2AccessToken(OAuth2AccessToken.TokenType.BEARER, "bff-access-token",
+                Instant.now(), Instant.now().plusSeconds(60));
+        when(clients.loadAuthorizedClient(eq("keycloak"), argThat(principal -> "keycloak-subject".equals(principal.getName())), eq(exchange)))
+                .thenReturn(Mono.just(new OAuth2AuthorizedClient(registration(), "keycloak-subject", accessToken)));
+
+        var response = new InternalBffSessionTokenController(clients).token(exchange).block();
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
     private static ClientRegistration registration() {
