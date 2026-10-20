@@ -3,14 +3,18 @@ package co.edu.uco.seguridad.shared.persistence.surrealdb;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.UriUtils;
 import reactor.core.publisher.Mono;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Cliente reactivo mínimo para el endpoint HTTP {@code /sql} de SurrealDB — ver ADR-019 para por qué
@@ -50,17 +54,24 @@ public final class SurrealDbClient {
      */
     public Mono<List<JsonNode>> execute(String surql, Map<String, String> params) {
         return webClient.post()
-                .uri(uriBuilder -> {
-                    uriBuilder.path("/sql");
-                    params.forEach(uriBuilder::queryParam);
-                    return uriBuilder.build();
-                })
+                .uri(sqlUri(params))
                 .contentType(MediaType.TEXT_PLAIN)
                 .accept(MediaType.APPLICATION_JSON)
                 .bodyValue(surql)
                 .retrieve()
                 .bodyToMono(String.class)
                 .map(this::parseStatements);
+    }
+
+    private URI sqlUri(Map<String, String> params) {
+        String query = params.entrySet().stream()
+                .map(entry -> UriUtils.encodeQueryParam(entry.getKey(), StandardCharsets.UTF_8) + "="
+                        + UriUtils.encodeQueryParam(entry.getValue(), StandardCharsets.UTF_8))
+                .collect(Collectors.joining("&"));
+        String baseUrl = properties.url().endsWith("/")
+                ? properties.url().substring(0, properties.url().length() - 1)
+                : properties.url();
+        return URI.create(baseUrl + "/sql" + (query.isEmpty() ? "" : "?" + query));
     }
 
     private List<JsonNode> parseStatements(String responseBody) {

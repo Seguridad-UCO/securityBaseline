@@ -115,8 +115,8 @@ public class AuthorizationConfiguration {
 
     @Bean
     AuthorizationContextResolver authorizationContextResolver(ResolveAuthorizationSubjectFactsUseCase facts,
-                                                              ProtectedResourceIdLookupValidator resourceIds) {
-        return new AuthorizationContextResolverImpl(facts, resourceIds);
+                                                              ProtectedResourceRepository resources) {
+        return new AuthorizationContextResolverImpl(facts, resources);
     }
 
     @Bean
