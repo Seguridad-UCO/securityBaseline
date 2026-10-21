@@ -56,7 +56,8 @@ public final class ReadCurrentUserApplicationsUseCaseImpl implements ReadCurrent
                 .filter(application -> application.tenantId().equals(input.tenantId()))
                 .switchIfEmpty(denied()).flatMap(application -> Mono.zip(directRoles(assigned.directRoleIds(), applicationId, input),
                         profiles(assigned.profileIds(), applicationId, input)).map(parts -> new CurrentUserApplicationsResponse.Application(
-                                application.name().value(), parts.getT1().tenantRoles(), parts.getT1().applicationRoles(), parts.getT2())));
+                                application.id(), application.name().value(), parts.getT1().tenantRoles(),
+                                parts.getT1().applicationRoles(), parts.getT2())));
     }
 
     private Mono<DirectRoles> directRoles(Set<RoleId> roleIds, ApplicationId applicationId, ReadCurrentUserApplicationsRequest input) {
