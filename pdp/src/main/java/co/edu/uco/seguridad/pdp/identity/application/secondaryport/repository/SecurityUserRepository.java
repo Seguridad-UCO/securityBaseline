@@ -22,6 +22,11 @@ public interface SecurityUserRepository {
      */
     Mono<ExternalIdentity> findIdentityBySubject(String subject);
 
+    /** Resuelve la identidad local asociada al subject autenticado, si existe. */
+    default Mono<SecurityUser> findUserBySubject(String subject) {
+        return findIdentityBySubject(subject).flatMap(identity -> findById(identity.userId()));
+    }
+
     Mono<SecurityUser> findByEmail(Email email);
 
     Mono<SecurityUser> findById(UserId userId);

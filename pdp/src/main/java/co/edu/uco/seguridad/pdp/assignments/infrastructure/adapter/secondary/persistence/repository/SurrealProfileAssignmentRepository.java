@@ -12,6 +12,7 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealRecordId;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Flux;
 import tools.jackson.databind.JsonNode;
 
 import java.time.Instant;
@@ -118,6 +119,17 @@ public final class SurrealProfileAssignmentRepository implements ProfileAssignme
                                 "now", now.toString()))
                 .map(results -> results.get(0).valueStream().map(row -> ProfileId.of(row.path("profileId").asString()))
                         .collect(Collectors.toSet()));
+    }
+
+    @Override
+    public Flux<ProfileAssignment> findActiveByUserAndTenant(UserId userId, TenantId tenantId, Instant now) {
+        return client.execute("""
+                        SELECT * FROM %s WHERE userId = $userId AND tenantId = $tenantId
+                        AND validFrom <= <datetime>$now AND (validUntil = NONE OR validUntil > <datetime>$now);
+                        """.formatted(ProfileAssignmentSchema.TABLE),
+                        Map.of("userId", userId.value().toString(), "tenantId", tenantId.value(), "now", now.toString()))
+                .flatMapMany(results -> Flux.fromIterable(results.get(0).valueStream().toList()))
+                .map(SurrealProfileAssignmentRepository::toDomain);
     }
 
     @Override

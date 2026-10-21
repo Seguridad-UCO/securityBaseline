@@ -4,8 +4,10 @@ import co.edu.uco.seguridad.pdp.tenants.application.rule.validator.TenantMustBeA
 import co.edu.uco.seguridad.pdp.tenants.application.rule.validator.impl.TenantMustBeActiveValidatorImpl;
 import co.edu.uco.seguridad.pdp.tenants.application.secondaryport.repository.TenantRepository;
 import co.edu.uco.seguridad.pdp.tenants.application.usecase.CreateTenantUseCase;
+import co.edu.uco.seguridad.pdp.tenants.application.usecase.FindTenantNameByCodeUseCase;
 import co.edu.uco.seguridad.pdp.tenants.application.usecase.ListTenantsUseCase;
 import co.edu.uco.seguridad.pdp.tenants.application.usecase.impl.CreateTenantUseCaseImpl;
+import co.edu.uco.seguridad.pdp.tenants.application.usecase.impl.FindTenantNameByCodeUseCaseImpl;
 import co.edu.uco.seguridad.pdp.tenants.application.usecase.impl.ListTenantsUseCaseImpl;
 import co.edu.uco.seguridad.pdp.tenants.domain.rule.TenantCodeMustBeUniqueRule;
 import co.edu.uco.seguridad.pdp.tenants.domain.rule.TenantMustExistRule;
@@ -74,6 +76,11 @@ public class TenantsConfiguration {
     @Bean
     ListTenantsUseCase listTenantsUseCase(TenantRepository repository) {
         return new ListTenantsUseCaseImpl(repository);
+    }
+
+    @Bean
+    FindTenantNameByCodeUseCase findTenantNameByCodeUseCase(TenantRepository repository) {
+        return new FindTenantNameByCodeUseCaseImpl(repository);
     }
 
     @Bean

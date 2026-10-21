@@ -38,6 +38,7 @@ import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.p
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.properties.OpaProperties;
 import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserIdLookupValidator;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.ResolveExternalIdentityUseCase;
+import co.edu.uco.seguridad.pdp.identity.application.usecase.FindAuthenticatedUserBySubjectUseCase;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.SearchUsersPageUseCase;
 import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.SecurityUserRepository;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileApplicationLookupValidator;
@@ -62,6 +63,7 @@ import co.edu.uco.seguridad.pdp.roles.application.usecase.CountApplicationRolesU
 import co.edu.uco.seguridad.pdp.roles.application.secondaryport.repository.RoleRepository;
 import co.edu.uco.seguridad.pdp.profiles.application.secondaryport.repository.ProfileRepository;
 import co.edu.uco.seguridad.pdp.profiles.application.usecase.CountApplicationProfilesUseCase;
+import co.edu.uco.seguridad.pdp.tenants.application.usecase.FindTenantNameByCodeUseCase;
 import co.edu.uco.seguridad.shared.audit.AdministrationAuditRepository;
 import co.edu.uco.seguridad.shared.observability.ReactiveTelemetry;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
@@ -84,6 +86,18 @@ import tools.jackson.databind.ObjectMapper;
 @Configuration
 @EnableConfigurationProperties({OpaProperties.class, MfaEvidenceProperties.class})
 public class AuthorizationConfiguration {
+
+    @Bean
+    ReadCurrentUserApplicationsUseCase readCurrentUserApplicationsUseCase(ResolveUserApplicationsUseCase assignments,
+            FindTenantNameByCodeUseCase tenants, ApplicationDetailsLookupValidator applications, RoleRepository roles) {
+        return new ReadCurrentUserApplicationsUseCaseImpl(assignments, tenants, applications, roles);
+    }
+
+    @Bean
+    ReadCurrentUserApplicationsInteractor readCurrentUserApplicationsInteractor(
+            FindAuthenticatedUserBySubjectUseCase users, ReadCurrentUserApplicationsUseCase useCase) {
+        return new ReadCurrentUserApplicationsInteractorImpl(users, useCase);
+    }
 
     @Bean
     BulkResourceWorkbookService bulkResourceWorkbookService() { return new BulkResourceWorkbookService(); }
