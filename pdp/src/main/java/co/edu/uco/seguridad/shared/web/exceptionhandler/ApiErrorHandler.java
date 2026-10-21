@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.ServerWebInputException;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.net.URI;
 import java.util.Locale;
@@ -48,6 +49,7 @@ public class ApiErrorHandler {
         HttpStatus status = exception instanceof ConflictBusinessRuleException
                 ? HttpStatus.CONFLICT
                 : "NOT_AUTHORIZED_TO_ADMINISTER".equals(exception.code())
+                        || "CURRENT_USER_APPLICATIONS_ACCESS_DENIED".equals(exception.code())
                         ? HttpStatus.FORBIDDEN
                         : HttpStatus.BAD_REQUEST;
         return ResponseEntity.status(status)
@@ -58,6 +60,12 @@ public class ApiErrorHandler {
     ResponseEntity<ProblemDetail> unreadableRequest(ServerWebInputException exception, ServerWebExchange exchange) {
         return ResponseEntity.badRequest().body(problem(HttpStatus.BAD_REQUEST, "MALFORMED_REQUEST",
                 WebContractMessages.unreadableBody(), exchange));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    ResponseEntity<ProblemDetail> accessDenied(AccessDeniedException exception, ServerWebExchange exchange) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(problem(HttpStatus.FORBIDDEN, "ACCESS_DENIED", exception.getMessage(), exchange));
     }
 
     @ExceptionHandler(Exception.class)

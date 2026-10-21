@@ -239,3 +239,37 @@ un `
 En un equipo mixto Mac/Windows eso significa que la validación pasaba para unos y fallaba para
 otros, sin que el archivo cambiara. Resuelto fijando `*.rego` y `security-policy-engine/scripts/**`
 a `eol=lf` en `.gitattributes`, y normalizando el árbol.
+# Consulta de aplicaciones desde una SPA integrada
+
+La librería PEP continúa protegiendo las APIs de negocio y no invoca este endpoint. Una SPA que
+use la sesión BFF central puede consultar su vista de navegación directamente al PDP:
+
+```ts
+const response = await fetch(`${securityBaseUrl}/api/v1/me/applications`, {
+  credentials: "include"
+});
+if (response.status === 401) {
+  const returnTo = encodeURIComponent(`${window.location.origin}${window.location.pathname}${window.location.search}`);
+  window.location.assign(`${securityBaseUrl}/oauth2/authorization/keycloak?return_to=${returnTo}`);
+  return;
+}
+if (!response.ok) throw new Error("No fue posible consultar las aplicaciones");
+
+const { data } = await response.json();
+data.applications.forEach((application: {
+  name: string;
+  tenantRoles: { name: string }[];
+  applicationRoles: { name: string }[];
+  profiles: { name: string; roles: { name: string; scope: "TENANT" | "APPLICATION" }[] }[];
+}) => renderApplication({
+  name: application.name,
+  tenantRoles: application.tenantRoles,
+  applicationRoles: application.applicationRoles,
+  profiles: application.profiles
+}));
+```
+
+El origen de la SPA debe figurar en `pdp.security.cors.allowed-origins`. El navegador envía la
+cookie `SECURITY_BASELINE_SESSION`; no se entrega un JWT a JavaScript. Cada aplicación contiene
+las secciones `tenantRoles`, `applicationRoles` y `profiles`; los perfiles muestran sus roles con
+alcance. Los roles `GLOBAL` no se exponen.

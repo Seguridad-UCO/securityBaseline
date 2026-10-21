@@ -20,6 +20,11 @@ public interface TenantRepository {
 
     Mono<Boolean> existsById(TenantId tenantId);
 
+    /** Lookup mínimo para flujos que ya poseen el código del tenant autenticado. */
+    default Mono<Tenant> findById(TenantId tenantId) {
+        return Mono.empty();
+    }
+
     Mono<Tenant> save(Tenant tenant);
 
     Flux<Tenant> findAll();
