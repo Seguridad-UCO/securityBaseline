@@ -28,7 +28,8 @@ public final class ReadCurrentUserApplicationsInteractorImpl implements ReadCurr
                 .map(response -> new CurrentUserApplicationsWebResponse(
                         new CurrentUserApplicationsWebResponse.Tenant(response.tenantName()),
                         new CurrentUserApplicationsWebResponse.User(response.userName(), response.email()),
-                        response.applications().stream().map(app -> new CurrentUserApplicationsWebResponse.Application(app.name(),
+                        response.applications().stream().map(app -> new CurrentUserApplicationsWebResponse.Application(
+                                app.id().value().toString(), app.name(),
                                 app.tenantRoles().stream().map(role -> new CurrentUserApplicationsWebResponse.NamedRole(role.name())).toList(),
                                 app.applicationRoles().stream().map(role -> new CurrentUserApplicationsWebResponse.NamedRole(role.name())).toList(),
                                 app.profiles().stream().map(profile -> new CurrentUserApplicationsWebResponse.Profile(profile.name(),
