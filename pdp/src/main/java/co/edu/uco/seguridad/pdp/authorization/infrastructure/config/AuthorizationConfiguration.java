@@ -89,8 +89,9 @@ public class AuthorizationConfiguration {
 
     @Bean
     ReadCurrentUserApplicationsUseCase readCurrentUserApplicationsUseCase(ResolveUserApplicationsUseCase assignments,
-            FindTenantNameByCodeUseCase tenants, ApplicationDetailsLookupValidator applications, RoleRepository roles) {
-        return new ReadCurrentUserApplicationsUseCaseImpl(assignments, tenants, applications, roles);
+            FindTenantNameByCodeUseCase tenants, ApplicationDetailsLookupValidator applications, RoleRepository roles,
+            ProfileRepository profiles) {
+        return new ReadCurrentUserApplicationsUseCaseImpl(assignments, tenants, applications, roles, profiles);
     }
 
     @Bean

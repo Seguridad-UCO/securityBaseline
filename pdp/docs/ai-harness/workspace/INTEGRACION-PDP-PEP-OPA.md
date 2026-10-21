@@ -248,9 +248,28 @@ use la sesión BFF central puede consultar su vista de navegación directamente 
 const response = await fetch(`${securityBaseUrl}/api/v1/me/applications`, {
   credentials: "include"
 });
-if (response.status === 401) window.location.assign(`${securityBaseUrl}/login`);
+if (response.status === 401) {
+  const returnTo = encodeURIComponent(`${window.location.origin}${window.location.pathname}${window.location.search}`);
+  window.location.assign(`${securityBaseUrl}/oauth2/authorization/keycloak?return_to=${returnTo}`);
+  return;
+}
+if (!response.ok) throw new Error("No fue posible consultar las aplicaciones");
+
+const { data } = await response.json();
+data.applications.forEach((application: {
+  name: string;
+  tenantRoles: { name: string }[];
+  applicationRoles: { name: string }[];
+  profiles: { name: string; roles: { name: string; scope: "TENANT" | "APPLICATION" }[] }[];
+}) => renderApplication({
+  name: application.name,
+  tenantRoles: application.tenantRoles,
+  applicationRoles: application.applicationRoles,
+  profiles: application.profiles
+}));
 ```
 
 El origen de la SPA debe figurar en `pdp.security.cors.allowed-origins`. El navegador envía la
-cookie `SECURITY_BASELINE_SESSION`; no se entrega un JWT a JavaScript. La respuesta contiene solo
-el nombre del tenant, el nombre/correo del usuario y nombres de aplicaciones con sus roles.
+cookie `SECURITY_BASELINE_SESSION`; no se entrega un JWT a JavaScript. Cada aplicación contiene
+las secciones `tenantRoles`, `applicationRoles` y `profiles`; los perfiles muestran sus roles con
+alcance. Los roles `GLOBAL` no se exponen.

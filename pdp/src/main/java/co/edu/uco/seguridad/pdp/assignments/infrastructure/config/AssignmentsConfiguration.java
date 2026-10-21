@@ -144,8 +144,8 @@ public class AssignmentsConfiguration {
 
     @Bean
     ResolveUserApplicationsUseCase resolveUserApplicationsUseCase(AssignmentRepository assignments,
-            ProfileAssignmentRepository profiles, ProfileRolesLookupValidator profileRoles, TimeProvider time) {
-        return new ResolveUserApplicationsUseCaseImpl(assignments, profiles, profileRoles, time);
+            ProfileAssignmentRepository profiles, TimeProvider time) {
+        return new ResolveUserApplicationsUseCaseImpl(assignments, profiles, time);
     }
 
     @Bean

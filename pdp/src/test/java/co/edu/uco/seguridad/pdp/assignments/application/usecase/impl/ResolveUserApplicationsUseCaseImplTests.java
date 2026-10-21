@@ -17,7 +17,6 @@ import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
 import co.edu.uco.seguridad.pdp.commons.model.RoleId;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.commons.model.UserId;
-import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileRolesLookupValidator;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
@@ -26,7 +25,6 @@ import reactor.test.StepVerifier;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -45,39 +43,40 @@ class ResolveUserApplicationsUseCaseImplTests {
     @Test
     void returns_active_direct_roles() {
         resolve(List.of(assignment(DIRECT_ROLE)), List.of(), Set.of())
-                .assertNext(result -> assertThat(result.rolesByApplication())
-                        .containsEntry(APPLICATION, Set.of(DIRECT_ROLE)))
+                .assertNext(result -> assertThat(result.assignmentsByApplication().get(APPLICATION).directRoleIds())
+                        .containsExactly(DIRECT_ROLE))
                 .verifyComplete();
     }
 
     @Test
     void returns_roles_inherited_from_an_active_profile() {
         resolve(List.of(), List.of(profileAssignment()), Set.of(PROFILE_ROLE))
-                .assertNext(result -> assertThat(result.rolesByApplication())
-                        .containsEntry(APPLICATION, Set.of(PROFILE_ROLE)))
+                .assertNext(result -> assertThat(result.assignmentsByApplication().get(APPLICATION).profileIds())
+                        .containsExactly(PROFILE))
                 .verifyComplete();
     }
 
     @Test
     void combines_sources_without_duplicate_roles() {
         resolve(List.of(assignment(DIRECT_ROLE)), List.of(profileAssignment()), Set.of(DIRECT_ROLE, PROFILE_ROLE))
-                .assertNext(result -> assertThat(result.rolesByApplication().get(APPLICATION))
-                        .containsExactlyInAnyOrder(DIRECT_ROLE, PROFILE_ROLE))
+                .assertNext(result -> {
+                    assertThat(result.assignmentsByApplication().get(APPLICATION).directRoleIds()).containsExactly(DIRECT_ROLE);
+                    assertThat(result.assignmentsByApplication().get(APPLICATION).profileIds()).containsExactly(PROFILE);
+                })
                 .verifyComplete();
     }
 
     @Test
     void excludes_expired_assignments_before_resolving_roles() {
         resolve(List.of(), List.of(), Set.of())
-                .assertNext(result -> assertThat(result.rolesByApplication()).isEmpty())
+                .assertNext(result -> assertThat(result.assignmentsByApplication()).isEmpty())
                 .verifyComplete();
     }
 
-    private static StepVerifier.FirstStep<co.edu.uco.seguridad.pdp.assignments.application.primaryport.response.UserApplicationRolesResponse> resolve(
+    private static StepVerifier.FirstStep<co.edu.uco.seguridad.pdp.assignments.application.primaryport.response.UserApplicationAssignmentsResponse> resolve(
             List<Assignment> assignments, List<ProfileAssignment> profiles, Set<RoleId> profileRoles) {
         ResolveUserApplicationsUseCase useCase = new ResolveUserApplicationsUseCaseImpl(
-                assignmentRepository(assignments), profileAssignmentRepository(profiles),
-                query -> Mono.just(profileRoles), fixedTime());
+                assignmentRepository(assignments), profileAssignmentRepository(profiles), fixedTime());
         return StepVerifier.create(useCase.execute(new ResolveUserApplicationsRequest(USER, TENANT)));
     }
 
