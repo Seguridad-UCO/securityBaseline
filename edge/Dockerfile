@@ -1,0 +1,49 @@
+# edge — Caddy + Coraza (WAF) + OWASP CRS v4 + rate limit por IP. ADR-032 / PLAN-HU-027 §7.1.
+#
+# Contexto de build = esta carpeta:  docker build -t security-edge edge/
+#
+# Versiones fijadas a propósito: el CRS viaja embebido en coraza-caddy (módulo Go
+# github.com/corazawaf/coraza-coreruleset, fijado por go.sum del release de coraza-caddy), así que
+# la versión de coraza-caddy ES la versión del CRS. Se imprime en el log de arranque (entrypoint.sh).
+ARG CADDY_VERSION=2.10.0
+ARG CORAZA_CADDY_VERSION=v2.1.0
+ARG CADDY_RATELIMIT_VERSION=v0.1.0
+
+FROM caddy:${CADDY_VERSION}-builder AS builder
+ARG CORAZA_CADDY_VERSION
+ARG CADDY_RATELIMIT_VERSION
+RUN xcaddy build \
+      --with github.com/corazawaf/coraza-caddy/v2@${CORAZA_CADDY_VERSION} \
+      --with github.com/mholt/caddy-ratelimit@${CADDY_RATELIMIT_VERSION}
+
+FROM caddy:${CADDY_VERSION}-alpine
+ARG CORAZA_CADDY_VERSION
+ENV CORAZA_CADDY_VERSION=${CORAZA_CADDY_VERSION}
+RUN apk add --no-cache curl
+COPY --from=builder /usr/bin/caddy /usr/bin/caddy
+COPY Caddyfile /etc/caddy/Caddyfile
+COPY rules/ /etc/coraza/rules/
+COPY entrypoint.sh /usr/local/bin/edge-entrypoint.sh
+COPY healthcheck.sh /usr/local/bin/edge-healthcheck.sh
+RUN chmod +x /usr/local/bin/edge-entrypoint.sh /usr/local/bin/edge-healthcheck.sh \
+ && mkdir -p /var/log/security /etc/coraza/generated
+
+# Defaults del contrato (PLAN-HU-027 §7.1). EDGE_UPSTREAM no tiene default a propósito: sin
+# upstream el edge no arranca.
+ENV EDGE_MODE=detection \
+    EDGE_LISTEN=:8088 \
+    EDGE_PARANOIA=1 \
+    EDGE_ANOMALY_INBOUND=5 \
+    EDGE_TRUSTED_PROXIES="" \
+    EDGE_RATE_AUTHORIZE=60/1m \
+    EDGE_RATE_SESSION=30/1m \
+    EDGE_RATE_DEFAULT=300/1m \
+    EDGE_LOG_DIR=/var/log/security \
+    OTEL_SERVICE_NAME=security-edge \
+    DEPLOYMENT_ENVIRONMENT=local
+
+HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=3 \
+  CMD /usr/local/bin/edge-healthcheck.sh
+
+EXPOSE 8088
+ENTRYPOINT ["/usr/local/bin/edge-entrypoint.sh"]

@@ -1,0 +1,175 @@
+# Overlay del edge sobre la infraestructura del PDP (PLAN-HU-027 §7.7).
+#
+#   docker compose -p edge -f pdp/docker-compose.yml -f edge/compose.pdp.yml up -d --build --wait
+#   docker compose -p edge -f pdp/docker-compose.yml -f edge/compose.pdp.yml --profile test run --rm hurl
+#
+# `-p edge` a propósito: volúmenes propios (edge_keycloak_data, edge_surrealdb_data) para que el
+# realm de CI se importe en un Keycloak vacío y no pise el realm configurado a mano del proyecto
+# `pdp`. Los container_name del compose base se sobreescriben por la misma razón.
+#
+# Solo `edge` publica un puerto (E1). PEP no participa aquí: ver compose.pep.yml.
+#
+# OJO: Compose resuelve las rutas relativas de un overlay contra el directorio del PRIMER archivo
+# (`pdp/`), no contra `edge/`. Por eso aquí todo va como `../edge/...` y `../observability/...`.
+services:
+  surrealdb:
+    container_name: edge-surrealdb
+    ports: !reset []
+
+  keycloak:
+    container_name: edge-keycloak
+    ports: !reset []
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+      - ../pdp/keycloak/themes:/opt/keycloak/themes
+      # Keycloak exige que el archivo se llame <realm>-realm.json; se monta con ese nombre.
+      - ../edge/tests/realm/security-baseline-ci-realm.json:/opt/keycloak/data/import/security-baseline-realm.json:ro
+    healthcheck:
+      # Keycloak 26 no trae curl; el health de management va por 9000 y bash + /dev/tcp alcanzan.
+      test:
+        - CMD-SHELL
+        - "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q '\"status\": \"UP\"' <&3"
+      interval: 5s
+      timeout: 5s
+      retries: 40
+      start_period: 20s
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HEALTH_ENABLED: "true"
+
+  redis:
+    container_name: edge-redis
+    ports: !reset []
+
+  opa:
+    build:
+      context: ../security-policy-engine
+    image: security-opa:edge-local
+    container_name: edge-opa
+    healthcheck:
+      test: ["CMD", "/opa", "eval", "--format=json", "data.security.authorization.decision"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  pdp:
+    build:
+      context: ..
+      dockerfile: pdp/Dockerfile
+    image: pdp:edge-local
+    container_name: edge-pdp
+    environment:
+      # Sin el perfil observability a propósito: mueve el management a 9080 y fija su address, y
+      # con eso /actuator/health no atravesaría el edge (flows/health.hurl). El log JSON en archivo
+      # se activa con las dos propiedades de logging que ese perfil usa, sin el resto.
+      SPRING_PROFILES_ACTIVE: dev,keycloak
+      PDP_INTERNAL_MTLS_ENABLED: "false"
+      PDP_DATASOURCE_URL: http://surrealdb:8000
+      PDP_DATASOURCE_USERNAME: root
+      PDP_DATASOURCE_PASSWORD: root
+      PDP_KEYCLOAK_ISSUER: http://keycloak:8080/realms/security-baseline
+      PDP_KEYCLOAK_CLIENT_ID: security-baseline-bff
+      PDP_KEYCLOAK_CLIENT_SECRET: ${EDGE_CI_KEYCLOAK_CLIENT_SECRET:?Set EDGE_CI_KEYCLOAK_CLIENT_SECRET to the CI realm client secret}
+      PDP_KEYCLOAK_BEARER_AUDIENCE: security-baseline-pdp
+      PDP_FRONTEND_ORIGIN: http://edge:8088
+      PDP_CORS_ALLOWED_ORIGINS: http://edge:8088
+      PDP_LOGIN_ALLOWED_RETURN_ORIGINS: http://edge:8088
+      PDP_REDIS_HOST: redis
+      PDP_REDIS_PORT: "6379"
+      PDP_OPA_BASEURL: http://opa:8181
+      # Log JSON del PDP compartido con el edge por volumen: es lo que el pipeline cruza por
+      # correlationId (criterio 5).
+      LOGGING_STRUCTURED_FORMAT_FILE: logstash
+      LOGGING_FILE_NAME: /var/log/security/security-pdp.json
+      OTEL_SERVICE_NAME: security-pdp
+      DEPLOYMENT_ENVIRONMENT: ${DEPLOYMENT_ENVIRONMENT:-local}
+      # Sin collector en este overlay: exportar métricas por OTLP solo produciría ruido.
+      MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED: "false"
+    volumes:
+      - ${EDGE_HOST_LOG_DIR:-../observability/logs}:/var/log/security
+    depends_on:
+      surrealdb:
+        condition: service_started
+      keycloak:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      opa:
+        condition: service_healthy
+    healthcheck:
+      # La imagen JRE no trae curl (el HEALTHCHECK de pdp/Dockerfile tampoco funciona por eso —
+      # hallazgo para el reporte); bash sí, y /dev/tcp alcanza.
+      test:
+        - CMD
+        - bash
+        - -c
+        - "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET /actuator/health HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q '\"status\":\"UP\"' <&3"
+      interval: 5s
+      timeout: 3s
+      retries: 40
+      start_period: 30s
+
+  edge:
+    build:
+      context: ../edge
+    image: security-edge:local
+    container_name: edge
+    ports:
+      - "8088:8088"
+    environment:
+      EDGE_MODE: ${EDGE_MODE:-detection}
+      EDGE_UPSTREAM: http://pdp:8080
+      EDGE_LISTEN: ":8088"
+      DEPLOYMENT_ENVIRONMENT: ${DEPLOYMENT_ENVIRONMENT:-local}
+    volumes:
+      - ${EDGE_HOST_LOG_DIR:-../observability/logs}:/var/log/security
+    networks:
+      - default
+      - edge_metrics
+    # Fail-closed (criterio 4) — sin overlay extra: el pipeline monta la fixture con `run -v`:
+    #   docker compose -p edge -f pdp/docker-compose.yml -f edge/compose.pdp.yml run --rm --no-deps \
+    #     -v ./edge/tests/fixtures/broken-rule.conf:/etc/coraza/rules/exclusions/99-broken.conf:ro edge
+    # y exige exit != 0.
+    depends_on:
+      pdp:
+        condition: service_healthy
+    healthcheck:
+      interval: ${EDGE_HEALTHCHECK_INTERVAL:-10s}
+
+  # Suite hurl, dentro de la red (resuelve edge y keycloak). Perfil `test`: no arranca con `up`.
+  #   --path-as-is: un WAF se prueba con la URL tal cual está escrita, nunca normalizada por el
+  #   cliente (sin esto libcurl convierte /api/v1/%2e%2e/.. en /etc/passwd antes de enviarlo).
+  hurl:
+    image: ghcr.io/orange-opensource/hurl:7.1.0
+    profiles: ["test"]
+    volumes:
+      - ../edge/tests:/tests:ro
+    working_dir: /tests
+    entrypoint: ["hurl"]
+    command: ["--version"]
+    depends_on:
+      edge:
+        condition: service_healthy
+
+  # Segunda IP para el criterio 6: mismo suite, otro contenedor, otra IP de origen.
+  hurl-second-ip:
+    image: ghcr.io/orange-opensource/hurl:7.1.0
+    profiles: ["test"]
+    volumes:
+      - ../edge/tests:/tests:ro
+    working_dir: /tests
+    entrypoint: ["hurl"]
+    command: ["--version"]
+    depends_on:
+      edge:
+        condition: service_healthy
+
+volumes:
+  keycloak_data:
+  surrealdb_data:
+
+networks:
+  edge_metrics:
+    external: true
+    name: security-edge-metrics

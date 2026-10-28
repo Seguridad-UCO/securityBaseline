@@ -29,12 +29,27 @@ Los nombres de eventos reservados son:
 - `security.authorization.completed`: resultado de la evaluación PDP.
 - `pep.enforcement.completed`: resultado de la aplicación de la decisión en PEP.
 - `security.access.event.recorded`: evidencia `access_event` confirmada en SurrealDB.
+- `edge.request.blocked` y `edge.request.rate_limited`: rechazos del WAF y del limitador por IP.
 
 `security.access.event.recorded` lleva solamente `decisionId`, `requestId`, `correlationId`,
 `decision`, `reason` y `action`. No lleva token, JWT, cuerpo, sujeto, ruta del recurso ni URLs.
 Las dimensiones de métricas son de vocabulario cerrado: `decision`, `reason`, `action`, `service`
 y `environment`; no se permiten IDs, tenant, aplicación, usuario ni ruta como etiquetas de
 Prometheus.
+
+El edge usa `service.name = security-edge` y escribe `security-edge.json` (acceso) y
+`security-edge-audit.json` (reglas que detectaron una petición). El query string se redacta en el
+log de acceso. El audit log conserva únicamente las partes configuradas por Coraza; el campo
+`logdata` añade puntuación, ruta sin query y `correlationId` para correlacionar detecciones sin
+copiar parámetros de la URL.
+
+El Collector recibe ambos archivos como `file_log/edge` y `file_log/edge_audit`. Antes de exportar
+el audit log, conserva solo el `correlationId` y una marca `edge.detection`; elimina el URI,
+cabeceras, cuerpos, direcciones IP y detalles de reglas que podrían contener valores de la petición.
+El archivo local de auditoría sigue siendo evidencia sensible: no se publica como artefacto de CI.
+Prometheus consulta las métricas de Caddy por la red interna dedicada `security-edge-metrics` en
+`edge:2019/metrics`. Solo el edge y el Collector se conectan a esa red; el puerto 2019 no se
+publica en el host y sirve métricas, no la API administrativa de Caddy.
 
 ## Semántica operativa
 

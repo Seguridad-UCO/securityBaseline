@@ -1,0 +1,260 @@
+# Pipeline de validación del edge. No despliega ni cambia EDGE_MODE en ambientes.
+name: edge_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
+
+trigger:
+  branches:
+    include: [main, feature/*]
+  paths:
+    include:
+      - edge
+      - observability
+      - pdp/Dockerfile
+      - pep
+      - ci/edge-pipeline.yml
+      - .mvn
+      - mvnw
+
+pr:
+  branches:
+    include: [main]
+  paths:
+    include:
+      - edge
+      - observability
+      - pdp/Dockerfile
+      - pep
+      - ci/edge-pipeline.yml
+      - .mvn
+      - mvnw
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+  - checkout: self
+
+  - bash: |
+      set -euo pipefail
+
+      evidence_dir="$(Agent.TempDirectory)/edge-evidence-$(Build.BuildId)"
+      export EDGE_HOST_LOG_DIR="$evidence_dir/logs"
+      export OBSERVABILITY_LOG_DIR="$evidence_dir/logs"
+      export EDGE_CI_KEYCLOAK_CLIENT_SECRET="$(
+        python3 -c 'import json; print(json.load(open("edge/tests/realm/security-baseline-ci-realm.json"))["clients"][0]["secret"])'
+      )"
+      export DEPLOYMENT_ENVIRONMENT=ci
+      mkdir -p "$evidence_dir/logs" "$evidence_dir/reports"
+      detection_project="edge-detection-$(Build.BuildId)"
+      blocking_project="edge-blocking-$(Build.BuildId)"
+      pep_project="edge-pep-$(Build.BuildId)"
+      observability_project="edge-observability-$(Build.BuildId)"
+
+      bash edge/tools/check-exclusions.sh
+
+      pdp_compose() {
+        project="$1"
+        shift
+        docker compose -p "$project" -f pdp/docker-compose.yml -f edge/compose.pdp.yml "$@"
+      }
+
+      pep_compose() {
+        project="$1"
+        shift
+        docker compose -p "$project" -f pep/compose.integration.yml -f edge/compose.pep.yml "$@"
+      }
+
+      observability_compose() {
+        project="$1"
+        shift
+        GRAFANA_ADMIN_PASSWORD=ci-not-used docker compose -p "$project" -f observability/compose.yml "$@"
+      }
+
+      cleanup() {
+        pdp_compose "$detection_project" down --remove-orphans || true
+        pdp_compose "$blocking_project" down --remove-orphans || true
+        pep_compose "$pep_project" down --remove-orphans || true
+        observability_compose "$observability_project" down --remove-orphans || true
+      }
+      trap cleanup EXIT
+
+      run_pdp_hurl() {
+        project="$1"
+        service="$2"
+        report="$3"
+        file="$4"
+        pdp_compose "$project" --profile test run --rm --no-deps \
+          -v "$evidence_dir/reports:/reports" "$service" \
+          --test --report-junit "/reports/$report.xml" \
+          --variables-file hurl.env.compose \
+          --variable "run_id=$(Build.BuildId)" "$file"
+      }
+
+      run_pep_hurl() {
+        project="$1"
+        service="$2"
+        report="$3"
+        file="$4"
+        pep_compose "$project" --profile test run --rm --no-deps \
+          -v "$evidence_dir/reports:/reports" "$service" \
+          --test --report-junit "/reports/$report.xml" \
+          --variables-file hurl.env.compose \
+          --variable "run_id=$(Build.BuildId)" "$file"
+      }
+
+      assert_detection_logs_clean() {
+        python3 - "$evidence_dir/logs/security-edge-audit.json" <<'PY'
+      import json
+      import sys
+
+      path = sys.argv[1]
+      unexpected = 0
+      try:
+          stream = open(path, encoding="utf-8")
+      except FileNotFoundError:
+          print("FALLA: no se generó security-edge-audit.json")
+          raise SystemExit(1)
+
+      with stream:
+          for line in stream:
+              try:
+                  event = json.loads(line)
+              except json.JSONDecodeError:
+                  print("FALLA: el audit log contiene una línea que no es JSON")
+                  raise SystemExit(1)
+              transaction = event.get("transaction", {})
+              headers = transaction.get("request", {}).get("headers", {})
+              correlation = next(
+                  (values for name, values in headers.items() if name.lower() == "x-correlation-id"),
+                  [],
+              )
+              correlation = correlation[0] if isinstance(correlation, list) and correlation else ""
+              if correlation.startswith("edge-healthcheck"):
+                  continue
+              if event.get("messages"):
+                  unexpected += 1
+
+      if unexpected:
+          print(f"FALLA: {unexpected} detección(es) WAF en flujos legítimos")
+          raise SystemExit(1)
+      print("OK: los flujos legítimos no dejaron detecciones WAF")
+      PY
+      }
+
+      assert_pdp_correlation() {
+        python3 - "$evidence_dir/logs/security-pdp.json" "$(Build.BuildId)" <<'PY'
+      import pathlib
+      import sys
+
+      path = pathlib.Path(sys.argv[1])
+      expected = f"hurl-corr-{sys.argv[2]}"
+      if not path.exists() or not any(expected in line for line in path.open(encoding="utf-8")):
+          print("FALLA: el correlationId de Hurl no aparece en el log del PDP")
+          raise SystemExit(1)
+      print("OK: el correlationId aparece en el log del PDP")
+      PY
+      }
+
+      assert_attack_not_in_pdp_logs() {
+        python3 - "$evidence_dir/logs/security-pdp.json" "$(Build.BuildId)" <<'PY'
+      import pathlib
+      import sys
+
+      path = pathlib.Path(sys.argv[1])
+      forbidden = f"edge-attack-{sys.argv[2]}"
+      if path.exists() and any(forbidden in line for line in path.open(encoding="utf-8")):
+          print("FALLA: el PDP registró una petición bloqueada por el edge")
+          raise SystemExit(1)
+      print("OK: la petición bloqueada no llegó a los logs del PDP")
+      PY
+      }
+
+      docker compose -p edge-config -f pdp/docker-compose.yml -f edge/compose.pdp.yml config --quiet
+      docker compose -p edge-pep-config -f pep/compose.integration.yml -f edge/compose.pep.yml config --quiet
+
+      observability_compose "$observability_project" up -d --wait --wait-timeout 120 collector
+
+      export EDGE_MODE=detection
+      pdp_compose "$detection_project" up -d --build --wait --wait-timeout 300
+      for file in \
+        flows/health.hurl \
+        flows/correlation.hurl \
+        flows/headers.hurl \
+        flows/oidc-login-session-logout.hurl \
+        flows/applications-register-list.hurl \
+        flows/administrators-list-add-remove.hurl \
+        flows/authorize.hurl \
+        flows/rate-limit-under-threshold.hurl; do
+        run_pdp_hurl "$detection_project" hurl "detection-${file//\//-}" "$file"
+      done
+      assert_detection_logs_clean
+      assert_pdp_correlation
+      pdp_compose "$detection_project" down --remove-orphans
+
+      export EDGE_MODE=blocking
+      pdp_compose "$blocking_project" up -d --build --wait --wait-timeout 300
+      for file in \
+        attacks/canary.hurl \
+        attacks/content-type-mismatch.hurl \
+        attacks/method-not-allowed.hurl \
+        attacks/path-traversal.hurl \
+        attacks/scanner-user-agent.hurl \
+        attacks/sqli-json-body.hurl \
+        attacks/sqli-query.hurl \
+        attacks/xss-query.hurl \
+        flows/health.hurl \
+        flows/correlation.hurl \
+        flows/headers.hurl \
+        flows/oidc-login-session-logout.hurl \
+        flows/applications-register-list.hurl \
+        flows/administrators-list-add-remove.hurl \
+        flows/authorize.hurl; do
+        run_pdp_hurl "$blocking_project" hurl "blocking-${file//\//-}" "$file"
+      done
+      assert_attack_not_in_pdp_logs
+
+      run_pdp_hurl "$blocking_project" hurl "rate-limit-over-threshold" "ratelimit/over-threshold.hurl" &
+      rate_limit_pid=$!
+      run_pdp_hurl "$blocking_project" hurl-second-ip "rate-limit-second-ip" "flows/rate-limit-under-threshold.hurl"
+      wait "$rate_limit_pid"
+
+      if pdp_compose "$blocking_project" run --rm --no-deps \
+        -v "$PWD/edge/tests/fixtures/broken-rule.conf:/etc/coraza/rules/exclusions/999999-broken-rule.conf:ro" \
+        edge; then
+        echo "FALLA: el edge arrancó con reglas Coraza inválidas"
+        exit 1
+      else
+        echo "OK: el edge falla cerrado con reglas Coraza inválidas"
+      fi
+      pdp_compose "$blocking_project" down --remove-orphans
+
+      pep_compose "$pep_project" up -d --build --wait --wait-timeout 180
+      for file in \
+        attacks/canary.hurl \
+        attacks/content-type-mismatch.hurl \
+        attacks/method-not-allowed.hurl \
+        attacks/path-traversal.hurl \
+        attacks/scanner-user-agent.hurl \
+        attacks/sqli-json-body.hurl \
+        attacks/sqli-query.hurl \
+        attacks/xss-query.hurl \
+        flows/health.hurl \
+        flows/correlation.hurl \
+        flows/headers.hurl; do
+        run_pep_hurl "$pep_project" hurl "pep-${file//\//-}" "$file"
+      done
+      pep_compose "$pep_project" down --remove-orphans
+    displayName: Validar edge, WAF, topologías y flujos en ambos modos
+
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    inputs:
+      testResultsFormat: JUnit
+      testResultsFiles: '$(Agent.TempDirectory)/edge-evidence-$(Build.BuildId)/reports/*.xml'
+      mergeTestResults: true
+      failTaskOnFailedTests: true
+
+  - task: PublishPipelineArtifact@1
+    condition: succeededOrFailed()
+    inputs:
+      targetPath: '$(Agent.TempDirectory)/edge-evidence-$(Build.BuildId)/reports'
+      artifact: edge-validation-evidence

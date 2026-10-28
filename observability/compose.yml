@@ -6,11 +6,15 @@ services:
     command: ["--config=/etc/otelcol/config.yml"]
     volumes:
       - ./collector.yml:/etc/otelcol/config.yml:ro
-      - ./logs:/var/log/security:ro
+      - ${OBSERVABILITY_LOG_DIR:-./logs}:/var/log/security:ro
       - collector-data:/var/lib/otelcol
     environment:
       PDP_METRICS_TARGET: ${PDP_METRICS_TARGET:-host.docker.internal:9080}
       PEP_METRICS_TARGET: ${PEP_METRICS_TARGET:-host.docker.internal:9081}
+      DEPLOYMENT_ENVIRONMENT: ${DEPLOYMENT_ENVIRONMENT:-local}
+    networks:
+      - default
+      - edge_metrics
     extra_hosts: ["host.docker.internal:host-gateway"]
     ports:
       - "127.0.0.1:4318:4318"
@@ -67,3 +71,9 @@ volumes:
   loki-data:
   prometheus-data:
   grafana-data:
+networks:
+  default:
+    name: security-observability
+  edge_metrics:
+    name: security-edge-metrics
+    internal: true

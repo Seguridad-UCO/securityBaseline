@@ -9,7 +9,9 @@ receivers:
       http:
         endpoint: 0.0.0.0:4318
   file_log:
-    include: [/var/log/security/*.json]
+    include:
+      - /var/log/security/security-pdp.json
+      - /var/log/security/security-pep.json
     start_at: beginning
     storage: file_storage
     operators:
@@ -32,6 +34,40 @@ receivers:
           parse_from: attributes.traceId
         span_id:
           parse_from: attributes.spanId
+  file_log/edge:
+    include: [/var/log/security/security-edge.json]
+    start_at: beginning
+    storage: file_storage
+    operators:
+      - type: json_parser
+        timestamp:
+          parse_from: attributes["@timestamp"]
+          layout_type: gotime
+          layout: '2006-01-02T15:04:05.999999999Z07:00'
+        severity:
+          parse_from: attributes.level
+      - type: add
+        field: resource["service.name"]
+        value: security-edge
+      - type: add
+        field: resource["deployment.environment.name"]
+        value: ${env:DEPLOYMENT_ENVIRONMENT}
+  file_log/edge_audit:
+    include: [/var/log/security/security-edge-audit.json]
+    start_at: beginning
+    storage: file_storage
+    operators:
+      - type: json_parser
+        timestamp:
+          parse_from: attributes.transaction.timestamp
+          layout_type: gotime
+          layout: '2006-01-02T15:04:05.999999999Z07:00'
+      - type: add
+        field: resource["service.name"]
+        value: security-edge
+      - type: add
+        field: resource["deployment.environment.name"]
+        value: ${env:DEPLOYMENT_ENVIRONMENT}
   prometheus:
     config:
       scrape_configs:
@@ -45,6 +81,11 @@ receivers:
           metrics_path: /actuator/prometheus
           static_configs:
             - targets: ["${env:PEP_METRICS_TARGET}"]
+        - job_name: security-edge
+          scrape_interval: 15s
+          metrics_path: /metrics
+          static_configs:
+            - targets: ["edge:2019"]
 processors:
   memory_limiter:
     check_interval: 1s
@@ -64,6 +105,22 @@ processors:
         statements:
           - delete_key(attributes, "exception.message")
           - delete_key(attributes, "exception.stacktrace")
+  transform/edge_audit_privacy:
+    error_mode: propagate
+    log_statements:
+      - context: log
+        conditions:
+          - attributes["transaction"] != nil
+        statements:
+          - set(attributes["correlationId"], attributes["transaction"]["request"]["headers"]["x-correlation-id"][0]) where attributes["transaction"]["request"]["headers"]["x-correlation-id"] != nil
+          - set(attributes["correlationId"], attributes["transaction"]["request"]["headers"]["X-Correlation-Id"][0]) where attributes["transaction"]["request"]["headers"]["X-Correlation-Id"] != nil
+          - set(attributes["edge.detection"], true) where attributes["messages"] != nil
+          - delete_key(attributes, "messages")
+          - delete_key(attributes["transaction"], "request")
+          - delete_key(attributes["transaction"], "response")
+          - delete_key(attributes["transaction"], "client_ip")
+          - delete_key(attributes["transaction"], "client_port")
+          - delete_key(attributes["transaction"], "intermediary")
   batch:
     timeout: 2s
     send_batch_size: 512
@@ -95,8 +152,8 @@ service:
       processors: [memory_limiter, transform/privacy, batch]
       exporters: [otlp_http/jaeger]
     logs:
-      receivers: [file_log, otlp]
-      processors: [memory_limiter, batch]
+      receivers: [file_log, file_log/edge, file_log/edge_audit, otlp]
+      processors: [memory_limiter, transform/edge_audit_privacy, batch]
       exporters: [otlp_http/loki]
     metrics:
       receivers: [prometheus, otlp]
