@@ -3,6 +3,7 @@ package co.edu.uco.seguridad.shared.auth.service;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.identity.application.primaryport.request.ProvisionIdentityRequest;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.ProvisionIdentityUseCase;
+import co.edu.uco.seguridad.shared.auth.port.RefreshTokenStorePort;
 import co.edu.uco.seguridad.shared.auth.model.OidcFlowIntent;
 import co.edu.uco.seguridad.shared.security.LocalUserPrincipal;
 import org.junit.jupiter.api.Test;
@@ -10,8 +11,12 @@ import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
+import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.InMemoryReactiveClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.server.ServerOAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
@@ -22,26 +27,33 @@ import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.oidc.user.OidcUserAuthority;
 import org.springframework.security.web.server.WebFilterExchange;
+import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class OidcAuthenticationSuccessHandlerTests {
 
     @Test
     void login_flow_provisions_the_local_user_and_redirects_to_the_frontend() {
         AtomicReference<String> provider = new AtomicReference<>();
+        AtomicReference<String> storedSessionId = new AtomicReference<>();
         ProvisionIdentityUseCase provisionIdentity = provisioner(provider);
         OidcFlowStateService flowState = new OidcFlowStateService();
         OidcAuthenticationSuccessHandler handler = new OidcAuthenticationSuccessHandler(provisionIdentity, flowState,
                 new OidcRedirectPolicy("http://localhost:5173"),
-                new KeycloakOidcSessionService(clientRegistrations()));
+                new KeycloakOidcSessionService(clientRegistrations()), authorizedClients(), refreshTokenStore(storedSessionId));
         MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/login/oauth2/code/keycloak").build());
         exchange.getSession().block().getAttributes().put(OidcFlowStateService.FLOW_INTENT_ATTRIBUTE, OidcFlowIntent.LOGIN.name());
 
@@ -52,13 +64,15 @@ class OidcAuthenticationSuccessHandlerTests {
         assertThat(exchange.getResponse().getHeaders().getLocation()).hasToString("http://localhost:5173");
         assertThat((Object) exchange.getSession().block().getAttribute(OidcFlowStateService.FLOW_INTENT_ATTRIBUTE)).isNull();
         assertThat((Object) exchange.getSession().block().getAttribute("SPRING_SECURITY_CONTEXT")).isNotNull();
+        assertThat(storedSessionId.get()).isEqualTo("keycloak-session-1");
     }
 
     @Test
     void login_flow_returns_to_the_allowed_application_saved_in_the_flow() {
         OidcFlowStateService flowState = new OidcFlowStateService();
         OidcAuthenticationSuccessHandler handler = new OidcAuthenticationSuccessHandler(provisioner(new AtomicReference<>()),
-                flowState, new OidcRedirectPolicy("http://localhost:5173"), new KeycloakOidcSessionService(clientRegistrations()));
+                flowState, new OidcRedirectPolicy("http://localhost:5173"), new KeycloakOidcSessionService(clientRegistrations()),
+                authorizedClients(), refreshTokenStore());
         MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/login/oauth2/code/keycloak").build());
         var session = exchange.getSession().block();
         session.getAttributes().put(OidcFlowStateService.FLOW_INTENT_ATTRIBUTE, OidcFlowIntent.LOGIN.name());
@@ -75,7 +89,7 @@ class OidcAuthenticationSuccessHandlerTests {
         OidcFlowStateService flowState = new OidcFlowStateService();
         OidcAuthenticationSuccessHandler handler = new OidcAuthenticationSuccessHandler(provisioner(new AtomicReference<>()),
                 flowState, new OidcRedirectPolicy("http://localhost:5173"),
-                new KeycloakOidcSessionService(clientRegistrations()));
+                new KeycloakOidcSessionService(clientRegistrations()), authorizedClients(), refreshTokenStore());
         MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/login/oauth2/code/keycloak").build());
         var session = exchange.getSession().block();
         session.getAttributes().put(OidcFlowStateService.FLOW_INTENT_ATTRIBUTE, OidcFlowIntent.REGISTER.name());
@@ -91,7 +105,8 @@ class OidcAuthenticationSuccessHandlerTests {
     void login_flow_persists_the_authentication_context_evidence_extracted_from_the_id_token() {
         OidcFlowStateService flowState = new OidcFlowStateService();
         OidcAuthenticationSuccessHandler handler = new OidcAuthenticationSuccessHandler(provisioner(new AtomicReference<>()),
-                flowState, new OidcRedirectPolicy("http://localhost:5173"), new KeycloakOidcSessionService(clientRegistrations()));
+                flowState, new OidcRedirectPolicy("http://localhost:5173"), new KeycloakOidcSessionService(clientRegistrations()),
+                authorizedClients(), refreshTokenStore());
         MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/login/oauth2/code/keycloak").build());
         exchange.getSession().block().getAttributes().put(OidcFlowStateService.FLOW_INTENT_ATTRIBUTE, OidcFlowIntent.LOGIN.name());
 
@@ -121,6 +136,7 @@ class OidcAuthenticationSuccessHandlerTests {
         OidcIdToken idToken = new OidcIdToken("id-token", Instant.now(), Instant.now().plusSeconds(300), Map.of(
                 IdTokenClaimNames.ISS, "http://localhost:9090/realms/security-baseline",
                 IdTokenClaimNames.SUB, "subject-1",
+                "sid", "keycloak-session-1",
                 "identity_provider", "google",
                 StandardClaimNames.EMAIL, "david@uco.edu",
                 StandardClaimNames.GIVEN_NAME, "David",
@@ -135,6 +151,7 @@ class OidcAuthenticationSuccessHandlerTests {
         OidcIdToken idToken = new OidcIdToken("id-token", Instant.now(), Instant.now().plusSeconds(300), Map.of(
                 IdTokenClaimNames.ISS, "http://localhost:9090/realms/security-baseline",
                 IdTokenClaimNames.SUB, "subject-1",
+                "sid", "keycloak-session-1",
                 "identity_provider", "google",
                 StandardClaimNames.EMAIL, "david@uco.edu",
                 StandardClaimNames.GIVEN_NAME, "David",
@@ -148,7 +165,11 @@ class OidcAuthenticationSuccessHandlerTests {
     }
 
     private static InMemoryReactiveClientRegistrationRepository clientRegistrations() {
-        ClientRegistration registration = ClientRegistration.withRegistrationId("keycloak")
+        return new InMemoryReactiveClientRegistrationRepository(clientRegistration());
+    }
+
+    private static ClientRegistration clientRegistration() {
+        return ClientRegistration.withRegistrationId("keycloak")
                 .clientId("security-baseline-bff")
                 .clientSecret("secret")
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
@@ -163,6 +184,41 @@ class OidcAuthenticationSuccessHandlerTests {
                 .providerConfigurationMetadata(Map.of(
                         "end_session_endpoint", "http://localhost:9090/realms/security-baseline/protocol/openid-connect/logout"))
                 .build();
-        return new InMemoryReactiveClientRegistrationRepository(registration);
+    }
+
+    private static ServerOAuth2AuthorizedClientRepository authorizedClients() {
+        ServerOAuth2AuthorizedClientRepository repository = mock(ServerOAuth2AuthorizedClientRepository.class);
+        Instant issuedAt = Instant.now();
+        OAuth2AuthorizedClient client = new OAuth2AuthorizedClient(clientRegistration(), "subject-1",
+                new OAuth2AccessToken(OAuth2AccessToken.TokenType.BEARER, "access-token", issuedAt,
+                        issuedAt.plusSeconds(300), Set.of("openid")),
+                new OAuth2RefreshToken("refresh-token", issuedAt, issuedAt.plusSeconds(1800)));
+        when(repository.loadAuthorizedClient(eq("keycloak"), any(), any(ServerWebExchange.class)))
+                .thenReturn(Mono.just(client));
+        return repository;
+    }
+
+    private static RefreshTokenStorePort refreshTokenStore() {
+        return refreshTokenStore(new AtomicReference<>());
+    }
+
+    private static RefreshTokenStorePort refreshTokenStore(AtomicReference<String> storedSessionId) {
+        return new RefreshTokenStorePort() {
+            @Override
+            public Mono<Void> store(String sessionId, String refreshToken, Instant expiresAt) {
+                storedSessionId.set(sessionId);
+                return Mono.empty();
+            }
+
+            @Override
+            public Mono<String> find(String sessionId) {
+                return Mono.empty();
+            }
+
+            @Override
+            public Mono<Void> delete(String sessionId) {
+                return Mono.empty();
+            }
+        };
     }
 }

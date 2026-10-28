@@ -3,16 +3,20 @@ package co.edu.uco.seguridad.shared.auth.service;
 import co.edu.uco.seguridad.pdp.identity.application.primaryport.request.ProvisionIdentityRequest;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.ProvisionIdentityUseCase;
 import co.edu.uco.seguridad.pdp.identity.domain.model.Email;
+import co.edu.uco.seguridad.shared.auth.port.RefreshTokenStorePort;
 import co.edu.uco.seguridad.shared.auth.model.OidcFlowIntent;
 import co.edu.uco.seguridad.shared.security.LocalUserPrincipal;
 import co.edu.uco.seguridad.shared.security.mfa.AuthenticationContextEvidence;
 import co.edu.uco.seguridad.shared.web.session.KeycloakLogoutController;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextImpl;
+import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.oauth2.client.web.server.ServerOAuth2AuthorizedClientRepository;
 import org.springframework.security.web.server.WebFilterExchange;
 import org.springframework.security.web.server.authentication.ServerAuthenticationSuccessHandler;
 import org.springframework.security.web.server.context.WebSessionServerSecurityContextRepository;
@@ -32,15 +36,21 @@ public final class OidcAuthenticationSuccessHandler implements ServerAuthenticat
     private final OidcFlowStateService flowState;
     private final OidcRedirectPolicy redirectPolicy;
     private final KeycloakOidcSessionService oidcSessionService;
+    private final ServerOAuth2AuthorizedClientRepository authorizedClients;
+    private final RefreshTokenStorePort refreshTokenStore;
     private final WebSessionServerSecurityContextRepository securityContextRepository =
             new WebSessionServerSecurityContextRepository();
 
     OidcAuthenticationSuccessHandler(ProvisionIdentityUseCase provisionIdentity, OidcFlowStateService flowState,
-                                     OidcRedirectPolicy redirectPolicy, KeycloakOidcSessionService oidcSessionService) {
+                                     OidcRedirectPolicy redirectPolicy, KeycloakOidcSessionService oidcSessionService,
+                                     ServerOAuth2AuthorizedClientRepository authorizedClients,
+                                     RefreshTokenStorePort refreshTokenStore) {
         this.provisionIdentity = provisionIdentity;
         this.flowState = flowState;
         this.redirectPolicy = redirectPolicy;
         this.oidcSessionService = oidcSessionService;
+        this.authorizedClients = authorizedClients;
+        this.refreshTokenStore = refreshTokenStore;
     }
 
     @Override
@@ -51,10 +61,12 @@ public final class OidcAuthenticationSuccessHandler implements ServerAuthenticat
                         ? restartAtKeycloakLogin(exchange.getExchange(), oidcUser.getIdToken().getTokenValue())
                         : flowState.returnTarget(exchange.getExchange())
                         .defaultIfEmpty(redirectPolicy.frontendHome())
-                        .flatMap(returnTarget -> startLocalSession(exchange.getExchange(), oidcUser, returnTarget)));
+                        .flatMap(returnTarget -> startLocalSession(
+                                exchange.getExchange(), authentication, oidcUser, returnTarget)));
     }
 
-    private Mono<Void> startLocalSession(ServerWebExchange exchange, OidcUser oidc, String returnTarget) {
+    private Mono<Void> startLocalSession(ServerWebExchange exchange, Authentication authentication,
+                                         OidcUser oidc, String returnTarget) {
         String email = oidc.getEmail();
         if (email == null || email.isBlank()) {
             return Mono.error(new IllegalArgumentException("Keycloak no entregó un correo verificable."));
@@ -64,9 +76,26 @@ public final class OidcAuthenticationSuccessHandler implements ServerAuthenticat
         ProvisionIdentityRequest request = new ProvisionIdentityRequest(oidc.getIdToken().getIssuer().toString(),
                 oidc.getSubject(), new Email(email), name, provider);
         return provisionIdentity.execute(request)
-                .flatMap(localUser -> saveLocalSession(exchange, localUser, oidc.getIdToken()))
+                .flatMap(localUser -> storeRefreshToken(exchange, authentication, oidc.getIdToken())
+                        .then(saveLocalSession(exchange, localUser, oidc.getIdToken())))
                 .then(flowState.clear(exchange))
                 .then(redirect(exchange, returnTarget));
+    }
+
+    private Mono<Void> storeRefreshToken(ServerWebExchange exchange, Authentication authentication, OidcIdToken idToken) {
+        String sessionId = idToken.getClaimAsString("sid");
+        if (sessionId == null || sessionId.isBlank()) {
+            return Mono.error(new IllegalStateException("Keycloak no entregó el identificador de sesión."));
+        }
+        return authorizedClients.<OAuth2AuthorizedClient>loadAuthorizedClient("keycloak", authentication, exchange)
+                .switchIfEmpty(Mono.error(new IllegalStateException("Keycloak no entregó una sesión OAuth2 autorizada.")))
+                .flatMap(client -> {
+                    OAuth2RefreshToken refreshToken = client.getRefreshToken();
+                    if (refreshToken == null || refreshToken.getExpiresAt() == null) {
+                        return Mono.error(new IllegalStateException("Keycloak no entregó un refresh token con expiración."));
+                    }
+                    return refreshTokenStore.store(sessionId, refreshToken.getTokenValue(), refreshToken.getExpiresAt());
+                });
     }
 
     private Mono<Void> restartAtKeycloakLogin(ServerWebExchange exchange, String idToken) {
@@ -81,8 +110,11 @@ public final class OidcAuthenticationSuccessHandler implements ServerAuthenticat
                 user.tenantId(), user.email(), user.name(), AuthenticationContextEvidence.from(idToken));
         var authentication = new UsernamePasswordAuthenticationToken(withAuthenticationContext, null, List.of());
         return exchange.getSession()
-                .doOnNext(session -> session.getAttributes().put(KeycloakLogoutController.KEYCLOAK_ID_TOKEN_ATTRIBUTE,
-                        idToken.getTokenValue()))
+                .doOnNext(session -> {
+                    session.getAttributes().put(KeycloakLogoutController.KEYCLOAK_ID_TOKEN_ATTRIBUTE, idToken.getTokenValue());
+                    session.getAttributes().put(KeycloakLogoutController.KEYCLOAK_SESSION_ID_ATTRIBUTE,
+                            idToken.getClaimAsString("sid"));
+                })
                 .then(securityContextRepository.save(exchange, new SecurityContextImpl(authentication)));
     }
 
