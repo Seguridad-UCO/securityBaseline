@@ -7,6 +7,8 @@ import co.edu.uco.seguridad.pdp.roles.domain.model.RoleName;
 import co.edu.uco.seguridad.pdp.roles.domain.model.RoleScope;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 /**
  * Puerto secundario del catálogo de roles, expresado solo en tipos de dominio.
  */
@@ -38,9 +40,16 @@ public interface RoleRepository {
      * Los roles del inquilino más los globales, recortados en la propia consulta.
      */
     Mono<ResultPage<Role>> findBy(RoleCriteria criteria, PageWindow window);
-    default Mono<Long> countByApplication(TenantId tenantId, ApplicationId applicationId) { return Mono.error(new UnsupportedOperationException()); }
+
+    default Mono<Long> countByApplication(TenantId tenantId, ApplicationId applicationId) {
+        return Mono.error(new UnsupportedOperationException());
+    }
 
     Mono<Role> save(Role role);
+
+    default Mono<Void> saveAllAtomically(List<Role> roles) {
+        return Mono.error(new UnsupportedOperationException());
+    }
 
     default Mono<Void> deleteById(RoleId roleId) {
         return Mono.error(new UnsupportedOperationException());

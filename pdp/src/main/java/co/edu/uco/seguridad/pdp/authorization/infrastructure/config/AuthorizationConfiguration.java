@@ -1,17 +1,13 @@
 package co.edu.uco.seguridad.pdp.authorization.infrastructure.config;
 
-import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationMustExistForTenantValidator;
-import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationNameLookupValidator;
-import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationNameForTenantLookupValidator;
-import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationOwnerLookupValidator;
-import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationDetailsLookupValidator;
+import co.edu.uco.seguridad.pdp.applications.application.rule.validator.*;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RemoveApplicationUseCase;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RotateApplicationCredentialUseCase;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.AssignmentApplicationLookupValidator;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.ProfileAssignmentApplicationLookupValidator;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.*;
 import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository.AssignmentRepository;
 import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository.ProfileAssignmentRepository;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.*;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.ActiveRoleNamesLookupValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.PrincipalMustBeApplicationAdministratorValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.impl.ActiveRoleNamesLookupValidatorImpl;
@@ -26,6 +22,8 @@ import co.edu.uco.seguridad.pdp.authorization.application.usecase.*;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.impl.*;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.*;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.*;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkCatalogImportService;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkCatalogWorkbookService;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkResourceImportService;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkResourceWorkbookService;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.observability.ObservedAccessAuditRepository;
@@ -37,37 +35,27 @@ import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.p
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.OpaPolicyDecisionAdapter;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.properties.OpaProperties;
 import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserIdLookupValidator;
-import co.edu.uco.seguridad.pdp.identity.application.usecase.ResolveExternalIdentityUseCase;
-import co.edu.uco.seguridad.pdp.identity.application.usecase.FindAuthenticatedUserBySubjectUseCase;
-import co.edu.uco.seguridad.pdp.identity.application.usecase.SearchUsersPageUseCase;
 import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.SecurityUserRepository;
+import co.edu.uco.seguridad.pdp.identity.application.usecase.FindAuthenticatedUserBySubjectUseCase;
+import co.edu.uco.seguridad.pdp.identity.application.usecase.ResolveExternalIdentityUseCase;
+import co.edu.uco.seguridad.pdp.identity.application.usecase.SearchUsersPageUseCase;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileApplicationLookupValidator;
-import co.edu.uco.seguridad.pdp.profiles.application.usecase.AddRoleToProfileUseCase;
-import co.edu.uco.seguridad.pdp.profiles.application.usecase.DefineProfileUseCase;
-import co.edu.uco.seguridad.pdp.profiles.application.usecase.RemoveRoleFromProfileUseCase;
-import co.edu.uco.seguridad.pdp.profiles.application.usecase.ListApplicationProfilesPageUseCase;
-import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceIdLookupValidator;
+import co.edu.uco.seguridad.pdp.profiles.application.secondaryport.repository.ProfileRepository;
+import co.edu.uco.seguridad.pdp.profiles.application.usecase.*;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceMustExistValidator;
-import co.edu.uco.seguridad.pdp.resources.application.usecase.RegisterProtectedResourceUseCase;
-import co.edu.uco.seguridad.pdp.resources.application.usecase.ListProtectedResourcesPageUseCase;
-import co.edu.uco.seguridad.pdp.resources.application.usecase.CountApplicationProtectedResourcesUseCase;
 import co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository.ProtectedResourceRepository;
+import co.edu.uco.seguridad.pdp.resources.application.usecase.CountApplicationProtectedResourcesUseCase;
+import co.edu.uco.seguridad.pdp.resources.application.usecase.ListProtectedResourcesPageUseCase;
+import co.edu.uco.seguridad.pdp.resources.application.usecase.RegisterProtectedResourceUseCase;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleApplicationLookupValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleNamesLookupValidator;
-import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleLookupByNameInScopeValidator;
-import co.edu.uco.seguridad.pdp.roles.application.usecase.DefineRoleUseCase;
-import co.edu.uco.seguridad.pdp.roles.application.usecase.GrantResourceToRoleUseCase;
-import co.edu.uco.seguridad.pdp.roles.application.usecase.RevokeResourceFromRoleUseCase;
-import co.edu.uco.seguridad.pdp.roles.application.usecase.ListApplicationRolesPageUseCase;
-import co.edu.uco.seguridad.pdp.roles.application.usecase.CountApplicationRolesUseCase;
 import co.edu.uco.seguridad.pdp.roles.application.secondaryport.repository.RoleRepository;
-import co.edu.uco.seguridad.pdp.profiles.application.secondaryport.repository.ProfileRepository;
-import co.edu.uco.seguridad.pdp.profiles.application.usecase.CountApplicationProfilesUseCase;
+import co.edu.uco.seguridad.pdp.roles.application.usecase.*;
 import co.edu.uco.seguridad.pdp.tenants.application.usecase.FindTenantNameByCodeUseCase;
 import co.edu.uco.seguridad.shared.audit.AdministrationAuditRepository;
+import co.edu.uco.seguridad.shared.event.DomainEventPublisher;
 import co.edu.uco.seguridad.shared.observability.ReactiveTelemetry;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
-import co.edu.uco.seguridad.shared.event.DomainEventPublisher;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
 import co.edu.uco.seguridad.shared.security.mfa.MfaEvidenceProperties;
@@ -89,8 +77,8 @@ public class AuthorizationConfiguration {
 
     @Bean
     ReadCurrentUserApplicationsUseCase readCurrentUserApplicationsUseCase(ResolveUserApplicationsUseCase assignments,
-            FindTenantNameByCodeUseCase tenants, ApplicationDetailsLookupValidator applications, RoleRepository roles,
-            ProfileRepository profiles) {
+                                                                          FindTenantNameByCodeUseCase tenants, ApplicationDetailsLookupValidator applications, RoleRepository roles,
+                                                                          ProfileRepository profiles) {
         return new ReadCurrentUserApplicationsUseCaseImpl(assignments, tenants, applications, roles, profiles);
     }
 
@@ -101,13 +89,25 @@ public class AuthorizationConfiguration {
     }
 
     @Bean
-    BulkResourceWorkbookService bulkResourceWorkbookService() { return new BulkResourceWorkbookService(); }
+    BulkResourceWorkbookService bulkResourceWorkbookService() {
+        return new BulkResourceWorkbookService();
+    }
+
+    @Bean
+    BulkCatalogWorkbookService bulkCatalogWorkbookService() {
+        return new BulkCatalogWorkbookService();
+    }
+
+    @Bean
+    BulkCatalogImportService bulkCatalogImportService(BulkCatalogWorkbookService books, RoleRepository roles, ProfileRepository profiles, ProtectedResourceRepository resources, ApplicationNameForTenantLookupValidator applications, IdentifierGenerator ids, TimeProvider time) {
+        return new BulkCatalogImportService(books, roles, profiles, resources, applications, ids, time);
+    }
 
     @Bean
     BulkResourceImportService bulkResourceImportService(BulkResourceWorkbookService workbooks,
-            ApplicationNameForTenantLookupValidator applications,
-            PrincipalMustBeApplicationAdministratorValidator administrators, ProtectedResourceRepository resources,
-            IdentifierGenerator identifiers, TimeProvider time, DomainEventPublisher events) {
+                                                        ApplicationNameForTenantLookupValidator applications,
+                                                        PrincipalMustBeApplicationAdministratorValidator administrators, ProtectedResourceRepository resources,
+                                                        IdentifierGenerator identifiers, TimeProvider time, DomainEventPublisher events) {
         return new BulkResourceImportService(workbooks, applications, administrators, resources, identifiers, time, events);
     }
 
@@ -226,7 +226,7 @@ public class AuthorizationConfiguration {
 
     @Bean
     ListApplicationSecurityRolesInteractor listApplicationSecurityRolesInteractor(ApplicationOwnerLookupValidator ownerLookup,
-            SubjectUserIdLookupValidator subjectUserIdLookup, ListApplicationSecurityRolesUseCase useCase) {
+                                                                                  SubjectUserIdLookupValidator subjectUserIdLookup, ListApplicationSecurityRolesUseCase useCase) {
         return new ListApplicationSecurityRolesInteractorImpl(ownerLookup, subjectUserIdLookup, useCase);
     }
 
@@ -238,7 +238,7 @@ public class AuthorizationConfiguration {
 
     @Bean
     ListApplicationSecurityProfilesInteractor listApplicationSecurityProfilesInteractor(ApplicationOwnerLookupValidator ownerLookup,
-            SubjectUserIdLookupValidator subjectUserIdLookup, ListApplicationSecurityProfilesUseCase useCase) {
+                                                                                        SubjectUserIdLookupValidator subjectUserIdLookup, ListApplicationSecurityProfilesUseCase useCase) {
         return new ListApplicationSecurityProfilesInteractorImpl(ownerLookup, subjectUserIdLookup, useCase);
     }
 
@@ -277,8 +277,8 @@ public class AuthorizationConfiguration {
 
     @Bean
     ListApplicationRoleAssignmentsInteractor listApplicationRoleAssignmentsInteractor(ApplicationOwnerLookupValidator ownerLookup,
-            SubjectUserIdLookupValidator subjectUserIdLookup, ListApplicationRoleAssignmentsUseCase useCase,
-            SecurityUserRepository users, RoleRepository roles) {
+                                                                                      SubjectUserIdLookupValidator subjectUserIdLookup, ListApplicationRoleAssignmentsUseCase useCase,
+                                                                                      SecurityUserRepository users, RoleRepository roles) {
         return new ListApplicationRoleAssignmentsInteractorImpl(ownerLookup, subjectUserIdLookup, useCase, users, roles);
     }
 
@@ -291,16 +291,16 @@ public class AuthorizationConfiguration {
 
     @Bean
     ListApplicationProfileAssignmentsInteractor listApplicationProfileAssignmentsInteractor(ApplicationOwnerLookupValidator ownerLookup,
-            SubjectUserIdLookupValidator subjectUserIdLookup, ListApplicationProfileAssignmentsUseCase useCase,
-            SecurityUserRepository users, ProfileRepository profiles) {
+                                                                                            SubjectUserIdLookupValidator subjectUserIdLookup, ListApplicationProfileAssignmentsUseCase useCase,
+                                                                                            SecurityUserRepository users, ProfileRepository profiles) {
         return new ListApplicationProfileAssignmentsInteractorImpl(ownerLookup, subjectUserIdLookup, useCase, users, profiles);
     }
 
     @Bean
     AssignmentDetailReadInteractor assignmentDetailReadInteractor(ApplicationOwnerLookupValidator ownerLookup,
-            SubjectUserIdLookupValidator subjectUserIdLookup, PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator,
-            AssignmentRepository assignments, ProfileAssignmentRepository profileAssignments, SecurityUserRepository users,
-            RoleRepository roles, ProfileRepository profiles, TimeProvider time) {
+                                                                  SubjectUserIdLookupValidator subjectUserIdLookup, PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator,
+                                                                  AssignmentRepository assignments, ProfileAssignmentRepository profileAssignments, SecurityUserRepository users,
+                                                                  RoleRepository roles, ProfileRepository profiles, TimeProvider time) {
         return new AssignmentDetailReadInteractorImpl(ownerLookup, subjectUserIdLookup, mustBeAdministrator, assignments,
                 profileAssignments, users, roles, profiles, time);
     }
