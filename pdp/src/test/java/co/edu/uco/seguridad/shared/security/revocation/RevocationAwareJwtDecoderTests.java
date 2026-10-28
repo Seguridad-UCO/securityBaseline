@@ -60,6 +60,37 @@ class RevocationAwareJwtDecoderTests {
     }
 
     @Test
+    void rejects_when_the_exact_jti_is_revoked_without_revoking_other_subject_tokens() {
+        TokenRevocationPort exactTokenRevocation = new TokenRevocationPort() {
+            @Override
+            public Mono<Void> revokeAllSince(UserId subject, Instant since) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Void> revokeToken(UserId subject, String tokenId, Instant expiresAt) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Boolean> isRevoked(UserId subject, Instant issuedAt) {
+                return Mono.just(false);
+            }
+
+            @Override
+            public Mono<Boolean> isTokenRevoked(UserId subject, String tokenId) {
+                return Mono.just(VALID_JWT.getId().equals(tokenId));
+            }
+        };
+        RevocationAwareJwtDecoder decoder = new RevocationAwareJwtDecoder(
+                delegateReturning(VALID_JWT), exactTokenRevocation, subjectLookupReturning(Mono.just(SUBJECT_USER_ID)));
+
+        StepVerifier.create(decoder.decode("token"))
+                .expectError(JwtValidationException.class)
+                .verify();
+    }
+
+    @Test
     void rejects_when_the_revocation_check_itself_fails() {
         RuntimeException redisDown = new RuntimeException("redis no disponible");
         RevocationAwareJwtDecoder decoder = new RevocationAwareJwtDecoder(
@@ -126,8 +157,18 @@ class RevocationAwareJwtDecoderTests {
             }
 
             @Override
+            public Mono<Void> revokeToken(UserId subject, String tokenId, Instant expiresAt) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public Mono<Boolean> isRevoked(UserId subject, Instant issuedAt) {
                 return Mono.just(revoked);
+            }
+
+            @Override
+            public Mono<Boolean> isTokenRevoked(UserId subject, String tokenId) {
+                return Mono.just(false);
             }
         };
     }
@@ -140,7 +181,17 @@ class RevocationAwareJwtDecoderTests {
             }
 
             @Override
+            public Mono<Void> revokeToken(UserId subject, String tokenId, Instant expiresAt) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public Mono<Boolean> isRevoked(UserId subject, Instant issuedAt) {
+                return Mono.error(failure);
+            }
+
+            @Override
+            public Mono<Boolean> isTokenRevoked(UserId subject, String tokenId) {
                 return Mono.error(failure);
             }
         };
@@ -154,7 +205,17 @@ class RevocationAwareJwtDecoderTests {
             }
 
             @Override
+            public Mono<Void> revokeToken(UserId subject, String tokenId, Instant expiresAt) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public Mono<Boolean> isRevoked(UserId subject, Instant issuedAt) {
+                throw new AssertionError("must not check revocation when there is no user id to check it for");
+            }
+
+            @Override
+            public Mono<Boolean> isTokenRevoked(UserId subject, String tokenId) {
                 throw new AssertionError("must not check revocation when there is no user id to check it for");
             }
         };

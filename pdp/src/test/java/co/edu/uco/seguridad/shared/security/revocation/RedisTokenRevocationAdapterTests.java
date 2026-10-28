@@ -39,7 +39,7 @@ class RedisTokenRevocationAdapterTests extends AbstractRedisIntegrationTest {
     }
 
     private static RedisTokenRevocationAdapter adapterWithRetention(Duration retention) {
-        return new RedisTokenRevocationAdapter(redis, new RevocationRetentionProperties(retention));
+        return new RedisTokenRevocationAdapter(redis, new RevocationRetentionProperties(retention), Instant::now);
     }
 
     @Test
@@ -102,6 +102,35 @@ class RedisTokenRevocationAdapterTests extends AbstractRedisIntegrationTest {
 
         StepVerifier.create(redis.getExpire("revoked-since:" + subject.value()))
                 .assertNext(ttl -> assertThat(ttl).isPositive())
+                .verifyComplete();
+    }
+
+    @Test
+    void revokes_only_the_exact_token_until_its_expiration() {
+        UserId subject = new UserId(UUID.randomUUID());
+        RedisTokenRevocationAdapter adapter = adapterWithRetention(Duration.ofHours(1));
+        String tokenId = UUID.randomUUID().toString();
+
+        adapter.revokeToken(subject, tokenId, Instant.now().plusSeconds(300)).block();
+
+        StepVerifier.create(adapter.isTokenRevoked(subject, tokenId))
+                .expectNext(true)
+                .verifyComplete();
+        StepVerifier.create(adapter.isTokenRevoked(subject, "different-token"))
+                .expectNext(false)
+                .verifyComplete();
+    }
+
+    @Test
+    void exact_token_revocation_key_expires_with_the_token() {
+        UserId subject = new UserId(UUID.randomUUID());
+        RedisTokenRevocationAdapter adapter = adapterWithRetention(Duration.ofHours(1));
+        String tokenId = UUID.randomUUID().toString();
+
+        adapter.revokeToken(subject, tokenId, Instant.now().plusSeconds(300)).block();
+
+        StepVerifier.create(redis.getExpire("revoked-token:" + subject.value() + ":" + tokenId))
+                .assertNext(ttl -> assertThat(ttl).isPositive().isLessThanOrEqualTo(Duration.ofSeconds(300)))
                 .verifyComplete();
     }
 }

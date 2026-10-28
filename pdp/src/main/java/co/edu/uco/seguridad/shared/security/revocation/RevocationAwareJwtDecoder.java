@@ -58,7 +58,10 @@ public final class RevocationAwareJwtDecoder implements ReactiveJwtDecoder {
         return delegate.decode(token).flatMap(jwt -> isTechnicalPepToken(jwt) ? Mono.just(jwt) : subjectUserIdLookup.execute(jwt.getSubject())
                 .switchIfEmpty(Mono.error(() -> revocationCheckFailedException(
                         "no existe una identidad registrada para el subject del token; no se puede verificar su revocación")))
-                .flatMap(userId -> revocation.isRevoked(userId, jwt.getIssuedAt()))
+                .flatMap(userId -> Mono.zip(
+                                revocation.isRevoked(userId, jwt.getIssuedAt()),
+                                revocation.isTokenRevoked(userId, jwt.getId()))
+                        .map(revocationState -> revocationState.getT1() || revocationState.getT2()))
                 .onErrorMap(error -> !(error instanceof JwtException), error -> revocationCheckFailedException(
                         "no se pudo verificar el estado de revocación del token"))
                 .flatMap(revoked -> revoked ? Mono.<Jwt>error(revokedException()) : Mono.just(jwt)));

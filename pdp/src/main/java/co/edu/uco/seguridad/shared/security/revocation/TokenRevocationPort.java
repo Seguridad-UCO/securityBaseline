@@ -22,7 +22,17 @@ public interface TokenRevocationPort {
     Mono<Void> revokeAllSince(UserId subject, Instant since);
 
     /**
+     * Revoca únicamente el token identificado por su {@code jti} hasta que expire.
+     */
+    Mono<Void> revokeToken(UserId subject, String tokenId, Instant expiresAt);
+
+    /**
      * {@code true} si {@code issuedAt} es anterior o igual al último {@code revokeAllSince} del sujeto.
      */
     Mono<Boolean> isRevoked(UserId subject, Instant issuedAt);
+
+    /**
+     * {@code true} si el token identificado por su {@code jti} fue revocado explícitamente.
+     */
+    Mono<Boolean> isTokenRevoked(UserId subject, String tokenId);
 }
