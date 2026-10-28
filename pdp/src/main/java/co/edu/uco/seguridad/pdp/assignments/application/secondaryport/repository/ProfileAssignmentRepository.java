@@ -5,6 +5,7 @@ import co.edu.uco.seguridad.pdp.assignments.domain.ProfileAssignmentCriteria;
 import co.edu.uco.seguridad.pdp.assignments.domain.model.ProfileAssignmentId;
 import co.edu.uco.seguridad.pdp.commons.model.*;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Flux;
 
 import java.time.Instant;
 import java.util.Set;
@@ -46,6 +47,11 @@ public interface ProfileAssignmentRepository {
      */
     default Mono<Set<ProfileId>> findActiveProfileIdsFor(UserId userId, ApplicationId applicationId, Instant now) {
         return Mono.just(Set.of());
+    }
+
+    /** Asignaciones de perfil vigentes de un usuario, limitadas siempre al tenant indicado. */
+    default Flux<ProfileAssignment> findActiveByUserAndTenant(UserId userId, TenantId tenantId, Instant now) {
+        return Flux.empty();
     }
 
     Mono<ProfileAssignment> save(ProfileAssignment profileAssignment);
