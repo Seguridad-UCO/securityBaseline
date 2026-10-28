@@ -29,6 +29,14 @@
 > PDP — el único punto de la plataforma que hoy no tiene ningún control es la capa sintáctica HTTP,
 > y las aplicaciones detrás del PEP (Django, PHP, .NET, Java) son exactamente lo que un WAF protege.
 > `HU-027` lo construye y lo lleva de detección a bloqueo con evidencia. Ver §4 P5.
+>
+> **Actualización 2026-10-21:** tres nuevas historias añadidas al backlog:
+> `HU-027` (WAF — PLAN ya existe, listo para ejecutar vía `@1-planificador`);
+> `HU-028` (cablear `TokenRevocationPort` en `KeycloakLogoutController` + `DELETE /api/v1/session`
+> para clientes bearer — gap identificado al verificar que HU-022 instaló el mecanismo pero el
+> logout del BFF nunca lo invoca);
+> `HU-029` (`POST /api/v1/session/token/refresh` — apps externas renuevan su token e implementan
+> cierre de sesión por inactividad sin exponer el `refresh_token` al cliente). Ver ROADMAP-PDP.md.
 
 ---
 
