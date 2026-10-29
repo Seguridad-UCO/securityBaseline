@@ -7,6 +7,8 @@ import co.edu.uco.seguridad.pdp.profiles.domain.model.ProfileName;
 import co.edu.uco.seguridad.pdp.roles.domain.model.RoleScope;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 /**
  * Puerto secundario del catálogo de perfiles, expresado solo en tipos de dominio.
  */
@@ -30,9 +32,16 @@ public interface ProfileRepository {
     }
 
     Mono<ResultPage<Profile>> findBy(ProfileCriteria criteria, PageWindow window);
-    default Mono<Long> countByApplication(TenantId tenantId, ApplicationId applicationId) { return Mono.error(new UnsupportedOperationException()); }
+
+    default Mono<Long> countByApplication(TenantId tenantId, ApplicationId applicationId) {
+        return Mono.error(new UnsupportedOperationException());
+    }
 
     Mono<Profile> save(Profile profile);
+
+    default Mono<Void> saveAllAtomically(List<Profile> profiles) {
+        return Mono.error(new UnsupportedOperationException());
+    }
 
     default Mono<Void> deleteById(ProfileId profileId) {
         return Mono.error(new UnsupportedOperationException());
