@@ -32,6 +32,11 @@ public final class FixtureServers implements AutoCloseable {
     public final AtomicReference<Map<String, List<String>>> lastHeaders = new AtomicReference<>();
     public final AtomicReference<byte[]> lastBody = new AtomicReference<>();
     public final AtomicReference<String> lastUri = new AtomicReference<>();
+    /** Modo del canal BFF del PDP: OK, HTTP401 o HTTP503. */
+    public final AtomicReference<String> bffMode = new AtomicReference<>("OK");
+    public final AtomicInteger bffSessionRequests = new AtomicInteger();
+    public final AtomicInteger serviceTokenRequests = new AtomicInteger();
+    public final AtomicReference<String> lastBffCookie = new AtomicReference<>();
     public final AtomicBoolean healthy = new AtomicBoolean(true);
     public final AtomicBoolean jwksHealthy = new AtomicBoolean(true);
     private final ObjectMapper mapper = new ObjectMapper();
@@ -58,6 +63,22 @@ public final class FixtureServers implements AutoCloseable {
             if (path.startsWith("/__fixture/mode/")) {
                 mode.set(path.substring("/__fixture/mode/".length()));
                 return response.send();
+            }
+            if (path.equals("/service-token")) {
+                serviceTokenRequests.incrementAndGet();
+                return response.header("Content-Type", "application/json")
+                        .sendString(Mono.just("{\"access_token\":\"fixture-service-token\",\"expires_in\":300}"));
+            }
+            if (path.startsWith("/internal/v1/applications/names/") && path.endsWith("/credential-validations"))
+                return response.header("Content-Type", "application/json").sendString(Mono.just("{}"));
+            if (path.equals("/internal/v1/bff-session-token")) {
+                bffSessionRequests.incrementAndGet();
+                lastBffCookie.set(request.requestHeaders().get("Cookie"));
+                String current = bffMode.get();
+                if (current.equals("HTTP401")) return response.status(401).send();
+                if (current.equals("HTTP503")) return response.status(503).send();
+                return response.header("Content-Type", "application/json").sendString(Mono.fromSupplier(() ->
+                        "{\"accessToken\":\"" + token("protected-api", issuer(), 300) + "\"}"));
             }
             if (!path.equals("/internal/v1/access-decisions")) return response.status(404).send();
             evaluations.incrementAndGet();

@@ -38,7 +38,8 @@ Estado del trabajo para retomarlo en cualquier máquina. Se actualiza al cerrar 
 | HU-028          | Replanteada: cablear revocación en logout BFF y `DELETE /api/v1/session` para Bearer (ADR-034) | ✅ — validada, ver REPORTE-HU-028.md (revocación por cliente `azp`, canal bearer/cookie, entry point en bearer) |
 | HU-029          | Retiro del proxy `POST /api/v1/session/token/refresh` (ADR-033); cada cliente renueva con el suyo | ✅ — retirado el proxy; ver ADR-033 |
 | HU-030          | Renovación del token de la sesión BFF para el canal PEP (nueva) | ✅ — validada, ver REPORTE-HU-030.md |
-| HU-031          | El PEP propaga la indisponibilidad del canal BFF en vez de convertirla en 401 (nueva) | ⏳ pendiente |
+| HU-031          | El PEP propaga el `503` del canal BFF en vez de convertirlo en `401` (nueva) | ✅ — validada, ver REPORTE-HU-031.md (la suite del PEP conserva un error heredado: HU-032) |
+| HU-032          | Fronteras Modulith del PEP: `PepArchitectureTests` en verde sin relajar reglas (nueva; requiere ADR-035) | ⏳ pendiente |
 
 **Estado verificado el 2026-09-15 (working tree, sobre `develop` + HU-018/HU-019 sin comitear):**
 `mvnw clean verify` → **675 pruebas, 0 fallos, 0 errores**, cobertura ≥ 50 % por paquete,
