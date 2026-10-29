@@ -69,3 +69,9 @@ WebSessionServerSecurityContextRepository
 # cambio que retiro esta excepcion de OpaPolicyDecisionAdapter (la clase ya existe).
 doc:pdp/docs/ai-harness/workspace/HANDOFF-INTEGRACION-PEP-OPA.md
 doc:pdp/docs/ai-harness/workspace/INTEGRACION-PDP-PEP-OPA.md
+
+# --- Pendiente a proposito: persistencia de la auditoria administrativa (HU-021) -----------------
+# La validacion de HU-021 fue RECHAZADA; SurrealAdministrationEventSchemaInitializer es la clase que
+# falta implementar y el CHECKPOINT y el handoff de HU-027/029 lo dicen asi. Retirar esta linea
+# cuando la clase exista.
+SurrealAdministrationEventSchemaInitializer
