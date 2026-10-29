@@ -9,8 +9,7 @@ import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository.ProtectedResourceRepository;
 import co.edu.uco.seguridad.pdp.resources.domain.ProtectedResource;
 import co.edu.uco.seguridad.pdp.resources.domain.model.*;
-import co.edu.uco.seguridad.pdp.resources.domain.event.ProtectedResourceRegistered;
-import co.edu.uco.seguridad.shared.event.DomainEventPublisher;
+import co.edu.uco.seguridad.pdp.resources.application.usecase.RegisterProtectedResourcesInBulkUseCase;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
 import co.edu.uco.seguridad.shared.security.PdpPrincipal;
@@ -22,13 +21,13 @@ import java.util.*;
 public final class BulkResourceImportService {
  private final BulkResourceWorkbookService workbooks; private final ApplicationNameForTenantLookupValidator applications;
  private final PrincipalMustBeApplicationAdministratorValidator administrators; private final ProtectedResourceRepository resources;
- private final IdentifierGenerator identifiers; private final TimeProvider time; private final DomainEventPublisher events;
- public BulkResourceImportService(BulkResourceWorkbookService w, ApplicationNameForTenantLookupValidator a, PrincipalMustBeApplicationAdministratorValidator ad, ProtectedResourceRepository r, IdentifierGenerator i, TimeProvider t, DomainEventPublisher events){workbooks=w;applications=a;administrators=ad;resources=r;identifiers=i;time=t;this.events=events;}
+ private final IdentifierGenerator identifiers; private final TimeProvider time; private final RegisterProtectedResourcesInBulkUseCase bulkRegistration;
+ public BulkResourceImportService(BulkResourceWorkbookService w, ApplicationNameForTenantLookupValidator a, PrincipalMustBeApplicationAdministratorValidator ad, ProtectedResourceRepository r, IdentifierGenerator i, TimeProvider t, RegisterProtectedResourcesInBulkUseCase bulkRegistration){workbooks=w;applications=a;administrators=ad;resources=r;identifiers=i;time=t;this.bulkRegistration=bulkRegistration;}
  public Mono<Result> validate(byte[] bytes, PdpPrincipal principal, UserId userId) {
   BulkResourceWorkbookService.ParsedWorkbook parsed=workbooks.parse(bytes); List<BulkResourceValidationResponse.BulkResourceRowError> errors=new ArrayList<>(parsed.errors()); List<Resolved> valid=new ArrayList<>();
   return Flux.fromIterable(parsed.rows()).concatMap(row -> resolve(row,principal,userId,errors).doOnNext(valid::add)).then(Mono.fromSupplier(()->result(parsed.rows().size(),errors,valid)));
  }
- public Mono<Result> commit(byte[] bytes, PdpPrincipal principal, UserId userId) { return validate(bytes,principal,userId).flatMap(result -> result.response().ready() ? resources.saveAllAtomically(result.resources()).then(Flux.fromIterable(result.resources()).concatMap(resource -> events.publish(ProtectedResourceRegistered.of(resource))).then()).thenReturn(result) : Mono.just(result)); }
+ public Mono<Result> commit(byte[] bytes, PdpPrincipal principal, UserId userId) { return validate(bytes,principal,userId).flatMap(result -> result.response().ready() ? bulkRegistration.execute(result.resources()).thenReturn(result) : Mono.just(result)); }
  private Mono<Resolved> resolve(BulkResourceWorkbookService.RowValue row,PdpPrincipal principal,UserId userId,List<BulkResourceValidationResponse.BulkResourceRowError> errors) {
   final ApplicationName name; final ResourcePath path; final HttpVerb method;
   try { name=new ApplicationName(row.applicationName()); path=new ResourcePath(row.path()); method=HttpVerb.parse(row.method()); }

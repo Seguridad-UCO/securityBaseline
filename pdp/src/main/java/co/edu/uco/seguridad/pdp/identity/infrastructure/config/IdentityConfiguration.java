@@ -9,6 +9,8 @@ import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.Se
 import co.edu.uco.seguridad.pdp.identity.application.usecase.AssignTenantUseCase;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.FindAuthenticatedUserBySubjectUseCase;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.ListUsersUseCase;
+import co.edu.uco.seguridad.pdp.identity.application.usecase.FindUserByIdUseCase;
+import co.edu.uco.seguridad.pdp.identity.application.usecase.impl.FindUserByIdUseCaseImpl;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.ProvisionIdentityUseCase;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.ResolveExternalIdentityUseCase;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.SearchUsersPageUseCase;
@@ -73,6 +75,11 @@ public class IdentityConfiguration {
     @Bean
     ListUsersUseCase listUsersUseCase(SecurityUserRepository repository) {
         return new ListUsersUseCaseImpl(repository);
+    }
+
+    @Bean
+    FindUserByIdUseCase findUserByIdUseCase(SecurityUserRepository repository) {
+        return new FindUserByIdUseCaseImpl(repository);
     }
 
     @Bean
