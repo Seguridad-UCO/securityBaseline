@@ -35,4 +35,17 @@ public interface TokenRevocationPort {
      * {@code true} si el token identificado por su {@code jti} fue revocado explícitamente.
      */
     Mono<Boolean> isTokenRevoked(UserId subject, String tokenId);
+
+    /**
+     * HU-028 / ADR-034 [N]: marca como revocado todo token del sujeto emitido al cliente
+     * {@code clientId} ({@code azp}) antes o en {@code since}. No afecta a otros clientes del mismo
+     * sujeto.
+     */
+    Mono<Void> revokeClientSince(UserId subject, String clientId, Instant since);
+
+    /**
+     * HU-028 / ADR-034 [N]: {@code true} si {@code issuedAt} es anterior o igual al último
+     * {@link #revokeClientSince} del par (sujeto, cliente). Fail-closed igual que el resto.
+     */
+    Mono<Boolean> isClientRevoked(UserId subject, String clientId, Instant issuedAt);
 }

@@ -121,6 +121,120 @@ class RedisTokenRevocationAdapterTests extends AbstractRedisIntegrationTest {
                 .verifyComplete();
     }
 
+    // ---- HU-028 / ADR-034: revocación acotada por cliente (azp) ----
+
+    @Test
+    void client_is_not_revoked_when_there_is_no_client_revocation() {
+        UserId subject = new UserId(UUID.randomUUID());
+        RedisTokenRevocationAdapter adapter = adapterWithRetention(Duration.ofHours(1));
+
+        StepVerifier.create(adapter.isClientRevoked(subject, "app-a", Instant.parse("2026-10-28T10:00:00Z")))
+                .expectNext(false)
+                .verifyComplete();
+    }
+
+    @Test
+    void client_is_revoked_when_issued_before_or_at_the_revoked_since_instant() {
+        UserId subject = new UserId(UUID.randomUUID());
+        RedisTokenRevocationAdapter adapter = adapterWithRetention(Duration.ofHours(1));
+        Instant revokedSince = Instant.parse("2026-10-28T12:00:00Z");
+
+        StepVerifier.create(adapter.revokeClientSince(subject, "app-a", revokedSince)).verifyComplete();
+
+        StepVerifier.create(adapter.isClientRevoked(subject, "app-a", revokedSince.minusSeconds(1)))
+                .expectNext(true)
+                .verifyComplete();
+        StepVerifier.create(adapter.isClientRevoked(subject, "app-a", revokedSince))
+                .expectNext(true)
+                .verifyComplete();
+    }
+
+    @Test
+    void client_is_not_revoked_when_issued_after_the_revoked_since_instant() {
+        UserId subject = new UserId(UUID.randomUUID());
+        RedisTokenRevocationAdapter adapter = adapterWithRetention(Duration.ofHours(1));
+        Instant revokedSince = Instant.parse("2026-10-28T12:00:00Z");
+
+        StepVerifier.create(adapter.revokeClientSince(subject, "app-a", revokedSince)).verifyComplete();
+
+        StepVerifier.create(adapter.isClientRevoked(subject, "app-a", revokedSince.plusSeconds(1)))
+                .expectNext(false)
+                .verifyComplete();
+    }
+
+    @Test
+    void client_revocation_does_not_affect_another_client_of_the_same_subject() {
+        UserId subject = new UserId(UUID.randomUUID());
+        RedisTokenRevocationAdapter adapter = adapterWithRetention(Duration.ofHours(1));
+        Instant revokedSince = Instant.parse("2026-10-28T12:00:00Z");
+
+        StepVerifier.create(adapter.revokeClientSince(subject, "app-a", revokedSince)).verifyComplete();
+
+        StepVerifier.create(adapter.isClientRevoked(subject, "app-b", revokedSince.minusSeconds(60)))
+                .expectNext(false)
+                .verifyComplete();
+    }
+
+    @Test
+    void client_revocation_does_not_affect_another_subject_of_the_same_client() {
+        UserId subject = new UserId(UUID.randomUUID());
+        UserId otherSubject = new UserId(UUID.randomUUID());
+        RedisTokenRevocationAdapter adapter = adapterWithRetention(Duration.ofHours(1));
+        Instant revokedSince = Instant.parse("2026-10-28T12:00:00Z");
+
+        StepVerifier.create(adapter.revokeClientSince(subject, "app-a", revokedSince)).verifyComplete();
+
+        StepVerifier.create(adapter.isClientRevoked(otherSubject, "app-a", revokedSince.minusSeconds(60)))
+                .expectNext(false)
+                .verifyComplete();
+    }
+
+    @Test
+    void a_second_client_revocation_overwrites_the_first() {
+        UserId subject = new UserId(UUID.randomUUID());
+        RedisTokenRevocationAdapter adapter = adapterWithRetention(Duration.ofHours(1));
+        Instant first = Instant.parse("2026-10-28T10:00:00Z");
+        Instant second = Instant.parse("2026-10-28T14:00:00Z");
+
+        StepVerifier.create(adapter.revokeClientSince(subject, "app-a", second)).verifyComplete();
+        StepVerifier.create(adapter.revokeClientSince(subject, "app-a", first)).verifyComplete();
+
+        StepVerifier.create(adapter.isClientRevoked(subject, "app-a", first.plusSeconds(1)))
+                .expectNext(false)
+                .verifyComplete();
+        StepVerifier.create(adapter.isClientRevoked(subject, "app-a", first))
+                .expectNext(true)
+                .verifyComplete();
+    }
+
+    @Test
+    void the_client_revocation_key_lives_for_the_configured_retention() {
+        UserId subject = new UserId(UUID.randomUUID());
+        RedisTokenRevocationAdapter adapter = adapterWithRetention(Duration.ofHours(1));
+
+        StepVerifier.create(adapter.revokeClientSince(subject, "app-a", Instant.parse("2026-10-28T12:00:00Z")))
+                .verifyComplete();
+
+        StepVerifier.create(redis.getExpire("revoked-client-since:" + subject.value() + ":app-a"))
+                .assertNext(ttl -> assertThat(ttl).isPositive().isLessThanOrEqualTo(Duration.ofHours(1))
+                        .isGreaterThan(Duration.ofMinutes(59)))
+                .verifyComplete();
+    }
+
+    @Test
+    void client_revocation_is_independent_from_the_subject_wide_revocation() {
+        UserId subject = new UserId(UUID.randomUUID());
+        RedisTokenRevocationAdapter adapter = adapterWithRetention(Duration.ofHours(1));
+        Instant revokedSince = Instant.parse("2026-10-28T12:00:00Z");
+        Instant issuedAt = revokedSince.minusSeconds(60);
+
+        StepVerifier.create(adapter.revokeClientSince(subject, "app-a", revokedSince)).verifyComplete();
+        StepVerifier.create(adapter.isRevoked(subject, issuedAt)).expectNext(false).verifyComplete();
+
+        StepVerifier.create(adapter.revokeAllSince(subject, revokedSince)).verifyComplete();
+        StepVerifier.create(adapter.isClientRevoked(subject, "app-b", issuedAt)).expectNext(false).verifyComplete();
+    }
+
     @Test
     void exact_token_revocation_key_expires_with_the_token() {
         UserId subject = new UserId(UUID.randomUUID());

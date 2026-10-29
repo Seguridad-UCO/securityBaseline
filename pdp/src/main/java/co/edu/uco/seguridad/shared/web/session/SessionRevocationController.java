@@ -14,6 +14,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
@@ -66,8 +67,8 @@ public final class SessionRevocationController {
         }
         if (principal instanceof Jwt jwt) {
             return subjectUserIdLookup.execute(jwt.getSubject())
-                    .switchIfEmpty(Mono.error(new IllegalStateException("No existe identidad local para el sujeto")))
-                    .map(userId -> new AuthenticatedSession(userId, jwt.getClaimAsString("sid"), jwt, null));
+                    .switchIfEmpty(Mono.error(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED)))
+                    .map(userId -> new AuthenticatedSession(userId, null, jwt, null));
         }
         if (principal instanceof Principal p) {
             return Mono.fromCallable(() -> new AuthenticatedSession(UserId.of(p.getName()), null, null, null));
@@ -81,9 +82,17 @@ public final class SessionRevocationController {
                 && session.jwt().getExpiresAt() != null
                 ? tokenRevocationPort.revokeToken(session.userId(), session.jwt().getId(), session.jwt().getExpiresAt())
                 : Mono.empty();
+        if (session.jwt() != null) {
+            // Canal bearer (ADR-034): acotado al cliente (azp); no toca el refresh del BFF ni la sesión web.
+            String clientId = session.jwt().getClaimAsString("azp");
+            Mono<Void> revokeClient = clientId == null || clientId.isBlank()
+                    ? Mono.empty()
+                    : Mono.defer(() -> tokenRevocationPort.revokeClientSince(session.userId(), clientId, revokedAt));
+            return revokeCurrentToken.then(revokeClient);
+        }
         Mono<Void> removeRefreshToken = session.sessionId() == null
                 ? Mono.empty()
-                : refreshTokenStore.delete(session.sessionId());
+                : Mono.defer(() -> refreshTokenStore.delete(session.sessionId()));
         Mono<Void> invalidateBffSession = session.webSession() == null
                 ? Mono.empty()
                 : Mono.defer(session.webSession()::invalidate);

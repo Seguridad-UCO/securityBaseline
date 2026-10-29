@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.shared.security.revocation;
 
+import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserIdLookupValidator;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import org.springframework.security.oauth2.core.OAuth2Error;
@@ -60,11 +61,20 @@ public final class RevocationAwareJwtDecoder implements ReactiveJwtDecoder {
                         "no existe una identidad registrada para el subject del token; no se puede verificar su revocación")))
                 .flatMap(userId -> Mono.zip(
                                 revocation.isRevoked(userId, jwt.getIssuedAt()),
-                                revocation.isTokenRevoked(userId, jwt.getId()))
-                        .map(revocationState -> revocationState.getT1() || revocationState.getT2()))
+                                revocation.isTokenRevoked(userId, jwt.getId()),
+                                clientRevoked(userId, jwt))
+                        .map(revocationState -> revocationState.getT1() || revocationState.getT2() || revocationState.getT3()))
                 .onErrorMap(error -> !(error instanceof JwtException), error -> revocationCheckFailedException(
                         "no se pudo verificar el estado de revocación del token"))
                 .flatMap(revoked -> revoked ? Mono.<Jwt>error(revokedException()) : Mono.just(jwt)));
+    }
+
+    /** HU-028 / ADR-034: solo consulta la revocación por cliente cuando el token trae {@code azp}. */
+    private Mono<Boolean> clientRevoked(UserId userId, Jwt jwt) {
+        String clientId = jwt.getClaimAsString("azp");
+        return clientId == null || clientId.isBlank()
+                ? Mono.just(false)
+                : revocation.isClientRevoked(userId, clientId, jwt.getIssuedAt());
     }
 
     private boolean isTechnicalPepToken(Jwt jwt) {

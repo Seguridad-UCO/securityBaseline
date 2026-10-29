@@ -4,7 +4,7 @@
 > Es el nivel 0 del grafo de conocimiento: responde "que existe y donde va lo nuevo".
 
 - Clases de produccion: **913**
-- Clases de prueba: **254**
+- Clases de prueba: **255**
 - Slices de negocio: **9** (applications, assignments, authorization, commons, identity, profiles, resources, roles, tenants)
 
 ---
@@ -403,4 +403,4 @@
 | `shared/config` | `CorsConfigurationTests`, `KeycloakSecurityConfigurationTests`, `SecurityConfigurationTests` |
 | `shared/persistence` | `SurrealDbClientTests`, `SurrealRecordIdTests`, `SurrealRepositoryIntegrationTests` |
 | `shared/security` | `ApiAccessDeniedHandlerTests`, `ApiAuthenticationEntryPointTests`, `CorsPropertiesTests`, `InternalMtlsWebFilterTests`, `JwtSecurityPropertiesTests`, `MfaEvidencePropertiesTests`, `PdpPrincipalSecurityContextTests`, `RedisTokenRevocationAdapterTests`, `RevocationAwareJwtDecoderTests`, `SecurityWebFilterChainTests`, `TestJwtSupport` |
-| `shared/web` | `ApiErrorHandlerTests`, `CorrelationWebFilterTests`, `InternalBffSessionTokenControllerTests`, `KeycloakLogoutControllerTests`, `SessionControllerTests`, `SessionRevocationControllerTests`, `WebContractMessagesTests` |
+| `shared/web` | `ApiErrorHandlerTests`, `CorrelationWebFilterTests`, `InternalBffSessionTokenControllerTests`, `KeycloakLogoutControllerTests`, `SessionControllerTests`, `SessionLogoutBearerIntegrationTests`, `SessionRevocationControllerTests`, `WebContractMessagesTests` |

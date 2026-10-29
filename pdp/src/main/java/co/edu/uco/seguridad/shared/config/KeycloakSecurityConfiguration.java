@@ -104,7 +104,9 @@ class KeycloakSecurityConfiguration {
                         .authenticationFailureHandler(failureHandler))
                 // El mismo perfil admite la sesión BFF y la evidencia Bearer de Keycloak (con revocación).
                 // La protección CSRF sigue limitada arriba a solicitudes autenticadas por cookie.
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtDecoder(bearerJwtDecoder)))
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .authenticationEntryPoint(entryPoint).accessDeniedHandler(deniedHandler)
+                        .jwt(jwt -> jwt.jwtDecoder(bearerJwtDecoder)))
                 .build();
     }
 

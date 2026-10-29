@@ -21,6 +21,7 @@ public final class RedisTokenRevocationAdapter implements TokenRevocationPort {
 
     private static final String KEY_PREFIX = "revoked-since:";
     private static final String TOKEN_KEY_PREFIX = "revoked-token:";
+    private static final String CLIENT_KEY_PREFIX = "revoked-client-since:";
 
     private final ReactiveRedisTemplate<String, String> redis;
     private final RevocationRetentionProperties properties;
@@ -63,6 +64,25 @@ public final class RedisTokenRevocationAdapter implements TokenRevocationPort {
     public Mono<Boolean> isTokenRevoked(UserId subject, String tokenId) {
         return redis.opsForValue().get(tokenKeyFor(subject, tokenId))
                 .hasElement();
+    }
+
+    /** HU-028 / ADR-034: clave {@code revoked-client-since:{userId}:{clientId}}. */
+    @Override
+    public Mono<Void> revokeClientSince(UserId subject, String clientId, Instant since) {
+        return redis.opsForValue().set(clientKeyFor(subject, clientId), since.toString(), properties.retention()).then();
+    }
+
+    /** HU-028 / ADR-034. */
+    @Override
+    public Mono<Boolean> isClientRevoked(UserId subject, String clientId, Instant issuedAt) {
+        return redis.opsForValue().get(clientKeyFor(subject, clientId))
+                .map(Instant::parse)
+                .map(revokedSince -> !issuedAt.isAfter(revokedSince))
+                .defaultIfEmpty(false);
+    }
+
+    private static String clientKeyFor(UserId subject, String clientId) {
+        return CLIENT_KEY_PREFIX + subject.value() + ":" + clientId;
     }
 
     private static String keyFor(UserId subject) {

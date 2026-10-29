@@ -1,88 +1,42 @@
-# Reporte de validación — HU-028
+# REPORTE — HU-028 (logout con revocación acotada por canal) — 2026-10-28
 
-> **Estado supersedido al 2026-10-28:** este documento refleja una validación focalizada antigua y
-> no es evidencia de cierre integral. La rama actual tiene tests focalizados y un recorrido real
-> BFF/logout, pero falta comprobar la revocación de un JWT bearer real tras `DELETE /api/v1/session`.
-> Usar el estado y la evidencia del
-> [handoff vigente](../HANDOFF-VALIDACION-HU-027-029.md); no tomar “APROBADO” ni los conteos de este
-> reporte como resultado actual.
+**Veredicto: APROBADO.** Reemplaza al reporte anterior, que daba por buena una revocación global también por
+bearer y no tenía prueba de extremo a extremo con un bearer real
+([ADR-034](../../../../../../security-platform-architecture/docs/01-governance/adr/ADR-034-logout-and-revocation-scope.md)).
 
-## Metadata
+## Cómo se validó
 
-- **Slice:** `shared` (`shared/web/session`, `shared/security/revocation`)
-- **Fecha:** 2026-10-21
-- **Plan validado:** `pdp/docs/ai-harness/workspace/planes/PLAN-HU-028.md`
-- **Rama:** `feature/HU-028-revocacion-al-logout`
+Árbol aislado (los esqueletos de HU-030 apartados con `git stash`). `mvnw clean verify` completo, `consistencia.ps1`,
+`drift.ps1` y `mapa.ps1`. Revisión manual del diff de producción por seguridad. Las pruebas las escribió
+`@2-tester-spec` antes de la implementación y se vieron en **rojo por la razón correcta** (adaptador:
+`UnsupportedOperationException`; decoder, controlador y E2E: aserción de comportamiento).
 
-## Resultado del build
+## Criterios
 
-> Ejecutado con `.claude/tools/verificar.ps1`.
-
-```
-ESTADO: VERDE  (mvnw test, 7,2s, exit 0)
-JDK: Java 25 en C:\Users\Sebastian\.jdks\temurin-25.0.4
-
-PRUEBAS:
-- KeycloakLogoutControllerTests: Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
-- SessionRevocationControllerTests: Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
-```
-
-| Comprobación | Resultado |
-|---|---|
-| Compilación | ✅ |
-| Pruebas | ✅ 6 pruebas en verde (0 fallos, 0 errores) |
-| `consistencia.ps1` | ✅ Sin inconsistencias en `shared` |
-| `drift.ps1` | ✅ 0 derivas nuevas introducidas |
-
-## Veredicto anterior (supersedido)
-
-El reporte original marcó la historia como aprobada con pruebas focalizadas. Ese veredicto queda
-retirado como estado actual hasta completar la prueba E2E Bearer descrita al inicio.
-
-## Bloqueantes
-
-Para la aprobación vigente: ejecutar el E2E Bearer contra Keycloak/Redis integrados y demostrar que
-el mismo JWT obtiene `401` después de `DELETE /api/v1/session`. Ver el handoff.
-
-## Observaciones menores
-
-1. `KeycloakLogoutController.logout` utiliza `Mono.defer(session::invalidate)` para garantizar la evaluación diferida reactiva; si la revocación en Redis falla, la invalidación de la sesión WebFlux no se ejecuta (comportamiento fail-closed).
-
-## Los cuatro juicios
-
-| # | Juicio | Resultado | Evidencia |
+| # | Criterio | Resultado | Evidencia |
 |---|---|---|---|
-| 1 | ¿Cumple los criterios de aceptación del plan? | ✅ | `KeycloakLogoutControllerTests` verifica invocación a `TokenRevocationPort.revokeAllSince` y comportamiento fail-closed; `SessionRevocationControllerTests` verifica endpoint `DELETE /api/v1/session` para identidades `PdpPrincipal` y `LocalUserPrincipal` con respuesta 204. |
-| 2 | ¿Convención de idioma? | ✅ | Código y pruebas en inglés; Javadoc y comentarios en español. |
-| 3 | ¿Introdujo deriva doc↔código? | ✅ | `drift.ps1` reporta 0 hallazgos nuevos. |
-| 4 | ¿La lógica quedó en la capa correcta? | ✅ | Invocación de `TokenRevocationPort` desde adaptadores web en `shared/web/session`, sin lógica de persistencia en controladores ni bloqueos reactivos. |
+| 1 | Logout del panel (cookie) revoca todo el sujeto, borra refresh e invalida la sesión | ✅ | `SessionRevocationControllerTests` (canal cookie) |
+| 2 | `DELETE /api/v1/session` con bearer: `204`; ese JWT y los del mismo cliente (`azp`) anteriores a T reciben `401` | ✅ | E2E `SessionLogoutBearerIntegrationTests` (servidor integrado, perfil `keycloak`, JWT RS256 firmado con JWKS local) |
+| 2b | Otro cliente del mismo sujeto sigue válido; la sesión BFF y su refresh no se tocan; bearer sin `azp` solo revoca su `jti` | ✅ | E2E + `SessionRevocationControllerTests` |
+| 3 | Redis falla al escribir → `503`; con Redis totalmente caído el decoder responde `401` (fail-closed) | ✅ | E2E con decorador `@Primary` que falla solo las escrituras |
+| 4 | Otro sujeto no se afecta; `iat` posterior a T tampoco | ✅ | E2E con `iat` explícitos, sin `sleep` |
+| 5 | El panel sigue igual | ✅ | rama cookie sin cambios de comportamiento |
+| 6 | Un bearer inválido, expirado, de firma alterada o revocado recibe `401` con el sobre `UNAUTHORIZED` (`application/problem+json`) | ✅ | E2E (3 casos). Era un defecto: respondía cuerpo vacío |
+| 7 | Sin identidad local → `401` (antes `500`) | ✅ | `SessionRevocationControllerTests` |
+| 8 | `verificar.ps1` completo, `consistencia`, `drift` | ✅ | **867 pruebas, 0 fallos, 0 errores**, JaCoCo ≥ 50 % por paquete; CONSISTENTE; SIN DERIVA |
 
-## Criterios de la línea base
+## Cambios de producción (solo `pdp/src/main/.../shared`)
 
-| # | Criterio | Resultado | Punto de control comprobado |
-|---|---|---|---|
-| 1 | Clean Architecture | ✅ | Controladores web delegan en `TokenRevocationPort` y `TimeProvider` |
-| 2 | Contratos de servicios | ✅ | Reutiliza puerto `TokenRevocationPort` de HU-022 |
-| 9 | Mapeo de errores | ✅ | Error de Redis propaga excepción al handler centralizado |
-| 21 | Modelos explícitos | ✅ | `UserId` inmutable; `PdpPrincipal` y `LocalUserPrincipal` |
-| 22 | Arquitectura reactiva | ✅ | Todo el flujo reactivo con `Mono`, sin `block()` |
-| 23 | Arquitectura antes de negocio | ✅ | Pruebas compiladas y en verde |
+- `TokenRevocationPort`: `revokeClientSince` / `isClientRevoked` (sin `default`: un doble sin implementarlos no compila).
+- `RedisTokenRevocationAdapter`: clave `revoked-client-since:{userId}:{clientId}`, misma retención y comparación `<=`.
+- `RevocationAwareJwtDecoder`: tercera comprobación por `azp`, solo si el token lo trae; fail-closed.
+- `SessionRevocationController`: canal por tipo de principal; borrado del refresh en `Mono.defer`.
+- `KeycloakSecurityConfiguration` y `SecurityConfiguration`: `ApiAuthenticationEntryPoint` y `ApiAccessDeniedHandler`
+  conectados al resource server (también el perfil no-keycloak tenía el mismo defecto).
 
-## Desviaciones respecto al plan
+## Límites conocidos
 
-Ninguna.
-
-## Datos para la entrega
-
-- **Mensaje de commit:** `feat(shared): cablear revocación de tokens al logout del BFF y exponer DELETE /api/v1/session (HU-028)`
-- **Cuerpo:** Inyecta `TokenRevocationPort` en `KeycloakLogoutController` para revocar tokens antes de invalidar la sesión WebFlux y redirigir al RP-initiated logout de Keycloak; añade `SessionRevocationController` para clientes bearer autenticados.
-- **Rama:** `feature/HU-028-revocacion-al-logout`
-- **Archivos a incluir:**
-  - `pdp/src/main/java/co/edu/uco/seguridad/shared/web/session/KeycloakLogoutController.java`
-  - `pdp/src/main/java/co/edu/uco/seguridad/shared/web/session/SessionRevocationController.java`
-  - `pdp/src/test/java/co/edu/uco/seguridad/shared/web/session/KeycloakLogoutControllerTests.java`
-  - `pdp/src/test/java/co/edu/uco/seguridad/shared/web/session/SessionRevocationControllerTests.java`
-
-## Próximos pasos
-
-Listo para el gate 2 (entrega).
+- La precisión de `iat` es de segundos y la comparación es `<=`: un token emitido en el mismo segundo que el logout
+  del mismo cliente cae revocado. Es la semántica que ya tenía `revokeAllSince`; aceptable.
+- El logout por bearer no termina la sesión SSO de Keycloak (nunca lo hizo): lo hace el cliente con su propio flujo.
+- `RefreshTokenStorePort` se conserva aquí; lo retira HU-030.

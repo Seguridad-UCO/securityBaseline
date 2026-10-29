@@ -61,6 +61,16 @@ class KeycloakLogoutControllerTests {
             public Mono<Boolean> isTokenRevoked(UserId subject, String tokenId) {
                 return Mono.just(false);
             }
+
+            @Override
+            public Mono<Void> revokeClientSince(UserId subject, String clientId, Instant since) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Boolean> isClientRevoked(UserId subject, String clientId, Instant issuedAt) {
+                throw new UnsupportedOperationException();
+            }
         };
 
         var controller = new KeycloakLogoutController(
@@ -118,6 +128,16 @@ class KeycloakLogoutControllerTests {
             public Mono<Boolean> isTokenRevoked(UserId subject, String tokenId) {
                 return Mono.just(false);
             }
+
+            @Override
+            public Mono<Void> revokeClientSince(UserId subject, String clientId, Instant since) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Boolean> isClientRevoked(UserId subject, String clientId, Instant issuedAt) {
+                throw new UnsupportedOperationException();
+            }
         };
 
         var controller = new KeycloakLogoutController(
@@ -161,6 +181,16 @@ class KeycloakLogoutControllerTests {
             @Override
             public Mono<Boolean> isTokenRevoked(UserId subject, String tokenId) {
                 return Mono.just(false);
+            }
+
+            @Override
+            public Mono<Void> revokeClientSince(UserId subject, String clientId, Instant since) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Boolean> isClientRevoked(UserId subject, String clientId, Instant issuedAt) {
+                throw new UnsupportedOperationException();
             }
         };
 
