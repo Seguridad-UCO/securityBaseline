@@ -35,7 +35,7 @@
 > `HU-028` (cablear `TokenRevocationPort` en `KeycloakLogoutController` + `DELETE /api/v1/session`
 > para clientes bearer — gap identificado al verificar que HU-022 instaló el mecanismo pero el
 > logout del BFF nunca lo invoca);
-> `HU-029` (`POST /api/v1/session/token/refresh` — apps externas renuevan su token e implementan
+> `HU-029` (retirado el proxy `POST /api/v1/session/token/refresh`; ver ADR-033; HU-030 y HU-031 nuevas/pendientes, HU-028 replanteada; antes: apps externas renovaban su token e implementaban
 > cierre de sesión por inactividad sin exponer el `refresh_token` al cliente). Ver ROADMAP-PDP.md.
 
 ---

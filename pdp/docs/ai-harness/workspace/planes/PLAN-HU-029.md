@@ -1,3 +1,5 @@
+> **REEMPLAZADO (2026-10-28):** este documento describe el endpoint `POST /api/v1/session/token/refresh`, que fue retirado por ADR-033 (HU-029 replanteada como retiro del proxy). Se conserva solo como historico; el plan vigente es `workspace/PLAN-HU-029.md`.
+
 # PLAN: Endpoint de refresco de token para aplicaciones externas (POST /api/v1/session/token/refresh)
 
 ## Metadata

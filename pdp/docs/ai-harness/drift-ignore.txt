@@ -75,3 +75,9 @@ doc:pdp/docs/ai-harness/workspace/INTEGRACION-PDP-PEP-OPA.md
 # falta implementar y el CHECKPOINT y el handoff de HU-027/029 lo dicen asi. Retirar esta linea
 # cuando la clase exista.
 SurrealAdministrationEventSchemaInitializer
+
+# --- Retiradas a proposito por HU-029 (ADR-033) ---------------------------------------------------
+# El plan y el handoff de HU-029 nombran el proxy de refresh que se borro, y los planes de HU-028/030
+# lo citan como historia. Acotado a estas dos clases; cualquier otra clase inexistente sigue fallando.
+KeycloakTokenRefreshAdapter
+TokenRefreshControllerTests

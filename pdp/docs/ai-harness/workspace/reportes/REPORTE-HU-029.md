@@ -1,88 +1,45 @@
-# Reporte de validación — HU-029
+# REPORTE — HU-029 (retiro del proxy de refresh) — 2026-10-28
 
-> **Estado supersedido al 2026-10-28:** las pruebas del controlador/adaptador no validan por sí solas
-> el flujo de una aplicación externa. El diseño actualmente probado almacena el refresh token del
-> cliente BFF; la decisión más reciente es que cada aplicación renueve con su propio cliente
-> directamente contra Keycloak. El contrato de HU-029 debe reconciliarse antes de aprobarse. Usar el
-> [handoff vigente](../HANDOFF-VALIDACION-HU-027-029.md); no tomar “APROBADO” ni los conteos de este
-> reporte como resultado actual.
+**Veredicto: APROBADO**, con un criterio de Edge pendiente de ejecución (ver "No ejecutado").
 
-## Metadata
+Reemplaza al reporte anterior, que validaba el endpoint proxy que esta historia retira
+([ADR-033](../../../../../../security-platform-architecture/docs/01-governance/adr/ADR-033-token-renewal-ownership.md)).
 
-- **Slice:** `shared` (`shared/web/session`, `shared/auth`)
-- **Fecha:** 2026-10-21
-- **Plan validado:** `pdp/docs/ai-harness/workspace/planes/PLAN-HU-029.md`
-- **Rama:** `feature/HU-029-refresh-token-externo`
+## Cómo se validó
 
-## Resultado del build
+Validación en un árbol **aislado**: los esqueletos sin implementar de HU-028 y HU-030 y sus planes se
+apartaron con `git stash` para no contaminar ni la cobertura ni la deriva de esta historia. El primer intento
+del validador, con esos esqueletos presentes, fue RECHAZADO por dos razones ajenas a HU-029: la cobertura
+de `shared.auth.model` (0,42, por excepciones-esqueleto de HU-030 sin pruebas) y citas de planes futuros a
+clases aún inexistentes.
 
-> Ejecutado con `.claude/tools/verificar.ps1`.
+## Criterios
 
-```
-ESTADO: VERDE  (mvnw test, 6,7s, exit 0)
-JDK: Java 25 en C:\Users\Sebastian\.jdks\temurin-25.0.4
-
-PRUEBAS:
-- TokenRefreshControllerTests: Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
-```
-
-| Comprobación | Resultado |
-|---|---|
-| Compilación | ✅ |
-| Pruebas | ✅ 3 pruebas en verde (0 fallos, 0 errores) |
-| `consistencia.ps1` | ✅ Sin inconsistencias en `shared` |
-| `drift.ps1` | ✅ 0 derivas nuevas introducidas |
-
-## Veredicto anterior (supersedido)
-
-El reporte original marcó la historia como aprobada con pruebas del controlador. Ese veredicto queda
-retirado como estado actual hasta reconciliar el contrato externo y validar el flujo acordado.
-
-## Bloqueantes
-
-Para la aprobación vigente: reconciliar el contrato HU-029 con la decisión de renovación directa
-por cada aplicación en Keycloak y validar el flujo resultante. Ver el handoff.
-
-## Observaciones menores
-
-1. `TokenRefreshController.refresh` revoca el token anterior (`tokenRevocationPort.revokeAllSince`) únicamente tras la emisión exitosa del nuevo token por parte del `TokenRefreshPort`, preservando el principio de fail-closed seguro si Keycloak falla.
-
-## Los cuatro juicios
-
-| # | Juicio | Resultado | Evidencia |
+| # | Criterio | Resultado | Evidencia |
 |---|---|---|---|
-| 1 | ¿Cumple los criterios de aceptación del plan? | ✅ | `TokenRefreshControllerTests` valida respuesta 200 con `{ accessToken, expiresIn, tokenType }`, revocación inmediata del token anterior, propagación de 503 sin revocación cuando falla el IdP, y respuesta 401 `SESSION_EXPIRED` cuando la sesión expira. |
-| 2 | ¿Convención de idioma? | ✅ | Identificadores en inglés; mensajes de error y documentación en español. |
-| 3 | ¿Introdujo deriva doc↔código? | ✅ | `drift.ps1` reporta 0 hallazgos nuevos. |
-| 4 | ¿La lógica quedó en la capa correcta? | ✅ | `TokenRefreshController` en capa web expone endpoint HTTP delegando en `TokenRefreshPort` y `TokenRevocationPort`. `TokenRefreshResponse` es record inmutable con validación compacta. |
+| A1 | No queda `TokenRefresh*` / `refreshSessionToken` | ✅ | `grep` en `pdp/src`, `securityBaseline-vue/src`, `security-ui/src`: sin coincidencias |
+| A2 | La ruta solo existe como constante de prueba | ✅ | única aparición: `SecurityWebFilterChainTests` |
+| A3 | Ningún controlador expuesto canjea `grant_type=refresh_token` | ✅ | `refresh_token` en `src/main` solo dentro del cliente OIDC del login y el almacén (HU-030) |
+| A4 | Ruta autenticada → 404 `RESOURCE_NOT_FOUND`; anónima → 401 `UNAUTHORIZED` | ✅ | `SecurityWebFilterChainTests`, 12 pruebas, 0 fallos (guardas de regresión: el controlador era `@Profile("keycloak")` y las pruebas corren en el perfil por defecto) |
+| A5 | El panel Vue no llama a la ruta; keepalive = `GET /api/v1/session` | ✅ | `useInactivityTracker.ts` → `refreshSession()` |
+| A6 | Typecheck del Vue | ✅ | `npm run typecheck` (vue-tsc), exit 0 |
+| A9 | `consistencia.ps1` y `drift.ps1` limpios | ✅ | CONSISTENTE; SIN DERIVA (2 clases retiradas declaradas en `drift-ignore.txt`) |
+| A10 | `verificar.ps1` completo en verde | ✅ | `mvnw clean verify`: **837 pruebas, 0 fallos, 0 errores**, JaCoCo ≥ 50 % por paquete |
+| A11 | `PROJECT-MAP.md` sin referencias | ✅ | regenerado con `mapa.ps1`; sin `TokenRefresh` |
 
-## Criterios de la línea base
+## No ejecutado (honesto)
 
-| # | Criterio | Resultado | Punto de control comprobado |
-|---|---|---|---|
-| 1 | Clean Architecture | ✅ | Desacoplamiento de detalles IdP a través del puerto `TokenRefreshPort` |
-| 2 | Contratos de servicios | ✅ | DTO `TokenRefreshResponse` y puerto reactivo `TokenRefreshPort` |
-| 9 | Mapeo de errores | ✅ | `ResponseStatusException` 401 y 503 según estado del IdP |
-| 14 | Validación de records | ✅ | `TokenRefreshResponse` valida no-nulidad de `accessToken` y `tokenType` |
-| 21 | Modelos inmutables | ✅ | `TokenRefreshResponse` es record inmutable |
-| 22 | Arquitectura reactiva | ✅ | Encadenamiento puramente reactivo con `Mono`, sin `block()` |
-| 23 | Arquitectura y pruebas | ✅ | Pruebas compiladas y en verde |
+- **A7/A8 — Hurl del Edge:** `hurl` no está instalado en el shell y `oidc-login-session-logout.hurl` no tiene
+  aún el paso `POST /api/v1/session/token/refresh` → 404. Se añade y se ejecuta con el resto de la suite de Edge
+  en HU-027 (el stack Edge está levantado).
 
-## Desviaciones respecto al plan
+## Decisiones tomadas en la historia
 
-Ninguna.
+- Ruta eliminada con `404`, sin `410` (ADR-033 §1).
+- `RefreshTokenStorePort`, el wrapper de `refresh_expires_in` y el tracker se dejan intactos: los retira HU-030.
+- Declaradas en `drift-ignore.txt` solo `KeycloakTokenRefreshAdapter` y `TokenRefreshControllerTests`.
 
-## Datos para la entrega
+## Observaciones
 
-- **Mensaje de commit:** `feat(shared): endpoint de refresco de token para aplicaciones externas (HU-029)`
-- **Cuerpo:** Expone `POST /api/v1/session/token/refresh` para clientes que renuevan sesión con su token actual; renueva mediante `TokenRefreshPort` e invalida el token previo mediante `TokenRevocationPort`.
-- **Rama:** `feature/HU-029-refresh-token-externo`
-- **Archivos a incluir:**
-  - `pdp/src/main/java/co/edu/uco/seguridad/shared/auth/port/TokenRefreshPort.java`
-  - `pdp/src/main/java/co/edu/uco/seguridad/shared/web/session/TokenRefreshController.java`
-  - `pdp/src/main/java/co/edu/uco/seguridad/shared/web/session/dto/TokenRefreshResponse.java`
-  - `pdp/src/test/java/co/edu/uco/seguridad/shared/web/session/TokenRefreshControllerTests.java`
-
-## Próximos pasos
-
-Listo para el gate 2 (entrega).
+- Las pruebas de la ruta no pueden ser rojo→verde (la ruta nunca existió en el perfil de prueba). El 404 real
+  con cookie BFF más CSRF queda cubierto por el paso A8 del Edge.
