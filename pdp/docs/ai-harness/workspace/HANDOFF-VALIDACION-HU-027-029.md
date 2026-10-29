@@ -2,8 +2,8 @@
 
 **Actualizado:** 2026-10-28
 **Rama inspeccionada:** `feature/seguridad-waf-sesiones`
-**HEAD inspeccionado:** `8fd1593` (`docs(ai-harness): actualizar mapa, roadmap y checkpoint tras cierre de HU-027, HU-028 y HU-029`)
-**Propósito:** preparar el commit/push y una revisión independiente con agentes especializados. Este documento no certifica las tres historias ni reemplaza sus criterios de aceptación.
+**HEAD base antes del commit:** `8fd1593` (`docs(ai-harness): actualizar mapa, roadmap y checkpoint tras cierre de HU-027, HU-028 y HU-029`)
+**Propósito:** registrar evidencia de validación y preparar una revisión independiente con agentes especializados. Este documento no certifica las tres historias ni reemplaza sus criterios de aceptación.
 
 ## Resumen ejecutivo
 
@@ -73,9 +73,9 @@ La prueba OIDC real había fallado porque Spring Security construye `OAuth2Refre
 - El typecheck Vue había pasado en una ejecución anterior; no se modificó Vue en esta sesión y no se repitió.
 - Las pruebas Hurl dejaron datos de prueba en el stack local; no se limpiaron ni se borraron volúmenes o claves Redis.
 
-## Cambios locales que deben auditarse antes del commit
+## Cambios auditados e incluidos en el commit
 
-Estado Git observado en `feature/seguridad-waf-sesiones`, HEAD `8fd1593`:
+Los cambios revisados se registraron en `ce5fbdb` (`fix(security): track Keycloak refresh expiry and update validation`) y se publicaron en `origin/feature/seguridad-waf-sesiones` sin trailer de coautor.
 
 ### Cambios editados al continuar el trabajo, sin commit
 
@@ -87,9 +87,9 @@ Estado Git observado en `feature/seguridad-waf-sesiones`, HEAD `8fd1593`:
 de `refresh_expires_in`. Las diffs de esta continuación se mezclan con esos cambios anteriores: revisar
 cada archivo completo y preservar las partes previas al preparar commits.
 
-### Otros cambios que ya estaban en el árbol al continuar el trabajo
+### Cambios previos del árbol de trabajo
 
-No atribuir ni descartar sin comparar con sus autores/agentes. Revisar y clasificar antes de stage:
+Estos cambios también se revisaron y quedaron incluidos en el commit:
 
 - `pdp/src/main/java/co/edu/uco/seguridad/shared/config/RedisConfiguration.java`
 - `pdp/src/main/java/co/edu/uco/seguridad/shared/web/exceptionhandler/ApiErrorHandler.java`
@@ -97,7 +97,7 @@ No atribuir ni descartar sin comparar con sus autores/agentes. Revisar y clasifi
 - `pdp/src/test/java/co/edu/uco/seguridad/pdp/assignments/application/usecase/impl/RemoveApplicationAdministratorUseCaseImplTests.java`
 - `pdp/keycloak/import/security-baseline-realm.json` (no rastreado y **vacío, 0 bytes**; no incluirlo)
 
-No se ejecutó `git add`, commit, push ni limpieza. El diff/estado debe volver a inspeccionarse justo antes de preparar la entrega. No incluir claves, tokens de prueba, configuración privada ni datos del volumen Redis en documentos o commits.
+El archivo `pdp/keycloak/import/security-baseline-realm.json` sigue sin seguimiento, vacío (0 bytes), y se excluyó. No se limpiaron datos de prueba ni se detuvieron o borraron contenedores/volúmenes. No incluir claves, tokens de prueba, configuración privada ni datos del volumen Redis en documentos o commits.
 
 ## Issues observados que el validador debe resolver o clasificar
 
@@ -115,7 +115,7 @@ No se ejecutó `git add`, commit, push ni limpieza. El diff/estado debe volver a
 2. **Revisión de código (read-only):** revisar coherencia de las tres HUs, contratos, edge cases reactivos, idempotencia, arquitectura y posibles cambios no relacionados en el worktree.
 3. **Agente implementador:** solo después de cerrar HU-029 y priorizar hallazgos, implementar los gaps aprobados y agregar pruebas de integración que prueben el contrato externo real.
 4. **Agente validador:** ejecutar validación completa en un árbol limpio/reproducible, suites Edge en detection y blocking, suites bearer/logout/refresh, `verificar.ps1`, consistencia, drift y mapas; no cambiar código.
-5. **Commit/push:** clasificar los cambios locales preexistentes, revisar `git diff --check`, correr gates finales, preparar commits temáticos y pedir aprobación antes de publicar. No afirmar que los tres HUs están “cerrados” hasta que los criterios pendientes tengan evidencia.
+5. **Commit/push:** realizado en `ce5fbdb`. No afirmar que los tres HUs están “cerrados” hasta que los criterios pendientes tengan evidencia.
 
 ## Guía para la siguiente sesión
 
