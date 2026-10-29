@@ -7,5 +7,9 @@ import java.time.Instant;
  * los value objects directamente haría que renombrar un campo del dominio rompiera la API en silencio.
  */
 public record ApplicationWebResponse(String id, String tenantId, String name, String description, String baseUrl,
-                                     Instant registeredAt) {
+                                     Instant registeredAt, java.util.Set<String> enabledEnvironments) {
+    public ApplicationWebResponse(String id, String tenantId, String name, String description, String baseUrl,
+                                  Instant registeredAt) {
+        this(id, tenantId, name, description, baseUrl, registeredAt, java.util.Set.of());
+    }
 }

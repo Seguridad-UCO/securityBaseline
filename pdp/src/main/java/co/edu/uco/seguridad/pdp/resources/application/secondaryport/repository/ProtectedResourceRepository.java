@@ -6,6 +6,7 @@ import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import java.util.List;
 
 /**
  * Puerto secundario para almacenamiento de recursos protegidos, expresado solo en tipos de dominio.
@@ -33,6 +34,11 @@ public interface ProtectedResourceRepository {
 
     Mono<ProtectedResource> save(ProtectedResource resource);
 
+    /** Inserta el lote como una sola unidad de persistencia; ante conflicto no deja altas parciales. */
+    default Mono<Void> saveAllAtomically(List<ProtectedResource> resources) {
+        return Mono.error(new UnsupportedOperationException("La inserción atómica por lote no está implementada"));
+    }
+
     default Mono<ProtectedResource> findByIdForTenant(ResourceId resourceId, TenantId tenantId) {
         return Mono.empty();
     }
@@ -50,5 +56,22 @@ public interface ProtectedResourceRepository {
      */
     Mono<ApplicationId> findApplicationIdById(ResourceId resourceId);
 
-    Mono<ResourceId> findIdByApplicationPathAndMethod(ApplicationId applicationId, ResourcePath path, HttpVerb method);
+    /**
+     * Finds the registered resource covering a concrete request path. A template segment such as
+     * {@code {id}} covers exactly one segment of the request path.
+     */
+    default Mono<ProtectedResource> findByApplicationPathAndMethod(ApplicationId applicationId, ResourcePath path,
+                                                                   HttpVerb method) {
+        return findAllByApplication(applicationId)
+                .filter(resource -> resource.method() == method)
+                .filter(resource -> resource.path().matches(path))
+                // A literal path is more specific than a template and must always win.
+                .sort((left, right) -> Boolean.compare(right.path().equals(path), left.path().equals(path)))
+                .next();
+    }
+
+    default Mono<ResourceId> findIdByApplicationPathAndMethod(ApplicationId applicationId, ResourcePath path,
+                                                               HttpVerb method) {
+        return findByApplicationPathAndMethod(applicationId, path, method).map(ProtectedResource::id);
+    }
 }

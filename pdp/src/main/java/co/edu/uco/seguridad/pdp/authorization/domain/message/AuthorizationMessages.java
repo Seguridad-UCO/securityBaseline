@@ -39,4 +39,8 @@ public final class AuthorizationMessages {
     public static String mfaEvidenceRequired(ApplicationId applicationId) {
         return "El sujeto no tiene evidencia de MFA para administrar la aplicación " + applicationId.value();
     }
+
+    public static String currentUserApplicationsAccessDenied() {
+        return "El sujeto autenticado no puede consultar sus aplicaciones";
+    }
 }

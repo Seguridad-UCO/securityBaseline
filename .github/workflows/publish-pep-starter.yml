@@ -1,0 +1,26 @@
+name: Publish PEP starter library
+
+on:
+  push:
+    tags: ['library-v*']
+
+permissions:
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: version
+        run: echo "value=${GITHUB_REF_NAME#library-v}" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          server-id: github
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+      - run: ./mvnw -f pep/starter/pom.xml -B -DskipTests -Drevision="${{ steps.version.outputs.value }}" deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

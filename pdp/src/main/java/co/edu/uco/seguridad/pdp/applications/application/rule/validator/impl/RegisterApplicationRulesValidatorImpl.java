@@ -5,6 +5,8 @@ import co.edu.uco.seguridad.pdp.applications.application.rule.validator.Register
 import co.edu.uco.seguridad.pdp.applications.application.secondaryport.repository.ApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationNameMustBeUniqueForTenantRule;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationNameMustNotBeReservedRule;
+import co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationMustHaveAtLeastOneEnabledEnvironmentRule;
+import co.edu.uco.seguridad.pdp.applications.domain.rule.model.ApplicationEnvironmentSelection;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.model.ApplicationNameAvailability;
 import co.edu.uco.seguridad.pdp.tenants.application.rule.validator.TenantMustBeActiveValidator;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
@@ -20,15 +22,19 @@ import java.util.Objects;
 public final class RegisterApplicationRulesValidatorImpl implements RegisterApplicationRulesValidator {
 
     private final ApplicationNameMustNotBeReservedRule nameMustNotBeReserved;
+    private final ApplicationMustHaveAtLeastOneEnabledEnvironmentRule mustHaveEnabledEnvironment;
     private final TenantMustBeActiveValidator tenantMustBeActive;
     private final ApplicationNameMustBeUniqueForTenantRule nameMustBeUnique;
     private final ApplicationRepository repository;
 
     public RegisterApplicationRulesValidatorImpl(ApplicationNameMustNotBeReservedRule nameMustNotBeReserved,
+                                                 ApplicationMustHaveAtLeastOneEnabledEnvironmentRule mustHaveEnabledEnvironment,
                                                  TenantMustBeActiveValidator tenantMustBeActive,
                                                  ApplicationNameMustBeUniqueForTenantRule nameMustBeUnique,
                                                  ApplicationRepository repository) {
         this.nameMustNotBeReserved = Objects.requireNonNull(nameMustNotBeReserved, RequiredArgumentMessages.RESERVED_NAME_RULE);
+        this.mustHaveEnabledEnvironment = Objects.requireNonNull(mustHaveEnabledEnvironment,
+                "applicationMustHaveAtLeastOneEnabledEnvironmentRule");
         this.tenantMustBeActive = Objects.requireNonNull(tenantMustBeActive, RequiredArgumentMessages.TENANT_ACTIVE_VALIDATOR);
         this.nameMustBeUnique = Objects.requireNonNull(nameMustBeUnique, RequiredArgumentMessages.UNIQUE_RULE);
         this.repository = Objects.requireNonNull(repository, RequiredArgumentMessages.APPLICATION_REPOSITORY);
@@ -36,7 +42,9 @@ public final class RegisterApplicationRulesValidatorImpl implements RegisterAppl
 
     @Override
     public Mono<Void> execute(RegisterApplicationRequest dto) {
-        return Mono.fromRunnable(() -> nameMustNotBeReserved.execute(dto.name()))
+        return Mono.fromRunnable(() -> mustHaveEnabledEnvironment.execute(
+                        new ApplicationEnvironmentSelection(dto.enabledEnvironments())))
+                .then(Mono.fromRunnable(() -> nameMustNotBeReserved.execute(dto.name())))
                 .then(tenantMustBeActive.execute(dto.tenantId()))
                 .then(repository.existsByTenantAndName(dto.tenantId(), dto.name()))
                 .doOnNext(registered -> nameMustBeUnique.execute(

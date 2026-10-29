@@ -17,6 +17,8 @@ import tools.jackson.databind.JsonNode;
 
 import java.time.Instant;
 import java.util.Map;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -33,12 +35,9 @@ public final class SurrealProtectedResourceRepository implements ProtectedResour
     @Override
     public Mono<Boolean> existsByApplicationPathAndMethod(ApplicationId applicationId, ResourcePath path,
                                                           HttpVerb method) {
-        return client.execute(
-                        "SELECT id FROM %s WHERE applicationId = $applicationId AND path = $path AND method = $method LIMIT 1;"
-                                .formatted(ProtectedResourceSchema.TABLE),
-                        Map.of("applicationId", applicationId.value().toString(), "path", path.value(),
-                                "method", method.name()))
-                .map(results -> !results.get(0).isEmpty());
+        // Existence and id resolution must use the same matching rule. Otherwise a template can
+        // be resolved later but is rejected here before the authorization context reaches OPA.
+        return findByApplicationPathAndMethod(applicationId, path, method).hasElement();
     }
 
     @Override
@@ -94,6 +93,26 @@ public final class SurrealProtectedResourceRepository implements ProtectedResour
     }
 
     @Override
+    public Mono<Void> saveAllAtomically(List<ProtectedResource> resources) {
+        if (resources.isEmpty()) return Mono.empty();
+        StringBuilder query = new StringBuilder("BEGIN TRANSACTION; ");
+        Map<String, String> parameters = new HashMap<>();
+        for (int index = 0; index < resources.size(); index++) {
+            ProtectedResource resource = resources.get(index);
+            String suffix = String.valueOf(index);
+            query.append("CREATE type::record('").append(ProtectedResourceSchema.TABLE).append("', $id").append(suffix)
+                    .append(") SET applicationId=$applicationId").append(suffix).append(", tenantId=$tenantId").append(suffix)
+                    .append(", path=$path").append(suffix).append(", method=$method").append(suffix)
+                    .append(", registeredAt=<datetime>$registeredAt").append(suffix).append("; ");
+            parameters.put("id" + suffix, resource.id().value().toString()); parameters.put("applicationId" + suffix, resource.applicationId().value().toString());
+            parameters.put("tenantId" + suffix, resource.tenantId().value()); parameters.put("path" + suffix, resource.path().value());
+            parameters.put("method" + suffix, resource.method().name()); parameters.put("registeredAt" + suffix, resource.registeredAt().toString());
+        }
+        query.append("COMMIT TRANSACTION;");
+        return client.execute(query.toString(), parameters).then();
+    }
+
+    @Override
     public Mono<Void> deleteById(ResourceId resourceId) {
         return client.execute(
                         "DELETE type::record('%s', $id);".formatted(ProtectedResourceSchema.TABLE),
@@ -131,10 +150,18 @@ public final class SurrealProtectedResourceRepository implements ProtectedResour
     }
 
     @Override
-    public Mono<ResourceId> findIdByApplicationPathAndMethod(ApplicationId applicationId, ResourcePath path, HttpVerb method) {
-        return client.execute("SELECT id FROM %s WHERE applicationId = $applicationId AND path = $path AND method = $method LIMIT 1;"
-                        .formatted(ProtectedResourceSchema.TABLE), Map.of("applicationId", applicationId.value().toString(), "path", path.value(), "method", method.name()))
-                .flatMap(results -> results.get(0).isEmpty() ? Mono.empty() : Mono.just(ResourceId.of(SurrealRecordId.idPart(results.get(0).get(0).path("id").asString()))));
+    public Mono<ProtectedResource> findByApplicationPathAndMethod(ApplicationId applicationId, ResourcePath path, HttpVerb method) {
+        return findAllByApplication(applicationId)
+                .filter(resource -> resource.method() == method)
+                .filter(resource -> resource.path().matches(path))
+                .collectList()
+                .flatMap(resources -> resources.stream()
+                        // A literal resource is always more specific than a template such as /employees/{id}.
+                        .filter(resource -> resource.path().equals(path))
+                        .findFirst()
+                        .or(() -> resources.stream().findFirst())
+                        .map(Mono::just)
+                        .orElseGet(Mono::empty));
     }
 
     private static ProtectedResource toDomain(JsonNode row) {

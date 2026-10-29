@@ -5,6 +5,7 @@ import co.edu.uco.seguridad.pdp.assignments.domain.AssignmentCriteria;
 import co.edu.uco.seguridad.pdp.assignments.domain.model.AssignmentId;
 import co.edu.uco.seguridad.pdp.commons.model.*;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Flux;
 
 import java.time.Instant;
 import java.util.Set;
@@ -49,6 +50,11 @@ public interface AssignmentRepository {
      * Los identificadores de rol con asignación activa para (usuario, aplicación) a la fecha {@code now}.
      */
     Mono<Set<RoleId>> findActiveRoleIdsFor(UserId userId, ApplicationId applicationId, Instant now);
+
+    /** Asignaciones de rol vigentes de un usuario, limitadas siempre al tenant indicado. */
+    default Flux<Assignment> findActiveByUserAndTenant(UserId userId, TenantId tenantId, Instant now) {
+        return Flux.empty();
+    }
 
     Mono<Assignment> save(Assignment assignment);
 

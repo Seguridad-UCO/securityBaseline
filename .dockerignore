@@ -1,0 +1,7 @@
+.git
+**/target
+**/.idea
+**/.DS_Store
+notes-security-demo
+pep-webflux-sample
+security-observability

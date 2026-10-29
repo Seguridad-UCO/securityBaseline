@@ -1,11 +1,14 @@
 package co.edu.uco.seguridad.pdp.applications.application.primaryport.request;
 
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
+import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationEnvironment;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
+import java.util.EnumSet;
+import java.util.Set;
 
 /**
  * DTO de entrada del puerto primario: intención tipada de registrar una aplicación para un inquilino.
@@ -14,11 +17,16 @@ import java.util.Objects;
  * invariante propio más allá de un tope de longitud que la entidad ya aplica.</p>
  */
 public record RegisterApplicationRequest(TenantId tenantId, ApplicationName name, String description,
-                                         ApplicationBaseUrl baseUrl) {
+                                         ApplicationBaseUrl baseUrl, Set<ApplicationEnvironment> enabledEnvironments) {
 
     public RegisterApplicationRequest {
         Objects.requireNonNull(tenantId, RequiredArgumentMessages.TENANT_ID);
         Objects.requireNonNull(name, RequiredArgumentMessages.APPLICATION_NAME);
         Objects.requireNonNull(baseUrl, RequiredArgumentMessages.APPLICATION_BASE_URL);
+        enabledEnvironments = enabledEnvironments == null ? Set.of() : Set.copyOf(enabledEnvironments);
+    }
+
+    public RegisterApplicationRequest(TenantId tenantId, ApplicationName name, String description, ApplicationBaseUrl baseUrl) {
+        this(tenantId, name, description, baseUrl, EnumSet.allOf(ApplicationEnvironment.class));
     }
 }

@@ -20,6 +20,6 @@ public final class IntegrationCredentialMustMatchRuleImpl implements Integration
     public Mono<Void> execute(RegisterIntegrationRequest input) {
         if (input == null || input.bearerToken() == null || input.bearerToken().isBlank())
             return Mono.error(new EnforcementFailure(EnforcementFailure.Kind.UNAUTHENTICATED, "INTEGRATION_TOKEN_INVALID"));
-        return credentials.validate(input.applicationId(), input.bearerToken());
+        return credentials.validate(input.applicationId(), input.environment(), input.bearerToken());
     }
 }

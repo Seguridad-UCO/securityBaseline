@@ -52,6 +52,7 @@
         "assignments :: usecase", "assignments :: dto", "assignments :: rule", "assignments :: model",
         "identity :: usecase", "identity :: dto",
         "identity :: rule",
+        "tenants :: usecase", "tenants :: dto",
         "roles", "roles :: repository", "roles :: aggregate", "roles :: exception", "roles :: rule", "roles :: usecase", "roles :: dto", "roles :: model",
         "profiles", "profiles :: repository", "profiles :: aggregate", "profiles :: exception", "profiles :: rule", "profiles :: usecase", "profiles :: dto", "profiles :: model"})
 package co.edu.uco.seguridad.pdp.authorization;

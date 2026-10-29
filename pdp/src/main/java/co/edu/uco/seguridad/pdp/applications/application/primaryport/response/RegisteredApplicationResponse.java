@@ -1,6 +1,7 @@
 package co.edu.uco.seguridad.pdp.applications.application.primaryport.response;
 
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
+import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationEnvironment;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
@@ -8,6 +9,7 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.time.Instant;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * DTO de salida del puerto primario: proyección de una aplicación registrada.
@@ -16,7 +18,8 @@ import java.util.Objects;
  * y nunca el agregado {@code Application} en sí.</p>
  */
 public record RegisteredApplicationResponse(ApplicationId id, TenantId tenantId, ApplicationName name,
-                                            String description, ApplicationBaseUrl baseUrl, Instant registeredAt) {
+                                            String description, ApplicationBaseUrl baseUrl, Instant registeredAt,
+                                            Set<ApplicationEnvironment> enabledEnvironments) {
 
     public RegisteredApplicationResponse {
         Objects.requireNonNull(id, RequiredArgumentMessages.APPLICATION_ID);
@@ -25,5 +28,11 @@ public record RegisteredApplicationResponse(ApplicationId id, TenantId tenantId,
         Objects.requireNonNull(baseUrl, RequiredArgumentMessages.APPLICATION_BASE_URL);
         Objects.requireNonNull(registeredAt, RequiredArgumentMessages.REGISTERED_AT);
         description = description == null ? "" : description;
+        enabledEnvironments = enabledEnvironments == null ? Set.of() : Set.copyOf(enabledEnvironments);
+    }
+
+    public RegisteredApplicationResponse(ApplicationId id, TenantId tenantId, ApplicationName name,
+                                         String description, ApplicationBaseUrl baseUrl, Instant registeredAt) {
+        this(id, tenantId, name, description, baseUrl, registeredAt, Set.of());
     }
 }

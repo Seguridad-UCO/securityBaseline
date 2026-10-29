@@ -7,6 +7,7 @@ import co.edu.uco.seguridad.pdp.applications.domain.ApplicationCriteria;
 import co.edu.uco.seguridad.pdp.applications.domain.exception.InvalidApplicationCredentialException;
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash;
+import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationEnvironment;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationCredentialMustBeValidRule;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationCredentialMustBeValidRuleImpl;
 import co.edu.uco.seguridad.pdp.commons.model.*;
@@ -16,6 +17,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.UUID;
+import java.util.Set;
 
 /**
  * La regla real (no un dummy): esta prueba también demuestra que la regla y el validador encajan,
@@ -52,6 +54,16 @@ class ValidateApplicationCredentialUseCaseImplTests {
     }
 
     @Test
+    void a_correct_secret_is_rejected_when_the_environment_is_not_enabled() {
+        ValidateApplicationCredentialUseCaseImpl useCase = new ValidateApplicationCredentialUseCaseImpl(
+                new ApplicationCredentialMustBeValidRuleImpl(), repository(Mono.just(HASH), Mono.just(TENANT), Set.of(ApplicationEnvironment.PROD)), hasher(true));
+
+        StepVerifier.create(useCase.execute(new ValidateApplicationCredentialRequest(APPLICATION_NAME, ApplicationEnvironment.LAB, CORRECT_SECRET)))
+                .expectError(InvalidApplicationCredentialException.class)
+                .verify();
+    }
+
+    @Test
     void an_application_that_does_not_exist_is_rejected_without_ever_comparing_a_secret() {
         ApplicationCredentialMustBeValidRule rule = new ApplicationCredentialMustBeValidRuleImpl();
         CredentialHasher poisonPill = new CredentialHasher() {
@@ -74,6 +86,11 @@ class ValidateApplicationCredentialUseCaseImplTests {
     }
 
     private static ApplicationRepository repository(Mono<ApplicationCredentialHash> hash, Mono<TenantId> tenantId) {
+        return repository(hash, tenantId, java.util.EnumSet.allOf(ApplicationEnvironment.class));
+    }
+
+    private static ApplicationRepository repository(Mono<ApplicationCredentialHash> hash, Mono<TenantId> tenantId,
+                                                     Set<ApplicationEnvironment> environments) {
         return new ApplicationRepository() {
             @Override
             public Mono<Boolean> existsByTenantAndName(TenantId tenantId, ApplicationName name) {
@@ -98,7 +115,7 @@ class ValidateApplicationCredentialUseCaseImplTests {
             @Override
             public Mono<Application> findUniqueByName(ApplicationName applicationName) {
                 return hash.map(value -> Application.register(APPLICATION, TENANT, APPLICATION_NAME, "",
-                        new ApplicationBaseUrl("https://notas.example.test"), value, java.time.Instant.EPOCH));
+                        new ApplicationBaseUrl("https://notas.example.test"), value, java.time.Instant.EPOCH, environments));
             }
 
             @Override

@@ -8,5 +8,9 @@ package co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.p
  * slice se lea igual que los demás.
  */
 public record ApplicationEntity(String id, String tenantId, String name, String description, String baseUrl,
-                                String credentialHash, String registeredAt) {
+                                String credentialHash, String registeredAt, java.util.List<String> enabledEnvironments) {
+    public ApplicationEntity(String id, String tenantId, String name, String description, String baseUrl,
+                             String credentialHash, String registeredAt) {
+        this(id, tenantId, name, description, baseUrl, credentialHash, registeredAt, java.util.List.of());
+    }
 }

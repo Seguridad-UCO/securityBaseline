@@ -31,7 +31,7 @@ class MfaAwareApplicationAdministratorValidatorTests {
     private static final TenantId TENANT = new TenantId("universidad-uco");
     private static final ApplicationId APPLICATION = new ApplicationId(UUID.randomUUID());
     private static final UserId USER = new UserId(UUID.randomUUID());
-    private static final MfaEvidenceProperties SATISFIED_BY_OTP = new MfaEvidenceProperties("acr", Set.of("urn:mfa:otp"));
+    private static final MfaEvidenceProperties SATISFIED_BY_OTP = new MfaEvidenceProperties(true, "acr", Set.of("urn:mfa:otp"));
 
     @Test
     void propagates_the_delegate_rejection_without_ever_evaluating_mfa_evidence() {

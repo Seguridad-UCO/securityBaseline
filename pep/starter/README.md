@@ -99,6 +99,10 @@ security.pep.enforcement.application-credential=${PDP_APPLICATION_CREDENTIAL}
 security.pep.enforcement.public-paths=/actuator/health
 ```
 
+`security.pep.enforcement.environment` acepta únicamente `dev`, `lab` o `prod` y debe estar
+habilitado para la aplicación en el catálogo PDP. Si no lo está, el PDP rechaza la credencial y el
+starter responde `401`; no se evalúan ni exponen recursos, roles o perfiles en ese ambiente.
+
 `PDP_APPLICATION_CREDENTIAL` debe ser la credencial emitida por el PDP, no un token creado ni almacenado por el
 PEP. Para una demostración estrictamente local se permite `http` solo al declarar explícitamente:
 

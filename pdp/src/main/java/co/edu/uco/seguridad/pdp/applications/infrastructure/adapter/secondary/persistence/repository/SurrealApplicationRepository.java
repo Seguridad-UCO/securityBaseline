@@ -74,6 +74,13 @@ public final class SurrealApplicationRepository implements ApplicationRepository
     }
 
     @Override
+    public Mono<Application> findByTenantAndName(TenantId tenantId, ApplicationName name) {
+        return client.execute("SELECT * FROM %s WHERE tenantId = $tenantId AND string::lowercase(name) = string::lowercase($name) LIMIT 1;"
+                        .formatted(ApplicationSchema.TABLE), Map.of("tenantId", tenantId.value(), "name", name.value()))
+                .flatMap(results -> results.get(0).isEmpty() ? Mono.empty() : Mono.just(toDomain(results.get(0).get(0))));
+    }
+
+    @Override
     public Mono<ApplicationCredentialHash> findCredentialHashById(ApplicationId applicationId) {
         return client.execute(
                         "SELECT credentialHash FROM type::record('%s', $id);".formatted(ApplicationSchema.TABLE),
@@ -131,20 +138,22 @@ public final class SurrealApplicationRepository implements ApplicationRepository
 
     @Override
     public Mono<Application> save(Application application) {
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("id", application.id().value().toString());
+        parameters.put("tenantId", application.tenantId().value());
+        parameters.put("name", application.name().value());
+        parameters.put("description", application.description());
+        parameters.put("baseUrl", application.baseUrl().value());
+        parameters.put("credentialHash", application.credentialHash().value());
+        parameters.put("enabledEnvironments", application.enabledEnvironments().stream().map(environment -> environment.value()).sorted().collect(java.util.stream.Collectors.joining(",")));
+        parameters.put("registeredAt", application.registeredAt().toString());
         return client.execute(
                         """
                                 CREATE type::record('%s', $id) SET \
                                 tenantId = $tenantId, name = $name, description = $description, baseUrl = $baseUrl, \
-                                credentialHash = $credentialHash, registeredAt = <datetime>$registeredAt;\
+                                credentialHash = $credentialHash, enabledEnvironments = $enabledEnvironments, registeredAt = <datetime>$registeredAt;\
                                 """.formatted(ApplicationSchema.TABLE),
-                        Map.of(
-                                "id", application.id().value().toString(),
-                                "tenantId", application.tenantId().value(),
-                                "name", application.name().value(),
-                                "description", application.description(),
-                                "baseUrl", application.baseUrl().value(),
-                                "credentialHash", application.credentialHash().value(),
-                                "registeredAt", application.registeredAt().toString()))
+                        parameters)
                 .thenReturn(application);
     }
 
@@ -162,11 +171,16 @@ public final class SurrealApplicationRepository implements ApplicationRepository
 
     @Override
     public Mono<Application> update(Application application) {
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("id", application.id().value().toString());
+        parameters.put("name", application.name().value());
+        parameters.put("description", application.description());
+        parameters.put("baseUrl", application.baseUrl().value());
+        parameters.put("enabledEnvironments", application.enabledEnvironments().stream().map(environment -> environment.value()).sorted().collect(java.util.stream.Collectors.joining(",")));
         return client.execute(
-                        "UPDATE type::record('%s', $id) SET name = $name, description = $description, baseUrl = $baseUrl;"
+                        "UPDATE type::record('%s', $id) SET name = $name, description = $description, baseUrl = $baseUrl, enabledEnvironments = $enabledEnvironments;"
                                 .formatted(ApplicationSchema.TABLE),
-                        Map.of("id", application.id().value().toString(), "name", application.name().value(),
-                                "description", application.description(), "baseUrl", application.baseUrl().value()))
+                        parameters)
                 .thenReturn(application);
     }
 
@@ -195,7 +209,9 @@ public final class SurrealApplicationRepository implements ApplicationRepository
                 row.path("description").asString(""),
                 row.path("baseUrl").asString(),
                 row.path("credentialHash").asString(),
-                row.path("registeredAt").asString());
+                row.path("registeredAt").asString(),
+                java.util.Arrays.stream(row.path("enabledEnvironments").asString("").split(","))
+                        .filter(value -> !value.isBlank()).toList());
         return ApplicationPersistenceMapper.toDomain(entity);
     }
 }

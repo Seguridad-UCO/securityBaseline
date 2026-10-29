@@ -58,7 +58,7 @@ public final class RegisterApplicationUseCaseImpl implements RegisterApplication
                     String secret = secretGenerator.next();
                     ApplicationCredentialHash credentialHash = new ApplicationCredentialHash(hasher.hash(secret));
                     Application application = Application.register(new ApplicationId(identifiers.next()),
-                            dto.tenantId(), dto.name(), dto.description(), dto.baseUrl(), credentialHash, time.now());
+                            dto.tenantId(), dto.name(), dto.description(), dto.baseUrl(), credentialHash, time.now(), dto.enabledEnvironments());
                     return new PendingRegistration(application, secret);
                 }))
                 .flatMap(pending -> repository.save(pending.application())
@@ -68,7 +68,7 @@ public final class RegisterApplicationUseCaseImpl implements RegisterApplication
 
     private static RegisteredApplicationResponse toRegistered(Application application) {
         return new RegisteredApplicationResponse(application.id(), application.tenantId(), application.name(),
-                application.description(), application.baseUrl(), application.registeredAt());
+                application.description(), application.baseUrl(), application.registeredAt(), application.enabledEnvironments());
     }
 
     private record PendingRegistration(Application application, String secret) {

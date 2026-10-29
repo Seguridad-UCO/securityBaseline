@@ -49,7 +49,7 @@ final class EmbeddedAccessDecisionController {
         String requestId = exchange.getAttribute("pep.requestId");
         String correlationId = exchange.getAttribute("pep.correlationId");
         Mono<String> evidence = validBearer(authorization) ? Mono.just(authorization.substring(7)) : bffSession.resolve(exchange);
-        return credentials.validate(body.applicationName(), credential)
+        return credentials.validate(body.applicationName(), body.environment(), credential)
                 .then(normalize.execute(new NormalizeAccessRequest(requestId, correlationId, Instant.now(),
                         body.applicationName(), body.environment(), body.path(), body.method())))
                 .flatMap(request -> evidence.flatMap(bearer -> enforce.execute(new EnforceAccessRequest(request, new IdentityEvidence(bearer)))))

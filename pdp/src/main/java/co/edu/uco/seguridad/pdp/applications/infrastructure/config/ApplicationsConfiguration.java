@@ -7,10 +7,12 @@ import co.edu.uco.seguridad.pdp.applications.application.usecase.*;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.*;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationCredentialMustBeValidRule;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationMustExistForTenantRule;
+import co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationMustHaveAtLeastOneEnabledEnvironmentRule;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationNameMustBeUniqueForTenantRule;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationNameMustNotBeReservedRule;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationCredentialMustBeValidRuleImpl;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationMustExistForTenantRuleImpl;
+import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationMustHaveAtLeastOneEnabledEnvironmentRuleImpl;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationNameMustBeUniqueForTenantRuleImpl;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationNameMustNotBeReservedRuleImpl;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.ListApplicationsInteractor;
@@ -60,12 +62,18 @@ public class ApplicationsConfiguration {
     }
 
     @Bean
+    ApplicationMustHaveAtLeastOneEnabledEnvironmentRule applicationMustHaveAtLeastOneEnabledEnvironmentRule() {
+        return new ApplicationMustHaveAtLeastOneEnabledEnvironmentRuleImpl();
+    }
+
+    @Bean
     RegisterApplicationRulesValidator registerApplicationRulesValidator(
             ApplicationNameMustNotBeReservedRule nameMustNotBeReserved,
+            ApplicationMustHaveAtLeastOneEnabledEnvironmentRule mustHaveEnabledEnvironment,
             TenantMustBeActiveValidator tenantMustBeActive,
             ApplicationNameMustBeUniqueForTenantRule nameMustBeUnique,
             ApplicationRepository repository) {
-        return new RegisterApplicationRulesValidatorImpl(nameMustNotBeReserved, tenantMustBeActive, nameMustBeUnique,
+        return new RegisterApplicationRulesValidatorImpl(nameMustNotBeReserved, mustHaveEnabledEnvironment, tenantMustBeActive, nameMustBeUnique,
                 repository);
     }
 
@@ -90,8 +98,9 @@ public class ApplicationsConfiguration {
     }
 
     @Bean
-    UpdateApplicationUseCase updateApplicationUseCase(ApplicationRepository repository) {
-        return new UpdateApplicationUseCaseImpl(repository);
+    UpdateApplicationUseCase updateApplicationUseCase(ApplicationRepository repository,
+                                                      ApplicationMustHaveAtLeastOneEnabledEnvironmentRule mustHaveEnabledEnvironment) {
+        return new UpdateApplicationUseCaseImpl(repository, mustHaveEnabledEnvironment);
     }
 
     @Bean
@@ -125,6 +134,11 @@ public class ApplicationsConfiguration {
     @Bean
     ApplicationNameLookupValidator applicationNameLookupValidator(ApplicationRepository repository) {
         return new ApplicationNameLookupValidatorImpl(repository);
+    }
+
+    @Bean
+    ApplicationNameForTenantLookupValidator applicationNameForTenantLookupValidator(ApplicationRepository repository) {
+        return new ApplicationNameForTenantLookupValidatorImpl(repository);
     }
 
     // HU-013 — canal interno de validación de credenciales.

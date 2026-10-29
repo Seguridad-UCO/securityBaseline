@@ -2,6 +2,7 @@ package co.edu.uco.seguridad.pdp.authorization.infrastructure.config;
 
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationMustExistForTenantValidator;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationNameLookupValidator;
+import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationNameForTenantLookupValidator;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationOwnerLookupValidator;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationDetailsLookupValidator;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RemoveApplicationUseCase;
@@ -25,6 +26,8 @@ import co.edu.uco.seguridad.pdp.authorization.application.usecase.*;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.impl.*;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.*;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.*;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkResourceImportService;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkResourceWorkbookService;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.observability.ObservedAccessAuditRepository;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.observability.ObservedAdministrationAuditRepository;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.persistence.repository.SurrealAccessAuditRepository;
@@ -35,6 +38,7 @@ import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.p
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.properties.OpaProperties;
 import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserIdLookupValidator;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.ResolveExternalIdentityUseCase;
+import co.edu.uco.seguridad.pdp.identity.application.usecase.FindAuthenticatedUserBySubjectUseCase;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.SearchUsersPageUseCase;
 import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.SecurityUserRepository;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileApplicationLookupValidator;
@@ -59,9 +63,11 @@ import co.edu.uco.seguridad.pdp.roles.application.usecase.CountApplicationRolesU
 import co.edu.uco.seguridad.pdp.roles.application.secondaryport.repository.RoleRepository;
 import co.edu.uco.seguridad.pdp.profiles.application.secondaryport.repository.ProfileRepository;
 import co.edu.uco.seguridad.pdp.profiles.application.usecase.CountApplicationProfilesUseCase;
+import co.edu.uco.seguridad.pdp.tenants.application.usecase.FindTenantNameByCodeUseCase;
 import co.edu.uco.seguridad.shared.audit.AdministrationAuditRepository;
 import co.edu.uco.seguridad.shared.observability.ReactiveTelemetry;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
+import co.edu.uco.seguridad.shared.event.DomainEventPublisher;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
 import co.edu.uco.seguridad.shared.security.mfa.MfaEvidenceProperties;
@@ -80,6 +86,30 @@ import tools.jackson.databind.ObjectMapper;
 @Configuration
 @EnableConfigurationProperties({OpaProperties.class, MfaEvidenceProperties.class})
 public class AuthorizationConfiguration {
+
+    @Bean
+    ReadCurrentUserApplicationsUseCase readCurrentUserApplicationsUseCase(ResolveUserApplicationsUseCase assignments,
+            FindTenantNameByCodeUseCase tenants, ApplicationDetailsLookupValidator applications, RoleRepository roles,
+            ProfileRepository profiles) {
+        return new ReadCurrentUserApplicationsUseCaseImpl(assignments, tenants, applications, roles, profiles);
+    }
+
+    @Bean
+    ReadCurrentUserApplicationsInteractor readCurrentUserApplicationsInteractor(
+            FindAuthenticatedUserBySubjectUseCase users, ReadCurrentUserApplicationsUseCase useCase) {
+        return new ReadCurrentUserApplicationsInteractorImpl(users, useCase);
+    }
+
+    @Bean
+    BulkResourceWorkbookService bulkResourceWorkbookService() { return new BulkResourceWorkbookService(); }
+
+    @Bean
+    BulkResourceImportService bulkResourceImportService(BulkResourceWorkbookService workbooks,
+            ApplicationNameForTenantLookupValidator applications,
+            PrincipalMustBeApplicationAdministratorValidator administrators, ProtectedResourceRepository resources,
+            IdentifierGenerator identifiers, TimeProvider time, DomainEventPublisher events) {
+        return new BulkResourceImportService(workbooks, applications, administrators, resources, identifiers, time, events);
+    }
 
     // HU-006 (D9 del handoff PDP-PEP-OPA): reemplaza a DenyByDefaultPolicyDecisionAdapter, que se
     // elimina — la denegacion por defecto pasa a vivir en la politica Rego, no en el PDP.
@@ -115,8 +145,8 @@ public class AuthorizationConfiguration {
 
     @Bean
     AuthorizationContextResolver authorizationContextResolver(ResolveAuthorizationSubjectFactsUseCase facts,
-                                                              ProtectedResourceIdLookupValidator resourceIds) {
-        return new AuthorizationContextResolverImpl(facts, resourceIds);
+                                                              ProtectedResourceRepository resources) {
+        return new AuthorizationContextResolverImpl(facts, resources);
     }
 
     @Bean

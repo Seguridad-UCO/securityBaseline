@@ -13,6 +13,7 @@ public final class AdministeredApplicationResponseMapper {
         RegisteredApplicationResponse application = response.application();
         return new AdministeredApplicationWebResponse(application.id().value().toString(),
                 application.tenantId().value(), application.name().value(), application.description(),
-                application.baseUrl().value(), response.credential(), application.registeredAt());
+                application.baseUrl().value(), response.credential(), application.registeredAt(), application.enabledEnvironments().stream()
+                        .map(environment -> environment.value()).collect(java.util.stream.Collectors.toUnmodifiableSet()));
     }
 }
