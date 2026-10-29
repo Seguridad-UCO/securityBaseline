@@ -14,6 +14,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.OAuth2RefreshToken;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenResponse;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.InMemoryReactiveClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.server.ServerOAuth2AuthorizedClientRepository;
@@ -53,7 +54,8 @@ class OidcAuthenticationSuccessHandlerTests {
         OidcFlowStateService flowState = new OidcFlowStateService();
         OidcAuthenticationSuccessHandler handler = new OidcAuthenticationSuccessHandler(provisionIdentity, flowState,
                 new OidcRedirectPolicy("http://localhost:5173"),
-                new KeycloakOidcSessionService(clientRegistrations()), authorizedClients(), refreshTokenStore(storedSessionId));
+                new KeycloakOidcSessionService(clientRegistrations()), authorizedClients(),
+                refreshTokenStore(storedSessionId), expirationTracker());
         MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/login/oauth2/code/keycloak").build());
         exchange.getSession().block().getAttributes().put(OidcFlowStateService.FLOW_INTENT_ATTRIBUTE, OidcFlowIntent.LOGIN.name());
 
@@ -72,7 +74,7 @@ class OidcAuthenticationSuccessHandlerTests {
         OidcFlowStateService flowState = new OidcFlowStateService();
         OidcAuthenticationSuccessHandler handler = new OidcAuthenticationSuccessHandler(provisioner(new AtomicReference<>()),
                 flowState, new OidcRedirectPolicy("http://localhost:5173"), new KeycloakOidcSessionService(clientRegistrations()),
-                authorizedClients(), refreshTokenStore());
+                authorizedClients(), refreshTokenStore(), expirationTracker());
         MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/login/oauth2/code/keycloak").build());
         var session = exchange.getSession().block();
         session.getAttributes().put(OidcFlowStateService.FLOW_INTENT_ATTRIBUTE, OidcFlowIntent.LOGIN.name());
@@ -89,7 +91,8 @@ class OidcAuthenticationSuccessHandlerTests {
         OidcFlowStateService flowState = new OidcFlowStateService();
         OidcAuthenticationSuccessHandler handler = new OidcAuthenticationSuccessHandler(provisioner(new AtomicReference<>()),
                 flowState, new OidcRedirectPolicy("http://localhost:5173"),
-                new KeycloakOidcSessionService(clientRegistrations()), authorizedClients(), refreshTokenStore());
+                new KeycloakOidcSessionService(clientRegistrations()), authorizedClients(), refreshTokenStore(),
+                expirationTracker());
         MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/login/oauth2/code/keycloak").build());
         var session = exchange.getSession().block();
         session.getAttributes().put(OidcFlowStateService.FLOW_INTENT_ATTRIBUTE, OidcFlowIntent.REGISTER.name());
@@ -106,7 +109,7 @@ class OidcAuthenticationSuccessHandlerTests {
         OidcFlowStateService flowState = new OidcFlowStateService();
         OidcAuthenticationSuccessHandler handler = new OidcAuthenticationSuccessHandler(provisioner(new AtomicReference<>()),
                 flowState, new OidcRedirectPolicy("http://localhost:5173"), new KeycloakOidcSessionService(clientRegistrations()),
-                authorizedClients(), refreshTokenStore());
+                authorizedClients(), refreshTokenStore(), expirationTracker());
         MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/login/oauth2/code/keycloak").build());
         exchange.getSession().block().getAttributes().put(OidcFlowStateService.FLOW_INTENT_ATTRIBUTE, OidcFlowIntent.LOGIN.name());
 
@@ -117,6 +120,35 @@ class OidcAuthenticationSuccessHandlerTests {
         var persistedUser = (LocalUserPrincipal) securityContext.getAuthentication().getPrincipal();
         assertThat(persistedUser.authenticationContext().acr()).contains("urn:mfa:otp");
         assertThat(persistedUser.authenticationContext().amr()).containsExactly("otp", "pwd");
+    }
+
+    @Test
+    void login_flow_uses_keycloak_refresh_expiration_when_spring_does_not_map_it() {
+        AtomicReference<Instant> storedExpiration = new AtomicReference<>();
+        KeycloakRefreshTokenExpirationTracker expirationTracker = expirationTracker();
+        OAuth2AccessTokenResponse tokenResponse = OAuth2AccessTokenResponse.withToken("access-token")
+                .tokenType(OAuth2AccessToken.TokenType.BEARER)
+                .expiresIn(300)
+                .refreshToken("refresh-token")
+                .additionalParameters(Map.of("refresh_expires_in", 1800))
+                .build();
+        expirationTracker.record(tokenResponse);
+
+        OidcFlowStateService flowState = new OidcFlowStateService();
+        OidcAuthenticationSuccessHandler handler = new OidcAuthenticationSuccessHandler(
+                provisioner(new AtomicReference<>()), flowState, new OidcRedirectPolicy("http://localhost:5173"),
+                new KeycloakOidcSessionService(clientRegistrations()), authorizedClientsWithoutRefreshExpiration(),
+                refreshTokenStore(new AtomicReference<>(), storedExpiration), expirationTracker);
+        MockServerWebExchange exchange = MockServerWebExchange.from(
+                MockServerHttpRequest.get("/login/oauth2/code/keycloak").build());
+        exchange.getSession().block().getAttributes()
+                .put(OidcFlowStateService.FLOW_INTENT_ATTRIBUTE, OidcFlowIntent.LOGIN.name());
+
+        handler.onAuthenticationSuccess(webFilterExchange(exchange), new TestingAuthenticationToken(oidcUser(), null))
+                .block();
+
+        assertThat(storedExpiration.get()).isEqualTo(
+                tokenResponse.getRefreshToken().getIssuedAt().plusSeconds(1800));
     }
 
     private static ProvisionIdentityUseCase provisioner(AtomicReference<String> provider) {
@@ -198,15 +230,37 @@ class OidcAuthenticationSuccessHandlerTests {
         return repository;
     }
 
+    private static ServerOAuth2AuthorizedClientRepository authorizedClientsWithoutRefreshExpiration() {
+        ServerOAuth2AuthorizedClientRepository repository = mock(ServerOAuth2AuthorizedClientRepository.class);
+        Instant issuedAt = Instant.now();
+        OAuth2AuthorizedClient client = new OAuth2AuthorizedClient(clientRegistration(), "subject-1",
+                new OAuth2AccessToken(OAuth2AccessToken.TokenType.BEARER, "access-token", issuedAt,
+                        issuedAt.plusSeconds(300), Set.of("openid")),
+                new OAuth2RefreshToken("refresh-token", issuedAt));
+        when(repository.loadAuthorizedClient(eq("keycloak"), any(), any(ServerWebExchange.class)))
+                .thenReturn(Mono.just(client));
+        return repository;
+    }
+
+    private static KeycloakRefreshTokenExpirationTracker expirationTracker() {
+        return new KeycloakRefreshTokenExpirationTracker(Instant::now);
+    }
+
     private static RefreshTokenStorePort refreshTokenStore() {
         return refreshTokenStore(new AtomicReference<>());
     }
 
     private static RefreshTokenStorePort refreshTokenStore(AtomicReference<String> storedSessionId) {
+        return refreshTokenStore(storedSessionId, new AtomicReference<>());
+    }
+
+    private static RefreshTokenStorePort refreshTokenStore(AtomicReference<String> storedSessionId,
+                                                           AtomicReference<Instant> storedExpiration) {
         return new RefreshTokenStorePort() {
             @Override
             public Mono<Void> store(String sessionId, String refreshToken, Instant expiresAt) {
                 storedSessionId.set(sessionId);
+                storedExpiration.set(expiresAt);
                 return Mono.empty();
             }
 

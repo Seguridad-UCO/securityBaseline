@@ -25,6 +25,7 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
+import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 
@@ -38,19 +39,22 @@ public final class OidcAuthenticationSuccessHandler implements ServerAuthenticat
     private final KeycloakOidcSessionService oidcSessionService;
     private final ServerOAuth2AuthorizedClientRepository authorizedClients;
     private final RefreshTokenStorePort refreshTokenStore;
+    private final KeycloakRefreshTokenExpirationTracker refreshTokenExpirationTracker;
     private final WebSessionServerSecurityContextRepository securityContextRepository =
             new WebSessionServerSecurityContextRepository();
 
     OidcAuthenticationSuccessHandler(ProvisionIdentityUseCase provisionIdentity, OidcFlowStateService flowState,
                                      OidcRedirectPolicy redirectPolicy, KeycloakOidcSessionService oidcSessionService,
                                      ServerOAuth2AuthorizedClientRepository authorizedClients,
-                                     RefreshTokenStorePort refreshTokenStore) {
+                                     RefreshTokenStorePort refreshTokenStore,
+                                     KeycloakRefreshTokenExpirationTracker refreshTokenExpirationTracker) {
         this.provisionIdentity = provisionIdentity;
         this.flowState = flowState;
         this.redirectPolicy = redirectPolicy;
         this.oidcSessionService = oidcSessionService;
         this.authorizedClients = authorizedClients;
         this.refreshTokenStore = refreshTokenStore;
+        this.refreshTokenExpirationTracker = refreshTokenExpirationTracker;
     }
 
     @Override
@@ -91,10 +95,13 @@ public final class OidcAuthenticationSuccessHandler implements ServerAuthenticat
                 .switchIfEmpty(Mono.error(new IllegalStateException("Keycloak no entregó una sesión OAuth2 autorizada.")))
                 .flatMap(client -> {
                     OAuth2RefreshToken refreshToken = client.getRefreshToken();
-                    if (refreshToken == null || refreshToken.getExpiresAt() == null) {
-                        return Mono.error(new IllegalStateException("Keycloak no entregó un refresh token con expiración."));
+                    if (refreshToken == null) {
+                        return Mono.error(new IllegalStateException("Keycloak no entregó un refresh token."));
                     }
-                    return refreshTokenStore.store(sessionId, refreshToken.getTokenValue(), refreshToken.getExpiresAt());
+                    Instant expiresAt = refreshToken.getExpiresAt() != null
+                            ? refreshToken.getExpiresAt()
+                            : refreshTokenExpirationTracker.consumeExpiration(refreshToken.getTokenValue());
+                    return refreshTokenStore.store(sessionId, refreshToken.getTokenValue(), expiresAt);
                 });
     }
 

@@ -44,10 +44,11 @@
 			roll_keep 7
 		}
 		format filter {
-			wrap json
-			time_format rfc3339_nano
-			time_key "@timestamp"
-			level_key "level"
+			wrap json {
+				time_format rfc3339_nano
+				time_key "@timestamp"
+				level_key "level"
+			}
 			fields {
 				request>uri regexp `\?.*` ""
 				request>remote_ip delete

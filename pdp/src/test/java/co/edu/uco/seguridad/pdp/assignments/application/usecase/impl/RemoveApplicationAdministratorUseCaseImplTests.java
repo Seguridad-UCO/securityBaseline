@@ -151,7 +151,17 @@ class RemoveApplicationAdministratorUseCaseImplTests {
             }
 
             @Override
+            public Mono<Void> revokeToken(UserId subject, String tokenId, Instant expiresAt) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public Mono<Boolean> isRevoked(UserId subject, Instant issuedAt) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Boolean> isTokenRevoked(UserId subject, String tokenId) {
                 throw new UnsupportedOperationException();
             }
         };
@@ -165,7 +175,17 @@ class RemoveApplicationAdministratorUseCaseImplTests {
             }
 
             @Override
+            public Mono<Void> revokeToken(UserId subject, String tokenId, Instant expiresAt) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public Mono<Boolean> isRevoked(UserId subject, Instant issuedAt) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Boolean> isTokenRevoked(UserId subject, String tokenId) {
                 throw new UnsupportedOperationException();
             }
         };
@@ -180,7 +200,17 @@ class RemoveApplicationAdministratorUseCaseImplTests {
             }
 
             @Override
+            public Mono<Void> revokeToken(UserId subject, String tokenId, Instant expiresAt) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public Mono<Boolean> isRevoked(UserId subject, Instant issuedAt) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Boolean> isTokenRevoked(UserId subject, String tokenId) {
                 throw new UnsupportedOperationException();
             }
         };

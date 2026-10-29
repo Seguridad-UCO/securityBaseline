@@ -1,5 +1,11 @@
 # Roadmap del PDP — qué sigue y cómo se reparte con el equipo
 
+> **Estado operativo HU-027/028/029 (2026-10-28):** no considerar las tres historias cerradas por
+> sus reportes históricos. HU-027 tiene suites locales en `blocking` aprobadas, con criterios de
+> CI/detection/observabilidad/medición pendientes; HU-028 requiere E2E Bearer real; HU-029 tiene
+> pendiente reconciliar el contrato, pues la decisión más reciente es que cada app refresca con su
+> propio cliente Keycloak. Seguir el [handoff de validación](HANDOFF-VALIDACION-HU-027-029.md).
+
 > **Si vas a empezar HU-003, lee primero [`HANDOFF-INTEGRACION-PEP-OPA.md`](HANDOFF-INTEGRACION-PEP-OPA.md).**
 > Tiene el contrato del PEP, las decisiones de diseño ya tomadas y las trampas verificadas.
 

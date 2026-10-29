@@ -1,5 +1,12 @@
 # Reporte de validación — HU-029
 
+> **Estado supersedido al 2026-10-28:** las pruebas del controlador/adaptador no validan por sí solas
+> el flujo de una aplicación externa. El diseño actualmente probado almacena el refresh token del
+> cliente BFF; la decisión más reciente es que cada aplicación renueve con su propio cliente
+> directamente contra Keycloak. El contrato de HU-029 debe reconciliarse antes de aprobarse. Usar el
+> [handoff vigente](../HANDOFF-VALIDACION-HU-027-029.md); no tomar “APROBADO” ni los conteos de este
+> reporte como resultado actual.
+
 ## Metadata
 
 - **Slice:** `shared` (`shared/web/session`, `shared/auth`)
@@ -26,13 +33,15 @@ PRUEBAS:
 | `consistencia.ps1` | ✅ Sin inconsistencias en `shared` |
 | `drift.ps1` | ✅ 0 derivas nuevas introducidas |
 
-## Estado final
+## Veredicto anterior (supersedido)
 
-> ✅ **APROBADO** — sin bloqueantes.
+El reporte original marcó la historia como aprobada con pruebas del controlador. Ese veredicto queda
+retirado como estado actual hasta reconciliar el contrato externo y validar el flujo acordado.
 
 ## Bloqueantes
 
-Ninguno.
+Para la aprobación vigente: reconciliar el contrato HU-029 con la decisión de renovación directa
+por cada aplicación en Keycloak y validar el flujo resultante. Ver el handoff.
 
 ## Observaciones menores
 

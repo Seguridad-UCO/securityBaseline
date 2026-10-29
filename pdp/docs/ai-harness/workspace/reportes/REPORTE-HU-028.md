@@ -1,5 +1,12 @@
 # Reporte de validación — HU-028
 
+> **Estado supersedido al 2026-10-28:** este documento refleja una validación focalizada antigua y
+> no es evidencia de cierre integral. La rama actual tiene tests focalizados y un recorrido real
+> BFF/logout, pero falta comprobar la revocación de un JWT bearer real tras `DELETE /api/v1/session`.
+> Usar el estado y la evidencia del
+> [handoff vigente](../HANDOFF-VALIDACION-HU-027-029.md); no tomar “APROBADO” ni los conteos de este
+> reporte como resultado actual.
+
 ## Metadata
 
 - **Slice:** `shared` (`shared/web/session`, `shared/security/revocation`)
@@ -27,13 +34,15 @@ PRUEBAS:
 | `consistencia.ps1` | ✅ Sin inconsistencias en `shared` |
 | `drift.ps1` | ✅ 0 derivas nuevas introducidas |
 
-## Estado final
+## Veredicto anterior (supersedido)
 
-> ✅ **APROBADO** — sin bloqueantes.
+El reporte original marcó la historia como aprobada con pruebas focalizadas. Ese veredicto queda
+retirado como estado actual hasta completar la prueba E2E Bearer descrita al inicio.
 
 ## Bloqueantes
 
-Ninguno.
+Para la aprobación vigente: ejecutar el E2E Bearer contra Keycloak/Redis integrados y demostrar que
+el mismo JWT obtiene `401` después de `DELETE /api/v1/session`. Ver el handoff.
 
 ## Observaciones menores
 

@@ -1,21 +1,33 @@
 package co.edu.uco.seguridad.shared.config;
 
+import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserIdLookupValidator;
 import co.edu.uco.seguridad.shared.auth.service.OidcAuthenticationFailureHandler;
 import co.edu.uco.seguridad.shared.auth.service.OidcAuthenticationSuccessHandler;
+import co.edu.uco.seguridad.shared.auth.service.KeycloakAuthorizationCodeTokenResponseClient;
+import co.edu.uco.seguridad.shared.auth.service.KeycloakRefreshTokenExpirationTracker;
 import co.edu.uco.seguridad.shared.security.ApiAccessDeniedHandler;
 import co.edu.uco.seguridad.shared.security.ApiAuthenticationEntryPoint;
 import co.edu.uco.seguridad.shared.security.CorsProperties;
+import co.edu.uco.seguridad.shared.security.JwtSecurityProperties;
 import co.edu.uco.seguridad.shared.security.KeycloakSessionProperties;
+import co.edu.uco.seguridad.shared.security.revocation.RevocationAwareJwtDecoder;
+import co.edu.uco.seguridad.shared.security.revocation.TokenRevocationPort;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
+import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
+import org.springframework.security.oauth2.client.endpoint.ReactiveOAuth2AccessTokenResponseClient;
 import org.springframework.security.oauth2.client.web.server.*;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
+import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.context.WebSessionServerSecurityContextRepository;
 import org.springframework.security.web.server.csrf.CookieServerCsrfTokenRepository;
@@ -38,8 +50,14 @@ import java.util.List;
 @Configuration
 @Profile("keycloak")
 @EnableWebFluxSecurity
-@EnableConfigurationProperties({CorsProperties.class, KeycloakSessionProperties.class})
+@EnableConfigurationProperties({CorsProperties.class, KeycloakSessionProperties.class, JwtSecurityProperties.class})
 class KeycloakSecurityConfiguration {
+
+    @Bean
+    ReactiveOAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> keycloakAuthorizationCodeTokenResponseClient(
+            KeycloakRefreshTokenExpirationTracker expirationTracker) {
+        return new KeycloakAuthorizationCodeTokenResponseClient(expirationTracker);
+    }
 
     @Bean
     ServerOAuth2AuthorizedClientRepository keycloakAuthorizedClientRepository() {
@@ -54,7 +72,9 @@ class KeycloakSecurityConfiguration {
                                                           OidcAuthenticationFailureHandler failureHandler,
                                                           ReactiveClientRegistrationRepository clientRegistrations,
                                                           ServerAuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository,
-                                                          ServerOAuth2AuthorizedClientRepository authorizedClientRepository) {
+                                                          ServerOAuth2AuthorizedClientRepository authorizedClientRepository,
+                                                          @org.springframework.beans.factory.annotation.Qualifier("keycloakBearerJwtDecoder")
+                                                          ReactiveJwtDecoder bearerJwtDecoder) {
         CookieServerCsrfTokenRepository csrf = CookieServerCsrfTokenRepository.withHttpOnlyFalse();
         csrf.setCookiePath("/");
         return http
@@ -82,7 +102,25 @@ class KeycloakSecurityConfiguration {
                         .authorizedClientRepository(authorizedClientRepository)
                         .authenticationSuccessHandler(successHandler)
                         .authenticationFailureHandler(failureHandler))
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtDecoder(bearerJwtDecoder)))
                 .build();
+    }
+
+    @Bean
+    @Primary
+    ReactiveJwtDecoder keycloakBearerJwtDecoder(JwtSecurityProperties properties,
+                                                TokenRevocationPort revocation,
+                                                SubjectUserIdLookupValidator subjectUserIdLookup) {
+        NimbusReactiveJwtDecoder decoder = NimbusReactiveJwtDecoder.withJwkSetUri(properties.jwkSetUri()).build();
+        OAuth2TokenValidator<Jwt> validator = new DelegatingOAuth2TokenValidator<>(List.of(
+                new JwtTimestampValidator(),
+                new JwtIssuerValidator(properties.issuer()),
+                new JwtClaimValidator<String>("sub", value -> value != null && !value.isBlank()),
+                new JwtClaimValidator<String>("jti", value -> value != null && !value.isBlank()),
+                new JwtClaimValidator<List<String>>("aud",
+                        audiences -> audiences != null && audiences.contains(properties.audience()))));
+        decoder.setJwtValidator(validator);
+        return new RevocationAwareJwtDecoder(decoder, revocation, subjectUserIdLookup);
     }
 
     private static ServerWebExchangeMatcher bffSessionRequest() {
@@ -96,7 +134,8 @@ class KeycloakSecurityConfiguration {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(properties.allowedOrigins());
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Content-Type", "X-XSRF-TOKEN", "X-Correlation-Id", "traceparent", "tracestate"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-XSRF-TOKEN",
+                "X-Correlation-Id", "traceparent", "tracestate"));
         configuration.setExposedHeaders(List.of("X-Request-Id", "X-Correlation-Id", "X-Decision-Id"));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

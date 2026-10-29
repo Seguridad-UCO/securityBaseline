@@ -53,7 +53,7 @@ X-XSRF-TOKEN: {{xsrf_token}}
 {
   "applicationId": "{{application_id}}",
   "resourcePath": "/notes/77",
-  "action": "read"
+  "action": "GET"
 }
 HTTP 200
 [Asserts]
