@@ -3,8 +3,6 @@ package co.edu.uco.seguridad.shared.config;
 import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserIdLookupValidator;
 import co.edu.uco.seguridad.shared.auth.service.OidcAuthenticationFailureHandler;
 import co.edu.uco.seguridad.shared.auth.service.OidcAuthenticationSuccessHandler;
-import co.edu.uco.seguridad.shared.auth.service.KeycloakAuthorizationCodeTokenResponseClient;
-import co.edu.uco.seguridad.shared.auth.service.KeycloakRefreshTokenExpirationTracker;
 import co.edu.uco.seguridad.shared.security.ApiAccessDeniedHandler;
 import co.edu.uco.seguridad.shared.security.ApiAuthenticationEntryPoint;
 import co.edu.uco.seguridad.shared.security.CorsProperties;
@@ -23,8 +21,6 @@ import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
-import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
-import org.springframework.security.oauth2.client.endpoint.ReactiveOAuth2AccessTokenResponseClient;
 import org.springframework.security.oauth2.client.web.server.*;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.jwt.*;
@@ -52,12 +48,6 @@ import java.util.List;
 @EnableWebFluxSecurity
 @EnableConfigurationProperties({CorsProperties.class, KeycloakSessionProperties.class, JwtSecurityProperties.class})
 class KeycloakSecurityConfiguration {
-
-    @Bean
-    ReactiveOAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> keycloakAuthorizationCodeTokenResponseClient(
-            KeycloakRefreshTokenExpirationTracker expirationTracker) {
-        return new KeycloakAuthorizationCodeTokenResponseClient(expirationTracker);
-    }
 
     @Bean
     ServerOAuth2AuthorizedClientRepository keycloakAuthorizedClientRepository() {

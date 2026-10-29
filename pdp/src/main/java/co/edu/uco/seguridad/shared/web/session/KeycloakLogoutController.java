@@ -1,7 +1,6 @@
 package co.edu.uco.seguridad.shared.web.session;
 
 import co.edu.uco.seguridad.pdp.commons.model.UserId;
-import co.edu.uco.seguridad.shared.auth.port.RefreshTokenStorePort;
 import co.edu.uco.seguridad.shared.auth.service.KeycloakOidcSessionService;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
 import co.edu.uco.seguridad.shared.security.LocalUserPrincipal;
@@ -30,18 +29,15 @@ public final class KeycloakLogoutController {
 
     private final KeycloakOidcSessionService oidcSessionService;
     private final TokenRevocationPort tokenRevocationPort;
-    private final RefreshTokenStorePort refreshTokenStore;
     private final TimeProvider timeProvider;
     private final String frontendOrigin;
 
     public KeycloakLogoutController(KeycloakOidcSessionService oidcSessionService,
                                     TokenRevocationPort tokenRevocationPort,
-                                    RefreshTokenStorePort refreshTokenStore,
                                     TimeProvider timeProvider,
                                     @Value("${pdp.frontend.origin}") String frontendOrigin) {
         this.oidcSessionService = Objects.requireNonNull(oidcSessionService, "oidcSessionService");
         this.tokenRevocationPort = Objects.requireNonNull(tokenRevocationPort, "tokenRevocationPort");
-        this.refreshTokenStore = Objects.requireNonNull(refreshTokenStore, "refreshTokenStore");
         this.timeProvider = Objects.requireNonNull(timeProvider, "timeProvider");
         this.frontendOrigin = Objects.requireNonNull(frontendOrigin, "frontendOrigin");
     }
@@ -51,17 +47,11 @@ public final class KeycloakLogoutController {
         return exchange.getSession()
                 .flatMap(session -> {
                     String idToken = session.getAttribute(KEYCLOAK_ID_TOKEN_ATTRIBUTE);
-                    String sessionId = session.getAttribute(KEYCLOAK_SESSION_ID_ATTRIBUTE);
 
                     Mono<Void> revocation = resolveUserId(session)
                             .flatMap(userId -> tokenRevocationPort.revokeAllSince(userId, timeProvider.now()))
                             .then();
-                    Mono<Void> removeRefreshToken = sessionId == null
-                            ? Mono.empty()
-                            : refreshTokenStore.delete(sessionId);
-
                     return revocation
-                            .then(removeRefreshToken)
                             .then(Mono.fromRunnable(() -> {
                                 session.getAttributes().remove(KEYCLOAK_ID_TOKEN_ATTRIBUTE);
                                 session.getAttributes().remove(KEYCLOAK_SESSION_ID_ATTRIBUTE);

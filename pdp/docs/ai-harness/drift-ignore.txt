@@ -81,3 +81,9 @@ SurrealAdministrationEventSchemaInitializer
 # lo citan como historia. Acotado a estas dos clases; cualquier otra clase inexistente sigue fallando.
 KeycloakTokenRefreshAdapter
 TokenRefreshControllerTests
+
+# --- Retiradas a proposito por HU-030 (ADR-033 §2) -------------------------------------------------
+# El almacen Redis de refresh y el wrapper del token response se retiraron: la renovacion vive en
+# BffSessionTokenRenewer. Los planes y el handoff de HU-027/029/030 los nombran como historia.
+RedisRefreshTokenStoreAdapter*
+KeycloakAuthorizationCodeTokenResponseClient*

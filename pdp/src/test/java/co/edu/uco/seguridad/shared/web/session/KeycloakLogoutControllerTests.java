@@ -2,7 +2,6 @@ package co.edu.uco.seguridad.shared.web.session;
 
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.commons.model.UserId;
-import co.edu.uco.seguridad.shared.auth.port.RefreshTokenStorePort;
 import co.edu.uco.seguridad.shared.auth.service.KeycloakOidcSessionService;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
 import co.edu.uco.seguridad.shared.security.LocalUserPrincipal;
@@ -35,10 +34,9 @@ class KeycloakLogoutControllerTests {
     private static final TimeProvider FIXED_TIME = () -> FIXED_NOW;
 
     @Test
-    void revokes_token_and_redirects_to_keycloak_logout_when_session_is_authenticated() {
+    void revokes_invalidates_the_session_and_redirects_to_keycloak_logout_without_any_refresh_store() {
         var revokedUser = new AtomicReference<UserId>();
         var revokedInstant = new AtomicReference<Instant>();
-        var deletedSessionId = new AtomicReference<String>();
         TokenRevocationPort revocationPort = new TokenRevocationPort() {
             @Override
             public Mono<Void> revokeAllSince(UserId subject, Instant since) {
@@ -76,7 +74,6 @@ class KeycloakLogoutControllerTests {
         var controller = new KeycloakLogoutController(
                 new KeycloakOidcSessionService(clientRegistrations()),
                 revocationPort,
-                storeDeleting(deletedSessionId),
                 FIXED_TIME,
                 "http://localhost:5173");
 
@@ -99,7 +96,6 @@ class KeycloakLogoutControllerTests {
 
         assertThat(revokedUser.get()).isEqualTo(userId);
         assertThat(revokedInstant.get()).isEqualTo(FIXED_NOW);
-        assertThat(deletedSessionId.get()).isEqualTo("keycloak-session-1");
         assertThat(session.isExpired()).isTrue();
         assertThat(exchange.getResponse().getStatusCode()).hasToString("302 FOUND");
         assertThat(exchange.getResponse().getHeaders().getLocation()).hasToString(
@@ -143,7 +139,6 @@ class KeycloakLogoutControllerTests {
         var controller = new KeycloakLogoutController(
                 new KeycloakOidcSessionService(clientRegistrations()),
                 unreachableRevocation,
-                unusedRefreshTokenStore(),
                 FIXED_TIME,
                 "http://localhost:5173");
 
@@ -197,7 +192,6 @@ class KeycloakLogoutControllerTests {
         var controller = new KeycloakLogoutController(
                 new KeycloakOidcSessionService(clientRegistrations()),
                 failingRevocation,
-                unusedRefreshTokenStore(),
                 FIXED_TIME,
                 "http://localhost:5173");
 
@@ -236,44 +230,5 @@ class KeycloakLogoutControllerTests {
                         "end_session_endpoint", "http://localhost:9090/realms/security-baseline/protocol/openid-connect/logout"))
                 .build();
         return new InMemoryReactiveClientRegistrationRepository(registration);
-    }
-
-    private static RefreshTokenStorePort unusedRefreshTokenStore() {
-        return new RefreshTokenStorePort() {
-            @Override
-            public Mono<Void> store(String sessionId, String refreshToken, Instant expiresAt) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public Mono<String> find(String sessionId) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public Mono<Void> delete(String sessionId) {
-                throw new AssertionError("no Keycloak refresh credential should be deleted");
-            }
-        };
-    }
-
-    private static RefreshTokenStorePort storeDeleting(AtomicReference<String> deletedSessionId) {
-        return new RefreshTokenStorePort() {
-            @Override
-            public Mono<Void> store(String sessionId, String refreshToken, Instant expiresAt) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public Mono<String> find(String sessionId) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public Mono<Void> delete(String sessionId) {
-                deletedSessionId.set(sessionId);
-                return Mono.empty();
-            }
-        };
     }
 }

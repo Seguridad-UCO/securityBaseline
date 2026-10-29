@@ -2,7 +2,6 @@ package co.edu.uco.seguridad.shared.web.session;
 
 import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserIdLookupValidator;
-import co.edu.uco.seguridad.shared.auth.port.RefreshTokenStorePort;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
 import co.edu.uco.seguridad.shared.security.LocalUserPrincipal;
 import co.edu.uco.seguridad.shared.security.PdpPrincipal;
@@ -32,15 +31,12 @@ public final class SessionRevocationController {
     private final TokenRevocationPort tokenRevocationPort;
     private final TimeProvider timeProvider;
     private final SubjectUserIdLookupValidator subjectUserIdLookup;
-    private final RefreshTokenStorePort refreshTokenStore;
 
     public SessionRevocationController(TokenRevocationPort tokenRevocationPort, TimeProvider timeProvider,
-                                       SubjectUserIdLookupValidator subjectUserIdLookup,
-                                       RefreshTokenStorePort refreshTokenStore) {
+                                       SubjectUserIdLookupValidator subjectUserIdLookup) {
         this.tokenRevocationPort = Objects.requireNonNull(tokenRevocationPort, "tokenRevocationPort");
         this.timeProvider = Objects.requireNonNull(timeProvider, "timeProvider");
         this.subjectUserIdLookup = Objects.requireNonNull(subjectUserIdLookup, "subjectUserIdLookup");
-        this.refreshTokenStore = Objects.requireNonNull(refreshTokenStore, "refreshTokenStore");
     }
 
     @DeleteMapping("/api/v1/session")
@@ -56,22 +52,21 @@ public final class SessionRevocationController {
     private Mono<AuthenticatedSession> resolveSession(Object principal, ServerWebExchange exchange) {
         if (principal instanceof LocalUserPrincipal user) {
             return exchange.getSession()
-                    .map(session -> new AuthenticatedSession(UserId.of(user.userId()),
-                            session.getAttribute(KeycloakLogoutController.KEYCLOAK_SESSION_ID_ATTRIBUTE), null, session));
+                    .map(session -> new AuthenticatedSession(UserId.of(user.userId()), null, session));
         }
         if (principal instanceof PdpPrincipal pdp) {
             return Mono.justOrEmpty(pdp.userId())
                     .switchIfEmpty(subjectUserIdLookup.execute(pdp.subject())
                             .switchIfEmpty(Mono.error(new IllegalStateException("No existe identidad local para el sujeto"))))
-                    .map(userId -> new AuthenticatedSession(userId, null, null, null));
+                    .map(userId -> new AuthenticatedSession(userId, null, null));
         }
         if (principal instanceof Jwt jwt) {
             return subjectUserIdLookup.execute(jwt.getSubject())
                     .switchIfEmpty(Mono.error(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED)))
-                    .map(userId -> new AuthenticatedSession(userId, null, jwt, null));
+                    .map(userId -> new AuthenticatedSession(userId, jwt, null));
         }
         if (principal instanceof Principal p) {
-            return Mono.fromCallable(() -> new AuthenticatedSession(UserId.of(p.getName()), null, null, null));
+            return Mono.fromCallable(() -> new AuthenticatedSession(UserId.of(p.getName()), null, null));
         }
         return Mono.error(new IllegalStateException("Principal no soportado para revocación"));
     }
@@ -90,18 +85,14 @@ public final class SessionRevocationController {
                     : Mono.defer(() -> tokenRevocationPort.revokeClientSince(session.userId(), clientId, revokedAt));
             return revokeCurrentToken.then(revokeClient);
         }
-        Mono<Void> removeRefreshToken = session.sessionId() == null
-                ? Mono.empty()
-                : Mono.defer(() -> refreshTokenStore.delete(session.sessionId()));
         Mono<Void> invalidateBffSession = session.webSession() == null
                 ? Mono.empty()
                 : Mono.defer(session.webSession()::invalidate);
         return tokenRevocationPort.revokeAllSince(session.userId(), revokedAt)
                 .then(revokeCurrentToken)
-                .then(removeRefreshToken)
                 .then(invalidateBffSession);
     }
 
-    private record AuthenticatedSession(UserId userId, String sessionId, Jwt jwt, WebSession webSession) {
+    private record AuthenticatedSession(UserId userId, Jwt jwt, WebSession webSession) {
     }
 }

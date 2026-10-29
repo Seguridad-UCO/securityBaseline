@@ -4,8 +4,6 @@ import co.edu.uco.seguridad.shared.cache.ActiveRolesCacheRetentionProperties;
 import co.edu.uco.seguridad.shared.cache.DistributedCachePort;
 import co.edu.uco.seguridad.shared.cache.ObservedDistributedCachePort;
 import co.edu.uco.seguridad.shared.cache.RedisDistributedCachePort;
-import co.edu.uco.seguridad.shared.auth.infrastructure.RedisRefreshTokenStoreAdapter;
-import co.edu.uco.seguridad.shared.auth.port.RefreshTokenStorePort;
 import co.edu.uco.seguridad.shared.security.RevocationRetentionProperties;
 import co.edu.uco.seguridad.shared.security.revocation.RedisTokenRevocationAdapter;
 import co.edu.uco.seguridad.shared.security.revocation.TokenRevocationPort;
@@ -49,11 +47,6 @@ public class RedisConfiguration {
                                             RevocationRetentionProperties properties,
                                             TimeProvider timeProvider) {
         return new RedisTokenRevocationAdapter(redis, properties, timeProvider);
-    }
-
-    @Bean
-    RefreshTokenStorePort refreshTokenStorePort(ReactiveRedisTemplate<String, String> redis, TimeProvider timeProvider) {
-        return new RedisRefreshTokenStoreAdapter(redis, timeProvider);
     }
 
     @Bean

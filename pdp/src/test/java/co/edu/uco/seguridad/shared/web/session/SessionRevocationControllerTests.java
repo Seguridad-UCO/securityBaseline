@@ -3,7 +3,6 @@ package co.edu.uco.seguridad.shared.web.session;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserIdLookupValidator;
-import co.edu.uco.seguridad.shared.auth.port.RefreshTokenStorePort;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
 import co.edu.uco.seguridad.shared.security.LocalUserPrincipal;
 import co.edu.uco.seguridad.shared.security.PdpPrincipal;
@@ -51,7 +50,7 @@ class SessionRevocationControllerTests {
     @Test
     void bearer_with_azp_revokes_the_jti_and_the_client_of_the_subject_but_not_the_whole_user() {
         List<String> calls = new ArrayList<>();
-        var controller = controller(revocation(calls, null), strictRefreshTokenStore());
+        var controller = controller(revocation(calls, null));
         Jwt jwt = bearerToken("jti-logout", CLIENT_A);
 
         StepVerifier.create(revokeAs(controller, jwt, newExchange()))
@@ -63,9 +62,9 @@ class SessionRevocationControllerTests {
     }
 
     @Test
-    void bearer_never_deletes_the_refresh_credential_nor_invalidates_the_web_session() {
+    void bearer_never_invalidates_the_web_session() {
         List<String> calls = new ArrayList<>();
-        var controller = controller(revocation(calls, null), strictRefreshTokenStore());
+        var controller = controller(revocation(calls, null));
         MockServerWebExchange exchange = newExchange();
         WebSession session = exchange.getSession().block();
         assertThat(session).isNotNull();
@@ -81,7 +80,7 @@ class SessionRevocationControllerTests {
     @Test
     void bearer_without_azp_revokes_only_its_own_jti() {
         List<String> calls = new ArrayList<>();
-        var controller = controller(revocation(calls, null), strictRefreshTokenStore());
+        var controller = controller(revocation(calls, null));
         Jwt jwt = bearerToken("jti-no-azp", null);
 
         StepVerifier.create(revokeAs(controller, jwt, newExchange()))
@@ -94,7 +93,7 @@ class SessionRevocationControllerTests {
     @Test
     void bearer_with_a_blank_azp_is_treated_as_without_azp() {
         List<String> calls = new ArrayList<>();
-        var controller = controller(revocation(calls, null), strictRefreshTokenStore());
+        var controller = controller(revocation(calls, null));
 
         StepVerifier.create(revokeAs(controller, bearerToken("jti-blank-azp", "   "), newExchange()))
                 .verifyComplete();
@@ -106,7 +105,7 @@ class SessionRevocationControllerTests {
     void bearer_propagates_the_redis_failure_and_leaves_the_web_session_untouched() {
         RedisSystemException redisDown = new RedisSystemException("Redis unreachable", new RuntimeException("timeout"));
         List<String> calls = new ArrayList<>();
-        var controller = controller(revocation(calls, redisDown), strictRefreshTokenStore());
+        var controller = controller(revocation(calls, redisDown));
         MockServerWebExchange exchange = newExchange();
         WebSession session = exchange.getSession().block();
         assertThat(session).isNotNull();
@@ -122,8 +121,7 @@ class SessionRevocationControllerTests {
     void bearer_whose_subject_has_no_local_identity_is_rejected_with_401_and_revokes_nothing() {
         List<String> calls = new ArrayList<>();
         SubjectUserIdLookupValidator unknownSubject = subject -> Mono.empty();
-        var controller = new SessionRevocationController(revocation(calls, null), FIXED_TIME, unknownSubject,
-                strictRefreshTokenStore());
+        var controller = new SessionRevocationController(revocation(calls, null), FIXED_TIME, unknownSubject);
 
         StepVerifier.create(revokeAs(controller, bearerToken("jti-logout", CLIENT_A), newExchange()))
                 .expectErrorSatisfies(error -> {
@@ -138,7 +136,7 @@ class SessionRevocationControllerTests {
     @Test
     void the_same_bearer_and_older_tokens_of_its_client_are_rejected_by_the_decoder_after_logout_but_other_clients_are_not() {
         StatefulRevocation state = new StatefulRevocation();
-        var controller = controller(state, strictRefreshTokenStore());
+        var controller = controller(state);
         Jwt loggedOut = bearerToken("jti-logout", CLIENT_A);
 
         StepVerifier.create(revokeAs(controller, loggedOut, newExchange()))
@@ -162,9 +160,9 @@ class SessionRevocationControllerTests {
     // ---- canal cookie BFF ----
 
     @Test
-    void cookie_session_revokes_all_tokens_of_the_user_deletes_the_refresh_and_invalidates_the_web_session_in_that_order() {
+    void cookie_session_revokes_all_tokens_of_the_user_and_invalidates_the_web_session_without_any_refresh_store() {
         List<String> calls = new ArrayList<>();
-        var controller = controller(revocation(calls, null), storeRecording(calls));
+        var controller = controller(revocation(calls, null));
         var principal = new LocalUserPrincipal(USER_ID.value().toString(), "sub-local", new TenantId("tenant-uco"),
                 "local@uco.edu.co", "Local User");
         MockServerWebExchange exchange = newExchange();
@@ -178,16 +176,15 @@ class SessionRevocationControllerTests {
                 .verifyComplete();
 
         assertThat(calls).containsExactly(
-                "revokeAllSince:" + USER_ID.value() + ":" + FIXED_NOW,
-                "delete:keycloak-session-2");
+                "revokeAllSince:" + USER_ID.value() + ":" + FIXED_NOW);
         assertThat(session.isExpired()).isTrue();
     }
 
     @Test
-    void cookie_session_fails_without_deleting_the_refresh_nor_invalidating_the_session_when_redis_fails() {
+    void cookie_session_fails_without_invalidating_the_session_when_redis_fails() {
         RedisSystemException redisDown = new RedisSystemException("Redis unreachable", new RuntimeException("timeout"));
         List<String> calls = new ArrayList<>();
-        var controller = controller(revocation(calls, redisDown), strictRefreshTokenStore());
+        var controller = controller(revocation(calls, redisDown));
         var principal = new LocalUserPrincipal(USER_ID.value().toString(), "sub-local", new TenantId("tenant-uco"),
                 "local@uco.edu.co", "Local User");
         MockServerWebExchange exchange = newExchange();
@@ -207,7 +204,7 @@ class SessionRevocationControllerTests {
     @Test
     void pdp_principal_revokes_all_tokens_of_the_user_and_never_a_single_client() {
         List<String> calls = new ArrayList<>();
-        var controller = controller(revocation(calls, null), strictRefreshTokenStore());
+        var controller = controller(revocation(calls, null));
         var principal = new PdpPrincipal(new TenantId("tenant-uco"), "subject-pdp", "jwt-id-123",
                 Optional.of(USER_ID), AuthenticationContextEvidence.NONE);
 
@@ -231,10 +228,9 @@ class SessionRevocationControllerTests {
         return MockServerWebExchange.from(MockServerHttpRequest.delete("/api/v1/session").build());
     }
 
-    private static SessionRevocationController controller(TokenRevocationPort revocationPort,
-                                                           RefreshTokenStorePort refreshTokenStore) {
+    private static SessionRevocationController controller(TokenRevocationPort revocationPort) {
         SubjectUserIdLookupValidator lookup = subject -> Mono.just(USER_ID);
-        return new SessionRevocationController(revocationPort, FIXED_TIME, lookup, refreshTokenStore);
+        return new SessionRevocationController(revocationPort, FIXED_TIME, lookup);
     }
 
     private static ReactiveJwtDecoder decoderReturning(Jwt jwt, TokenRevocationPort revocation) {
@@ -324,45 +320,6 @@ class SessionRevocationControllerTests {
             Instant since = revokedClients.get(clientId);
             return Mono.just(since != null && !issuedAt.isAfter(since));
         }
-    }
-
-    /** Falla ruidosamente si el controller toca el refresh del BFF cuando no debe. */
-    private static RefreshTokenStorePort strictRefreshTokenStore() {
-        return new RefreshTokenStorePort() {
-            @Override
-            public Mono<Void> store(String sessionId, String refreshToken, Instant expiresAt) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public Mono<String> find(String sessionId) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public Mono<Void> delete(String sessionId) {
-                return Mono.error(new AssertionError("must not delete the BFF refresh credential in this scenario"));
-            }
-        };
-    }
-
-    private static RefreshTokenStorePort storeRecording(List<String> calls) {
-        return new RefreshTokenStorePort() {
-            @Override
-            public Mono<Void> store(String sessionId, String refreshToken, Instant expiresAt) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public Mono<String> find(String sessionId) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public Mono<Void> delete(String sessionId) {
-                return Mono.fromRunnable(() -> calls.add("delete:" + sessionId));
-            }
-        };
     }
 
     /** {@code azp} nulo omite el claim. El {@code sid} se incluye: el bearer no debe usarlo. */

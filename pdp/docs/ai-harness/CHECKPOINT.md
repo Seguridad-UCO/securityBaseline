@@ -37,7 +37,7 @@ Estado del trabajo para retomarlo en cualquier máquina. Se actualiza al cerrar 
 | HU-027          | WAF con Coraza y OWASP CRS v4 en contenedor edge delante de PEP y PDP: reglas, suites hurl de ataques y flujos legítimos, rate limiting por IP y healthcheck                                                                                                                                                                                                                                                                                                           | 🟡 — suites locales de PDP en `blocking` pasaron; detection/audit, PEP, CI, observabilidad completa y mediciones pendientes. Ver handoff vigente |
 | HU-028          | Replanteada: cablear revocación en logout BFF y `DELETE /api/v1/session` para Bearer (ADR-034) | ✅ — validada, ver REPORTE-HU-028.md (revocación por cliente `azp`, canal bearer/cookie, entry point en bearer) |
 | HU-029          | Retiro del proxy `POST /api/v1/session/token/refresh` (ADR-033); cada cliente renueva con el suyo | ✅ — retirado el proxy; ver ADR-033 |
-| HU-030          | Renovación del token de la sesión BFF para el canal PEP (nueva) | ⏳ pendiente |
+| HU-030          | Renovación del token de la sesión BFF para el canal PEP (nueva) | ✅ — validada, ver REPORTE-HU-030.md |
 | HU-031          | El PEP propaga la indisponibilidad del canal BFF en vez de convertirla en 401 (nueva) | ⏳ pendiente |
 
 **Estado verificado el 2026-09-15 (working tree, sobre `develop` + HU-018/HU-019 sin comitear):**
