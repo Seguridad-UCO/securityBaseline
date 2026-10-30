@@ -109,7 +109,7 @@ Con el Collector tal como está y `allow_structured_metadata: true`, Loki 3.7.7 
 
 ## 4. Diseño 1 — `edge/rules/85-audit-on-detection.conf` (texto exacto, probado [V])
 
-Sustituye el bloque de las dos líneas `SecRule` (se conserva el comentario explicativo, ampliado con lo de arriba). Probado en `detection` y `blocking`:
+Sustituye el bloque de las dos líneas de regla (directiva SecRule) (se conserva el comentario explicativo, ampliado con lo de arriba). Probado en `detection` y `blocking`:
 
 ```
 SecRule REQUEST_HEADERS:X-Correlation-Id "!@streq edge-healthcheck" \
