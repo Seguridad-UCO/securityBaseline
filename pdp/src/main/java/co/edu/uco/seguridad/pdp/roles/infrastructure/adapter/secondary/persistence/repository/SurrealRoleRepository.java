@@ -1,10 +1,6 @@
 package co.edu.uco.seguridad.pdp.roles.infrastructure.adapter.secondary.persistence.repository;
 
-import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
-import co.edu.uco.seguridad.pdp.commons.model.RoleId;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.pdp.roles.application.secondaryport.repository.RoleRepository;
 import co.edu.uco.seguridad.pdp.roles.domain.Role;
 import co.edu.uco.seguridad.pdp.roles.domain.RoleCriteria;
@@ -115,7 +111,8 @@ public final class SurrealRoleRepository implements RoleRepository {
                 });
     }
 
-    @Override public Mono<Long> countByApplication(TenantId tenantId, ApplicationId applicationId) {
+    @Override
+    public Mono<Long> countByApplication(TenantId tenantId, ApplicationId applicationId) {
         return client.execute("SELECT count() FROM %s WHERE tenantId = $tenantId AND applicationId = $applicationId GROUP ALL;".formatted(RoleSchema.TABLE), Map.of("tenantId", tenantId.value(), "applicationId", applicationId.value().toString()))
                 .map(r -> totalOf(r.get(0)));
     }
@@ -148,6 +145,26 @@ public final class SurrealRoleRepository implements RoleRepository {
                 """.formatted(RoleSchema.TABLE, tenantIdExpr, applicationIdExpr, resourcesLiteral);
 
         return client.execute(query, parameters).thenReturn(role);
+    }
+
+    @Override
+    public Mono<Void> saveAllAtomically(List<Role> roles) {
+        if (roles.isEmpty()) return Mono.empty();
+        StringBuilder query = new StringBuilder("BEGIN TRANSACTION; ");
+        Map<String, String> p = new HashMap<>();
+        for (int i = 0; i < roles.size(); i++) {
+            Role role = roles.get(i);
+            String n = "" + i;
+            String resources = role.resources().stream().map(id -> "'" + id.value() + "'").collect(Collectors.joining(",", "[", "]"));
+            query.append("CREATE type::record('").append(RoleSchema.TABLE).append("',$id").append(n).append(") SET level=$level").append(n).append(", name=$name").append(n).append(", tenantId=$tenant").append(n).append(", applicationId=$application").append(n).append(", resources=").append(resources).append(", registeredAt=<datetime>$at").append(n).append("; ");
+            p.put("id" + n, role.id().value().toString());
+            p.put("level" + n, role.scope().level().name());
+            p.put("name" + n, role.name().value());
+            p.put("tenant" + n, role.scope().tenantId().orElseThrow().value());
+            p.put("application" + n, role.scope().applicationId().map(a -> a.value().toString()).orElse(""));
+            p.put("at" + n, role.registeredAt().toString());
+        }
+        return client.execute(query.append("COMMIT TRANSACTION;").toString(), p).then();
     }
 
     @Override

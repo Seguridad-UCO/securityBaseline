@@ -88,7 +88,8 @@ public final class SurrealProfileRepository implements ProfileRepository {
                 });
     }
 
-    @Override public Mono<Long> countByApplication(TenantId tenantId, ApplicationId applicationId) {
+    @Override
+    public Mono<Long> countByApplication(TenantId tenantId, ApplicationId applicationId) {
         return client.execute("SELECT count() FROM %s WHERE tenantId = $tenantId AND applicationId = $applicationId GROUP ALL;".formatted(ProfileSchema.TABLE), Map.of("tenantId", tenantId.value(), "applicationId", applicationId.value().toString()))
                 .map(r -> totalOf(r.get(0)));
     }
@@ -121,6 +122,26 @@ public final class SurrealProfileRepository implements ProfileRepository {
                 """.formatted(ProfileSchema.TABLE, tenantIdExpr, applicationIdExpr, rolesLiteral);
 
         return client.execute(query, parameters).thenReturn(profile);
+    }
+
+    @Override
+    public Mono<Void> saveAllAtomically(List<Profile> profiles) {
+        if (profiles.isEmpty()) return Mono.empty();
+        StringBuilder query = new StringBuilder("BEGIN TRANSACTION; ");
+        Map<String, String> p = new HashMap<>();
+        for (int i = 0; i < profiles.size(); i++) {
+            Profile profile = profiles.get(i);
+            String n = "" + i;
+            String roles = profile.roles().stream().map(id -> "'" + id.value() + "'").collect(Collectors.joining(",", "[", "]"));
+            query.append("CREATE type::record('").append(ProfileSchema.TABLE).append("',$id").append(n).append(") SET level=$level").append(n).append(", name=$name").append(n).append(", tenantId=$tenant").append(n).append(", applicationId=$application").append(n).append(", roles=").append(roles).append(", registeredAt=<datetime>$at").append(n).append("; ");
+            p.put("id" + n, profile.id().value().toString());
+            p.put("level" + n, profile.scope().level().name());
+            p.put("name" + n, profile.name().value());
+            p.put("tenant" + n, profile.scope().tenantId().orElseThrow().value());
+            p.put("application" + n, profile.scope().applicationId().map(a -> a.value().toString()).orElse(""));
+            p.put("at" + n, profile.registeredAt().toString());
+        }
+        return client.execute(query.append("COMMIT TRANSACTION;").toString(), p).then();
     }
 
     @Override
