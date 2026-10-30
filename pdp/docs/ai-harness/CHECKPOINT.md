@@ -42,7 +42,8 @@ Estado del trabajo para retomarlo en cualquier máquina. Se actualiza al cerrar 
 | HU-032          | Fronteras Modulith del PEP: `PepArchitectureTests` en verde sin relajar reglas (nueva; requiere ADR-035) | ⏳ pendiente |
 | HU-033          | `MFA_REQUIRED` responde `403` y no `400` (ADR-031; nueva) | ✅ — validada, ver REPORTE-HU-033.md |
 | HU-034          | Observabilidad del WAF: bloqueos en Loki y Grafana con regla, ruta y `correlationId` (nueva; criterio 5 de HU-027) | ⏳ pendiente |
-| HU-035          | Endurecer la carga masiva de roles y perfiles de `develop`: gate de administrador de la aplicación (hoy ausente), contadores, `mode` y límites (nueva) | ⏳ pendiente — hallazgo de seguridad |
+| HU-035          | Endurecer la carga masiva de roles y perfiles de `develop`: gate de administrador de la aplicación, contadores, `mode`, límites y cabeceras (nueva) | ✅ — validada, ver REPORTE-HU-035.md |
+| HU-036          | Quién puede crear roles y perfiles de alcance TENANT (hoy sin gate, igual en la vía individual; depende de ADR-024) (nueva) | ⏳ pendiente |
 
 **Estado verificado el 2026-09-15 (working tree, sobre `develop` + HU-018/HU-019 sin comitear):**
 `mvnw clean verify` → **675 pruebas, 0 fallos, 0 errores**, cobertura ≥ 50 % por paquete,
