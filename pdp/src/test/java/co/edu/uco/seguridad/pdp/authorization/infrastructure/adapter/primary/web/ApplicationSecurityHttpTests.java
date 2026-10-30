@@ -37,6 +37,9 @@ class ApplicationSecurityHttpTests extends AbstractSurrealDbIntegrationTest {
     @AfterAll static void stopOpa() { opa.stop(); }
     @DynamicPropertySource static void opaProperties(DynamicPropertyRegistry registry) { registry.add("pdp.opa.base-url", () -> opa.baseUrl()); }
     @DynamicPropertySource static void mfaProperties(DynamicPropertyRegistry registry) {
+        // El application.properties de test sombrea al de main y no declara mfa.enabled: sin esto el
+        // step-up queda apagado (el record resuelve enabled=false) y la falta de evidencia pasaría.
+        registry.add("pdp.security.mfa.enabled", () -> "true");
         registry.add("pdp.security.mfa.claim", () -> "acr");
         registry.add("pdp.security.mfa.accepted-values", () -> TestJwtSupport.MFA_ACCEPTED_ACR);
     }
@@ -91,6 +94,17 @@ class ApplicationSecurityHttpTests extends AbstractSurrealDbIntegrationTest {
             client().get().uri(security(route) + "?page=0&size=20").header("Authorization", bearer()).exchange()
                     .expectStatus().isForbidden();
         }
+    }
+
+    @Test void an_administrative_read_without_mfa_evidence_is_a_403_mfa_required_problem_detail() {
+        String withoutEvidence = "Bearer " + TestJwtSupport.signedToken(TENANT, "test-subject");
+        client().get().uri("/api/v1/applications/" + applicationId + "/administrators").header("Authorization", withoutEvidence).exchange()
+                .expectStatus().isForbidden()
+                .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON)
+                .expectBody()
+                .jsonPath("$.code").isEqualTo("MFA_REQUIRED")
+                .jsonPath("$.status").isEqualTo(403)
+                .jsonPath("$.title").isEqualTo("MFA_REQUIRED");
     }
 
     @Test void relationship_routes_are_application_scoped_and_paged() throws Exception {

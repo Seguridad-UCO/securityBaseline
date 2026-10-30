@@ -52,7 +52,8 @@ public class ApiErrorHandler {
                 ? HttpStatus.CONFLICT
                 : "NOT_AUTHORIZED_TO_ADMINISTER".equals(exception.code())
                         || "CURRENT_USER_APPLICATIONS_ACCESS_DENIED".equals(exception.code())
-                        ? HttpStatus.FORBIDDEN
+                        || "MFA_REQUIRED".equals(exception.code())
+                        ?HttpStatus.FORBIDDEN
                         : HttpStatus.BAD_REQUEST;
         return ResponseEntity.status(status)
                 .body(problem(status, exception.code(), exception.getMessage(), exchange));
