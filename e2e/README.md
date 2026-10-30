@@ -28,15 +28,24 @@ claim `tenant`) y un usuario `e2e-nonadmin`, hace el primer ingreso de ese usuar
 
 Resultado: 13 solicitudes, todas pasan. Contra la imagen anterior a HU-036 el paso 6 devolvía 201: así se comprobó el hueco real.
 
-## Parte manual (microfrontend en un navegador) — no ejecutada
+## Parte de navegador (microfrontend con Bearer) — ejecutada el 2026-10-30
 
-`host.html` + `serve.mjs` montan `security-ui/dist` con `getAccessToken`. Necesita el stack local estándar (Keycloak en `:9090`, PDP en `:8080` con
-`PDP_CORS_ALLOWED_ORIGINS=http://localhost:5190`), `e2e/provision-keycloak.sh` ejecutado en ese Keycloak (ajusta las credenciales de administrador),
-y `node e2e/serve.mjs`. Abre `http://localhost:5190`, escribe el `applicationId` de una aplicación que administre el usuario y pulsa «Entrar y montar».
-Comprobar: las pestañas cargan datos; en la pestaña de red toda llamada lleva `Authorization: Bearer` y ninguna cookie; al caducar el token se
-vuelve a pedir; al revocar el token el panel avisa con `onError` (`unauthenticated`).
+Contra el stack del edge (Keycloak de **prueba**, nunca el realm real), en el Browser pane. El Keycloak del edge no publica puerto y su `iss`
+es `http://keycloak:8080/...`, así que `browser/` resuelve las dos cosas sin tocar el PDP:
+
+1. `docker compose -p edge -f pdp/docker-compose.yml -f edge/compose.pdp.yml -f e2e/browser/override.yml up -d --no-build --no-deps --wait keycloak pdp`
+   (publica el Keycloak de prueba en `127.0.0.1:9091` y permite CORS desde `http://localhost:5190`).
+2. `bash e2e/provision-keycloak.sh` ya ejecutado por `run.ps1` (cliente `e2e-host`, usuario `edge-tester` del realm de CI).
+3. `node e2e/browser/serve-int.mjs` y abrir `http://localhost:5190`: el servidor reenvía `/kc-token` al Keycloak con `Host: keycloak:8080`
+   (para que el `iss` del token coincida con el que valida el PDP) y sirve `security-ui/dist`. «Entrar y montar» registra una aplicación y monta el panel.
+
+Resultado: el panel monta y carga resumen, roles, perfiles, recursos y administradores; toda llamada lleva `Authorization: Bearer`, sin CSRF y con
+`credentials: omit`; el host entrega el token antes de **cada** petición (`getAccessToken`); tras «Cerrar sesión Bearer» (204, revocación en Redis) la
+siguiente llamada da 401 y `onError` entrega `unauthenticated` al host. No se probó la caducidad natural del token (renovación por el host).
 
 ## Hallazgos de esta prueba
+
+0. **El bundle del microfrontend no arrancaba en un navegador sin bundler** (`process is not defined`: Vue dejaba 184 `process.env.NODE_ENV`). Corregido en `security-ui` (`define` en `vite.config.ts`).
 
 1. **El token del host necesita el claim `tenant`.** El PDP lo toma del claim (nunca del cuerpo); sin él toda llamada da `400 INVALID_TENANT_ID`.
    La cookie BFF usa el tenant por defecto y por eso el laboratorio no lo mostraba. Ya está en la guía de integración.
