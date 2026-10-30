@@ -293,8 +293,10 @@ La cookie del laboratorio funciona porque frontend, BFF y backend viven en `loca
 Para el canal Bearer, Seguridad debe dejar hecho por cada aplicación host:
 
 1. Un cliente en el realm de Keycloak (público con PKCE, o confidencial vía su backend) con el *audience mapper* que añade `security-baseline-pdp` a `aud`.
-2. Su origen exacto en `pdp.security.cors.allowed-origins` (`PDP_CORS_ALLOWED_ORIGINS`); nunca `*`.
-3. Si el usuario administra seguridad, un token con la evidencia de MFA exigida (ADR-027); si el host no la eleva, esas operaciones responden `403 MFA_REQUIRED`, que es el comportamiento correcto.
+2. Un *mapper* que ponga en el token el claim `tenant` (atributo del usuario). El PDP toma el tenant del claim, nunca del cuerpo ni de la query; sin él, toda llamada responde `400 INVALID_TENANT_ID`. (La cookie BFF usa el tenant por defecto del PDP, por eso el laboratorio no lo muestra.)
+3. Su origen exacto en `pdp.security.cors.allowed-origins` (`PDP_CORS_ALLOWED_ORIGINS`); nunca `*`.
+4. Si el usuario administra seguridad, un token con la evidencia de MFA exigida (ADR-027); si el host no la eleva, esas operaciones responden `403 MFA_REQUIRED`, que es el comportamiento correcto.
+5. **Limitación actual:** el canal Bearer todavía no aprovisiona la identidad del usuario (HU-026, criterio 5). Un usuario que nunca ingresó al panel recibe `401` en todo; hasta que se implemente, cada usuario debe haber ingresado una vez por el panel (cookie BFF) o ser aprovisionado por Seguridad.
 
 ### 9.2 Montar el microfrontend de seguridad en su aplicación
 
