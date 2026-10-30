@@ -74,6 +74,20 @@
 		respond "ok" 200
 	}
 
+	# ── /internal/*: DENEGAR POR DEFECTO (decisión del responsable, hallazgo de la validación HU-027) ──
+	#    Ninguna ruta /internal sale por el edge: es el canal PEP→PDP (bff-session-token,
+	#    access-decisions, credential-validations, administrators…) y el PEP lo llama directo al PDP.
+	#    Responde 404 sin cuerpo en `detection` y en `blocking` (regla de enrutamiento, no del WAF).
+	#    Excepción en lista blanca, SOLO si el upstream es el PEP (EDGE_INTERNAL_ALLOW_PEP=true, que
+	#    fija compose.pep.yml): las dos rutas propias del starter embebido
+	#      PUT  /internal/v1/integrations/*/*
+	#      POST /internal/v1/embedded-access-decisions
+	#    El regex es de prefijo y tolera mayúsculas, barras repetidas, `;param` y sufijos. ──
+	@internal_denegado expression `path_regexp('(?i)^/+internal') && !("{$EDGE_INTERNAL_ALLOW_PEP}" == "true" && ((method('PUT') && path_regexp('(?i)^/+internal/+v1/+integrations/+[^/]+/+[^/]+/?$')) || (method('POST') && path_regexp('(?i)^/+internal/+v1/+embedded-access-decisions/?$'))))`
+	handle @internal_denegado {
+		respond 404
+	}
+
 	# ── WAF: después de request_header (ver order), antes de todo handle. Reglas en /etc/coraza/rules ──
 	coraza_waf {
 		load_owasp_crs

@@ -2,6 +2,7 @@
 # /_edge/canary responde 200 estático DESPUÉS del WAF: si un payload trivial llega al 200, el motor
 # no está bloqueando aunque el proxy esté vivo.
 GET {{edge_url}}/_edge/canary
+X-Correlation-Id: edge-attack-{{run_id}}
 HTTP 200
 
 GET {{edge_url}}/_edge/canary

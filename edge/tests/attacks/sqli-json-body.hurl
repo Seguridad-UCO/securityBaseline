@@ -1,6 +1,7 @@
 # attacks/sqli-json-body — inyección en un cuerpo JSON: prueba que el procesador JSON está activo
 # (SecRequestBodyAccess On + JSON). PLAN-HU-027 §9.
 POST {{edge_url}}/api/v1/applications
+X-Correlation-Id: edge-attack-{{run_id}}
 Content-Type: application/json
 {
   "name": "x' UNION SELECT credentialHash FROM application--",

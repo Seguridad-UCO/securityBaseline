@@ -84,6 +84,18 @@ services:
       LOGGING_FILE_NAME: /var/log/security/security-pdp.json
       OTEL_SERVICE_NAME: security-pdp
       DEPLOYMENT_ENVIRONMENT: ${DEPLOYMENT_ENVIRONMENT:-local}
+      # SOLO PRUEBAS DE EDGE (decision del responsable, HU-030): el realm de CI emite access tokens de
+      # 300 s; con un margen de renovacion mayor que su vida, cada llamada a
+      # /internal/v1/bff-session-token renueva contra Keycloak sin esperar ni tocar el realm.
+      # El default de produccion (60s) vive en application-keycloak.properties y no cambia.
+      # SOLO TOPOLOGIA DE PRUEBAS DEL EDGE (decision del responsable, igual que el laboratorio de
+      # distribution/compose.yaml): el default del PDP es pdp.security.mfa.enabled=true, fail-closed
+      # (sin claim de MFA no hay administracion de aplicaciones) y el realm de CI no emite MFA. Con el
+      # default, GET /api/v1/applications/{id}/administrators responde 400 MFA_REQUIRED y el flujo
+      # administrators-list-add-remove no puede probar el camino feliz a traves del edge. El default
+      # de produccion (true) no cambia; el estado HTTP del rechazo MFA se corrige en HU-033.
+      PDP_SECURITY_MFA_ENABLED: "false"
+      PDP_SECURITY_SESSION_TOKEN_RENEWAL_SKEW: ${EDGE_TEST_TOKEN_RENEWAL_SKEW:-3600s}
       # Sin collector en este overlay: exportar métricas por OTLP solo produciría ruido.
       MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED: "false"
     volumes:
@@ -120,6 +132,11 @@ services:
     environment:
       EDGE_MODE: ${EDGE_MODE:-detection}
       EDGE_UPSTREAM: http://pdp:8080
+      # SOLO TOPOLOGIA DE PRUEBAS: la suite hace varios logins OIDC seguidos desde una sola IP y la zona
+      # `session` (/api/v1/session*, /oauth2/*, /login/*) del contrato (30/1m) devuelve 429 a partir del
+      # tercero (hallazgo de validacion 2026-10-28). El default del contrato (Dockerfile) NO cambia;
+      # el umbral real de produccion se fija con trafico observado (HU-027 punto 4 de "por decidir").
+      EDGE_RATE_SESSION: ${EDGE_RATE_SESSION:-150/1m}
       EDGE_LISTEN: ":8088"
       DEPLOYMENT_ENVIRONMENT: ${DEPLOYMENT_ENVIRONMENT:-local}
     volumes:

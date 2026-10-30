@@ -84,7 +84,7 @@ steps:
         file="$4"
         pdp_compose "$project" --profile test run --rm --no-deps \
           -v "$evidence_dir/reports:/reports" "$service" \
-          --test --report-junit "/reports/$report.xml" \
+          --test --jobs 1 --path-as-is --report-junit "/reports/$report.xml" \
           --variables-file hurl.env.compose \
           --variable "run_id=$(Build.BuildId)" "$file"
       }
@@ -96,7 +96,7 @@ steps:
         file="$4"
         pep_compose "$project" --profile test run --rm --no-deps \
           -v "$evidence_dir/reports:/reports" "$service" \
-          --test --report-junit "/reports/$report.xml" \
+          --test --jobs 1 --path-as-is --report-junit "/reports/$report.xml" \
           --variables-file hurl.env.compose \
           --variable "run_id=$(Build.BuildId)" "$file"
       }
@@ -129,6 +129,10 @@ steps:
               )
               correlation = correlation[0] if isinstance(correlation, list) and correlation else ""
               if correlation.startswith("edge-healthcheck"):
+                  continue
+              # El audit log solo guarda la parte A (sin cabeceras, ver 00-engine.conf): el canario
+              # del healthcheck de detection se reconoce por su ruta interna.
+              if transaction.get("request", {}).get("uri", "").startswith("/_edge/canary"):
                   continue
               if event.get("messages"):
                   unexpected += 1
@@ -180,6 +184,8 @@ steps:
         flows/correlation.hurl \
         flows/headers.hurl \
         flows/oidc-login-session-logout.hurl \
+        flows/bff-session-token-internal.hurl \
+        flows/internal-channel-blocked.hurl \
         flows/applications-register-list.hurl \
         flows/administrators-list-add-remove.hurl \
         flows/authorize.hurl \
@@ -205,6 +211,8 @@ steps:
         flows/correlation.hurl \
         flows/headers.hurl \
         flows/oidc-login-session-logout.hurl \
+        flows/bff-session-token-internal.hurl \
+        flows/internal-channel-blocked.hurl \
         flows/applications-register-list.hurl \
         flows/administrators-list-add-remove.hurl \
         flows/authorize.hurl; do

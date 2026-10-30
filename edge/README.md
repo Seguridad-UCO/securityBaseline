@@ -57,7 +57,20 @@ el Collector solo exporta su `correlationId` y una marca de detección, no datos
 detalles de reglas. El Collector y el dashboard usan `service.name = security-edge`; el scrape de
 métricas llega por la red privada.
 
-Las cifras p50/p95 y memoria B1 quedan **pendientes de medición**. El spike de sidecar en Azure no se
-ha ejecutado y no hay cambio de despliegue de Azure en esta HU. El YAML de
+Latencia medida en Compose local (2026-10-30, `blocking`, 3x400 peticiones por caso, ver
+[`EVIDENCIA-HU-027.md`](../pdp/docs/ai-harness/workspace/reportes/EVIDENCIA-HU-027.md)): el edge añade
+~1,4 ms p50 / ~2,5 ms p95 a `/actuator/health` y ~2,3 ms p50 / ~3,9 ms p95 a `POST /api/v1/authorize`.
+La memoria en B1 y el spike de sidecar en Azure siguen **pendientes** (no hay cambio de despliegue de
+Azure en esta HU). Memoria local de referencia: edge ~76 MiB, PDP ~436 MiB. El YAML de
 [`ci/edge-pipeline.yml`](../ci/edge-pipeline.yml) debe registrarse como pipeline separado en Azure
 DevOps antes de que pueda aportar resultados de CI.
+
+## Rutas que el edge no expone
+
+Todo `/internal/*` es **default-deny** hacia el PDP: el edge responde `404` sin cuerpo en `detection` y
+`blocking` (regla de enrutamiento, no del WAF; `tests/flows/internal-channel-blocked.hurl`). El canal
+PEP→PDP (`bff-session-token`, `access-decisions`, `credential-validations`, `.../administrators`, ...) lo usa el
+PEP directo contra el PDP, por la red interna, nunca a través de este edge. Con upstream PEP
+(`EDGE_INTERNAL_ALLOW_PEP=true`, fijado solo en `compose.pep.yml`) se permiten exactamente dos rutas propias del
+PEP, las que necesita el starter embebido: `PUT /internal/v1/integrations/*/*` y
+`POST /internal/v1/embedded-access-decisions`.

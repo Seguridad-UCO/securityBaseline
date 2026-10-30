@@ -51,6 +51,31 @@
           }
         }
       ]
+    },
+    {
+      "clientId": "security-pep-internal",
+      "name": "Identidad tecnica del PEP (canal /internal/v1) — solo para el Compose de pruebas del edge (HU-030)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "edge-ci-pep-internal-secret-2026",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocolMappers": [
+        {
+          "name": "bff-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.custom.audience": "security-baseline-bff",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
     }
   ],
   "users": [

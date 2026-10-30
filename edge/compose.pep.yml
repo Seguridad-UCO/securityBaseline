@@ -18,6 +18,10 @@ services:
     environment:
       EDGE_MODE: ${EDGE_MODE:-detection}
       EDGE_UPSTREAM: http://pep:8081
+      # Lista blanca de /internal solo con upstream PEP (starter embebido): PUT
+      # /internal/v1/integrations/*/* y POST /internal/v1/embedded-access-decisions. En la topologia
+      # PDP todo /internal/* es 404 (Caddyfile).
+      EDGE_INTERNAL_ALLOW_PEP: "true"
       EDGE_LISTEN: ":8088"
       DEPLOYMENT_ENVIRONMENT: ${DEPLOYMENT_ENVIRONMENT:-local}
     volumes:

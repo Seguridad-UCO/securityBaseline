@@ -1,6 +1,7 @@
 # attacks/sqli-query — inyección SQL en la query string (CRS 942xxx). PLAN-HU-027 §9.
 # Esperado en blocking: 403 problem+json REQUEST_REJECTED, sin id de regla en el cuerpo (E6).
 GET {{edge_url}}/api/v1/applications
+X-Correlation-Id: edge-attack-{{run_id}}
 [Query]
 name: ' OR 1=1--
 HTTP 403

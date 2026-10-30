@@ -32,6 +32,7 @@ RUN chmod +x /usr/local/bin/edge-entrypoint.sh /usr/local/bin/edge-healthcheck.s
 # upstream el edge no arranca.
 ENV EDGE_MODE=detection \
     EDGE_LISTEN=:8088 \
+    EDGE_INTERNAL_ALLOW_PEP=false \
     EDGE_PARANOIA=1 \
     EDGE_ANOMALY_INBOUND=5 \
     EDGE_TRUSTED_PROXIES="" \

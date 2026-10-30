@@ -1,6 +1,8 @@
 # flows/administrators-list-add-remove — HU-020 a través del edge. PLAN-HU-027 §9 y §11.4.
-# Con HU-024 en fail-closed (realm sin MFA), POST/DELETE reciben 403 FORBIDDEN **del PDP**; lo que
-# esta prueba garantiza es que el edge no los rechazó (nunca REQUEST_REJECTED, nunca 5xx).
+# La topología de pruebas del edge arranca el PDP con PDP_SECURITY_MFA_ENABLED=false (compose.pdp.yml):
+# el realm de CI no emite MFA y con el default fail-closed el listado respondería MFA_REQUIRED. Así el
+# listado se afirma estricto (200); POST/DELETE son negocio del PDP (duplicado, último administrador)
+# y lo que se garantiza es que el edge no los rechazó (nunca REQUEST_REJECTED, nunca 5xx).
 
 # --- prólogo: login OIDC (idéntico a oidc-login-session-logout.hurl pasos 1-5) ---
 GET {{edge_url}}/oauth2/authorization/keycloak

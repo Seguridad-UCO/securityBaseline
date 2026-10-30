@@ -84,6 +84,14 @@ HTTP 201
 jsonpath "$.data.id" exists
 jsonpath "$.data.name" == "edge-oidc-{{run_id}}"
 
+# 7b. HU-029 retiró POST /api/v1/session/token/refresh (cada app renueva directo con Keycloak): con
+#     cookie válida y CSRF correcto el endpoint ya no existe. 404 es del PDP, no del edge.
+POST {{edge_url}}/api/v1/session/token/refresh
+Content-Type: application/json
+X-XSRF-TOKEN: {{xsrf_token}}
+{}
+HTTP 404
+
 # 8. Logout: el PDP cierra la sesión y redirige al logout de Keycloak.
 GET {{edge_url}}/api/v1/session/logout
 HTTP *
@@ -97,3 +105,14 @@ HTTP *
 [Asserts]
 status >= 300
 status < 500
+
+# 10. Sin cookie de sesión (host alterno encaminado al mismo edge: la cookie jar es por host), el
+#     endpoint retirado responde 401, no 404: la autenticación va antes que el enrutado.
+POST http://nocookie.invalid:8088/api/v1/session/token/refresh
+Content-Type: application/json
+[Options]
+connect-to: nocookie.invalid:8088:edge:8088
+{}
+HTTP 401
+[Asserts]
+jsonpath "$.code" != "REQUEST_REJECTED"

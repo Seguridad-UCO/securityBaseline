@@ -15,3 +15,12 @@ HTTP 200
 [Asserts]
 header "X-Correlation-Id" matches "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
 header "X-Request-Id" matches "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+
+# /actuator/health NO deja línea en el log del PDP (el logger HTTP no lo registra): para que el
+# pipeline pueda localizar el id en el log del PDP (criterio 5), el mismo id viaja también por una
+# ruta que sí se registra. Sin sesión el PDP responde 401 y deja "Petición HTTP finalizada".
+GET {{edge_url}}/api/v1/session
+X-Correlation-Id: hurl-corr-{{run_id}}
+HTTP 401
+[Asserts]
+header "X-Correlation-Id" == "hurl-corr-{{run_id}}"

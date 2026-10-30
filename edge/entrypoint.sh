@@ -11,6 +11,11 @@ case "${EDGE_MODE:-}" in
   *) fail "EDGE_MODE debe ser 'detection' o 'blocking' (recibido: '${EDGE_MODE:-}')" ;;
 esac
 
+case "${EDGE_INTERNAL_ALLOW_PEP:-false}" in
+  true|false) export EDGE_INTERNAL_ALLOW_PEP="${EDGE_INTERNAL_ALLOW_PEP:-false}" ;;
+  *) fail "EDGE_INTERNAL_ALLOW_PEP debe ser 'true' o 'false' (recibido: '${EDGE_INTERNAL_ALLOW_PEP}')" ;;
+esac
+
 [ -n "${EDGE_UPSTREAM:-}" ] || fail "EDGE_UPSTREAM es obligatoria (p. ej. http://pdp:8080)"
 case "${EDGE_PARANOIA:-1}" in 1|2|3|4) ;; *) fail "EDGE_PARANOIA debe ser 1..4" ;; esac
 case "${EDGE_ANOMALY_INBOUND:-5}" in ''|*[!0-9]*) fail "EDGE_ANOMALY_INBOUND debe ser un entero" ;; esac
