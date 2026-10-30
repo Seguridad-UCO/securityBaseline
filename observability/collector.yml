@@ -52,16 +52,20 @@ receivers:
       - type: add
         field: resource["deployment.environment.name"]
         value: ${env:DEPLOYMENT_ENVIRONMENT}
+  # Audit log de Coraza (partes AKZ). HU-034: el timestamp es epoch en ns (transaction.unix_timestamp;
+  # transaction.timestamp es "YYYY/MM/DD HH:MM:SS" y no es ISO) y una linea que no parsea se DESCARTA
+  # (on_error: drop): nunca viaja cruda a Loki. Su pipeline propio (logs/edge_audit) es fail-closed.
   file_log/edge_audit:
     include: [/var/log/security/security-edge-audit.json]
     start_at: beginning
     storage: file_storage
     operators:
       - type: json_parser
+        on_error: drop
         timestamp:
-          parse_from: attributes.transaction.timestamp
-          layout_type: gotime
-          layout: '2006-01-02T15:04:05.999999999Z07:00'
+          parse_from: attributes.transaction.unix_timestamp
+          layout_type: epoch
+          layout: ns
       - type: add
         field: resource["service.name"]
         value: security-edge
@@ -105,22 +109,50 @@ processors:
         statements:
           - delete_key(attributes, "exception.message")
           - delete_key(attributes, "exception.stacktrace")
-  transform/edge_audit_privacy:
-    error_mode: propagate
+  # HU-034: proyeccion SANEADA del audit de Coraza. SUSTITUYE el cuerpo (la linea cruda lleva query,
+  # client_ip y Matched Data) y deja los atributos en LISTA BLANCA (keep_keys + set; nada de delete_key:
+  # lo que no se nombra no sale). error_mode: ignore para que una linea rara no envenene el lote; el orden
+  # garantiza que set(body) y keep_keys corren siempre, asi un fallo de extraccion deja campos vacios y
+  # nunca la linea cruda. correlationId lo controla el cliente: se sanea a [A-Za-z0-9._:-] y se acota a 128.
+  transform/edge_audit_projection:
+    error_mode: ignore
     log_statements:
       - context: log
-        conditions:
-          - attributes["transaction"] != nil
         statements:
-          - set(attributes["correlationId"], attributes["transaction"]["request"]["headers"]["x-correlation-id"][0]) where attributes["transaction"]["request"]["headers"]["x-correlation-id"] != nil
-          - set(attributes["correlationId"], attributes["transaction"]["request"]["headers"]["X-Correlation-Id"][0]) where attributes["transaction"]["request"]["headers"]["X-Correlation-Id"] != nil
-          - set(attributes["edge.detection"], true) where attributes["messages"] != nil
-          - delete_key(attributes, "messages")
-          - delete_key(attributes["transaction"], "request")
-          - delete_key(attributes["transaction"], "response")
-          - delete_key(attributes["transaction"], "client_ip")
-          - delete_key(attributes["transaction"], "client_port")
-          - delete_key(attributes["transaction"], "intermediary")
+          - 'set(log.cache["byMsg"],  SliceToMap(log.attributes["messages"], ["data","msg"], ["data","id"]))'
+          - 'set(log.cache["detMsg"], SliceToMap(log.attributes["messages"], ["data","msg"], ["data","data"]))'
+          - 'set(log.cache["logdata"], log.cache["detMsg"]["edge-detection"])'
+          - 'delete_key(log.cache["byMsg"], "edge-detection") where log.cache["byMsg"] != nil'
+          - 'delete_key(log.cache["byMsg"], "") where log.cache["byMsg"] != nil'
+          - 'set(log.cache["score"], ExtractPatterns(log.cache["logdata"], "^anomaly_score=(?P<score>[0-9]+) ")["score"]) where log.cache["logdata"] != nil'
+          - 'set(log.cache["cid"], ExtractPatterns(log.cache["logdata"], " correlationId=(?P<cid>.*)$")["cid"]) where log.cache["logdata"] != nil'
+          - 'replace_pattern(log.cache["cid"], "[^A-Za-z0-9._:-]", "_") where log.cache["cid"] != nil'
+          - 'set(log.cache["ids"], String(Values(log.cache["byMsg"]))) where log.cache["byMsg"] != nil'
+          - 'replace_pattern(log.cache["ids"], "[][]", "") where log.cache["ids"] != nil'
+          - 'set(log.cache["msgs"], String(Keys(log.cache["byMsg"]))) where log.cache["byMsg"] != nil'
+          - 'replace_pattern(log.cache["msgs"], "^..|..$", "") where log.cache["msgs"] != nil'
+          - 'replace_pattern(log.cache["msgs"], "\",\"", " | ") where log.cache["msgs"] != nil'
+          - 'set(log.cache["main"], ExtractPatterns(log.cache["ids"], "^(?:(?:949110|959100|980[0-9]{3}|100900),)*(?P<main>[0-9]+)")["main"]) where log.cache["ids"] != nil'
+          - 'set(log.cache["main"], "") where log.cache["main"] != nil and IsMatch(log.cache["main"], "^(949110|959100|980[0-9]{3}|100900)$")'
+          - 'set(log.cache["path"], Split(log.attributes["transaction"]["request"]["uri"], "?")[0])'
+          - 'set(log.cache["method"], log.attributes["transaction"]["request"]["method"])'
+          - 'set(log.cache["tid"], log.attributes["transaction"]["id"])'
+          - 'set(log.cache["intr"], log.attributes["transaction"]["is_interrupted"])'
+          - 'set(log.cache["f"], {"ids": log.cache["ids"], "msgs": log.cache["msgs"], "main": log.cache["main"], "score": log.cache["score"], "path": log.cache["path"], "method": log.cache["method"], "tid": log.cache["tid"]})'
+          - 'truncate_all(log.cache["f"], 1024)'
+          - 'set(log.cache["c"], {"cid": log.cache["cid"]})'
+          - 'truncate_all(log.cache["c"], 128)'
+          - 'set(log.body, {"correlationId": log.cache["c"]["cid"], "edge.rule_ids": log.cache["f"]["ids"], "edge.rule_msgs": log.cache["f"]["msgs"], "edge.rule_main": log.cache["f"]["main"], "edge.score": log.cache["f"]["score"], "edge.path": log.cache["f"]["path"], "edge.method": log.cache["f"]["method"], "edge.interrupted": log.cache["intr"], "edge.transaction_id": log.cache["f"]["tid"]})'
+          - 'keep_keys(log.attributes, [])'
+          - 'set(log.attributes["correlationId"], log.cache["c"]["cid"])'
+          - 'set(log.attributes["edge.rule_ids"], log.cache["f"]["ids"])'
+          - 'set(log.attributes["edge.rule_msgs"], log.cache["f"]["msgs"])'
+          - 'set(log.attributes["edge.rule_main"], log.cache["f"]["main"])'
+          - 'set(log.attributes["edge.score"], log.cache["f"]["score"])'
+          - 'set(log.attributes["edge.path"], log.cache["f"]["path"])'
+          - 'set(log.attributes["edge.method"], log.cache["f"]["method"])'
+          - 'set(log.attributes["edge.interrupted"], log.cache["intr"])'
+          - 'set(log.attributes["edge.transaction_id"], log.cache["f"]["tid"])'
   batch:
     timeout: 2s
     send_batch_size: 512
@@ -152,8 +184,13 @@ service:
       processors: [memory_limiter, transform/privacy, batch]
       exporters: [otlp_http/jaeger]
     logs:
-      receivers: [file_log, file_log/edge, file_log/edge_audit, otlp]
-      processors: [memory_limiter, transform/edge_audit_privacy, batch]
+      receivers: [file_log, file_log/edge, otlp]
+      processors: [memory_limiter, batch]
+      exporters: [otlp_http/loki]
+    # Pipeline propio e incondicional del audit del WAF (fail-closed por construccion, HU-034).
+    logs/edge_audit:
+      receivers: [file_log/edge_audit]
+      processors: [memory_limiter, transform/edge_audit_projection, batch]
       exporters: [otlp_http/loki]
     metrics:
       receivers: [prometheus, otlp]
