@@ -10,6 +10,10 @@ public final class IdentityMessages {
         return "El usuario no existe: " + userId;
     }
 
+    public static String userEmailAlreadyRegistered(String email) {
+        return "El correo ya pertenece a otro usuario: " + email;
+    }
+
     private IdentityMessages() {
     }
 }

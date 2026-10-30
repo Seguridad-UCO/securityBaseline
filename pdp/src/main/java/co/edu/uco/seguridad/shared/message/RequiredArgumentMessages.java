@@ -336,6 +336,9 @@ public final class RequiredArgumentMessages {
     public static final String ADMINISTRATION_OPERATION = "se requiere la operación administrativa";
     public static final String ADMINISTRATION_OUTCOME = "se requiere el resultado de la operación administrativa";
 
+    public static final String USER_EMAIL_AVAILABLE_RULE = "se requiere la regla de correo de usuario disponible";
+    public static final String RESOLVE_BEARER_IDENTITY_USE_CASE = "se requiere el caso de uso de identidad Bearer";
+
     private RequiredArgumentMessages() {
     }
 }

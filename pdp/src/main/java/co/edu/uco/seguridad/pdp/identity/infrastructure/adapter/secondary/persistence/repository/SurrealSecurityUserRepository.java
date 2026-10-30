@@ -14,6 +14,7 @@ import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persis
 import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.schema.IdentitySchema;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
+import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbException;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealRecordId;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -114,6 +115,36 @@ public final class SurrealSecurityUserRepository implements SecurityUserReposito
                                 "subject", identity.subject(),
                                 "provider", identity.provider()))
                 .then();
+    }
+
+    @Override
+    public Mono<ExternalIdentity> createUserWithIdentityIfAbsent(SecurityUser user, ExternalIdentity identity) {
+        return client.execute(
+                        """
+                        BEGIN TRANSACTION; \
+                        CREATE type::record('%1$s', $userId) SET \
+                        email = $email, name = $name, tenantId = $tenantId, \
+                        createdAt = <datetime>$createdAt, lastLoginAt = <datetime>$lastLoginAt; \
+                        CREATE type::record('%2$s', $identityId) SET \
+                        userId = $userId, issuer = $issuer, subject = $subject, provider = $provider; \
+                        COMMIT TRANSACTION;\
+                        """.formatted(IdentitySchema.USER_TABLE, IdentitySchema.IDENTITY_TABLE),
+                        Map.of(
+                                "userId", user.id().value().toString(),
+                                "email", user.email().value(),
+                                "name", user.name(),
+                                "tenantId", user.tenantId().value(),
+                                "createdAt", user.createdAt().toString(),
+                                "lastLoginAt", user.lastLoginAt().toString(),
+                                "identityId", UUID.randomUUID().toString(),
+                                "issuer", identity.issuer(),
+                                "subject", identity.subject(),
+                                "provider", identity.provider()))
+                .thenReturn(identity)
+                // Violación de unicidad: toda la transacción se revierte. Si la identidad ya existe,
+                // otra petición ganó la carrera y se devuelve su vínculo; si no, el error es real.
+                .onErrorResume(SurrealDbException.class, failure -> findIdentity(identity.issuer(), identity.subject())
+                        .switchIfEmpty(Mono.error(failure)));
     }
 
     @Override
