@@ -25,7 +25,8 @@ COPY Caddyfile /etc/caddy/Caddyfile
 COPY rules/ /etc/coraza/rules/
 COPY entrypoint.sh /usr/local/bin/edge-entrypoint.sh
 COPY healthcheck.sh /usr/local/bin/edge-healthcheck.sh
-RUN chmod +x /usr/local/bin/edge-entrypoint.sh /usr/local/bin/edge-healthcheck.sh \
+COPY audit-rotate.sh /usr/local/bin/edge-audit-rotate.sh
+RUN chmod +x /usr/local/bin/edge-entrypoint.sh /usr/local/bin/edge-healthcheck.sh /usr/local/bin/edge-audit-rotate.sh \
  && mkdir -p /var/log/security /etc/coraza/generated
 
 # Defaults del contrato (PLAN-HU-027 §7.1). EDGE_UPSTREAM no tiene default a propósito: sin
@@ -40,6 +41,10 @@ ENV EDGE_MODE=detection \
     EDGE_RATE_SESSION=30/1m \
     EDGE_RATE_DEFAULT=300/1m \
     EDGE_LOG_DIR=/var/log/security \
+    EDGE_AUDIT_MAX_BYTES=10485760 \
+    EDGE_AUDIT_KEEP=5 \
+    EDGE_AUDIT_ROTATE_INTERVAL=60 \
+    EDGE_DETECT_PROBE_INTERVAL=600 \
     OTEL_SERVICE_NAME=security-edge \
     DEPLOYMENT_ENVIRONMENT=local
 

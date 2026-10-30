@@ -2,7 +2,8 @@
 # Healthcheck del MOTOR, no solo del proxy (PLAN-HU-027 §7.4).
 #  - /_edge/health debe responder 200.
 #  - blocking:  el canario con payload debe dar 403 — si da 200, el motor no bloquea.
-#  - detection: el canario da 200 Y el audit log debe crecer — si no crece, el motor no detecta.
+#  - detection: el canario da 200 Y el audit log debe cambiar — si no, el motor no detecta. La sonda se
+#               espacia con EDGE_DETECT_PROBE_INTERVAL (HU-034); /_edge/health se comprueba siempre.
 set -u
 PORT="${EDGE_LISTEN#:}"
 BASE="http://127.0.0.1:${PORT}"
@@ -23,12 +24,28 @@ case "${EDGE_MODE:-}" in
     # En detection el canario SÍ debe auditarse (es la evidencia de que el motor detecta): por eso
     # va con edge-healthcheck-detect y no con edge-healthcheck (que la regla 100001 excluye del audit).
     # El pipeline ignora las transacciones cuyo X-Correlation-Id empieza por edge-healthcheck.
-    before=$(wc -c < "$AUDIT" 2>/dev/null || echo 0)
-    code=$(curl -s -o /dev/null -w '%{http_code}' -H 'X-Correlation-Id: edge-healthcheck-detect' "${BASE}/_edge/canary?p=${PAYLOAD}" || echo 000)
-    [ "$code" = "200" ] || { echo "edge: canario en detection -> $code (esperado 200)"; exit 1; }
-    sleep 1
-    after=$(wc -c < "$AUDIT" 2>/dev/null || echo 0)
-    [ "$after" -gt "$before" ] || { echo "edge: el audit log no creció tras el canario: el motor no detecta"; exit 1; }
+    # HU-034: la sonda del motor NO corre en cada latido (cada 10 s eran ~95 MB/día de audit): solo si
+    # el estado no existe o es más viejo que EDGE_DETECT_PROBE_INTERVAL (default 600 s; 0 = siempre).
+    # Un fallo borra el estado, así que el siguiente latido reintenta de inmediato.
+    STATE=/tmp/edge-detect-probe
+    INTERVAL="${EDGE_DETECT_PROBE_INTERVAL:-600}"
+    due=1
+    if [ "$INTERVAL" -gt 0 ] 2>/dev/null && [ -f "$STATE" ]; then
+      now=$(date +%s)
+      mt=$(stat -c %Y "$STATE" 2>/dev/null || echo 0)
+      [ $((now - mt)) -lt "$INTERVAL" ] && due=0
+    fi
+    if [ "$due" = "1" ]; then
+      rm -f "$STATE"
+      before=$(wc -c < "$AUDIT" 2>/dev/null || echo 0)
+      code=$(curl -s -o /dev/null -w '%{http_code}' -H 'X-Correlation-Id: edge-healthcheck-detect' "${BASE}/_edge/canary?p=${PAYLOAD}" || echo 000)
+      [ "$code" = "200" ] || { echo "edge: canario en detection -> $code (esperado 200)"; exit 1; }
+      sleep 1
+      after=$(wc -c < "$AUDIT" 2>/dev/null || echo 0)
+      # -ne y no -gt: una rotación (copytruncate) entre las dos lecturas deja after < before.
+      [ "$after" -ne "$before" ] || { echo "edge: el audit log no cambió tras el canario: el motor no detecta"; exit 1; }
+      touch "$STATE"
+    fi
     ;;
   *) echo "edge: EDGE_MODE inválido"; exit 1 ;;
 esac
