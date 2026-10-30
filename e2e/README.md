@@ -43,4 +43,6 @@ vuelve a pedir; al revocar el token el panel avisa con `onError` (`unauthenticat
 2. **El canal Bearer no aprovisiona identidades** (HU-026, criterio 5, pendiente): un usuario que nunca ingresó por el panel recibe `401` en todo,
    porque `RevocationAwareJwtDecoder` necesita su identidad local para comprobar la revocación. Solución propuesta: HU-038 (aprovisionar en el decoder
    con los claims mínimos, fail-closed).
-3. El `#` dentro de un valor de formulario en Hurl abre un comentario: usar variables (fallo del propio script, corregido).
+3. **El canal Bearer nunca obtiene `ALLOW`** (`host-authorize.hurl`): el principal Bearer no lleva `userId`, el PDP omite roles y entitlements y responde
+   siempre `DENY/NO_APPLICABLE_POLICY`. La misma cadena por cookie (`host-authorize-cookie.hurl`) sí da `ALLOW`. Se amplía HU-038.
+4. El `#` dentro de un valor de formulario en Hurl abre un comentario: usar variables (fallo del propio script, corregido).
