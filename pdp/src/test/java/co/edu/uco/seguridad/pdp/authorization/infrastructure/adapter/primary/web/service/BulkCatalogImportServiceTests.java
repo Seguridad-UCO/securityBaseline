@@ -4,9 +4,12 @@ import co.edu.uco.seguridad.pdp.applications.application.primaryport.request.App
 import co.edu.uco.seguridad.pdp.applications.application.primaryport.response.RegisteredApplicationResponse;
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministrationRequest;
+import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.TenantAdministrationRequest;
+import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.PrincipalMustAdministerAtLeastOneApplicationValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.PrincipalMustBeApplicationAdministratorValidator;
 import co.edu.uco.seguridad.pdp.authorization.domain.exception.MfaEvidenceRequiredException;
 import co.edu.uco.seguridad.pdp.authorization.domain.exception.NotAuthorizedToAdministerException;
+import co.edu.uco.seguridad.pdp.authorization.domain.exception.NotAuthorizedToAdministerTenantCatalogException;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.BulkResourceValidationResponse;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.BulkResourceValidationResponse.BulkResourceRowError;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.CatalogWorkbooks.SheetData;
@@ -74,6 +77,8 @@ class BulkCatalogImportServiceTests {
 
     private static final String APPLICATION_NOT_FOUND_MESSAGE = "No se encontró la aplicación en el tenant autenticado";
     private static final String NOT_AUTHORIZED_MESSAGE = "No está autorizado para administrar esta aplicación";
+    private static final String TENANT_NOT_AUTHORIZED_MESSAGE =
+            "No está autorizado para definir roles ni perfiles de alcance TENANT: debe administrar al menos una aplicación del tenant";
 
     private final BulkCatalogWorkbookService workbooks = new BulkCatalogWorkbookService();
     private final List<ApplicationNameForTenantQuery> applicationQueries = new ArrayList<>();
@@ -86,7 +91,10 @@ class BulkCatalogImportServiceTests {
     private final AtomicInteger idsIssued = new AtomicInteger();
     private final AtomicInteger roleExistenceQueries = new AtomicInteger();
     private final AtomicInteger profileExistenceQueries = new AtomicInteger();
+    private final List<TenantAdministrationRequest> tenantGateCalls = new ArrayList<>();
     private Function<AdministrationRequest, Mono<Void>> gate = request -> Mono.empty();
+    // HU-036: por omisión el actor administra APP_UNO, así que las filas TENANT pasan salvo que la prueba lo cambie
+    private Function<TenantAdministrationRequest, Mono<ApplicationId>> tenantGate = actor -> Mono.just(APP_UNO);
     private RuntimeException saveFailure;
 
     private BulkCatalogImportService service() {
@@ -200,6 +208,10 @@ class BulkCatalogImportServiceTests {
             gateCalls.add(request);
             return gate.apply(request);
         });
+        PrincipalMustAdministerAtLeastOneApplicationValidator tenantAdministrators = actor -> Mono.defer(() -> {
+            tenantGateCalls.add(actor);
+            return tenantGate.apply(actor);
+        });
         return new BulkCatalogImportService(workbooks, roles, profiles, resources,
                 query -> {
                     applicationQueries.add(query);
@@ -214,6 +226,7 @@ class BulkCatalogImportServiceTests {
                     };
                 },
                 administrators,
+                tenantAdministrators,
                 () -> new UUID(0, idsIssued.incrementAndGet()),
                 () -> NOW);
     }
@@ -229,6 +242,10 @@ class BulkCatalogImportServiceTests {
 
     private static Mono<Void> denied(AdministrationRequest request) {
         return Mono.error(new NotAuthorizedToAdministerException(request.tenantId(), request.applicationId()));
+    }
+
+    private static Mono<ApplicationId> tenantDenied(TenantAdministrationRequest actor) {
+        return Mono.error(new NotAuthorizedToAdministerTenantCatalogException(actor.tenantId(), Optional.of(APP_UNO)));
     }
 
     private static List<String> codes(BulkResourceValidationResponse response) {
@@ -254,6 +271,7 @@ class BulkCatalogImportServiceTests {
     private void assertNothingWasTouched() {
         assertThat(applicationQueries).isEmpty();
         assertThat(gateCalls).isEmpty();
+        assertThat(tenantGateCalls).isEmpty();
         assertThat(idsIssued).hasValue(0);
         assertThat(roleExistenceQueries).hasValue(0);
         assertThat(profileExistenceQueries).hasValue(0);
@@ -579,8 +597,11 @@ class BulkCatalogImportServiceTests {
         assertThat(result.profiles()).isEmpty();
     }
 
+    // HU-036: antes de esta historia las filas TENANT no consultaban ningún gate (su prueba afirmaba que una
+    // denegación por aplicación no las afectaba). Ahora tienen el suyo: el validador de inquilino. El gate por
+    // aplicación sigue sin ser asunto de estas filas.
     @Test
-    void tenant_scope_rows_do_not_call_the_gate() throws Exception {
+    void tenant_scope_rows_use_the_tenant_gate_and_never_the_application_gate() throws Exception {
         gate = BulkCatalogImportServiceTests::denied;
         byte[] roles = CatalogWorkbooks.xlsx(CatalogWorkbooks.roles(new String[]{"Auditor", "TENANT", null}));
         byte[] profiles = CatalogWorkbooks.xlsx(CatalogWorkbooks.profiles(new String[]{"Gestores", "TENANT", null}));
@@ -589,6 +610,329 @@ class BulkCatalogImportServiceTests {
         assertThat(validate("profiles", profiles).response().ready()).isTrue();
 
         assertThat(gateCalls).isEmpty();
+        assertThat(tenantGateCalls).hasSize(2);
+    }
+
+    // ---- gate de inquilino de las filas TENANT (HU-036) ---------------------------------------------------------
+
+    @Test
+    void tenant_roles_are_accepted_when_the_actor_administers_an_application() throws Exception {
+        byte[] file = CatalogWorkbooks.xlsx(CatalogWorkbooks.roles(
+                new String[]{"Auditor", "TENANT", null},
+                new String[]{"Gestor", "tenant", null}));
+
+        BulkCatalogImportService.Result result = validate("roles", file);
+
+        assertThat(result.response().ready()).isTrue();
+        assertThat(result.response().errors()).isEmpty();
+        assertThat(result.roles()).extracting(r -> r.name().value()).containsExactly("Auditor", "Gestor");
+        assertThat(result.roles()).extracting(Role::scope).containsOnly(RoleScope.ofTenant(TENANT));
+        assertThat(tenantGateCalls).hasSize(1);
+    }
+
+    @Test
+    void tenant_roles_are_rejected_per_row_when_the_actor_has_no_permission() throws Exception {
+        tenantGate = BulkCatalogImportServiceTests::tenantDenied;
+        byte[] file = CatalogWorkbooks.xlsx(CatalogWorkbooks.roles(
+                new String[]{"Auditor", "TENANT", null},
+                new String[]{"Gestor", "TENANT", null}));
+
+        BulkCatalogImportService.Result result = validate("roles", file);
+
+        assertThat(result.response().ready()).isFalse();
+        assertThat(result.response().errors()).extracting(BulkResourceRowError::row, BulkResourceRowError::field,
+                        BulkResourceRowError::code, BulkResourceRowError::description)
+                .containsExactly(
+                        tuple(2, "Alcance*", "NOT_AUTHORIZED", TENANT_NOT_AUTHORIZED_MESSAGE),
+                        tuple(3, "Alcance*", "NOT_AUTHORIZED", TENANT_NOT_AUTHORIZED_MESSAGE));
+        assertThat(result.roles()).isEmpty();
+    }
+
+    @Test
+    void tenant_profiles_are_rejected_per_row_when_the_actor_has_no_permission() throws Exception {
+        tenantGate = BulkCatalogImportServiceTests::tenantDenied;
+        byte[] file = CatalogWorkbooks.xlsx(CatalogWorkbooks.profiles(
+                new String[]{"Gestores", "TENANT", null},
+                new String[]{"Operadores", "TENANT", null}));
+
+        BulkCatalogImportService.Result result = validate("profiles", file);
+
+        assertThat(result.response().ready()).isFalse();
+        assertThat(result.response().errors()).extracting(BulkResourceRowError::row, BulkResourceRowError::field,
+                        BulkResourceRowError::code, BulkResourceRowError::description)
+                .containsExactly(
+                        tuple(2, "Alcance*", "NOT_AUTHORIZED", TENANT_NOT_AUTHORIZED_MESSAGE),
+                        tuple(3, "Alcance*", "NOT_AUTHORIZED", TENANT_NOT_AUTHORIZED_MESSAGE));
+        assertThat(result.profiles()).isEmpty();
+    }
+
+    @Test
+    void commit_saves_nothing_when_a_tenant_row_is_rejected() throws Exception {
+        tenantGate = BulkCatalogImportServiceTests::tenantDenied;
+        byte[] roles = CatalogWorkbooks.xlsx(CatalogWorkbooks.roles(new String[]{"Auditor", "TENANT", null}));
+        byte[] profiles = CatalogWorkbooks.xlsx(CatalogWorkbooks.profiles(new String[]{"Gestores", "TENANT", null}));
+        BulkCatalogImportService service = service();
+
+        StepVerifier.create(service.commit("roles", roles, PRINCIPAL, ACTOR))
+                .assertNext(result -> assertThat(result.response().ready()).isFalse())
+                .verifyComplete();
+        StepVerifier.create(service.commit("profiles", profiles, PRINCIPAL, ACTOR))
+                .assertNext(result -> assertThat(result.response().ready()).isFalse())
+                .verifyComplete();
+
+        assertThat(rolesSaved).isEmpty();
+        assertThat(profilesSaved).isEmpty();
+    }
+
+    @Test
+    void a_failing_or_mfa_blocked_tenant_gate_is_not_authorized_per_row() throws Exception {
+        byte[] file = CatalogWorkbooks.xlsx(CatalogWorkbooks.roles(new String[]{"Auditor", "TENANT", null}));
+        List<Function<TenantAdministrationRequest, Mono<ApplicationId>>> blockedGates = List.of(
+                actor -> Mono.error(new IllegalStateException("opa caído")),
+                actor -> Mono.error(new MfaEvidenceRequiredException(actor.tenantId(), APP_UNO)),
+                actor -> Mono.error(new NotAuthorizedToAdministerTenantCatalogException(actor.tenantId(), Optional.empty())));
+
+        for (Function<TenantAdministrationRequest, Mono<ApplicationId>> blocked : blockedGates) {
+            tenantGate = blocked;
+
+            BulkCatalogImportService.Result result = validate("roles", file);
+
+            assertThat(result.response().ready()).isFalse();
+            assertThat(result.response().errors()).singleElement().satisfies(error -> {
+                assertThat(error.code()).isEqualTo("NOT_AUTHORIZED");
+                assertThat(error.field()).isEqualTo("Alcance*");
+                // sin filtrar el detalle: ni el error de red ni la exigencia de MFA llegan al archivo de errores
+                assertThat(error.description()).isEqualTo(TENANT_NOT_AUTHORIZED_MESSAGE);
+            });
+            assertThat(result.roles()).isEmpty();
+        }
+    }
+
+    @Test
+    void the_tenant_gate_is_consulted_once_per_call_for_many_tenant_rows() throws Exception {
+        byte[] file = CatalogWorkbooks.xlsx(CatalogWorkbooks.roles(
+                new String[]{"Auditor", "TENANT", null},
+                new String[]{"Editor", "TENANT", null},
+                new String[]{"Lector", "TENANT", null}));
+        BulkCatalogImportService service = service();
+
+        StepVerifier.create(service.validate("roles", file, PRINCIPAL, ACTOR)).expectNextCount(1).verifyComplete();
+        assertThat(tenantGateCalls).hasSize(1);
+
+        // la decisión pertenece a una sola llamada: la siguiente vuelve a preguntar
+        StepVerifier.create(service.commit("roles", file, PRINCIPAL, ACTOR)).expectNextCount(1).verifyComplete();
+        assertThat(tenantGateCalls).hasSize(2);
+    }
+
+    @Test
+    void a_tenant_denial_is_reused_for_the_other_tenant_rows_instead_of_asking_again() throws Exception {
+        tenantGate = BulkCatalogImportServiceTests::tenantDenied;
+        byte[] file = CatalogWorkbooks.xlsx(CatalogWorkbooks.roles(
+                new String[]{"Auditor", "TENANT", null},
+                new String[]{"Editor", "TENANT", null},
+                new String[]{"Lector", "TENANT", null}));
+
+        BulkCatalogImportService.Result result = validate("roles", file);
+
+        assertThat(rows(result.response())).containsExactly(2, 3, 4);
+        assertThat(codes(result.response())).containsOnly("NOT_AUTHORIZED");
+        assertThat(tenantGateCalls).hasSize(1);
+    }
+
+    @Test
+    void the_tenant_gate_is_not_consulted_without_tenant_rows() throws Exception {
+        tenantGate = actor -> {
+            throw new AssertionError("must not consult the tenant gate");
+        };
+        byte[] file = CatalogWorkbooks.xlsx(CatalogWorkbooks.roles(
+                new String[]{"Editor", "APPLICATION", "App Uno"},
+                new String[]{"Lector", "APPLICATION", "App Dos"}));
+
+        BulkCatalogImportService.Result result = validate("roles", file);
+
+        assertThat(result.response().ready()).isTrue();
+        assertThat(tenantGateCalls).isEmpty();
+        assertThat(gateCalls).hasSize(2);
+    }
+
+    @Test
+    void the_tenant_gate_is_consulted_lazily_only_for_the_tenant_rows_that_reach_it() throws Exception {
+        byte[] file = CatalogWorkbooks.xlsx(CatalogWorkbooks.roles(
+                new String[]{"Ab", "TENANT", null},
+                new String[]{null, "TENANT", null},
+                new String[]{"Gestor", "PLANETA", null},
+                new String[]{"Raiz", "GLOBAL", null}));
+
+        BulkCatalogImportService.Result result = validate("roles", file);
+
+        assertThat(result.response().ready()).isFalse();
+        assertThat(tenantGateCalls).isEmpty();
+    }
+
+    @Test
+    void the_tenant_gate_precedes_duplicate_checks() throws Exception {
+        tenantGate = BulkCatalogImportServiceTests::tenantDenied;
+        persistedRoles.add(persistedRole("Editor", RoleScope.ofTenant(TENANT)));
+        persistedProfiles.add(Profile.define(new ProfileId(UUID.fromString("00000000-0000-0000-0000-0000000000d1")),
+                new ProfileName("Gestores"), RoleScope.ofTenant(TENANT), NOW));
+        byte[] roles = CatalogWorkbooks.xlsx(CatalogWorkbooks.roles(
+                new String[]{"Editor", "TENANT", null},
+                new String[]{"Editor", "TENANT", null},
+                new String[]{"Nuevo", "TENANT", null}));
+        byte[] profiles = CatalogWorkbooks.xlsx(CatalogWorkbooks.profiles(new String[]{"Gestores", "TENANT", null}));
+
+        BulkCatalogImportService.Result rolesResult = validate("roles", roles);
+        BulkCatalogImportService.Result profilesResult = validate("profiles", profiles);
+
+        // un no-administrador no puede sondear qué existe: ni DUPLICATE_PERSISTED ni DUPLICATE_IN_FILE
+        assertThat(rows(rolesResult.response())).containsExactly(2, 3, 4);
+        assertThat(codes(rolesResult.response())).containsOnly("NOT_AUTHORIZED");
+        assertThat(codes(profilesResult.response())).containsExactly("NOT_AUTHORIZED");
+        assertThat(roleExistenceQueries).hasValue(0);
+        assertThat(profileExistenceQueries).hasValue(0);
+    }
+
+    @Test
+    void an_actor_with_permission_still_sees_the_duplicates_of_the_tenant_scope() throws Exception {
+        persistedRoles.add(persistedRole("Editor", RoleScope.ofTenant(TENANT)));
+        byte[] file = CatalogWorkbooks.xlsx(CatalogWorkbooks.roles(
+                new String[]{"Editor", "TENANT", null},
+                new String[]{"Lector", "TENANT", null},
+                new String[]{"lector", "TENANT", null}));
+
+        BulkCatalogImportService.Result result = validate("roles", file);
+
+        assertThat(result.response().errors()).extracting(BulkResourceRowError::row, BulkResourceRowError::code)
+                .containsExactly(tuple(2, "DUPLICATE_PERSISTED"), tuple(4, "DUPLICATE_IN_FILE"));
+        assertThat(tenantGateCalls).hasSize(1);
+    }
+
+    @Test
+    void a_tenant_row_with_an_application_value_is_invalid_value_without_consulting_the_gate() throws Exception {
+        byte[] roles = CatalogWorkbooks.xlsx(CatalogWorkbooks.roles(new String[]{"Auditor", "TENANT", "App Uno"}));
+        byte[] profiles = CatalogWorkbooks.xlsx(CatalogWorkbooks.profiles(new String[]{"Gestores", "TENANT", "App Uno"}));
+
+        assertThat(validate("roles", roles).response().errors()).extracting(BulkResourceRowError::field,
+                BulkResourceRowError::code).containsExactly(tuple("Aplicación", "INVALID_VALUE"));
+        assertThat(validate("profiles", profiles).response().errors()).extracting(BulkResourceRowError::field,
+                BulkResourceRowError::code).containsExactly(tuple("Aplicación", "INVALID_VALUE"));
+
+        assertThat(tenantGateCalls).isEmpty();
+        assertThat(gateCalls).isEmpty();
+    }
+
+    @Test
+    void mixed_batch_rejects_only_the_tenant_rows_and_saves_nothing() throws Exception {
+        tenantGate = BulkCatalogImportServiceTests::tenantDenied;
+        byte[] file = CatalogWorkbooks.xlsx(CatalogWorkbooks.roles(
+                new String[]{"Auditor", "APPLICATION", "App Uno"},
+                new String[]{"Gestor", "TENANT", null},
+                new String[]{"Lector", "APPLICATION", "App Dos"}));
+
+        StepVerifier.create(service().commit("roles", file, PRINCIPAL, ACTOR))
+                .assertNext(result -> {
+                    assertThat(result.response().ready()).isFalse();
+                    assertThat(result.response().errors()).extracting(BulkResourceRowError::row,
+                                    BulkResourceRowError::field, BulkResourceRowError::code)
+                            .containsExactly(tuple(3, "Alcance*", "NOT_AUTHORIZED"));
+                    assertThat(result.roles()).extracting(r -> r.name().value()).containsExactly("Auditor", "Lector");
+                })
+                .verifyComplete();
+
+        assertThat(rolesSaved).isEmpty();
+    }
+
+    @Test
+    void relations_of_a_rejected_tenant_role_are_reported_as_not_found() throws Exception {
+        tenantGate = BulkCatalogImportServiceTests::tenantDenied;
+        byte[] file = CatalogWorkbooks.xlsx(
+                CatalogWorkbooks.roles(new String[]{"Auditor", "TENANT", null}),
+                CatalogWorkbooks.roleResources(new String[]{"Auditor", "TENANT", "App Uno", "/api/orders", "GET"}));
+
+        BulkCatalogImportService.Result result = validate("roles", file);
+
+        assertThat(result.response().errors()).extracting(BulkResourceRowError::row, BulkResourceRowError::code)
+                .containsExactly(tuple(2, "NOT_AUTHORIZED"), tuple(2, "ROLE_NOT_FOUND"));
+        assertThat(tenantGateCalls).hasSize(1);
+        assertThat(result.roles()).isEmpty();
+    }
+
+    @Test
+    void relations_of_a_rejected_tenant_profile_are_reported_as_not_found() throws Exception {
+        tenantGate = BulkCatalogImportServiceTests::tenantDenied;
+        persistedRoles.add(persistedRole("Auditor", RoleScope.ofTenant(TENANT)));
+        byte[] file = CatalogWorkbooks.xlsx(
+                CatalogWorkbooks.profiles(new String[]{"Gestores", "TENANT", null}),
+                CatalogWorkbooks.profileRoles(new String[]{"Gestores", "TENANT", null, "Auditor", "TENANT", null}));
+
+        BulkCatalogImportService.Result result = validate("profiles", file);
+
+        assertThat(result.response().errors()).extracting(BulkResourceRowError::row, BulkResourceRowError::code)
+                .containsExactly(tuple(2, "NOT_AUTHORIZED"), tuple(2, "PROFILE_NOT_FOUND"));
+        assertThat(tenantGateCalls).hasSize(1);
+        assertThat(result.profiles()).isEmpty();
+    }
+
+    @Test
+    void the_tenant_validator_receives_tenant_user_subject_and_authentication_of_the_principal() throws Exception {
+        AuthenticationContextEvidence evidence = new AuthenticationContextEvidence(Optional.of("urn:mfa:otp"), List.of("otp"));
+        PdpPrincipal principal = new PdpPrincipal(TENANT, "subject-9", "jti-9", Optional.empty(), evidence);
+        UserId resolvedUser = new UserId(UUID.fromString("00000000-0000-0000-0000-0000000000bb"));
+        byte[] file = CatalogWorkbooks.xlsx(CatalogWorkbooks.roles(new String[]{"Auditor", "TENANT", null}));
+
+        StepVerifier.create(service().validate("roles", file, principal, resolvedUser))
+                .assertNext(result -> assertThat(result.response().ready()).isTrue())
+                .verifyComplete();
+
+        assertThat(tenantGateCalls).containsExactly(new TenantAdministrationRequest(TENANT, resolvedUser, "subject-9", evidence));
+    }
+
+    @Test
+    void the_tenant_of_the_tenant_gate_is_the_one_of_the_principal() throws Exception {
+        PdpPrincipal otherTenantPrincipal = new PdpPrincipal(OTHER_TENANT, "subject-2", "jti-2",
+                Optional.of(ACTOR), AuthenticationContextEvidence.NONE);
+        byte[] file = CatalogWorkbooks.xlsx(CatalogWorkbooks.roles(new String[]{"Auditor", "TENANT", null}));
+
+        StepVerifier.create(service().validate("roles", file, otherTenantPrincipal, ACTOR))
+                .assertNext(result -> assertThat(result.roles()).extracting(Role::scope)
+                        .containsExactly(RoleScope.ofTenant(OTHER_TENANT)))
+                .verifyComplete();
+
+        assertThat(tenantGateCalls).extracting(TenantAdministrationRequest::tenantId).containsOnly(OTHER_TENANT);
+    }
+
+    @Test
+    void an_unsupported_mode_never_consults_the_tenant_gate() throws Exception {
+        byte[] file = CatalogWorkbooks.xlsx(
+                CatalogWorkbooks.roles(new String[]{"Auditor", "TENANT", null}),
+                CatalogWorkbooks.profiles(new String[]{"Gestores", "TENANT", null}));
+        BulkCatalogImportService service = service();
+
+        StepVerifier.create(service.validate("otra", file, PRINCIPAL, ACTOR))
+                .expectError(UnsupportedBulkModeException.class).verify();
+        StepVerifier.create(service.commit("resources-roles", file, PRINCIPAL, ACTOR))
+                .expectError(UnsupportedBulkModeException.class).verify();
+
+        assertThat(tenantGateCalls).isEmpty();
+    }
+
+    @Test
+    void rejected_tenant_rows_keep_the_counters_consistent() throws Exception {
+        tenantGate = BulkCatalogImportServiceTests::tenantDenied;
+        byte[] file = CatalogWorkbooks.xlsx(
+                CatalogWorkbooks.roles(
+                        new String[]{"Auditor", "TENANT", null},
+                        new String[]{"Gestor", "TENANT", null},
+                        new String[]{"Editor", "APPLICATION", "App Uno"}),
+                CatalogWorkbooks.roleResources(new String[]{"Auditor", "TENANT", "App Uno", "/api/orders", "GET"}));
+
+        BulkResourceValidationResponse response = validate("roles", file).response();
+
+        assertThat(response.ready()).isFalse();
+        assertThat(response.totalRows()).isEqualTo(3);
+        assertThat(response.invalidRows()).isEqualTo(2);
+        assertThat(response.validRows()).isEqualTo(1);
+        assertCountersAreConsistent(response);
     }
 
     @Test

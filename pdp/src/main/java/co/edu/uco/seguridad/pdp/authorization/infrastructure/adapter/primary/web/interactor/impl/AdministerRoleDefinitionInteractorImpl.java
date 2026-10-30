@@ -2,6 +2,8 @@ package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.we
 
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministerRoleDefinitionRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministrationRequest;
+import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.CatalogAdministration;
+import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.TenantAdministrationRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerRoleDefinitionUseCase;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.DefineRoleRawRequest;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.RoleAdministrationWebResponse;
@@ -22,10 +24,11 @@ import java.util.Set;
 /**
  * Implementación de {@link AdministerRoleDefinitionInteractor} (HU-016). Resuelve el principal y su
  * {@code UserId} (mismo patrón {@code resolveUserId} que {@code ApplicationRemovalInteractorImpl}),
- * mapea el raw a {@code DefineRoleRequest} y construye {@code Optional<AdministrationRequest>} a
- * partir de {@code role.scope().applicationId()} — presente solo si el alcance es
- * {@code APPLICATION}. El applicationId sale del propio scope de la petición, sin ninguna consulta
- * adicional (a diferencia de {@code AdministerResourceGrantInteractorImpl}).
+ * mapea el raw a {@code DefineRoleRequest} y construye el {@link CatalogAdministration} a partir de
+ * {@code role.scope().applicationId()}: {@code OfApplication} si el alcance es {@code APPLICATION},
+ * {@code OfTenant} si es {@code TENANT} (HU-036) — nunca una request sin gate. El applicationId sale del
+ * propio scope de la petición, sin ninguna consulta adicional (a diferencia de
+ * {@code AdministerResourceGrantInteractorImpl}).
  */
 public final class AdministerRoleDefinitionInteractorImpl implements AdministerRoleDefinitionInteractor {
 
@@ -51,9 +54,12 @@ public final class AdministerRoleDefinitionInteractorImpl implements AdministerR
     private static AdministerRoleDefinitionRequest toAdministerRequest(DefineRoleRawRequest raw,
                                                                        PdpPrincipal principal, UserId userId) {
         DefineRoleRequest role = DefineRoleRequestMapper.toRequest(raw, principal.tenantId());
-        var administration = role.scope().applicationId()
-                .map(applicationId -> new AdministrationRequest(principal.tenantId(), applicationId, userId,
-                        principal.subject(), Set.<String>of(), principal.authenticationContext()));
+        CatalogAdministration administration = role.scope().applicationId()
+                .<CatalogAdministration>map(applicationId -> new CatalogAdministration.OfApplication(
+                        new AdministrationRequest(principal.tenantId(), applicationId, userId,
+                                principal.subject(), Set.<String>of(), principal.authenticationContext())))
+                .orElseGet(() -> new CatalogAdministration.OfTenant(new TenantAdministrationRequest(
+                        principal.tenantId(), userId, principal.subject(), principal.authenticationContext())));
         return new AdministerRoleDefinitionRequest(administration, role);
     }
 

@@ -4,8 +4,10 @@ import co.edu.uco.seguridad.pdp.applications.application.primaryport.response.Re
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationNameForTenantLookupValidator;
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministrationRequest;
+import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.PrincipalMustAdministerAtLeastOneApplicationValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.PrincipalMustBeApplicationAdministratorValidator;
 import co.edu.uco.seguridad.pdp.authorization.domain.exception.NotAuthorizedToAdministerException;
+import co.edu.uco.seguridad.pdp.authorization.domain.exception.NotAuthorizedToAdministerTenantCatalogException;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkCatalogImportService;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkCatalogWorkbookService;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkResourceImportService;
@@ -58,6 +60,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -184,9 +187,12 @@ class BulkResourceControllerTests {
             gateCalls.add(request);
             return Mono.error(new NotAuthorizedToAdministerException(request.tenantId(), request.applicationId()));
         };
+        // HU-036: las rutas de esta clase no cargan filas TENANT; si alguna lo hiciera, el actor de inquilino también se niega
+        PrincipalMustAdministerAtLeastOneApplicationValidator tenantDenyAll = actor -> Mono.error(
+                new NotAuthorizedToAdministerTenantCatalogException(actor.tenantId(), Optional.empty()));
         BulkCatalogWorkbookService catalogWorkbooks = new BulkCatalogWorkbookService();
         BulkCatalogImportService catalogImports = new BulkCatalogImportService(catalogWorkbooks, roles, profiles,
-                resources, applications, denyAll, () -> new UUID(0, sequence.incrementAndGet()), () -> NOW);
+                resources, applications, denyAll, tenantDenyAll, () -> new UUID(0, sequence.incrementAndGet()), () -> NOW);
         BulkResourceImportService resourceImports = new BulkResourceImportService(new BulkResourceWorkbookService(),
                 applications, denyAll, resources, () -> new UUID(0, sequence.incrementAndGet()), () -> NOW,
                 batch -> Mono.empty());

@@ -51,6 +51,7 @@ public class ApiErrorHandler {
         HttpStatus status = exception instanceof ConflictBusinessRuleException
                 ? HttpStatus.CONFLICT
                 : "NOT_AUTHORIZED_TO_ADMINISTER".equals(exception.code())
+                        || "NOT_AUTHORIZED_TO_ADMINISTER_TENANT_CATALOG".equals(exception.code())
                         || "CURRENT_USER_APPLICATIONS_ACCESS_DENIED".equals(exception.code())
                         || "MFA_REQUIRED".equals(exception.code())
                         ?HttpStatus.FORBIDDEN

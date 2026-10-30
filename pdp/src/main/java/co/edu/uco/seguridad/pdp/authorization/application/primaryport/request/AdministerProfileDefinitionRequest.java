@@ -4,19 +4,16 @@ import co.edu.uco.seguridad.pdp.profiles.application.primaryport.request.DefineP
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
-import java.util.Optional;
 
 /**
- * Entrada de {@code AdministerProfileDefinitionUseCase} (HU-019): la solicitud de definición de
- * perfil, más la administración a gatear si el perfil es de alcance {@code APPLICATION}.
- * {@code Optional} vacío significa "esta escritura no requiere administración" (perfil
- * {@code TENANT}) — mismo criterio que {@code AdministerRoleDefinitionRequest} (HU-016).
+ * Entrada de {@code AdministerProfileDefinitionUseCase} (HU-019, HU-036): la solicitud de definición de
+ * perfil, más el gate que exige su alcance (aplicación o inquilino). Ver {@link CatalogAdministration}.
  */
-public record AdministerProfileDefinitionRequest(Optional<AdministrationRequest> administration,
+public record AdministerProfileDefinitionRequest(CatalogAdministration administration,
                                                  DefineProfileRequest profile) {
 
     public AdministerProfileDefinitionRequest {
-        Objects.requireNonNull(administration, RequiredArgumentMessages.ADMINISTRATION);
+        Objects.requireNonNull(administration, RequiredArgumentMessages.CATALOG_ADMINISTRATION);
         Objects.requireNonNull(profile, RequiredArgumentMessages.DEFINE_PROFILE_REQUEST);
     }
 }
