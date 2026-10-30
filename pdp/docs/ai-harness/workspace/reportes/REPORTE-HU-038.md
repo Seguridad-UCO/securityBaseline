@@ -41,7 +41,7 @@ CONSISTENTE, `drift.ps1` SIN DERIVA, y E2E contra el stack edge reconstruido con
 - Se asume **un solo emisor** por despliegue (la identidad se guarda con su `iss`).
 - La transacción `BEGIN/COMMIT` de `createUserWithIdentityIfAbsent` está cubierta por `SurrealSecurityUserRepositoryProvisioningTests`
   contra un SurrealDB de Testcontainers; no contra la versión desplegada en producción.
-- Pendiente tras fusionar HU-036 y HU-038: repetir `host-bearer.hurl` completo (sin `first-login`) sobre la rama integrada.
+- Integración con HU-036 (rama temporal local, 2026-10-30): `verify` 1187 pruebas en verde, y `host-bearer.hurl` completo (13/13, sin `first-login`) y `host-authorize.hurl` (9/9) pasan.
 
 ## Cambios de comportamiento (deliberados)
 
