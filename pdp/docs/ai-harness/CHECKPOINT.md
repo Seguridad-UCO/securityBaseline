@@ -41,7 +41,7 @@ Estado del trabajo para retomarlo en cualquier máquina. Se actualiza al cerrar 
 | HU-031          | El PEP propaga el `503` del canal BFF en vez de convertirlo en `401` (nueva) | ✅ — validada, ver REPORTE-HU-031.md (la suite del PEP conserva un error heredado: HU-032) |
 | HU-032          | Fronteras Modulith del PEP: `PepArchitectureTests` en verde sin relajar reglas (nueva; requiere ADR-035) | ⏳ pendiente |
 | HU-033          | `MFA_REQUIRED` responde `403` y no `400` (ADR-031; nueva) | ✅ — validada, ver REPORTE-HU-033.md |
-| HU-034          | Observabilidad del WAF: bloqueos en Loki y Grafana con regla, ruta y `correlationId` (nueva; criterio 5 de HU-027) | ⏳ pendiente |
+| HU-034          | Observabilidad del WAF: bloqueos en Loki y Grafana con regla, ruta y `correlationId` (nueva; criterio 5 de HU-027) | ✅ — validada, ver REPORTE-HU-034.md |
 | HU-035          | Endurecer la carga masiva de roles y perfiles de `develop`: gate de administrador de la aplicación (hoy ausente), contadores, `mode` y límites (nueva) | ⏳ pendiente — hallazgo de seguridad |
 
 **Estado verificado el 2026-09-15 (working tree, sobre `develop` + HU-018/HU-019 sin comitear):**
