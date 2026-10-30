@@ -74,7 +74,10 @@ public final class BffSessionTokenRenewer {
             Mono<String> shared = Mono.defer(() -> authorize(exchange, principal))
                     .timeout(renewalTimeout)
                     .onErrorMap(BffSessionTokenRenewer::translate)
-                    .doFinally(signal -> inFlight.remove(id, self.get()))
+                    // La entrada se libera ANTES de propagar el término (doFinally corre después): una petición
+                    // inmediata posterior no puede encontrar el resultado ya cacheado de la renovación anterior.
+                    .doOnTerminate(() -> inFlight.remove(id, self.get()))
+                    .doOnCancel(() -> inFlight.remove(id, self.get()))
                     .cache();
             self.set(shared);
             return shared;

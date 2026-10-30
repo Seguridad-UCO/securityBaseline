@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /** Lectura y anotación del libro de carga masiva: el contrato de columnas, duplicados y errores por fila. */
 class BulkResourceWorkbookParsingTests {
 
-    private static final String[] HEADERS = {"Nombre de aplicación", "Ruta", "Método HTTP"};
+    private static final String[] HEADERS = {"Aplicación*", "Ruta*", "Método HTTP*"};
 
     private final BulkResourceWorkbookService service = new BulkResourceWorkbookService();
 
@@ -75,7 +75,7 @@ class BulkResourceWorkbookParsingTests {
 
     @Test
     void rejects_changed_headers() throws Exception {
-        var parsed = service.parse(book("Recursos", new String[]{"App", "Ruta", "Método HTTP"},
+        var parsed = service.parse(book("Recursos", new String[]{"App", "Ruta*", "Método HTTP*"},
                 new String[]{"App", "/a", "GET"}));
 
         assertThat(parsed.errors()).extracting(BulkResourceRowError::code).containsExactly("INVALID_HEADERS");

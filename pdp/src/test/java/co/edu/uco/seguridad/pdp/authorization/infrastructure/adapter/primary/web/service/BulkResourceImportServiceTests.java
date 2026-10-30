@@ -93,7 +93,7 @@ class BulkResourceImportServiceTests {
     private static byte[] workbook(String[]... rows) throws Exception {
         try (XSSFWorkbook book = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Sheet sheet = book.createSheet("Recursos");
-            String[] headers = {"Nombre de aplicación", "Ruta", "Método HTTP"};
+            String[] headers = {"Aplicación*", "Ruta*", "Método HTTP*"};
             var header = sheet.createRow(0);
             for (int c = 0; c < headers.length; c++) {
                 header.createCell(c).setCellValue(headers[c]);
