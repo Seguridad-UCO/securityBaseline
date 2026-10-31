@@ -17,6 +17,8 @@ class SecurityWebFilterChainTests extends AbstractSurrealDbIntegrationTest {
 
     private static final String PATH = "/api/v1/applications";
 
+    private static final String RETIRED_REFRESH_PATH = "/api/v1/session/token/refresh";
+
     @LocalServerPort
     int port;
 
@@ -96,6 +98,25 @@ class SecurityWebFilterChainTests extends AbstractSurrealDbIntegrationTest {
         client().get().uri("/actuator/info")
                 .exchange()
                 .expectStatus().isOk();
+    }
+
+    @Test
+    void retired_token_refresh_route_answers_404_for_an_authenticated_caller() {
+        client().post().uri(RETIRED_REFRESH_PATH)
+                .header("Authorization", "Bearer " + TestJwtSupport.signedToken("universidad-uco", "test-subject"))
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody()
+                .jsonPath("$.code").isEqualTo("RESOURCE_NOT_FOUND");
+    }
+
+    @Test
+    void retired_token_refresh_route_answers_401_without_credentials() {
+        client().post().uri(RETIRED_REFRESH_PATH)
+                .exchange()
+                .expectStatus().isUnauthorized()
+                .expectBody()
+                .jsonPath("$.code").isEqualTo("UNAUTHORIZED");
     }
 
     @Test

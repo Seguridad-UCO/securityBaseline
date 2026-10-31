@@ -26,7 +26,7 @@
         },
         "query": "label_values(jvm_memory_used_bytes, service)",
         "includeAll": true,
-        "allValue": ".*",
+        "allValue": ".+",
         "multi": true,
         "refresh": 1,
         "current": {
@@ -372,13 +372,184 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "{service_name=~\"$service\"} | json | correlationId=~\"${correlation:raw}\""
+          "expr": "{service_name=~\"$service\"} | json | correlationId=~\"${correlation:raw}\"",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          }
         }
       ],
       "options": {
         "showTime": true,
         "wrapLogMessage": true,
         "sortOrder": "Descending"
+      }
+    },
+    {
+      "id": 13,
+      "title": "Edge — respuestas 403/429 por segundo",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 60,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (code) (rate(caddy_http_requests_total{code=~\"403|429\"}[$__rate_interval]))",
+          "legendFormat": "{{code}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 14,
+      "title": "Edge — latencia p95",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 60,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(caddy_http_request_duration_seconds_bucket[$__rate_interval])))",
+          "legendFormat": "p95"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 15,
+      "title": "Edge — detecciones (regla, puntuación, ruta, correlationId)",
+      "type": "logs",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 68,
+        "w": 24,
+        "h": 12
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "{service_name=\"security-edge\"} | edge_rule_ids != \"\" | correlationId !~ \"edge-healthcheck.*\"",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          }
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending"
+      },
+      "description": "Cada línea es la proyección saneada del audit log del WAF (correlationId, edge.rule_ids, edge.rule_msgs, edge.rule_main, edge.score, edge.path, edge.method, edge.interrupted, edge.transaction_id). Excluye el canario edge-healthcheck*."
+    },
+    {
+      "id": 16,
+      "title": "Edge — detecciones por regla principal",
+      "description": "Regla principal = primera regla de detección que disparó en la transacción (excluye las de evaluación 949110, 959100, 980xxx y la de auditoría 100900). El conjunto completo está en edge_rule_ids.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 80,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "topk(10, sum by (edge_rule_main) (count_over_time({service_name=\"security-edge\"} | edge_rule_ids != \"\" | correlationId !~ \"edge-healthcheck.*\" [$__auto])))",
+          "legendFormat": "{{edge_rule_main}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 60,
+            "stacking": {
+              "mode": "normal"
+            }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 17,
+      "title": "Edge — detecciones por ruta",
+      "description": "Ruta sin query string (edge_path). topk(10) acota la cardinalidad de rutas con identificadores.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 80,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "topk(10, sum by (edge_path) (count_over_time({service_name=\"security-edge\"} | edge_rule_ids != \"\" | correlationId !~ \"edge-healthcheck.*\" [$__auto])))",
+          "legendFormat": "{{edge_path}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 60,
+            "stacking": {
+              "mode": "normal"
+            }
+          },
+          "unit": "short"
+        },
+        "overrides": []
       }
     }
   ]

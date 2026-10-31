@@ -2,9 +2,15 @@ package co.edu.uco.seguridad.pdp.authorization.application.usecase.impl;
 
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministerResourceGrantRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministrationRequest;
+import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.CatalogAdministration;
+import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.TenantAdministrationRequest;
+import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.PrincipalMustAdministerAtLeastOneApplicationValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.PrincipalMustBeApplicationAdministratorValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerResourceGrantUseCase;
 import co.edu.uco.seguridad.pdp.authorization.domain.exception.NotAuthorizedToAdministerException;
+import co.edu.uco.seguridad.pdp.authorization.domain.exception.NotAuthorizedToAdministerTenantCatalogException;
+import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.roles.application.primaryport.request.RevokeResourceRequest;
 import co.edu.uco.seguridad.pdp.roles.application.primaryport.response.RoleResponse;
 import co.edu.uco.seguridad.pdp.roles.application.usecase.GrantResourceToRoleUseCase;
@@ -22,13 +28,15 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * Implementación de {@link AdministerResourceGrantUseCase} (HU-016). Retrofit HU-021: audita
- * {@code RESOURCE_GRANTED} en ambas ramas del camino gateado, sin cambiar el resultado — sin
- * {@code administration} (rol TENANT) no hay gate ni auditoría.
+ * Implementación de {@link AdministerResourceGrantUseCase} (HU-016, HU-036). Conceder o revocar un recurso
+ * edita el rol: si es de alcance {@code APPLICATION} se exige administrar esa aplicación; si es
+ * {@code TENANT}, administrar al menos una aplicación del inquilino (ADR-036). Retrofit HU-021: audita
+ * {@code RESOURCE_GRANTED} / {@code RESOURCE_REVOKED}.
  */
 public final class AdministerResourceGrantUseCaseImpl implements AdministerResourceGrantUseCase {
 
     private final PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator;
+    private final PrincipalMustAdministerAtLeastOneApplicationValidator mustAdministerSomeApplication;
     private final GrantResourceToRoleUseCase grantResource;
     private final RevokeResourceFromRoleUseCase revokeResource;
     private final AdministrationAuditRepository audit;
@@ -36,10 +44,13 @@ public final class AdministerResourceGrantUseCaseImpl implements AdministerResou
     private final TimeProvider time;
 
     public AdministerResourceGrantUseCaseImpl(PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator,
+                                              PrincipalMustAdministerAtLeastOneApplicationValidator mustAdministerSomeApplication,
                                               GrantResourceToRoleUseCase grantResource, RevokeResourceFromRoleUseCase revokeResource, AdministrationAuditRepository audit,
                                               IdentifierGenerator identifiers, TimeProvider time) {
         this.mustBeAdministrator = Objects.requireNonNull(mustBeAdministrator,
                 RequiredArgumentMessages.PRINCIPAL_MUST_BE_APPLICATION_ADMINISTRATOR_VALIDATOR);
+        this.mustAdministerSomeApplication = Objects.requireNonNull(mustAdministerSomeApplication,
+                RequiredArgumentMessages.PRINCIPAL_MUST_ADMINISTER_AT_LEAST_ONE_APPLICATION_VALIDATOR);
         this.grantResource = Objects.requireNonNull(grantResource, RequiredArgumentMessages.GRANT_RESOURCE_TO_ROLE_USE_CASE);
         this.revokeResource = Objects.requireNonNull(revokeResource, "revokeResource");
         this.audit = Objects.requireNonNull(audit, RequiredArgumentMessages.ADMINISTRATION_AUDIT_REPOSITORY);
@@ -52,37 +63,65 @@ public final class AdministerResourceGrantUseCaseImpl implements AdministerResou
      * habilita desde el adaptador que aporta explícitamente su caso de uso.
      */
     public AdministerResourceGrantUseCaseImpl(PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator,
+                                              PrincipalMustAdministerAtLeastOneApplicationValidator mustAdministerSomeApplication,
                                               GrantResourceToRoleUseCase grantResource, AdministrationAuditRepository audit,
                                               IdentifierGenerator identifiers, TimeProvider time) {
-        this(mustBeAdministrator, grantResource,
+        this(mustBeAdministrator, mustAdministerSomeApplication, grantResource,
                 input -> Mono.error(new IllegalStateException("La revocación de recursos no está configurada")),
                 audit, identifiers, time);
     }
 
     @Override
     public Mono<RoleResponse> execute(AdministerResourceGrantRequest input) {
-        Mono<Void> gate = input.administration().map(mustBeAdministrator::execute).orElseGet(Mono::empty);
-        Mono<RoleResponse> result = gate.then(Mono.defer(() -> input.revocation()
-                ? revokeResource.execute(new RevokeResourceRequest(input.grant().tenantId(), input.grant().roleId(), input.grant().resourceId()))
-                : grantResource.execute(input.grant())));
         AdministrationOperation operation = input.revocation() ? AdministrationOperation.RESOURCE_REVOKED
                 : AdministrationOperation.RESOURCE_GRANTED;
-        return input.administration().map(administration -> audited(result, administration, operation)).orElse(result);
+        return switch (input.administration()) {
+            case CatalogAdministration.OfApplication application ->
+                    applicationScoped(application.administration(), input, operation);
+            case CatalogAdministration.OfTenant tenant -> tenantScoped(tenant.actor(), input, operation);
+        };
     }
 
-    private Mono<RoleResponse> audited(Mono<RoleResponse> result, AdministrationRequest administration,
-                                       AdministrationOperation operation) {
-        return result
-                .flatMap(response -> recordAudit(administration, operation, AdministrationOutcome.ALLOWED).thenReturn(response))
+    private Mono<RoleResponse> applicationScoped(AdministrationRequest administration, AdministerResourceGrantRequest input,
+                                                 AdministrationOperation operation) {
+        return mustBeAdministrator.execute(administration)
+                .then(Mono.defer(() -> grantOrRevoke(input)))
+                .flatMap(response -> recordAudit(administration.tenantId(), administration.applicationId(),
+                        administration.subject(), operation, AdministrationOutcome.ALLOWED).thenReturn(response))
                 .onErrorResume(NotAuthorizedToAdministerException.class,
-                        error -> recordAudit(administration, operation, AdministrationOutcome.DENIED).then(Mono.error(error)));
+                        error -> recordAudit(administration.tenantId(), administration.applicationId(),
+                                administration.subject(), operation, AdministrationOutcome.DENIED).then(Mono.error(error)));
     }
 
-    private Mono<Void> recordAudit(AdministrationRequest context, AdministrationOperation operation,
-                                   AdministrationOutcome outcome) {
+    private Mono<RoleResponse> tenantScoped(TenantAdministrationRequest actor, AdministerResourceGrantRequest input,
+                                            AdministrationOperation operation) {
+        return mustAdministerSomeApplication.execute(actor)
+                .onErrorResume(NotAuthorizedToAdministerTenantCatalogException.class,
+                        error -> auditTenantDenial(actor, operation, error).then(Mono.error(error)))
+                .flatMap(grantedBy -> grantOrRevoke(input)
+                        .flatMap(response -> recordAudit(actor.tenantId(), grantedBy, actor.subject(), operation,
+                                AdministrationOutcome.ALLOWED).thenReturn(response)));
+    }
+
+    private Mono<RoleResponse> grantOrRevoke(AdministerResourceGrantRequest input) {
+        return input.revocation()
+                ? revokeResource.execute(new RevokeResourceRequest(input.grant().tenantId(), input.grant().roleId(), input.grant().resourceId()))
+                : grantResource.execute(input.grant());
+    }
+
+    private Mono<Void> auditTenantDenial(TenantAdministrationRequest actor, AdministrationOperation operation,
+                                         NotAuthorizedToAdministerTenantCatalogException denial) {
+        return denial.evaluatedApplication()
+                .map(evaluated -> recordAudit(actor.tenantId(), evaluated, actor.subject(), operation,
+                        AdministrationOutcome.DENIED))
+                .orElseGet(Mono::empty);
+    }
+
+    private Mono<Void> recordAudit(TenantId tenantId, ApplicationId applicationId, String subject,
+                                   AdministrationOperation operation, AdministrationOutcome outcome) {
         UUID eventId = identifiers.next();
-        AdministrationEvent event = new AdministrationEvent(eventId, eventId.toString(), context.tenantId(),
-                context.applicationId(), context.subject(), operation, outcome, time.now());
+        AdministrationEvent event = new AdministrationEvent(eventId, eventId.toString(), tenantId, applicationId,
+                subject, operation, outcome, time.now());
         return Mono.defer(() -> audit.save(event)).onErrorResume(error -> Mono.empty());
     }
 

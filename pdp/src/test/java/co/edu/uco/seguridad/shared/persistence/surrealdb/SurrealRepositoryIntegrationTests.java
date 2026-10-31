@@ -512,6 +512,31 @@ class SurrealRepositoryIntegrationTests extends AbstractSurrealDbIntegrationTest
     }
 
     @Test
+    void user_repository_lists_a_tenant_alphabetically_ignoring_case_and_filters_from_the_first_letter() {
+        client.ensureNamespaceAndDatabase()
+                .then(client.execute("DEFINE TABLE IF NOT EXISTS security_user SCHEMALESS;", Map.of()))
+                .block();
+
+        SecurityUserRepository repository = new SurrealSecurityUserRepository(client);
+        TenantId tenant = new TenantId("surreal-it-alphabetical-" + UUID.randomUUID().toString().substring(0, 8));
+        for (String name : new String[] {"Zoe Ruiz", "ana gomez", "Álvaro Díaz", "Beatriz Mora", "adriana lopez"}) {
+            String mail = name.toLowerCase().replace(" ", ".").replace("á", "a").replace("í", "i") + "@uco.edu";
+            StepVerifier.create(repository.save(SecurityUser.provision(new UserId(UUID.randomUUID()), tenant,
+                    new Email(mail), name, Instant.now()))).expectNextCount(1).verifyComplete();
+        }
+
+        StepVerifier.create(repository.findPageByTenant(tenant, "", PageWindow.ofPage(0, 20)))
+                .assertNext(page -> assertThat(page.content()).extracting(SecurityUser::name)
+                        .containsExactly("adriana lopez", "Álvaro Díaz", "ana gomez", "Beatriz Mora", "Zoe Ruiz"))
+                .verifyComplete();
+
+        StepVerifier.create(repository.findPageByTenant(tenant, "a", PageWindow.ofPage(0, 20)))
+                .assertNext(page -> assertThat(page.content()).extracting(SecurityUser::name)
+                        .startsWith("adriana lopez"))
+                .verifyComplete();
+    }
+
+    @Test
     void access_audit_repository_saves_an_event_and_finds_it_by_correlation_id() {
         client.ensureNamespaceAndDatabase()
                 .then(client.execute("DEFINE TABLE IF NOT EXISTS access_event SCHEMALESS;", Map.of()))

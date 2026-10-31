@@ -10,3 +10,7 @@ security-policy-engine/scripts/** text eol=lf
 
 # Scripts de arranque de las imagenes: el shebang falla con CRLF ("bad interpreter").
 docker/*.sh text eol=lf
+# El edge corre en un contenedor Linux: con core.autocrlf=true un entrypoint o un healthcheck en CRLF
+# falla con "no such file or directory" (el shebang termina en retorno de carro). Se fija LF para todo edge/ y los scripts.
+edge/** text eol=lf
+*.sh text eol=lf

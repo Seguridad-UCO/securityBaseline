@@ -37,6 +37,9 @@ class ApplicationSecurityHttpTests extends AbstractSurrealDbIntegrationTest {
     @AfterAll static void stopOpa() { opa.stop(); }
     @DynamicPropertySource static void opaProperties(DynamicPropertyRegistry registry) { registry.add("pdp.opa.base-url", () -> opa.baseUrl()); }
     @DynamicPropertySource static void mfaProperties(DynamicPropertyRegistry registry) {
+        // El application.properties de test sombrea al de main y no declara mfa.enabled: sin esto el
+        // step-up queda apagado (el record resuelve enabled=false) y la falta de evidencia pasaría.
+        registry.add("pdp.security.mfa.enabled", () -> "true");
         registry.add("pdp.security.mfa.claim", () -> "acr");
         registry.add("pdp.security.mfa.accepted-values", () -> TestJwtSupport.MFA_ACCEPTED_ACR);
     }
@@ -93,6 +96,17 @@ class ApplicationSecurityHttpTests extends AbstractSurrealDbIntegrationTest {
         }
     }
 
+    @Test void an_administrative_read_without_mfa_evidence_is_a_403_mfa_required_problem_detail() {
+        String withoutEvidence = "Bearer " + TestJwtSupport.signedToken(TENANT, "test-subject");
+        client().get().uri("/api/v1/applications/" + applicationId + "/administrators").header("Authorization", withoutEvidence).exchange()
+                .expectStatus().isForbidden()
+                .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON)
+                .expectBody()
+                .jsonPath("$.code").isEqualTo("MFA_REQUIRED")
+                .jsonPath("$.status").isEqualTo(403)
+                .jsonPath("$.title").isEqualTo("MFA_REQUIRED");
+    }
+
     @Test void relationship_routes_are_application_scoped_and_paged() throws Exception {
         String resourceId = JSON.readTree(client().get().uri(security("resources") + "?page=0&size=20")
                 .header("Authorization", bearer()).exchange().expectStatus().isOk().expectBody().returnResult().getResponseBody())
@@ -104,6 +118,32 @@ class ApplicationSecurityHttpTests extends AbstractSurrealDbIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON).bodyValue("{\"resourceId\":\"%s\"}".formatted(resourceId)).exchange().expectStatus().isOk();
         client().get().uri(security("roles/" + roleId + "/resources?page=0&size=1")).header("Authorization", bearer()).exchange()
                 .expectStatus().isOk().expectBody().jsonPath("$.data.content[0].id").isEqualTo(resourceId).jsonPath("$.data.total").isEqualTo(1).jsonPath("$.data.limit").isEqualTo(1);
+    }
+
+    @Test void synchronizing_the_same_permissions_twice_is_idempotent_instead_of_a_server_error() throws Exception {
+        String resourceId = JSON.readTree(client().get().uri(security("resources") + "?page=0&size=20")
+                .header("Authorization", bearer()).exchange().expectStatus().isOk().expectBody().returnResult().getResponseBody())
+                .path("data").path("content").get(0).path("id").asString();
+        String roleId = idOf(client().post().uri("/api/v1/roles").header("Authorization", bearer())
+                .contentType(MediaType.APPLICATION_JSON).bodyValue("{\"name\":\"SINCRONIZA\",\"scope\":\"APPLICATION\",\"applicationId\":\"%s\"}".formatted(applicationId))
+                .exchange().expectStatus().isCreated().expectBody().returnResult().getResponseBody());
+        String selection = "{\"applicationId\":\"%s\",\"resourceIds\":[\"%s\"]}".formatted(applicationId, resourceId);
+
+        // 1.ª vez: concede. 2.ª y 3.ª: sin cambios, antes respondían 500 (NoSuchElementException).
+        for (int attempt = 0; attempt < 3; attempt++) {
+            client().put().uri("/api/v1/roles/" + roleId + "/resources").header("Authorization", bearer())
+                    .contentType(MediaType.APPLICATION_JSON).bodyValue(selection).exchange()
+                    .expectStatus().isOk().expectBody()
+                    .jsonPath("$.code").isEqualTo("ROLE_RESOURCES_SYNCHRONIZED")
+                    .jsonPath("$.data.resourceIds[0]").isEqualTo(resourceId);
+        }
+
+        // Vaciar es un cambio real; volver a vaciar ya no tiene nada que hacer y también responde 200.
+        String empty = "{\"applicationId\":\"%s\",\"resourceIds\":[]}".formatted(applicationId);
+        for (int attempt = 0; attempt < 2; attempt++) {
+            client().put().uri("/api/v1/roles/" + roleId + "/resources").header("Authorization", bearer())
+                    .contentType(MediaType.APPLICATION_JSON).bodyValue(empty).exchange().expectStatus().isOk();
+        }
     }
 
     @Test void profile_role_relationship_route_is_application_scoped_and_paged() throws Exception {
