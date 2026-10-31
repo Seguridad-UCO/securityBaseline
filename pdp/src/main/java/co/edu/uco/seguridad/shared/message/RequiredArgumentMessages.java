@@ -344,6 +344,9 @@ public final class RequiredArgumentMessages {
     public static final String TENANT_ADMINISTRATION_REQUEST =
             "se requiere la solicitud de administración de alcance inquilino";
     public static final String CATALOG_ADMINISTRATION = "se requiere el gate de administración del catálogo";
+    // HU-038 — identidad del usuario Bearer.
+    public static final String USER_EMAIL_AVAILABLE_RULE = "se requiere la regla de correo de usuario disponible";
+    public static final String RESOLVE_BEARER_IDENTITY_USE_CASE = "se requiere el caso de uso de identidad Bearer";
 
     private RequiredArgumentMessages() {
     }
