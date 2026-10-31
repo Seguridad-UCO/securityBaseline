@@ -103,3 +103,7 @@ PEP directo contra el PDP, por la red interna, nunca a través de este edge. Con
 (`EDGE_INTERNAL_ALLOW_PEP=true`, fijado solo en `compose.pep.yml`) se permiten exactamente dos rutas propias del
 PEP, las que necesita el starter embebido: `PUT /internal/v1/integrations/*/*` y
 `POST /internal/v1/embedded-access-decisions`.
+
+## Usuario sin privilegios
+
+El edge corre como el usuario `edge` (uid/gid 10001), no como root. Es dueño de lo único que escribe: `/var/log/security` (audit log), `/etc/coraza/generated` y el estado de Caddy (`/data`, `/config`). Si montas `/var/log/security` desde una carpeta del anfitrión en Linux, esa carpeta debe ser escribible por el uid 10001 (`chown 10001:10001 <carpeta>`); en Docker Desktop no hace falta. Un volumen nombrado hereda el dueño correcto.
