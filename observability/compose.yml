@@ -1,8 +1,23 @@
 name: security-observability
 services:
+  # Único paso con root, efímero y sin red: entrega a 10001 los volúmenes nombrados de collector y jaeger (Docker los
+  # crea de root porque sus imágenes no traen esos directorios). chown -R conserva los datos que ya existan, así el
+  # colector no pierde sus offsets de lectura ni Jaeger sus trazas al dejar de correr como root.
+  volume-permissions:
+    image: alpine:3.20
+    user: "0:0"
+    network_mode: none
+    cap_drop: [ALL]
+    # DAC_OVERRIDE: en la 2.ª ejecución los directorios (modo 700) ya son de 10001 y root, sin esta capacidad, no entra.
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER]
+    command: ["chown", "-R", "10001:10001", "/var/lib/otelcol", "/var/lib/jaeger"]
+    volumes:
+      - collector-data:/var/lib/otelcol
+      - jaeger-data:/var/lib/jaeger
+    restart: "no"
   collector:
     image: otel/opentelemetry-collector-contrib:0.160.0
-    user: "0:0"
+    user: "10001:10001"
     command: ["--config=/etc/otelcol/config.yml"]
     volumes:
       - ./collector.yml:/etc/otelcol/config.yml:ro
@@ -19,11 +34,20 @@ services:
     ports:
       - "127.0.0.1:4318:4318"
       - "127.0.0.1:13133:13133"
-    depends_on: [jaeger, loki]
+    depends_on:
+      volume-permissions:
+        condition: service_completed_successfully
+      jaeger:
+        condition: service_started
+      loki:
+        condition: service_started
     restart: unless-stopped
   jaeger:
     image: jaegertracing/jaeger:2.20.0
-    user: "0:0"
+    user: "10001:10001"
+    depends_on:
+      volume-permissions:
+        condition: service_completed_successfully
     command: ["--config=/etc/jaeger/config.yml"]
     volumes:
       - ./jaeger.yml:/etc/jaeger/config.yml:ro

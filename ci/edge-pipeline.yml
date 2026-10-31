@@ -44,6 +44,8 @@ steps:
       )"
       export DEPLOYMENT_ENVIRONMENT=ci
       mkdir -p "$evidence_dir/logs" "$evidence_dir/reports"
+      # edge y pdp corren sin root (uid 10001): el directorio de evidencias, creado por el agente, debe ser escribible.
+      chmod 777 "$evidence_dir/logs"
       detection_project="edge-detection-$(Build.BuildId)"
       blocking_project="edge-blocking-$(Build.BuildId)"
       pep_project="edge-pep-$(Build.BuildId)"

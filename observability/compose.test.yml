@@ -1,0 +1,107 @@
+# Pila EFIMERA de la prueba de punta a punta de HU-034 (observabilidad del WAF).
+# La arranca y la derriba observability/tests/Test-WafObservability.ps1; no es para uso manual
+# ni se despliega en ningun entorno. Ver observability/README.md.
+#
+#   edge (security-edge:local) -> audit log + log de acceso -> colector -> Loki <- Grafana
+#   edge -> upstream (stub de PDP que escribe security-pdp.json con la forma del PDP real)
+#
+# Principios:
+#  - Usa los archivos REALES del repo, sin copias: collector.yml de produccion, loki.yml, el
+#    provisioning y el dashboard, y edge/rules, Caddyfile y scripts montados :ro sobre la imagen
+#    local security-edge:local (asi la prueba no reconstruye la imagen ni descarga nada).
+#  - Todo con pull_policy: never. Si falta una imagen, la prueba falla con un mensaje claro.
+#  - Puertos publicados en 127.0.0.1 con puerto aleatorio (el script los descubre con
+#    `docker compose port`): no choca con los stacks edge/edge-pep/observability en marcha.
+#  - Variables OBS_TEST_* y EDGE_TEST_*: las fija el script de prueba. Sin ellas Compose se niega a
+#    resolver el archivo (a proposito: evita que un `up` manual cree directorios en el repo).
+name: hu034-obs-test
+
+services:
+  upstream:                                  # PDP de pruebas
+    image: alpine:3.20
+    pull_policy: never
+    command: ["sh", "-c", "while true; do nc -l -p 8080 -e /stub-pdp.sh; done"]
+    volumes:
+      - ./test-fixtures/stub-pdp.sh:/stub-pdp.sh:ro
+      - ${OBS_TEST_LOG_DIR:?fije OBS_TEST_LOG_DIR (lo hace Test-WafObservability.ps1)}:/var/log/security
+
+  edge:
+    image: security-edge:local
+    pull_policy: never
+    entrypoint: ["sh", "/usr/local/bin/edge-entrypoint.sh"]     # sin depender del bit +x del bind-mount
+    environment:
+      EDGE_MODE: ${EDGE_TEST_MODE:-detection}
+      EDGE_UPSTREAM: http://upstream:8080
+      EDGE_LISTEN: ":8088"
+      EDGE_RATE_DEFAULT: "100000/1m"          # la prueba dispara decenas de peticiones desde una IP
+      EDGE_AUDIT_MAX_BYTES: ${EDGE_TEST_AUDIT_MAX_BYTES:-10485760}
+      EDGE_AUDIT_KEEP: ${EDGE_TEST_AUDIT_KEEP:-5}
+      EDGE_AUDIT_ROTATE_INTERVAL: ${EDGE_TEST_ROTATE_INTERVAL:-60}
+      EDGE_DETECT_PROBE_INTERVAL: ${EDGE_TEST_PROBE_INTERVAL:-600}
+      DEPLOYMENT_ENVIRONMENT: test
+    ports:
+      - "127.0.0.1::8088"
+    volumes:
+      - ${OBS_TEST_LOG_DIR:?fije OBS_TEST_LOG_DIR}:/var/log/security
+      - ../edge/rules:/etc/coraza/rules:ro
+      - ../edge/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ../edge/entrypoint.sh:/usr/local/bin/edge-entrypoint.sh:ro
+      - ../edge/healthcheck.sh:/usr/local/bin/edge-healthcheck.sh:ro
+      # edge/audit-rotate.sh es NUEVO en HU-034. Mientras no exista, el script de prueba apunta esta
+      # variable a un archivo vacio de su directorio temporal (un bind-mount de un archivo
+      # inexistente crearia un DIRECTORIO dentro del repo).
+      - ${OBS_TEST_ROTATE_SCRIPT:?fije OBS_TEST_ROTATE_SCRIPT}:/usr/local/bin/edge-audit-rotate.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "sh /usr/local/bin/edge-healthcheck.sh"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      - upstream
+
+  collector:
+    image: otel/opentelemetry-collector-contrib:0.160.0
+    pull_policy: never
+    user: "0:0"
+    command: ["--config=/etc/otelcol/config.yml"]
+    volumes:
+      - ./collector.yml:/etc/otelcol/config.yml:ro               # EL MISMO archivo de produccion
+      - ${OBS_TEST_LOG_DIR:?fije OBS_TEST_LOG_DIR}:/var/log/security:ro
+      - collector-data:/var/lib/otelcol
+    environment:
+      PDP_METRICS_TARGET: upstream:8080       # solo evita errores de scrape; no hay metricas en la prueba
+      PEP_METRICS_TARGET: upstream:8080
+      DEPLOYMENT_ENVIRONMENT: test
+    ports:
+      - "127.0.0.1::13133"
+    depends_on:
+      - loki
+
+  loki:
+    image: grafana/loki:3.7.7
+    pull_policy: never
+    command: ["-config.file=/etc/loki/local.yml"]
+    volumes:
+      - ./loki.yml:/etc/loki/local.yml:ro
+    ports:
+      - "127.0.0.1::3100"
+
+  grafana:
+    image: grafana/grafana:13.2.1
+    pull_policy: never
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: test-only-not-a-secret          # valor de prueba, solo de este compose efimero
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "127.0.0.1::3000"
+    depends_on:
+      - loki
+
+volumes:
+  collector-data:

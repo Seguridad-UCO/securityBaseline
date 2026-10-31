@@ -2,6 +2,8 @@ package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.we
 
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministerProfileRoleAdditionRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministrationRequest;
+import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.CatalogAdministration;
+import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.TenantAdministrationRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerProfileRoleAdditionUseCase;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.AddRoleToProfileRawRequest;
 import co.edu.uco.seguridad.pdp.commons.model.*;
@@ -13,9 +15,13 @@ import co.edu.uco.seguridad.pdp.profiles.domain.exception.ProfileNotFoundExcepti
 import co.edu.uco.seguridad.pdp.profiles.domain.model.ProfileName;
 import co.edu.uco.seguridad.pdp.roles.domain.model.RoleScope;
 import co.edu.uco.seguridad.shared.security.TestJwtSupport;
+import co.edu.uco.seguridad.shared.security.mfa.AuthenticationContextEvidence;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+import reactor.util.context.Context;
 
 import java.time.Instant;
 import java.util.*;
@@ -23,8 +29,10 @@ import java.util.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * HU-019: a diferencia de {@code AdministerProfileDefinitionInteractorImpl}, el applicationId no
+ * HU-019 + HU-036: a diferencia de {@code AdministerProfileDefinitionInteractorImpl}, el applicationId no
  * viene en la petición — se resuelve del perfil ya existente vía {@link ProfileApplicationLookupValidator}.
+ * Con aplicación se exige administrarla; sin aplicación (perfil {@code TENANT}) se exige el actor de
+ * inquilino — nunca una petición sin gate.
  */
 class AdministerProfileRoleAdditionInteractorImplTests {
 
@@ -37,7 +45,7 @@ class AdministerProfileRoleAdditionInteractorImplTests {
     private static final Instant REGISTERED_AT = Instant.parse("2026-09-15T00:00:00Z");
 
     @Test
-    void builds_administration_present_when_the_profile_belongs_to_an_application() {
+    void builds_the_application_gate_when_the_profile_belongs_to_an_application() {
         List<AdministerProfileRoleAdditionRequest> received = new ArrayList<>();
         ProfileResponse response = new ProfileResponse(PROFILE_ID, new ProfileName("Docentes de matematicas"),
                 RoleScope.ofApplication(new TenantId(TENANT), APPLICATION), Set.of(ROLE_ID), REGISTERED_AT);
@@ -50,14 +58,18 @@ class AdministerProfileRoleAdditionInteractorImplTests {
                 .verifyComplete();
 
         assertThat(received).hasSize(1);
-        Optional<AdministrationRequest> administration = received.getFirst().administration();
-        assertThat(administration).isPresent();
-        assertThat(administration.orElseThrow().applicationId()).isEqualTo(APPLICATION);
-        assertThat(administration.orElseThrow().subjectUserId()).isEqualTo(USER);
+        assertThat(received.getFirst().administration()).isInstanceOfSatisfying(CatalogAdministration.OfApplication.class,
+                gate -> {
+                    AdministrationRequest administration = gate.administration();
+                    assertThat(administration.applicationId()).isEqualTo(APPLICATION);
+                    assertThat(administration.subjectUserId()).isEqualTo(USER);
+                    assertThat(administration.tenantId().value()).isEqualTo(TENANT);
+                    assertThat(administration.subject()).isEqualTo(SUBJECT);
+                });
     }
 
     @Test
-    void builds_administration_empty_when_the_profile_is_tenant_scoped() {
+    void builds_the_tenant_gate_when_the_profile_is_tenant_scoped() {
         List<AdministerProfileRoleAdditionRequest> received = new ArrayList<>();
         ProfileResponse response = new ProfileResponse(PROFILE_ID, new ProfileName("Coordinadores"),
                 RoleScope.ofTenant(new TenantId(TENANT)), Set.of(ROLE_ID), REGISTERED_AT);
@@ -70,7 +82,26 @@ class AdministerProfileRoleAdditionInteractorImplTests {
                 .verifyComplete();
 
         assertThat(received).hasSize(1);
-        assertThat(received.getFirst().administration()).isEqualTo(Optional.empty());
+        assertThat(received.getFirst().administration()).isInstanceOf(CatalogAdministration.OfTenant.class);
+    }
+
+    @Test
+    void the_tenant_gate_carries_tenant_user_subject_and_authentication_of_the_principal() {
+        List<AdministerProfileRoleAdditionRequest> received = new ArrayList<>();
+        ProfileResponse response = new ProfileResponse(PROFILE_ID, new ProfileName("Coordinadores"),
+                RoleScope.ofTenant(new TenantId(TENANT)), Set.of(ROLE_ID), REGISTERED_AT);
+        AdministerProfileRoleAdditionInteractorImpl interactor = new AdministerProfileRoleAdditionInteractorImpl(
+                useCaseCapturing(received, response), subjectUserIdLookup(), profileApplicationLookup(Optional.empty()));
+        AddRoleToProfileRawRequest raw = new AddRoleToProfileRawRequest(PROFILE_ID.value().toString(), ROLE_ID.value().toString());
+        List<String> amr = List.of("otp");
+
+        StepVerifier.create(interactor.execute(raw).contextWrite(principalWithEvidence("urn:mfa:otp", amr)))
+                .expectNextCount(1)
+                .verifyComplete();
+
+        assertThat(received.getFirst().administration()).isEqualTo(new CatalogAdministration.OfTenant(
+                new TenantAdministrationRequest(new TenantId(TENANT), USER, SUBJECT,
+                        new AuthenticationContextEvidence(Optional.of("urn:mfa:otp"), amr))));
     }
 
     @Test
@@ -86,6 +117,11 @@ class AdministerProfileRoleAdditionInteractorImplTests {
         StepVerifier.create(interactor.execute(raw).contextWrite(TestJwtSupport.withPrincipal(TENANT, SUBJECT)))
                 .expectError(ProfileNotFoundException.class)
                 .verify();
+    }
+
+    private static Context principalWithEvidence(String acr, List<String> amr) {
+        return ReactiveSecurityContextHolder.withAuthentication(new JwtAuthenticationToken(
+                TestJwtSupport.jwtWithAuthenticationContext(TENANT, SUBJECT, acr, amr)));
     }
 
     private static SubjectUserIdLookupValidator subjectUserIdLookup() {

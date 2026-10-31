@@ -1,6 +1,6 @@
 package co.edu.uco.seguridad.shared.config;
 
-import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserIdLookupValidator;
+import co.edu.uco.seguridad.pdp.identity.application.usecase.ResolveBearerIdentityUseCase;
 import co.edu.uco.seguridad.shared.auth.service.OidcAuthenticationFailureHandler;
 import co.edu.uco.seguridad.shared.auth.service.OidcAuthenticationSuccessHandler;
 import co.edu.uco.seguridad.shared.security.ApiAccessDeniedHandler;
@@ -32,6 +32,7 @@ import org.springframework.security.web.server.csrf.ServerCsrfTokenRequestAttrib
 import org.springframework.security.web.server.util.matcher.AndServerWebExchangeMatcher;
 import org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
+import org.springframework.util.StringUtils;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
@@ -104,17 +105,18 @@ class KeycloakSecurityConfiguration {
     @Primary
     ReactiveJwtDecoder keycloakBearerJwtDecoder(JwtSecurityProperties properties,
                                                 TokenRevocationPort revocation,
-                                                SubjectUserIdLookupValidator subjectUserIdLookup) {
+                                                ResolveBearerIdentityUseCase identities) {
         NimbusReactiveJwtDecoder decoder = NimbusReactiveJwtDecoder.withJwkSetUri(properties.jwkSetUri()).build();
         OAuth2TokenValidator<Jwt> validator = new DelegatingOAuth2TokenValidator<>(List.of(
                 new JwtTimestampValidator(),
                 new JwtIssuerValidator(properties.issuer()),
                 new JwtClaimValidator<String>("sub", value -> value != null && !value.isBlank()),
                 new JwtClaimValidator<String>("jti", value -> value != null && !value.isBlank()),
+                new JwtClaimValidator<String>("tenant", StringUtils::hasText),
                 new JwtClaimValidator<List<String>>("aud",
                         audiences -> audiences != null && audiences.contains(properties.audience()))));
         decoder.setJwtValidator(validator);
-        return new RevocationAwareJwtDecoder(decoder, revocation, subjectUserIdLookup);
+        return RevocationAwareJwtDecoder.provisioning(decoder, revocation, identities);
     }
 
     private static ServerWebExchangeMatcher bffSessionRequest() {

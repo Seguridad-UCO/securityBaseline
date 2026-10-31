@@ -2,8 +2,10 @@
 # Lista blanca de /internal: únicamente PUT /internal/v1/integrations/*/* y
 # POST /internal/v1/embedded-access-decisions atraviesan el edge hacia el PEP; el resto sigue en 404 sin
 # cuerpo. NO ejecutar en la topología PDP (allí todo /internal es 404: internal-channel-blocked.hurl).
-# `status != 404` en las permitidas: lo que responda el backend (401/400/…) es negocio suyo; el 404 del
-# edge es el único que se descarta. Verificado contra un edge de prueba con upstream PDP (ver EVIDENCIA).
+# En las permitidas, lo que responda el PEP (401/400/503…) es negocio suyo y depende de qué tenga detrás
+# (en la topología de fixtures el PDP no existe y el PEP responde 503): lo que se afirma es que la petición
+# LLEGÓ al PEP, es decir, que no es el 404 vacío del edge y que la respuesta es un problem+json del PEP con su
+# `requestId`. Un `status < 500` aquí era una afirmación sobre el backend, no sobre el edge.
 
 POST {{edge_url}}/internal/v1/embedded-access-decisions
 Content-Type: application/json
@@ -11,7 +13,8 @@ Content-Type: application/json
 HTTP *
 [Asserts]
 status != 404
-status < 500
+header "Content-Type" contains "application/problem+json"
+jsonpath "$.requestId" exists
 
 PUT {{edge_url}}/internal/v1/integrations/demo/local
 Content-Type: application/json
@@ -19,7 +22,8 @@ Content-Type: application/json
 HTTP *
 [Asserts]
 status != 404
-status < 500
+header "Content-Type" contains "application/problem+json"
+jsonpath "$.requestId" exists
 
 # El resto de /internal sigue denegado, también con método de la lista blanca en otra ruta.
 GET {{edge_url}}/internal/v1/bff-session-token
