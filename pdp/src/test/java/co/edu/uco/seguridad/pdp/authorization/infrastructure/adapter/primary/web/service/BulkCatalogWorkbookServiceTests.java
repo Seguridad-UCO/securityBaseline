@@ -2,13 +2,13 @@ package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.we
 
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.BulkResourceValidationResponse.BulkResourceRowError;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkCatalogWorkbookService.CatalogRow;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkCatalogWorkbookService.Parsed;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkCatalogWorkbookService.ProfileRoleRow;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkCatalogWorkbookService.RoleResourceRow;
 import org.apache.poi.ss.usermodel.DataValidation;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
@@ -17,9 +17,11 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 
 /**
  * Plantillas, lectura y reporte de errores del libro de carga masiva de catálogo (roles, perfiles y sus relaciones).
+ * La lectura no lanza excepciones: cada problema del archivo o de una celda vuelve como un error con código estable.
  */
 class BulkCatalogWorkbookServiceTests {
 
@@ -41,6 +43,17 @@ class BulkCatalogWorkbookServiceTests {
         List<String> headers = new ArrayList<>();
         sheet.getRow(0).forEach(cell -> headers.add(cell.getStringCellValue()));
         return headers;
+    }
+
+    /** Fila, campo, código y descripción de un error: lo que el contrato fija (el {@code value} no se afirma). */
+    private static void assertSingleError(List<BulkResourceRowError> errors, int row, String field, String code,
+                                          String description) {
+        assertThat(errors).singleElement().satisfies(error -> {
+            assertThat(error.row()).isEqualTo(row);
+            assertThat(error.field()).isEqualTo(field);
+            assertThat(error.code()).isEqualTo(code);
+            assertThat(error.description()).isEqualTo(description);
+        });
     }
 
     // ---- plantillas -------------------------------------------------------------------------------------------
@@ -99,21 +112,56 @@ class BulkCatalogWorkbookServiceTests {
 
     @Test
     void a_generated_template_can_be_read_back_and_has_no_data_rows() throws Exception {
-        assertThatThrownBy(() -> service.parse("roles", service.template("roles")))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("El archivo no contiene filas de datos");
+        Parsed<CatalogRow> parsed = service.parse("roles", service.template("roles"));
+
+        assertThat(parsed.rows()).isEmpty();
+        assertSingleError(parsed.errors(), 0, "file", "EMPTY_FILE", "El archivo no contiene filas de datos");
     }
 
-    /**
-     * HALLAZGO: la rama {@code default} lanza {@code IllegalArgumentException} dentro del {@code try}, y el
-     * {@code catch (Exception)} la convierte en {@code IllegalStateException}. {@code BulkResourceController.catalogTemplate}
-     * solo atrapa {@code IllegalArgumentException} para responder 400: una modalidad desconocida acaba en 500.
-     */
-    @Disabled("Hallazgo: BulkCatalogWorkbookService.template(l.125/130) convierte la modalidad inválida en IllegalStateException; el controller espera IllegalArgumentException (400)")
+    @Test
+    void the_headers_of_every_template_sheet_are_the_ones_the_reader_demands() throws Exception {
+        try (Workbook roles = open(service.template("roles")); Workbook profiles = open(service.template("profiles"))) {
+            assertThat(headers(roles.getSheet("Roles"))).containsExactly(CatalogWorkbooks.ROLE_HEADERS);
+            assertThat(headers(roles.getSheet("RolesxRecurso"))).containsExactly(CatalogWorkbooks.ROLE_RESOURCE_HEADERS);
+            assertThat(headers(profiles.getSheet("Perfiles"))).containsExactly(CatalogWorkbooks.PROFILE_HEADERS);
+            assertThat(headers(profiles.getSheet("PerfilesxRol"))).containsExactly(CatalogWorkbooks.PROFILE_ROLE_HEADERS);
+        }
+        // Ida y vuelta: la lectura no rechaza las cabeceras de la plantilla (solo reporta que no hay datos)
+        assertThat(service.parse("profiles", service.template("profiles")).errors())
+                .extracting(BulkResourceRowError::code).containsExactly("EMPTY_FILE");
+        assertThat(service.parseRoleResources(service.template("roles"))).isEqualTo(new Parsed<RoleResourceRow>(List.of(), List.of()));
+        assertThat(service.parseProfileRoles(service.template("profiles"))).isEqualTo(new Parsed<ProfileRoleRow>(List.of(), List.of()));
+    }
+
+    @Test
+    void every_template_states_the_size_and_row_limits_in_its_guide_sheet() throws Exception {
+        for (String mode : List.of("roles", "profiles", "resources-roles")) {
+            try (Workbook book = open(service.template(mode))) {
+                Sheet guide = book.getSheet("Guía");
+                StringBuilder text = new StringBuilder();
+                guide.forEach(row -> row.forEach(cell -> text.append(cell.getStringCellValue()).append('\n')));
+                assertThat(text.toString()).contains("5 MB").contains("1.000");
+            }
+        }
+    }
+
     @Test
     void an_unsupported_mode_is_a_client_error_not_an_internal_failure() {
         assertThatThrownBy(() -> service.template("otra"))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void an_unsupported_template_mode_is_reported_as_an_unsupported_bulk_mode_whatever_its_spelling() {
+        for (String mode : List.of("otra", "Roles", "PROFILES", "")) {
+            assertThatThrownBy(() -> service.template(mode)).isInstanceOf(UnsupportedBulkModeException.class);
+        }
+    }
+
+    @Test
+    void the_limits_are_the_same_ones_the_resources_upload_uses() {
+        assertThat(BulkCatalogWorkbookService.MAX_BYTES).isEqualTo(BulkResourceWorkbookService.MAX_BYTES).isEqualTo(5 * 1024 * 1024);
+        assertThat(BulkCatalogWorkbookService.MAX_ROWS).isEqualTo(BulkResourceWorkbookService.MAX_ROWS).isEqualTo(1_000);
     }
 
     // ---- lectura de roles y perfiles --------------------------------------------------------------------------
@@ -124,7 +172,10 @@ class BulkCatalogWorkbookServiceTests {
                 new String[]{"  Auditor ", "tenant", null},
                 new String[]{"Editor", "APPLICATION", " Mi aplicación "}));
 
-        assertThat(service.parse("roles", file)).containsExactly(
+        Parsed<CatalogRow> parsed = service.parse("roles", file);
+
+        assertThat(parsed.errors()).isEmpty();
+        assertThat(parsed.rows()).containsExactly(
                 new CatalogRow(2, "Auditor", "tenant", ""),
                 new CatalogRow(3, "Editor", "APPLICATION", "Mi aplicación"));
     }
@@ -135,14 +186,20 @@ class BulkCatalogWorkbookServiceTests {
                 CatalogWorkbooks.roles(new String[]{"No debe leerse", "TENANT", null}),
                 CatalogWorkbooks.profiles(new String[]{"Gestores", "TENANT", null}));
 
-        assertThat(service.parse("profiles", file)).containsExactly(new CatalogRow(2, "Gestores", "TENANT", ""));
+        Parsed<CatalogRow> parsed = service.parse("profiles", file);
+
+        assertThat(parsed.errors()).isEmpty();
+        assertThat(parsed.rows()).containsExactly(new CatalogRow(2, "Gestores", "TENANT", ""));
     }
 
     @Test
     void reads_legacy_xls_workbooks_too() throws Exception {
         byte[] file = CatalogWorkbooks.xls(CatalogWorkbooks.roles(new String[]{"Auditor", "TENANT", null}));
 
-        assertThat(service.parse("roles", file)).extracting(CatalogRow::name).containsExactly("Auditor");
+        Parsed<CatalogRow> parsed = service.parse("roles", file);
+
+        assertThat(parsed.errors()).isEmpty();
+        assertThat(parsed.rows()).extracting(CatalogRow::name).containsExactly("Auditor");
     }
 
     @Test
@@ -153,7 +210,10 @@ class BulkCatalogWorkbookServiceTests {
                 new String[]{"   ", null, null},
                 new String[]{"Auditor", "TENANT", null}));
 
-        assertThat(service.parse("roles", file)).containsExactly(new CatalogRow(5, "Auditor", "TENANT", ""));
+        Parsed<CatalogRow> parsed = service.parse("roles", file);
+
+        assertThat(parsed.errors()).isEmpty();
+        assertThat(parsed.rows()).containsExactly(new CatalogRow(5, "Auditor", "TENANT", ""));
     }
 
     @Test
@@ -162,69 +222,277 @@ class BulkCatalogWorkbookServiceTests {
                 new String[]{null, "TENANT", null},
                 new String[]{"Auditor", null, null}));
 
-        assertThat(service.parse("roles", file)).containsExactly(
+        Parsed<CatalogRow> parsed = service.parse("roles", file);
+
+        assertThat(parsed.errors()).isEmpty();
+        assertThat(parsed.rows()).containsExactly(
                 new CatalogRow(2, "", "TENANT", ""),
                 new CatalogRow(3, "Auditor", "", ""));
     }
 
     @Test
-    void rejects_a_workbook_without_the_requested_sheet() throws Exception {
+    void extra_columns_after_the_expected_headers_are_allowed() throws Exception {
+        byte[] file = CatalogWorkbooks.xlsx(CatalogWorkbooks.sheet("Roles",
+                new String[]{"Nombre de rol*", "Alcance*", "Aplicación", "Comentarios"},
+                new String[]{"Auditor", "TENANT", null, "libre"}));
+
+        Parsed<CatalogRow> parsed = service.parse("roles", file);
+
+        assertThat(parsed.errors()).isEmpty();
+        assertThat(parsed.rows()).containsExactly(new CatalogRow(2, "Auditor", "TENANT", ""));
+    }
+
+    @Test
+    void only_the_roles_and_profiles_modes_can_be_read() throws Exception {
+        byte[] file = CatalogWorkbooks.xlsx(CatalogWorkbooks.roles(new String[]{"Auditor", "TENANT", null}));
+
+        for (String mode : List.of("otra", "resources-roles", "Roles")) {
+            assertThatThrownBy(() -> service.parse(mode, file)).isInstanceOf(UnsupportedBulkModeException.class);
+        }
+    }
+
+    // ---- lectura: problemas del archivo -----------------------------------------------------------------------
+
+    @Test
+    void a_workbook_without_the_requested_sheet_reports_the_missing_sheet() throws Exception {
         byte[] onlyProfiles = CatalogWorkbooks.xlsx(CatalogWorkbooks.profiles(new String[]{"Gestores", "TENANT", null}));
 
-        assertThatThrownBy(() -> service.parse("roles", onlyProfiles))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Falta la hoja Roles");
+        Parsed<CatalogRow> parsed = service.parse("roles", onlyProfiles);
+
+        assertThat(parsed.rows()).isEmpty();
+        assertSingleError(parsed.errors(), 0, "file", "MISSING_SHEET", "Falta la hoja Roles");
     }
 
     @Test
-    void rejects_the_profiles_mode_when_the_profiles_sheet_is_missing() throws Exception {
+    void the_profiles_mode_reports_the_missing_profiles_sheet() throws Exception {
         byte[] onlyRoles = CatalogWorkbooks.xlsx(CatalogWorkbooks.roles(new String[]{"Auditor", "TENANT", null}));
 
-        assertThatThrownBy(() -> service.parse("profiles", onlyRoles))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Falta la hoja Perfiles");
+        Parsed<CatalogRow> parsed = service.parse("profiles", onlyRoles);
+
+        assertThat(parsed.rows()).isEmpty();
+        assertSingleError(parsed.errors(), 0, "file", "MISSING_SHEET", "Falta la hoja Perfiles");
     }
 
     @Test
-    void rejects_a_file_with_headers_but_no_data() throws Exception {
-        byte[] file = CatalogWorkbooks.xlsx(CatalogWorkbooks.roles());
+    void a_file_with_headers_but_no_data_is_empty() throws Exception {
+        Parsed<CatalogRow> parsed = service.parse("roles", CatalogWorkbooks.xlsx(CatalogWorkbooks.roles()));
 
-        assertThatThrownBy(() -> service.parse("roles", file))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("El archivo no contiene filas de datos");
+        assertThat(parsed.rows()).isEmpty();
+        assertSingleError(parsed.errors(), 0, "file", "EMPTY_FILE", "El archivo no contiene filas de datos");
     }
 
     @Test
-    void rejects_a_file_whose_rows_are_all_blank() throws Exception {
+    void a_file_whose_rows_are_all_blank_is_empty() throws Exception {
         byte[] file = CatalogWorkbooks.xlsx(CatalogWorkbooks.roles(new String[]{"", "", ""}, new String[]{" ", " ", " "}));
 
-        assertThatThrownBy(() -> service.parse("roles", file))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("El archivo no contiene filas de datos");
+        Parsed<CatalogRow> parsed = service.parse("roles", file);
+
+        assertThat(parsed.rows()).isEmpty();
+        assertSingleError(parsed.errors(), 0, "file", "EMPTY_FILE", "El archivo no contiene filas de datos");
     }
 
     @Test
-    void rejects_bytes_that_are_not_a_workbook() {
+    void bytes_that_are_not_a_workbook_are_reported_instead_of_thrown() {
         for (byte[] bytes : new byte[][]{{1, 2, 3, 4}, "no soy excel".getBytes()}) {
-            assertThatThrownBy(() -> service.parse("roles", bytes))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("El archivo no es un libro Excel válido");
+            Parsed<CatalogRow> parsed = service.parse("roles", bytes);
+
+            assertThat(parsed.rows()).isEmpty();
+            assertSingleError(parsed.errors(), 0, "file", "INVALID_WORKBOOK", "El archivo no es un libro Excel válido");
         }
     }
 
     @Test
-    void rejects_empty_input_with_an_illegal_argument() {
-        assertThatThrownBy(() -> service.parse("roles", new byte[0])).isInstanceOf(IllegalArgumentException.class);
+    void zero_bytes_and_null_are_an_empty_file_with_a_spanish_message() {
+        for (byte[] bytes : new byte[][]{new byte[0], null}) {
+            Parsed<CatalogRow> parsed = service.parse("roles", bytes);
+
+            assertThat(parsed.rows()).isEmpty();
+            assertSingleError(parsed.errors(), 0, "file", "EMPTY_FILE", "El archivo está vacío");
+        }
     }
 
     @Test
-    void rejects_a_password_protected_workbook_as_not_readable() throws Exception {
+    void a_file_over_the_size_limit_is_too_large_and_the_limit_itself_is_still_inspected() {
+        Parsed<CatalogRow> tooLarge = service.parse("roles", new byte[BulkCatalogWorkbookService.MAX_BYTES + 1]);
+        Parsed<CatalogRow> atTheLimit = service.parse("roles", new byte[BulkCatalogWorkbookService.MAX_BYTES]);
+
+        assertThat(tooLarge.rows()).isEmpty();
+        assertSingleError(tooLarge.errors(), 0, "file", "FILE_TOO_LARGE", "El archivo supera el límite de 5 MB");
+        assertThat(atTheLimit.errors()).singleElement()
+                .satisfies(error -> assertThat(error.code()).isEqualTo("INVALID_WORKBOOK"));
+    }
+
+    @Test
+    void a_password_protected_workbook_is_reported_as_encrypted() throws Exception {
         byte[] file = CatalogWorkbooks.encrypted("secreto",
                 CatalogWorkbooks.roles(new String[]{"Auditor", "TENANT", null}));
 
-        assertThatThrownBy(() -> service.parse("roles", file))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("El archivo no es un libro Excel válido");
+        Parsed<CatalogRow> parsed = service.parse("roles", file);
+
+        assertThat(parsed.rows()).isEmpty();
+        assertSingleError(parsed.errors(), 0, "file", "ENCRYPTED_FILE", "No se aceptan libros cifrados");
+    }
+
+    // ---- lectura: cabeceras -----------------------------------------------------------------------------------
+
+    @Test
+    void a_changed_header_is_rejected_naming_the_sheet_and_the_expected_headers() throws Exception {
+        byte[] roles = CatalogWorkbooks.xlsx(CatalogWorkbooks.sheet("Roles",
+                new String[]{"Nombre", "Alcance*", "Aplicación"}, new String[]{"Auditor", "TENANT", null}));
+        byte[] profiles = CatalogWorkbooks.xlsx(CatalogWorkbooks.sheet("Perfiles",
+                new String[]{"Nombre de perfil*", "Alcance", "Aplicación"}, new String[]{"Gestores", "TENANT", null}));
+
+        Parsed<CatalogRow> parsedRoles = service.parse("roles", roles);
+        Parsed<CatalogRow> parsedProfiles = service.parse("profiles", profiles);
+
+        assertThat(parsedRoles.rows()).isEmpty();
+        assertThat(parsedRoles.errors()).singleElement().satisfies(error -> {
+            assertThat(error.row()).isEqualTo(1);
+            assertThat(error.field()).isEqualTo("Roles");
+            assertThat(error.code()).isEqualTo("INVALID_HEADERS");
+            assertThat(error.description()).startsWith("Los encabezados de la hoja Roles deben ser:")
+                    .contains("Nombre de rol*").contains("Alcance*").contains("Aplicación");
+        });
+        assertThat(parsedProfiles.rows()).isEmpty();
+        assertThat(parsedProfiles.errors()).singleElement().satisfies(error -> {
+            assertThat(error.row()).isEqualTo(1);
+            assertThat(error.field()).isEqualTo("Perfiles");
+            assertThat(error.code()).isEqualTo("INVALID_HEADERS");
+            assertThat(error.description()).startsWith("Los encabezados de la hoja Perfiles deben ser:")
+                    .contains("Nombre de perfil*");
+        });
+    }
+
+    @Test
+    void headers_are_case_sensitive_and_a_missing_header_cell_is_rejected() throws Exception {
+        byte[] lowerCase = CatalogWorkbooks.xlsx(CatalogWorkbooks.sheet("Roles",
+                new String[]{"nombre de rol*", "Alcance*", "Aplicación"}, new String[]{"Auditor", "TENANT", null}));
+        byte[] shortHeader = CatalogWorkbooks.xlsx(CatalogWorkbooks.sheet("Roles",
+                new String[]{"Nombre de rol*", "Alcance*"}, new String[]{"Auditor", "TENANT", null}));
+
+        assertThat(service.parse("roles", lowerCase).errors()).extracting(BulkResourceRowError::code)
+                .containsExactly("INVALID_HEADERS");
+        assertThat(service.parse("roles", shortHeader).errors()).extracting(BulkResourceRowError::code)
+                .containsExactly("INVALID_HEADERS");
+    }
+
+    @Test
+    void a_first_data_row_without_a_header_row_is_rejected_instead_of_silently_lost() throws Exception {
+        byte[] file = CatalogWorkbooks.xlsx(CatalogWorkbooks.sheet("Roles",
+                new String[]{"Auditor", "TENANT", ""}, new String[]{"Editor", "TENANT", ""}));
+
+        Parsed<CatalogRow> parsed = service.parse("roles", file);
+
+        assertThat(parsed.rows()).isEmpty();
+        assertThat(parsed.errors()).extracting(BulkResourceRowError::row, BulkResourceRowError::field, BulkResourceRowError::code)
+                .containsExactly(tuple(1, "Roles", "INVALID_HEADERS"));
+    }
+
+    @Test
+    void an_invalid_header_only_in_a_relation_sheet_does_not_stop_the_main_sheet() throws Exception {
+        byte[] file = CatalogWorkbooks.xlsx(
+                CatalogWorkbooks.roles(new String[]{"Auditor", "TENANT", null}),
+                CatalogWorkbooks.sheet("RolesxRecurso", new String[]{"Rol", "Alcance*", "Aplicación*", "Ruta*", "Método HTTP*"},
+                        new String[]{"Auditor", "TENANT", "Mi aplicación", "/api/orders", "GET"}),
+                CatalogWorkbooks.sheet("PerfilesxRol", new String[]{"Perfil", "Alcance del perfil*"},
+                        new String[]{"Gestores", "TENANT"}));
+
+        Parsed<RoleResourceRow> roleResources = service.parseRoleResources(file);
+        Parsed<ProfileRoleRow> profileRoles = service.parseProfileRoles(file);
+
+        assertThat(service.parse("roles", file).errors()).isEmpty();
+        assertThat(roleResources.rows()).isEmpty();
+        assertThat(roleResources.errors()).singleElement().satisfies(error -> {
+            assertThat(error.row()).isEqualTo(1);
+            assertThat(error.field()).isEqualTo("RolesxRecurso");
+            assertThat(error.code()).isEqualTo("INVALID_HEADERS");
+            assertThat(error.description()).startsWith("Los encabezados de la hoja RolesxRecurso deben ser:");
+        });
+        assertThat(profileRoles.rows()).isEmpty();
+        assertThat(profileRoles.errors()).extracting(BulkResourceRowError::field, BulkResourceRowError::code)
+                .containsExactly(tuple("PerfilesxRol", "INVALID_HEADERS"));
+    }
+
+    // ---- lectura: tope de filas -------------------------------------------------------------------------------
+
+    @Test
+    void more_than_the_row_limit_reports_too_many_rows_and_reads_only_the_first_thousand() throws Exception {
+        byte[] file = CatalogWorkbooks.xlsx(CatalogWorkbooks.roles(
+                CatalogWorkbooks.tenantRoleRows("Rol", BulkCatalogWorkbookService.MAX_ROWS + 1)));
+
+        Parsed<CatalogRow> parsed = service.parse("roles", file);
+
+        assertThat(parsed.rows()).hasSize(BulkCatalogWorkbookService.MAX_ROWS);
+        assertThat(parsed.rows().getLast().name()).isEqualTo("Rol-1000");
+        assertSingleError(parsed.errors(), 0, "Roles", "TOO_MANY_ROWS", "La hoja Roles supera las 1.000 filas de datos");
+    }
+
+    @Test
+    void exactly_the_row_limit_is_accepted() throws Exception {
+        byte[] file = CatalogWorkbooks.xlsx(CatalogWorkbooks.profiles(
+                CatalogWorkbooks.tenantRoleRows("Perfil", BulkCatalogWorkbookService.MAX_ROWS)));
+
+        Parsed<CatalogRow> parsed = service.parse("profiles", file);
+
+        assertThat(parsed.errors()).isEmpty();
+        assertThat(parsed.rows()).hasSize(BulkCatalogWorkbookService.MAX_ROWS);
+    }
+
+    @Test
+    void a_relation_sheet_over_the_row_limit_is_truncated_and_reported_under_its_own_name() throws Exception {
+        String[][] relations = new String[BulkCatalogWorkbookService.MAX_ROWS + 1][];
+        for (int i = 0; i < relations.length; i++) {
+            relations[i] = new String[]{"Auditor", "TENANT", "Mi aplicación", "/api/r" + i, "GET"};
+        }
+        byte[] file = CatalogWorkbooks.xlsx(
+                CatalogWorkbooks.roles(new String[]{"Auditor", "TENANT", null}),
+                CatalogWorkbooks.roleResources(relations));
+
+        Parsed<RoleResourceRow> parsed = service.parseRoleResources(file);
+
+        assertThat(parsed.rows()).hasSize(BulkCatalogWorkbookService.MAX_ROWS);
+        assertSingleError(parsed.errors(), 0, "RolesxRecurso", "TOO_MANY_ROWS",
+                "La hoja RolesxRecurso supera las 1.000 filas de datos");
+    }
+
+    // ---- lectura: tipos de celda ------------------------------------------------------------------------------
+
+    @Test
+    void a_numeric_or_boolean_cell_is_an_error_of_its_own_row_and_the_row_is_kept() throws Exception {
+        byte[] file = CatalogWorkbooks.xlsx(CatalogWorkbooks.roles(
+                new Object[]{12345, "TENANT", null},
+                new Object[]{"Auditor", true, null},
+                new String[]{"Editor", "TENANT", null}));
+
+        Parsed<CatalogRow> parsed = service.parse("roles", file);
+
+        assertThat(parsed.rows()).containsExactly(
+                new CatalogRow(2, "", "TENANT", ""),
+                new CatalogRow(3, "Auditor", "", ""),
+                new CatalogRow(4, "Editor", "TENANT", ""));
+        assertThat(parsed.errors()).extracting(BulkResourceRowError::row, BulkResourceRowError::field,
+                        BulkResourceRowError::code, BulkResourceRowError::description)
+                .containsExactly(
+                        tuple(2, "Nombre de rol*", "UNEXPECTED_CELL_TYPE", "La celda debe contener texto"),
+                        tuple(3, "Alcance*", "UNEXPECTED_CELL_TYPE", "La celda debe contener texto"));
+    }
+
+    @Test
+    void a_formula_or_an_error_cell_is_an_unsupported_cell_of_its_own_row() throws Exception {
+        byte[] file = CatalogWorkbooks.xlsx(CatalogWorkbooks.profiles(
+                new Object[]{"Gestores", "TENANT", new CatalogWorkbooks.Formula("1+1")},
+                new Object[]{"Auditores", "TENANT", CatalogWorkbooks.ERROR_CELL}));
+
+        Parsed<CatalogRow> parsed = service.parse("profiles", file);
+
+        assertThat(parsed.rows()).containsExactly(
+                new CatalogRow(2, "Gestores", "TENANT", ""),
+                new CatalogRow(3, "Auditores", "TENANT", ""));
+        assertThat(parsed.errors()).extracting(BulkResourceRowError::row, BulkResourceRowError::field,
+                        BulkResourceRowError::code, BulkResourceRowError::description)
+                .containsExactly(
+                        tuple(2, "Aplicación", "UNSUPPORTED_CELL", "No se admiten fórmulas ni celdas de error"),
+                        tuple(3, "Aplicación", "UNSUPPORTED_CELL", "No se admiten fórmulas ni celdas de error"));
     }
 
     // ---- relaciones -------------------------------------------------------------------------------------------
@@ -238,7 +506,10 @@ class BulkCatalogWorkbookServiceTests {
                         new String[]{"", "", "", "", ""},
                         new String[]{"Editor", "APPLICATION", "Mi aplicación", "/api/items", "POST"}));
 
-        assertThat(service.parseRoleResources(file)).containsExactly(
+        Parsed<RoleResourceRow> parsed = service.parseRoleResources(file);
+
+        assertThat(parsed.errors()).isEmpty();
+        assertThat(parsed.rows()).containsExactly(
                 new RoleResourceRow(2, "Auditor", "TENANT", "Mi aplicación", "/api/orders", "GET"),
                 new RoleResourceRow(4, "Editor", "APPLICATION", "Mi aplicación", "/api/items", "POST"));
     }
@@ -247,14 +518,38 @@ class BulkCatalogWorkbookServiceTests {
     void a_missing_role_resource_sheet_means_no_relations() throws Exception {
         byte[] file = CatalogWorkbooks.xlsx(CatalogWorkbooks.roles(new String[]{"Auditor", "TENANT", null}));
 
-        assertThat(service.parseRoleResources(file)).isEmpty();
+        Parsed<RoleResourceRow> parsed = service.parseRoleResources(file);
+
+        assertThat(parsed.rows()).isEmpty();
+        assertThat(parsed.errors()).isEmpty();
     }
 
     @Test
-    void a_broken_file_cannot_provide_role_resource_relations() {
-        assertThatThrownBy(() -> service.parseRoleResources(new byte[]{1, 2, 3}))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("La hoja RolesxRecurso no es válida");
+    void a_broken_file_reports_an_error_instead_of_providing_role_resource_relations() {
+        Parsed<RoleResourceRow> parsed = service.parseRoleResources(new byte[]{1, 2, 3});
+
+        assertThat(parsed.rows()).isEmpty();
+        assertThat(parsed.errors()).singleElement()
+                .satisfies(error -> assertThat(error.code()).isEqualTo("INVALID_WORKBOOK"));
+    }
+
+    @Test
+    void a_non_text_cell_in_a_relation_sheet_is_reported_under_the_sheet_name_and_the_row_is_kept() throws Exception {
+        byte[] file = CatalogWorkbooks.xlsx(
+                CatalogWorkbooks.roles(new String[]{"Auditor", "TENANT", null}),
+                CatalogWorkbooks.roleResources(
+                        new Object[]{"Auditor", "TENANT", "Mi aplicación", 404, "GET"},
+                        new Object[]{"Auditor", "TENANT", "Mi aplicación", "/api/orders", new CatalogWorkbooks.Formula("1+1")}));
+
+        Parsed<RoleResourceRow> parsed = service.parseRoleResources(file);
+
+        assertThat(parsed.rows()).containsExactly(
+                new RoleResourceRow(2, "Auditor", "TENANT", "Mi aplicación", "", "GET"),
+                new RoleResourceRow(3, "Auditor", "TENANT", "Mi aplicación", "/api/orders", ""));
+        assertThat(parsed.errors()).extracting(BulkResourceRowError::row, BulkResourceRowError::field, BulkResourceRowError::code)
+                .containsExactly(
+                        tuple(2, "RolesxRecurso", "UNEXPECTED_CELL_TYPE"),
+                        tuple(3, "RolesxRecurso", "UNSUPPORTED_CELL"));
     }
 
     @Test
@@ -266,7 +561,10 @@ class BulkCatalogWorkbookServiceTests {
                         new String[]{null, null, null, null, null, null},
                         new String[]{"Gestores", "TENANT", "", "Editor", "TENANT", ""}));
 
-        assertThat(service.parseProfileRoles(file)).containsExactly(
+        Parsed<ProfileRoleRow> parsed = service.parseProfileRoles(file);
+
+        assertThat(parsed.errors()).isEmpty();
+        assertThat(parsed.rows()).containsExactly(
                 new ProfileRoleRow(2, "Gestores", "TENANT", "", "Auditor", "APPLICATION", "Mi aplicación"),
                 new ProfileRoleRow(4, "Gestores", "TENANT", "", "Editor", "TENANT", ""));
     }
@@ -275,14 +573,32 @@ class BulkCatalogWorkbookServiceTests {
     void a_missing_profile_role_sheet_means_no_relations() throws Exception {
         byte[] file = CatalogWorkbooks.xlsx(CatalogWorkbooks.profiles(new String[]{"Gestores", "TENANT", null}));
 
-        assertThat(service.parseProfileRoles(file)).isEmpty();
+        Parsed<ProfileRoleRow> parsed = service.parseProfileRoles(file);
+
+        assertThat(parsed.rows()).isEmpty();
+        assertThat(parsed.errors()).isEmpty();
     }
 
     @Test
-    void a_broken_file_cannot_provide_profile_role_relations() {
-        assertThatThrownBy(() -> service.parseProfileRoles(new byte[]{1, 2, 3}))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("La hoja PerfilesxRol no es válida");
+    void a_broken_file_reports_an_error_instead_of_providing_profile_role_relations() {
+        Parsed<ProfileRoleRow> parsed = service.parseProfileRoles(new byte[]{1, 2, 3});
+
+        assertThat(parsed.rows()).isEmpty();
+        assertThat(parsed.errors()).singleElement()
+                .satisfies(error -> assertThat(error.code()).isEqualTo("INVALID_WORKBOOK"));
+    }
+
+    @Test
+    void a_non_text_cell_in_the_profile_role_sheet_is_reported_under_the_sheet_name() throws Exception {
+        byte[] file = CatalogWorkbooks.xlsx(
+                CatalogWorkbooks.profiles(new String[]{"Gestores", "TENANT", null}),
+                CatalogWorkbooks.profileRoles(new Object[]{"Gestores", "TENANT", null, 99, "TENANT", null}));
+
+        Parsed<ProfileRoleRow> parsed = service.parseProfileRoles(file);
+
+        assertThat(parsed.rows()).containsExactly(new ProfileRoleRow(2, "Gestores", "TENANT", "", "", "TENANT", ""));
+        assertThat(parsed.errors()).extracting(BulkResourceRowError::row, BulkResourceRowError::field, BulkResourceRowError::code)
+                .containsExactly(tuple(2, "PerfilesxRol", "UNEXPECTED_CELL_TYPE"));
     }
 
     // ---- reporte de errores -----------------------------------------------------------------------------------
@@ -317,9 +633,19 @@ class BulkCatalogWorkbookServiceTests {
     }
 
     @Test
-    void the_error_report_cannot_be_built_from_a_broken_file() {
-        assertThatThrownBy(() -> service.errorReport(new byte[]{1, 2, 3}, List.of()))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("No fue posible generar el reporte");
+    void the_error_report_of_an_unreadable_file_is_a_workbook_with_only_the_errors_sheet() throws Exception {
+        List<BulkResourceRowError> errors = List.of(
+                new BulkResourceRowError(0, "file", "", "INVALID_WORKBOOK", "El archivo no es un libro Excel válido"));
+        byte[] encrypted = CatalogWorkbooks.encrypted("secreto", CatalogWorkbooks.roles(new String[]{"Auditor", "TENANT", null}));
+
+        for (byte[] unreadable : new byte[][]{{1, 2, 3}, new byte[0], null, encrypted}) {
+            try (Workbook report = open(service.errorReport(unreadable, errors))) {
+                assertThat(sheetNames(report)).containsExactly("Errores");
+                Sheet sheet = report.getSheet("Errores");
+                assertThat(headers(sheet)).containsExactly("Fila", "Campo / hoja", "Código", "Descripción");
+                assertThat(sheet.getLastRowNum()).isEqualTo(1);
+                assertThat(sheet.getRow(1).getCell(2).getStringCellValue()).isEqualTo("INVALID_WORKBOOK");
+            }
+        }
     }
 }

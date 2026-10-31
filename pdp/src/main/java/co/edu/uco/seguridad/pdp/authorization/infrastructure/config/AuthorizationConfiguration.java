@@ -102,8 +102,8 @@ public class AuthorizationConfiguration {
     }
 
     @Bean
-    BulkCatalogImportService bulkCatalogImportService(BulkCatalogWorkbookService books, RoleRepository roles, ProfileRepository profiles, ProtectedResourceRepository resources, ApplicationNameForTenantLookupValidator applications, IdentifierGenerator ids, TimeProvider time) {
-        return new BulkCatalogImportService(books, roles, profiles, resources, applications, ids, time);
+    BulkCatalogImportService bulkCatalogImportService(BulkCatalogWorkbookService books, RoleRepository roles, ProfileRepository profiles, ProtectedResourceRepository resources, ApplicationNameForTenantLookupValidator applications, PrincipalMustBeApplicationAdministratorValidator administrators, IdentifierGenerator ids, TimeProvider time) {
+        return new BulkCatalogImportService(books, roles, profiles, resources, applications, administrators, ids, time);
     }
 
     @Bean
