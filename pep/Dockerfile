@@ -24,7 +24,18 @@ USER 10001
 EXPOSE 18080 18081
 ENTRYPOINT ["java", "-Dfixture.bind-host=0.0.0.0", "-cp", "test-classes:classes:dependency/*", "co.edu.uco.seguridad.pep.fixture.FixtureServers"]
 
-FROM eclipse-temurin:25-jre AS runtime
+FROM build AS jre
+# Runtime de Java a la medida (módulos de jdeps + los que se cargan por reflexión), como en pdp/Dockerfile.
+RUN MODULES="$(jdeps --ignore-missing-deps --multi-release 25 --print-module-deps --recursive \
+        -cp '/layers/dependencies/lib/*' /layers/application/app.jar),java.logging,java.management,java.xml,jdk.crypto.ec,jdk.naming.dns,jdk.zipfs" \
+ && jlink --add-modules "$MODULES" --strip-debug --no-man-pages --no-header-files --compress=zip-6 --output /javaruntime
+
+FROM ubuntu:24.04 AS runtime
+ENV JAVA_HOME=/opt/java PATH=/opt/java/bin:$PATH
+RUN groupadd --gid 10001 app \
+ && useradd --uid 10001 --gid app --no-create-home --shell /usr/sbin/nologin app \
+ && mkdir -p /app && chown app:app /app
+COPY --from=jre /javaruntime $JAVA_HOME
 WORKDIR /app
 COPY --from=build /layers/dependencies/ ./
 COPY --from=build /layers/spring-boot-loader/ ./
