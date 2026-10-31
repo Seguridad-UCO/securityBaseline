@@ -50,6 +50,9 @@ public final class ProblemWriter {
         headers.setCacheControl("no-store");
         if (status == HttpStatus.UNAUTHORIZED) headers.set(HttpHeaders.WWW_AUTHENTICATE, "Bearer");
         if (status == HttpStatus.TOO_MANY_REQUESTS) headers.set(HttpHeaders.RETRY_AFTER, "1");
+        if (failure.kind() == EnforcementFailure.Kind.UNAVAILABLE && "BFF_SESSION_UNAVAILABLE".equals(failure.code())) {
+            headers.set(HttpHeaders.RETRY_AFTER, "5");
+        }
         exchange.getResponse().setStatusCode(status);
         ProblemDetail detail = ProblemDetail.forStatusAndDetail(status, status.getReasonPhrase());
         detail.setTitle(failure.code());

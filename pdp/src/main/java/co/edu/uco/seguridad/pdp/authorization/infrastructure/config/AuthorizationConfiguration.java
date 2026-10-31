@@ -5,13 +5,17 @@ import co.edu.uco.seguridad.pdp.applications.application.usecase.RemoveApplicati
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RotateApplicationCredentialUseCase;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.AssignmentApplicationLookupValidator;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.ProfileAssignmentApplicationLookupValidator;
-import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository.AssignmentRepository;
-import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository.ProfileAssignmentRepository;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.*;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.ListActiveProfileAssignmentsByProfilePageUseCase;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.ListActiveProfileAssignmentsByUserPageUseCase;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.ListActiveRoleAssignmentsByRolePageUseCase;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.ListActiveRoleAssignmentsByUserPageUseCase;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.ActiveRoleNamesLookupValidator;
+import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.PrincipalMustAdministerAtLeastOneApplicationValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.PrincipalMustBeApplicationAdministratorValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.impl.ActiveRoleNamesLookupValidatorImpl;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.impl.MfaAwareApplicationAdministratorValidator;
+import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.impl.PrincipalMustAdministerAtLeastOneApplicationValidatorImpl;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.impl.PrincipalMustBeApplicationAdministratorValidatorImpl;
 import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.AccessAuditRepository;
 import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.AdministrationDecisionPort;
@@ -35,10 +39,11 @@ import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.p
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.OpaPolicyDecisionAdapter;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.properties.OpaProperties;
 import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserIdLookupValidator;
-import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.SecurityUserRepository;
-import co.edu.uco.seguridad.pdp.identity.application.usecase.FindAuthenticatedUserBySubjectUseCase;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.ResolveExternalIdentityUseCase;
+import co.edu.uco.seguridad.pdp.identity.application.usecase.FindAuthenticatedUserBySubjectUseCase;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.SearchUsersPageUseCase;
+import co.edu.uco.seguridad.pdp.identity.application.usecase.FindUserByIdUseCase;
+import co.edu.uco.seguridad.pdp.resources.application.usecase.RegisterProtectedResourcesInBulkUseCase;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileApplicationLookupValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.secondaryport.repository.ProfileRepository;
 import co.edu.uco.seguridad.pdp.profiles.application.usecase.*;
@@ -99,16 +104,16 @@ public class AuthorizationConfiguration {
     }
 
     @Bean
-    BulkCatalogImportService bulkCatalogImportService(BulkCatalogWorkbookService books, RoleRepository roles, ProfileRepository profiles, ProtectedResourceRepository resources, ApplicationNameForTenantLookupValidator applications, IdentifierGenerator ids, TimeProvider time) {
-        return new BulkCatalogImportService(books, roles, profiles, resources, applications, ids, time);
+    BulkCatalogImportService bulkCatalogImportService(BulkCatalogWorkbookService books, RoleRepository roles, ProfileRepository profiles, ProtectedResourceRepository resources, ApplicationNameForTenantLookupValidator applications, PrincipalMustBeApplicationAdministratorValidator administrators, PrincipalMustAdministerAtLeastOneApplicationValidator tenantAdministrators, IdentifierGenerator ids, TimeProvider time) {
+        return new BulkCatalogImportService(books, roles, profiles, resources, applications, administrators, tenantAdministrators, ids, time);
     }
 
     @Bean
     BulkResourceImportService bulkResourceImportService(BulkResourceWorkbookService workbooks,
-                                                        ApplicationNameForTenantLookupValidator applications,
-                                                        PrincipalMustBeApplicationAdministratorValidator administrators, ProtectedResourceRepository resources,
-                                                        IdentifierGenerator identifiers, TimeProvider time, DomainEventPublisher events) {
-        return new BulkResourceImportService(workbooks, applications, administrators, resources, identifiers, time, events);
+            ApplicationNameForTenantLookupValidator applications,
+            PrincipalMustBeApplicationAdministratorValidator administrators, ProtectedResourceRepository resources,
+            IdentifierGenerator identifiers, TimeProvider time, RegisterProtectedResourcesInBulkUseCase bulkRegistration) {
+        return new BulkResourceImportService(workbooks, applications, administrators, resources, identifiers, time, bulkRegistration);
     }
 
     // HU-006 (D9 del handoff PDP-PEP-OPA): reemplaza a DenyByDefaultPolicyDecisionAdapter, que se
@@ -204,6 +209,16 @@ public class AuthorizationConfiguration {
                 new PrincipalMustBeApplicationAdministratorValidatorImpl(useCase), mfaProperties);
     }
 
+    // HU-036 — gate de las escrituras de catálogo de alcance TENANT: administra al menos una aplicación
+    // del inquilino. Consume el validador ya decorado con MFA (el bean de arriba), nunca la
+    // implementación desnuda, para que el step-up de MFA no se pueda esquivar por esta vía.
+    @Bean
+    PrincipalMustAdministerAtLeastOneApplicationValidator principalMustAdministerAtLeastOneApplicationValidator(
+            ResolveUserApplicationsUseCase userApplications,
+            PrincipalMustBeApplicationAdministratorValidator applicationAdministrator) {
+        return new PrincipalMustAdministerAtLeastOneApplicationValidatorImpl(userApplications, applicationAdministrator);
+    }
+
     @Bean
     ListApplicationSecurityResourcesUseCase listApplicationSecurityResourcesUseCase(
             PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator,
@@ -277,8 +292,8 @@ public class AuthorizationConfiguration {
 
     @Bean
     ListApplicationRoleAssignmentsInteractor listApplicationRoleAssignmentsInteractor(ApplicationOwnerLookupValidator ownerLookup,
-                                                                                      SubjectUserIdLookupValidator subjectUserIdLookup, ListApplicationRoleAssignmentsUseCase useCase,
-                                                                                      SecurityUserRepository users, RoleRepository roles) {
+            SubjectUserIdLookupValidator subjectUserIdLookup, ListApplicationRoleAssignmentsUseCase useCase,
+            FindUserByIdUseCase users, RoleRepository roles) {
         return new ListApplicationRoleAssignmentsInteractorImpl(ownerLookup, subjectUserIdLookup, useCase, users, roles);
     }
 
@@ -291,18 +306,22 @@ public class AuthorizationConfiguration {
 
     @Bean
     ListApplicationProfileAssignmentsInteractor listApplicationProfileAssignmentsInteractor(ApplicationOwnerLookupValidator ownerLookup,
-                                                                                            SubjectUserIdLookupValidator subjectUserIdLookup, ListApplicationProfileAssignmentsUseCase useCase,
-                                                                                            SecurityUserRepository users, ProfileRepository profiles) {
+            SubjectUserIdLookupValidator subjectUserIdLookup, ListApplicationProfileAssignmentsUseCase useCase,
+            FindUserByIdUseCase users, ProfileRepository profiles) {
         return new ListApplicationProfileAssignmentsInteractorImpl(ownerLookup, subjectUserIdLookup, useCase, users, profiles);
     }
 
     @Bean
     AssignmentDetailReadInteractor assignmentDetailReadInteractor(ApplicationOwnerLookupValidator ownerLookup,
-                                                                  SubjectUserIdLookupValidator subjectUserIdLookup, PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator,
-                                                                  AssignmentRepository assignments, ProfileAssignmentRepository profileAssignments, SecurityUserRepository users,
-                                                                  RoleRepository roles, ProfileRepository profiles, TimeProvider time) {
-        return new AssignmentDetailReadInteractorImpl(ownerLookup, subjectUserIdLookup, mustBeAdministrator, assignments,
-                profileAssignments, users, roles, profiles, time);
+            SubjectUserIdLookupValidator subjectUserIdLookup, PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator,
+            ListActiveRoleAssignmentsByRolePageUseCase roleAssignmentsByRole,
+            ListActiveRoleAssignmentsByUserPageUseCase roleAssignmentsByUser,
+            ListActiveProfileAssignmentsByProfilePageUseCase profileAssignmentsByProfile,
+            ListActiveProfileAssignmentsByUserPageUseCase profileAssignmentsByUser, FindUserByIdUseCase users,
+            RoleRepository roles, ProfileRepository profiles) {
+        return new AssignmentDetailReadInteractorImpl(ownerLookup, subjectUserIdLookup, mustBeAdministrator,
+                roleAssignmentsByRole, roleAssignmentsByUser, profileAssignmentsByProfile, profileAssignmentsByUser,
+                users, roles, profiles);
     }
 
     @Bean
@@ -328,7 +347,7 @@ public class AuthorizationConfiguration {
     @Bean
     ListApplicationSecurityAdministratorsInteractor listApplicationSecurityAdministratorsInteractor(
             ApplicationOwnerLookupValidator ownerLookup, SubjectUserIdLookupValidator subjectUserIdLookup,
-            ListApplicationSecurityAdministratorsUseCase useCase, SecurityUserRepository users) {
+            ListApplicationSecurityAdministratorsUseCase useCase, FindUserByIdUseCase users) {
         return new ListApplicationSecurityAdministratorsInteractorImpl(ownerLookup, subjectUserIdLookup, useCase, users);
     }
 
@@ -393,9 +412,10 @@ public class AuthorizationConfiguration {
     // del implementador (PLAN-HU-016.md §8) — de momento estos beans no quedan enrutados.
     @Bean
     AdministerRoleDefinitionUseCase administerRoleDefinitionUseCase(
-            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator, DefineRoleUseCase defineRole,
+            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator,
+            PrincipalMustAdministerAtLeastOneApplicationValidator mustAdministerSomeApplication, DefineRoleUseCase defineRole,
             AdministrationAuditRepository audit, IdentifierGenerator identifiers, TimeProvider time) {
-        return new AdministerRoleDefinitionUseCaseImpl(mustBeAdministrator, defineRole, audit, identifiers, time);
+        return new AdministerRoleDefinitionUseCaseImpl(mustBeAdministrator, mustAdministerSomeApplication, defineRole, audit, identifiers, time);
     }
 
     @Bean
@@ -406,10 +426,11 @@ public class AuthorizationConfiguration {
 
     @Bean
     AdministerResourceGrantUseCase administerResourceGrantUseCase(
-            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator, GrantResourceToRoleUseCase grantResource,
+            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator,
+            PrincipalMustAdministerAtLeastOneApplicationValidator mustAdministerSomeApplication, GrantResourceToRoleUseCase grantResource,
             RevokeResourceFromRoleUseCase revokeResource,
             AdministrationAuditRepository audit, IdentifierGenerator identifiers, TimeProvider time) {
-        return new AdministerResourceGrantUseCaseImpl(mustBeAdministrator, grantResource, revokeResource, audit, identifiers, time);
+        return new AdministerResourceGrantUseCaseImpl(mustBeAdministrator, mustAdministerSomeApplication, grantResource, revokeResource, audit, identifiers, time);
     }
 
     @Bean
@@ -475,9 +496,10 @@ public class AuthorizationConfiguration {
     // de momento estos beans no quedan enrutados.
     @Bean
     AdministerProfileDefinitionUseCase administerProfileDefinitionUseCase(
-            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator, DefineProfileUseCase defineProfile,
+            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator,
+            PrincipalMustAdministerAtLeastOneApplicationValidator mustAdministerSomeApplication, DefineProfileUseCase defineProfile,
             AdministrationAuditRepository audit, IdentifierGenerator identifiers, TimeProvider time) {
-        return new AdministerProfileDefinitionUseCaseImpl(mustBeAdministrator, defineProfile, audit, identifiers, time);
+        return new AdministerProfileDefinitionUseCaseImpl(mustBeAdministrator, mustAdministerSomeApplication, defineProfile, audit, identifiers, time);
     }
 
     @Bean
@@ -488,10 +510,11 @@ public class AuthorizationConfiguration {
 
     @Bean
     AdministerProfileRoleAdditionUseCase administerProfileRoleAdditionUseCase(
-            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator, AddRoleToProfileUseCase addRoleToProfile,
+            PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator,
+            PrincipalMustAdministerAtLeastOneApplicationValidator mustAdministerSomeApplication, AddRoleToProfileUseCase addRoleToProfile,
             RemoveRoleFromProfileUseCase removeRoleFromProfile,
             AdministrationAuditRepository audit, IdentifierGenerator identifiers, TimeProvider time) {
-        return new AdministerProfileRoleAdditionUseCaseImpl(mustBeAdministrator, addRoleToProfile, removeRoleFromProfile, audit, identifiers, time);
+        return new AdministerProfileRoleAdditionUseCaseImpl(mustBeAdministrator, mustAdministerSomeApplication, addRoleToProfile, removeRoleFromProfile, audit, identifiers, time);
     }
 
     @Bean

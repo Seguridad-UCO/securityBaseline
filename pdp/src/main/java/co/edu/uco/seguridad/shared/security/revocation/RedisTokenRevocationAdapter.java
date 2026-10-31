@@ -3,9 +3,11 @@ package co.edu.uco.seguridad.shared.security.revocation;
 import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.security.RevocationRetentionProperties;
+import co.edu.uco.seguridad.shared.port.TimeProvider;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 
@@ -18,18 +20,36 @@ import java.util.Objects;
 public final class RedisTokenRevocationAdapter implements TokenRevocationPort {
 
     private static final String KEY_PREFIX = "revoked-since:";
+    private static final String TOKEN_KEY_PREFIX = "revoked-token:";
+    private static final String CLIENT_KEY_PREFIX = "revoked-client-since:";
 
     private final ReactiveRedisTemplate<String, String> redis;
     private final RevocationRetentionProperties properties;
+    private final TimeProvider timeProvider;
 
-    public RedisTokenRevocationAdapter(ReactiveRedisTemplate<String, String> redis, RevocationRetentionProperties properties) {
+    public RedisTokenRevocationAdapter(ReactiveRedisTemplate<String, String> redis,
+                                       RevocationRetentionProperties properties,
+                                       TimeProvider timeProvider) {
         this.redis = Objects.requireNonNull(redis, RequiredArgumentMessages.REACTIVE_REDIS_TEMPLATE);
         this.properties = Objects.requireNonNull(properties, RequiredArgumentMessages.REVOCATION_RETENTION_PROPERTIES);
+        this.timeProvider = Objects.requireNonNull(timeProvider, "timeProvider");
     }
 
     @Override
     public Mono<Void> revokeAllSince(UserId subject, Instant since) {
         return redis.opsForValue().set(keyFor(subject), since.toString(), properties.retention()).then();
+    }
+
+    @Override
+    public Mono<Void> revokeToken(UserId subject, String tokenId, Instant expiresAt) {
+        Objects.requireNonNull(subject, "subject");
+        Objects.requireNonNull(tokenId, "tokenId");
+        Objects.requireNonNull(expiresAt, "expiresAt");
+        Duration ttl = Duration.between(timeProvider.now(), expiresAt);
+        if (ttl.isNegative() || ttl.isZero()) {
+            return Mono.empty();
+        }
+        return redis.opsForValue().set(tokenKeyFor(subject, tokenId), "1", ttl).then();
     }
 
     @Override
@@ -40,7 +60,36 @@ public final class RedisTokenRevocationAdapter implements TokenRevocationPort {
                 .defaultIfEmpty(false);
     }
 
+    @Override
+    public Mono<Boolean> isTokenRevoked(UserId subject, String tokenId) {
+        return redis.opsForValue().get(tokenKeyFor(subject, tokenId))
+                .hasElement();
+    }
+
+    /** HU-028 / ADR-034: clave {@code revoked-client-since:{userId}:{clientId}}. */
+    @Override
+    public Mono<Void> revokeClientSince(UserId subject, String clientId, Instant since) {
+        return redis.opsForValue().set(clientKeyFor(subject, clientId), since.toString(), properties.retention()).then();
+    }
+
+    /** HU-028 / ADR-034. */
+    @Override
+    public Mono<Boolean> isClientRevoked(UserId subject, String clientId, Instant issuedAt) {
+        return redis.opsForValue().get(clientKeyFor(subject, clientId))
+                .map(Instant::parse)
+                .map(revokedSince -> !issuedAt.isAfter(revokedSince))
+                .defaultIfEmpty(false);
+    }
+
+    private static String clientKeyFor(UserId subject, String clientId) {
+        return CLIENT_KEY_PREFIX + subject.value() + ":" + clientId;
+    }
+
     private static String keyFor(UserId subject) {
         return KEY_PREFIX + subject.value();
+    }
+
+    private static String tokenKeyFor(UserId subject, String tokenId) {
+        return TOKEN_KEY_PREFIX + subject.value() + ":" + tokenId;
     }
 }

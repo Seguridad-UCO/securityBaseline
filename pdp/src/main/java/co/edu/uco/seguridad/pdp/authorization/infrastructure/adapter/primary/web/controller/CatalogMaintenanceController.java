@@ -5,7 +5,11 @@ import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationEnvironment
 import co.edu.uco.seguridad.pdp.applications.application.usecase.UpdateApplicationUseCase;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.ProfileDeletionDependencyValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministrationRequest;
+import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.TenantAdministrationRequest;
+import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.PrincipalMustAdministerAtLeastOneApplicationValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.PrincipalMustBeApplicationAdministratorValidator;
+import co.edu.uco.seguridad.pdp.authorization.domain.exception.NotAuthorizedToAdministerException;
+import co.edu.uco.seguridad.pdp.authorization.domain.exception.NotAuthorizedToAdministerTenantCatalogException;
 import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserIdLookupValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.primaryport.request.UpdateProfileRequest;
@@ -33,13 +37,20 @@ import reactor.core.publisher.Mono;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * PATCH/DELETE administrativos. Las asociaciones tienen sus propios endpoints especializados.
+ *
+ * <p>Gate (HU-036): sobre un objetivo de alcance {@code APPLICATION} se exige administrar esa aplicación;
+ * sobre uno {@code TENANT} (el lookup de aplicación viene vacío), administrar al menos una aplicación del
+ * inquilino. Es fail-closed: si el {@code UserId} del llamador no se puede resolver, se deniega (403) en
+ * vez de omitir el gate.</p>
  */
 @RestController
 final class CatalogMaintenanceController {
     private final PrincipalMustBeApplicationAdministratorValidator administrator;
+    private final PrincipalMustAdministerAtLeastOneApplicationValidator tenantAdministrator;
     private final SubjectUserIdLookupValidator users;
     private final UpdateApplicationUseCase applications;
     private final UpdateProtectedResourceUseCase resources;
@@ -55,7 +66,8 @@ final class CatalogMaintenanceController {
     private final co.edu.uco.seguridad.pdp.assignments.application.rule.validator.RoleDeletionDependencyValidator assignmentRoleDependencies;
     private final ProfileDeletionDependencyValidator profileDependencies;
 
-    CatalogMaintenanceController(PrincipalMustBeApplicationAdministratorValidator administrator, SubjectUserIdLookupValidator users,
+    CatalogMaintenanceController(PrincipalMustBeApplicationAdministratorValidator administrator,
+                                 PrincipalMustAdministerAtLeastOneApplicationValidator tenantAdministrator, SubjectUserIdLookupValidator users,
                                  UpdateApplicationUseCase applications, UpdateProtectedResourceUseCase resources, RemoveProtectedResourceUseCase removeResources,
                                  UpdateRoleUseCase roles, RemoveRoleUseCase removeRoles, UpdateProfileUseCase profiles, RemoveProfileUseCase removeProfiles,
                                  RoleApplicationLookupValidator roleApplication, ProfileApplicationLookupValidator profileApplication,
@@ -64,6 +76,7 @@ final class CatalogMaintenanceController {
                                  co.edu.uco.seguridad.pdp.assignments.application.rule.validator.RoleDeletionDependencyValidator assignmentRoleDependencies,
                                  ProfileDeletionDependencyValidator profileDependencies) {
         this.administrator = administrator;
+        this.tenantAdministrator = tenantAdministrator;
         this.users = users;
         this.applications = applications;
         this.resources = resources;
@@ -108,25 +121,25 @@ final class CatalogMaintenanceController {
     @PatchMapping("/api/v1/roles/{roleId}")
     Mono<ResponseEntity<ApiResponse<Object>>> updateRole(@PathVariable String roleId, @RequestBody NamePatch body, ServerWebExchange exchange) {
         RoleId role = role(roleId);
-        return principal().flatMap(p -> roleApplication.execute(new co.edu.uco.seguridad.pdp.roles.application.primaryport.request.RoleOwnershipQuery(role, p.tenantId())).flatMap(app -> gateOptional(p, app).then(roles.execute(new UpdateRoleRequest(p.tenantId(), role, RequestFieldParser.parse("name", body.name(), co.edu.uco.seguridad.pdp.roles.domain.model.RoleName::new)))))).map(r -> ok("ROLE_UPDATED", r, exchange));
+        return principal().flatMap(p -> roleApplication.execute(new co.edu.uco.seguridad.pdp.roles.application.primaryport.request.RoleOwnershipQuery(role, p.tenantId())).flatMap(app -> gateCatalog(p, app).then(roles.execute(new UpdateRoleRequest(p.tenantId(), role, RequestFieldParser.parse("name", body.name(), co.edu.uco.seguridad.pdp.roles.domain.model.RoleName::new)))))).map(r -> ok("ROLE_UPDATED", r, exchange));
     }
 
     @DeleteMapping("/api/v1/roles/{roleId}")
     Mono<ResponseEntity<ApiResponse<Object>>> deleteRole(@PathVariable String roleId, ServerWebExchange exchange) {
         RoleId role = role(roleId);
-        return principal().flatMap(p -> roleApplication.execute(new co.edu.uco.seguridad.pdp.roles.application.primaryport.request.RoleOwnershipQuery(role, p.tenantId())).flatMap(app -> gateOptional(p, app).then(profileRoleDependencies.execute(role)).then(assignmentRoleDependencies.execute(role)).then(removeRoles.execute(new RemoveRoleUseCase.Request(p.tenantId(), role))))).thenReturn(ok("ROLE_REMOVED", null, exchange));
+        return principal().flatMap(p -> roleApplication.execute(new co.edu.uco.seguridad.pdp.roles.application.primaryport.request.RoleOwnershipQuery(role, p.tenantId())).flatMap(app -> gateCatalog(p, app).then(profileRoleDependencies.execute(role)).then(assignmentRoleDependencies.execute(role)).then(removeRoles.execute(new RemoveRoleUseCase.Request(p.tenantId(), role))))).thenReturn(ok("ROLE_REMOVED", null, exchange));
     }
 
     @PatchMapping("/api/v1/profiles/{profileId}")
     Mono<ResponseEntity<ApiResponse<Object>>> updateProfile(@PathVariable String profileId, @RequestBody NamePatch body, ServerWebExchange exchange) {
         ProfileId profile = profile(profileId);
-        return principal().flatMap(p -> profileApplication.execute(new co.edu.uco.seguridad.pdp.profiles.application.primaryport.request.ProfileOwnershipQuery(p.tenantId(), profile)).flatMap(app -> gateOptional(p, app).then(profiles.execute(new UpdateProfileRequest(p.tenantId(), profile, RequestFieldParser.parse("name", body.name(), co.edu.uco.seguridad.pdp.profiles.domain.model.ProfileName::new)))))).map(r -> ok("PROFILE_UPDATED", r, exchange));
+        return principal().flatMap(p -> profileApplication.execute(new co.edu.uco.seguridad.pdp.profiles.application.primaryport.request.ProfileOwnershipQuery(p.tenantId(), profile)).flatMap(app -> gateCatalog(p, app).then(profiles.execute(new UpdateProfileRequest(p.tenantId(), profile, RequestFieldParser.parse("name", body.name(), co.edu.uco.seguridad.pdp.profiles.domain.model.ProfileName::new)))))).map(r -> ok("PROFILE_UPDATED", r, exchange));
     }
 
     @DeleteMapping("/api/v1/profiles/{profileId}")
     Mono<ResponseEntity<ApiResponse<Object>>> deleteProfile(@PathVariable String profileId, ServerWebExchange exchange) {
         ProfileId profile = profile(profileId);
-        return principal().flatMap(p -> profileApplication.execute(new co.edu.uco.seguridad.pdp.profiles.application.primaryport.request.ProfileOwnershipQuery(p.tenantId(), profile)).flatMap(app -> gateOptional(p, app).then(profileDependencies.execute(profile)).then(removeProfiles.execute(new RemoveProfileUseCase.Request(p.tenantId(), profile))))).thenReturn(ok("PROFILE_REMOVED", null, exchange));
+        return principal().flatMap(p -> profileApplication.execute(new co.edu.uco.seguridad.pdp.profiles.application.primaryport.request.ProfileOwnershipQuery(p.tenantId(), profile)).flatMap(app -> gateCatalog(p, app).then(profileDependencies.execute(profile)).then(removeProfiles.execute(new RemoveProfileUseCase.Request(p.tenantId(), profile))))).thenReturn(ok("PROFILE_REMOVED", null, exchange));
     }
 
     private Mono<PdpPrincipal> principal() {
@@ -134,15 +147,25 @@ final class CatalogMaintenanceController {
     }
 
     private Mono<Void> gate(PdpPrincipal p, ApplicationId app) {
-        return user(p).flatMap(u -> administrator.execute(new AdministrationRequest(p.tenantId(), app, u, p.subject(), Set.of(), p.authenticationContext())));
+        return user(p, () -> new NotAuthorizedToAdministerException(p.tenantId(), app))
+                .flatMap(u -> administrator.execute(new AdministrationRequest(p.tenantId(), app, u, p.subject(), Set.of(), p.authenticationContext())));
     }
 
-    private Mono<Void> gateOptional(PdpPrincipal p, Optional<ApplicationId> app) {
-        return app.map(a -> gate(p, a)).orElseGet(Mono::empty);
+    /** Alcance {@code APPLICATION} ⇒ gate de esa aplicación; {@code TENANT} (sin aplicación) ⇒ actor de inquilino. */
+    private Mono<Void> gateCatalog(PdpPrincipal p, Optional<ApplicationId> app) {
+        return app.map(a -> gate(p, a)).orElseGet(() -> gateTenant(p));
     }
 
-    private Mono<UserId> user(PdpPrincipal p) {
-        return p.userId().map(Mono::just).orElseGet(() -> users.execute(p.subject()));
+    private Mono<Void> gateTenant(PdpPrincipal p) {
+        return user(p, () -> new NotAuthorizedToAdministerTenantCatalogException(p.tenantId(), Optional.empty()))
+                .flatMap(u -> tenantAdministrator.execute(new TenantAdministrationRequest(p.tenantId(), u, p.subject(), p.authenticationContext())))
+                .then();
+    }
+
+    /** Fail-closed: sin {@code UserId} resoluble no hay gate que evaluar, así que se deniega con {@code unresolvable}. */
+    private Mono<UserId> user(PdpPrincipal p, Supplier<? extends Throwable> unresolvable) {
+        return p.userId().map(Mono::just).orElseGet(() -> users.execute(p.subject()))
+                .switchIfEmpty(Mono.error(unresolvable));
     }
 
     private static ApplicationId id(String value) {
