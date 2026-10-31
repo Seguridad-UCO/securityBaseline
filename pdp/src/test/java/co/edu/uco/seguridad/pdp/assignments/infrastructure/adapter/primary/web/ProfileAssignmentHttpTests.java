@@ -134,9 +134,12 @@ class ProfileAssignmentHttpTests extends AbstractSurrealDbIntegrationTest {
         return id;
     }
 
+    // HU-036: definir y componer catálogo TENANT exige administrar al menos una aplicación del inquilino (con
+    // evidencia de MFA). Quien registra la aplicación queda como su primer administrador (HU-015), así que
+    // basta registrarla antes y firmar con evidencia de MFA.
     private String defineTenantScopedProfile(String tenant, String name) {
         byte[] body = client().post().uri("/api/v1/profiles")
-                .header("Authorization", "Bearer " + TestJwtSupport.signedToken(tenant, "test-subject"))
+                .header("Authorization", "Bearer " + TestJwtSupport.signedTokenWithMfaEvidence(tenant, "test-subject"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("""
                         {"name":"%s","scope":"TENANT"}""".formatted(name))
@@ -148,7 +151,7 @@ class ProfileAssignmentHttpTests extends AbstractSurrealDbIntegrationTest {
 
     private void addRoleToProfile(String tenant, String profileId, String roleId) {
         client().post().uri("/api/v1/profiles/" + profileId + "/roles")
-                .header("Authorization", "Bearer " + TestJwtSupport.signedToken(tenant, "test-subject"))
+                .header("Authorization", "Bearer " + TestJwtSupport.signedTokenWithMfaEvidence(tenant, "test-subject"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("""
                         {"roleId":"%s"}""".formatted(roleId))
@@ -158,7 +161,7 @@ class ProfileAssignmentHttpTests extends AbstractSurrealDbIntegrationTest {
 
     private String defineTenantScopedRole(String tenant, String name) {
         byte[] body = client().post().uri("/api/v1/roles")
-                .header("Authorization", "Bearer " + TestJwtSupport.signedToken(tenant, "test-subject"))
+                .header("Authorization", "Bearer " + TestJwtSupport.signedTokenWithMfaEvidence(tenant, "test-subject"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("""
                         {"name":"%s","scope":"TENANT"}""".formatted(name))

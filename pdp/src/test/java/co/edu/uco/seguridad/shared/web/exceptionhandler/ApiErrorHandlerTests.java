@@ -4,6 +4,8 @@ import co.edu.uco.seguridad.pdp.applications.domain.exception.DuplicateApplicati
 import co.edu.uco.seguridad.pdp.applications.domain.exception.ReservedApplicationNameException;
 import co.edu.uco.seguridad.pdp.authorization.domain.exception.MfaEvidenceRequiredException;
 import co.edu.uco.seguridad.pdp.authorization.domain.exception.NotAuthorizedToAdministerException;
+import co.edu.uco.seguridad.pdp.authorization.domain.exception.NotAuthorizedToAdministerTenantCatalogException;
+import co.edu.uco.seguridad.pdp.authorization.domain.message.AuthorizationMessages;
 import co.edu.uco.seguridad.pdp.commons.exception.InvalidApplicationNameException;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
@@ -17,6 +19,7 @@ import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.web.server.ServerWebInputException;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -98,6 +101,32 @@ class ApiErrorHandlerTests {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(response.getBody().getProperties()).containsEntry("code", "NOT_AUTHORIZED_TO_ADMINISTER");
+    }
+
+    @Test
+    void not_being_authorized_to_administer_the_tenant_catalog_becomes_a_403_with_its_own_code() {
+        ResponseEntity<ProblemDetail> response = handler.businessRule(
+                new NotAuthorizedToAdministerTenantCatalogException(new TenantId("universidad-uco"),
+                        Optional.of(new ApplicationId(APPLICATION_UUID))),
+                exchange());
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        ProblemDetail body = response.getBody();
+        assertThat(body).isNotNull();
+        assertThat(body.getStatus()).isEqualTo(403);
+        assertThat(body.getTitle()).isEqualTo("NOT_AUTHORIZED_TO_ADMINISTER_TENANT_CATALOG");
+        assertThat(body.getType()).hasToString("urn:security-baseline:error:not_authorized_to_administer_tenant_catalog");
+        assertThat(body.getProperties()).containsEntry("code", "NOT_AUTHORIZED_TO_ADMINISTER_TENANT_CATALOG");
+        assertThat(body.getDetail()).isEqualTo(AuthorizationMessages.notAuthorizedToAdministerTenantCatalog());
+    }
+
+    @Test
+    void the_tenant_catalog_denial_without_an_evaluated_application_is_also_a_403() {
+        ResponseEntity<ProblemDetail> response = handler.businessRule(
+                new NotAuthorizedToAdministerTenantCatalogException(new TenantId("universidad-uco"), Optional.empty()),
+                exchange());
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
 
     @Test

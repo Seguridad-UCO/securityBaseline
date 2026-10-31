@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.shared.config;
 
+import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserIdLookupValidator;
 import co.edu.uco.seguridad.shared.security.*;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -125,7 +126,7 @@ class SecurityConfiguration {
      */
     @Bean
     @Primary
-    ReactiveJwtDecoder jwtDecoder(JwtSecurityProperties properties) {
+    ReactiveJwtDecoder jwtDecoder(JwtSecurityProperties properties, SubjectUserIdLookupValidator subjectUserIdLookup) {
         NimbusReactiveJwtDecoder decoder = properties.usesJwks()
                 ? NimbusReactiveJwtDecoder.withJwkSetUri(properties.jwkSetUri()).build()
                 : NimbusReactiveJwtDecoder.withSecretKey(hmacKey(properties.secret())).build();
@@ -139,7 +140,8 @@ class SecurityConfiguration {
                 new JwtClaimValidator<List<String>>("aud",
                         audiences -> audiences != null && audiences.contains(properties.audience()))));
         decoder.setJwtValidator(validator);
-        return decoder;
+        // HU-038: sellado suave del claim interno (sin aprovisionar), coherente con el canal Keycloak.
+        return new LocalIdentityStampingJwtDecoder(decoder, subjectUserIdLookup);
     }
 
     private static SecretKeySpec hmacKey(String secret) {
