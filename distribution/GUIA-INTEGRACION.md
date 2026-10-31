@@ -278,6 +278,64 @@ await fetch("http://localhost:8082/api/notas", {
 
 El backend debe permitir el origen de su frontend y credenciales en CORS. Para un frontend Vite en `http://localhost:5174`, permita exactamente ese origen y `allowCredentials=true`; no use `*` cuando se envían cookies.
 
+### 9.1 Dos canales: cookie BFF o Bearer
+
+La cookie del laboratorio funciona porque frontend, BFF y backend viven en `localhost`. En una aplicación real que **tiene su propio login OIDC** el canal de integración es el Bearer (ADR-031): la cookie del PDP es de otro sitio y `SameSite=Lax` la bloquea.
+
+| | Cookie BFF | Bearer |
+|---|---|---|
+| Quién es dueño de la sesión | El PDP (panel propio) | **La aplicación host** |
+| Qué viaja | `SECURITY_BASELINE_SESSION` + `X-XSRF-TOKEN` en escrituras | `Authorization: Bearer <access token>`; sin cookies ni CSRF |
+| Renovación del token | El PDP renueva del lado servidor; el navegador nunca ve un token (ADR-033) | **La aplicación renueva con su propio cliente OIDC**; el PDP no expone endpoint de refresh |
+| Cierre de sesión | `DELETE /api/v1/session` cierra la sesión global del usuario (panel) | `DELETE /api/v1/session` revoca solo el token presentado y los del mismo cliente (`azp`); no cierra la sesión en otras aplicaciones ni en el panel (ADR-034) |
+| Uso recomendado | Laboratorio y panel de Seguridad | Aplicaciones protegidas, microfrontend de seguridad y herramientas |
+
+Para el canal Bearer, Seguridad debe dejar hecho por cada aplicación host:
+
+1. Un cliente en el realm de Keycloak (público con PKCE, o confidencial vía su backend) con el *audience mapper* que añade `security-baseline-pdp` a `aud`.
+2. Un *mapper* que ponga en el token el claim `tenant` (atributo del usuario). El PDP toma el tenant del claim, nunca del cuerpo ni de la query; sin él, toda llamada responde `400 INVALID_TENANT_ID`. (La cookie BFF usa el tenant por defecto del PDP, por eso el laboratorio no lo muestra.)
+3. Su origen exacto en `pdp.security.cors.allowed-origins` (`PDP_CORS_ALLOWED_ORIGINS`); nunca `*`.
+4. Si el usuario administra seguridad, un token con la evidencia de MFA exigida (ADR-027); si el host no la eleva, esas operaciones responden `403 MFA_REQUIRED`, que es el comportamiento correcto.
+5. **Limitación actual:** el canal Bearer todavía no aprovisiona la identidad del usuario (HU-026, criterio 5). Un usuario que nunca ingresó al panel recibe `401` en todo; hasta que se implemente, cada usuario debe haber ingresado una vez por el panel (cookie BFF) o ser aprovisionado por Seguridad.
+
+### 9.2 Montar el microfrontend de seguridad en su aplicación
+
+El panel de administración de seguridad de **su** aplicación se incrusta como componente; no necesita construir pantallas de roles, perfiles, recursos ni asignaciones:
+
+```ts
+import { mount } from "https://security-ui.example.edu/v1/security-administration.js";
+
+const handle = mount(document.querySelector("#security")!, {
+  applicationId: "<uuid-de-su-aplicacion>",   // o applicationName
+  apiBaseUrl: "https://pdp.example.edu",
+  // Token vigente con audiencia del PDP, pedido antes de CADA petición. El componente no lo guarda.
+  getAccessToken: () => auth.getValidAccessToken(),
+  // El componente informa y nunca reintenta: usted decide.
+  onError: ({ cause }) => {
+    if (cause === "unauthenticated") auth.login();       // 401, o no hubo token
+    if (cause === "mfa_required") auth.stepUpWithMfa();  // 403 MFA_REQUIRED
+    // "forbidden" (403) y "unavailable" (429/503) normalmente solo se muestran.
+  },
+});
+// handle.refresh() recarga los datos; handle.unmount() desmonta.
+```
+
+- Va en Shadow DOM: no hereda ni contamina los estilos de su aplicación; se adapta con `theme` (`accent`, `fontFamily`, `radius`).
+- Su CSP necesita `script-src` hacia el origen del módulo y `connect-src` hacia el PDP.
+- Solo administra la aplicación indicada y solo si el usuario es su administrador; ocultar o mostrar el componente **no autoriza nada**: cada llamada la vuelve a decidir el PDP.
+- El detalle del contrato (opciones, caché, Module Federation) está en `security-ui/INTEGRATION-STANDARD.md`.
+
+### 9.3 Qué debe hacer su frontend con cada código
+
+| Código | Qué hacer |
+|---|---|
+| `401` | Sesión muerta o token inválido: iniciar sesión de nuevo. No reintentar en bucle. |
+| `403 MFA_REQUIRED` | Reautenticar al usuario con segundo factor y repetir la operación. |
+| `403 NOT_AUTHORIZED_TO_ADMINISTER` | El usuario no administra esa aplicación. Mostrarlo; no es reintentable. |
+| `403 NOT_AUTHORIZED_TO_ADMINISTER_TENANT_CATALOG` | Definir o modificar roles y perfiles **de todo el inquilino** exige administrar al menos una aplicación del inquilino (ADR-036). |
+| `429` | Demasiadas solicitudes: esperar y reintentar. |
+| `503` | Keycloak o el PDP no están disponibles de forma pasajera: mostrar "reintentar" con un retardo propio. **No** llevar al login ni cerrar la sesión. |
+
 ## 10. Interpretar respuestas y resolver problemas
 
 | Respuesta | Significado | Qué revisar |
@@ -285,6 +343,8 @@ El backend debe permitir el origen de su frontend y credenciales en CORS. Para u
 | `401 TOKEN_INVALID` | Falta sesión/Bearer o el token no es válido. | Inicie sesión otra vez, confirme que la cookie se envía o que el Bearer corresponde al realm local. |
 | `403 ACCESS_DENIED` | La identidad es válida, pero no hay política aplicable. | Revise método/ruta exactos, recurso asociado al rol, rol en el perfil y perfil asignado al usuario. |
 | `403 NO_APPLICABLE_POLICY` en auditoría | No existe una relación aplicable entre recurso, rol y usuario. | Asociar el recurso al rol: el perfil por sí solo no concede acceso. |
+| `403 MFA_REQUIRED` | La operación administrativa exige evidencia de segundo factor. | Que el token traiga el `acr`/`amr` exigido; el host debe elevar el MFA (9.3). |
+| `403 NOT_AUTHORIZED_TO_ADMINISTER_TENANT_CATALOG` | Se intentó definir o editar un rol/perfil de alcance inquilino sin administrar ninguna aplicación. | Registrar o recibir la administración de una aplicación del inquilino (ADR-036). |
 | `503 PEP_UNAVAILABLE` | El backend no logra llegar al PEP/PDP. | Confirme `http://localhost:18081/actuator/health`, la URL del PEP y que Docker esté activo. |
 | Maven `401` | GitHub Packages rechazó las credenciales. | Revise `settings.xml`, el token classic, `read:packages` y acceso al repositorio. |
 | Puerto ocupado | Otro proceso usa un puerto del baseline. | Cambie el puerto correspondiente en `.env`, ejecute `docker compose up -d` y actualice las URLs consumidoras. |
@@ -344,3 +404,8 @@ Para producción se requiere, como mínimo: HTTPS, identidad corporativa, MFA pa
 - [ ] El backend tiene el starter y configura `application-name`, PEP URL, ambiente y credencial.
 - [ ] El frontend envía cookie de sesión o Bearer y CORS permite credenciales.
 - [ ] Se validaron al menos una operación permitida y una denegada.
+- [ ] Si la aplicación tiene su propio login: su cliente de Keycloak lleva el audience `security-baseline-pdp`, su origen está en `PDP_CORS_ALLOWED_ORIGINS` y renueva sus tokens con su propio cliente OIDC (9.1).
+- [ ] Si incrusta el microfrontend de seguridad: entrega `getAccessToken` (token vigente en cada llamada) y trata `onError` para `unauthenticated` y `mfa_required` (9.2).
+- [ ] El frontend distingue `401`, `403 MFA_REQUIRED`, `429` y `503` y no cierra la sesión ante un `503` (9.3).
+- [ ] Quien define roles o perfiles de alcance inquilino administra al menos una aplicación del inquilino (ADR-036).
+- [ ] En producción, delante del PDP/PEP va el edge con WAF (`edge/`): empezar en `detection`, revisar las evidencias y solo entonces pasar a `blocking`; `/internal/*` no debe ser alcanzable desde fuera.

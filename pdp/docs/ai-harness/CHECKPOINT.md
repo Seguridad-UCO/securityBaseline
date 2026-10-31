@@ -41,9 +41,11 @@ Estado del trabajo para retomarlo en cualquier máquina. Se actualiza al cerrar 
 | HU-031          | El PEP propaga el `503` del canal BFF en vez de convertirlo en `401` (nueva) | ✅ — validada, ver REPORTE-HU-031.md (la suite del PEP conservaba un error heredado: resuelto en HU-032) |
 | HU-032          | Fronteras Modulith del PEP: `PepArchitectureTests` en verde sin relajar reglas (nueva; requiere ADR-035) | ✅ — validada, ver REPORTE-HU-032.md (ADR-035; `pep` verify 79 pruebas en verde) |
 | HU-033          | `MFA_REQUIRED` responde `403` y no `400` (ADR-031; nueva) | ✅ — validada, ver REPORTE-HU-033.md |
-| HU-034          | Observabilidad del WAF: bloqueos en Loki y Grafana con regla, ruta y `correlationId` (nueva; criterio 5 de HU-027) | ✅ — validada, ver REPORTE-HU-034.md |
+| HU-034          | Observabilidad del WAF: bloqueos en Loki y Grafana con regla, ruta y `correlationId` (nueva; criterio 5 de HU-027) | ⏳ pendiente |
 | HU-035          | Endurecer la carga masiva de roles y perfiles de `develop`: gate de administrador de la aplicación, contadores, `mode`, límites y cabeceras (nueva) | ✅ — validada, ver REPORTE-HU-035.md |
 | HU-036          | Quién puede crear y editar roles y perfiles de alcance TENANT: gate «administra al menos una aplicación del tenant» en las seis vías (individual, edición, PATCH/DELETE y masiva) (nueva) | ✅ — validada, ver REPORTE-HU-036.md (ADR-036; verify 1125 pruebas, consistencia y drift en verde) |
+| HU-037          | Canal bearer del microfrontend de seguridad: `getAccessToken` y `onError` para el host (ADR-031; nueva; repositorio `security-ui`) | ✅ — ver `workspace/HU-037.md` (28 pruebas Vitest, `tsc` limpio, `dist/` regenerado). Probado de punta a punta en navegador con un host real (Bearer, renovación y revocación; 2026-10-30) |
+| HU-038          | El canal Bearer aprovisiona la identidad local del usuario (criterio 5 de HU-026 sin cumplir; nueva, hallada por la E2E) | ✅ — validada, ver `workspace/HU-038.md`: un usuario que nunca entró al panel se aprovisiona sola por Bearer |
 
 **Estado verificado el 2026-09-15 (working tree, sobre `develop` + HU-018/HU-019 sin comitear):**
 `mvnw clean verify` → **675 pruebas, 0 fallos, 0 errores**, cobertura ≥ 50 % por paquete,

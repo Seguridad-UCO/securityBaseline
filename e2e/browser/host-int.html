@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>Host de prueba E2E</title>
+<style>body{font-family:system-ui;margin:24px}#bar{margin-bottom:12px}button{margin-right:6px}pre{background:#f4f4f4;padding:8px;white-space:pre-wrap}</style></head>
+<body>
+<div id="bar">
+  <label>Usuario <input id="u" value="edge-tester"></label>
+  <label>Clave <input id="p" type="password" value="EdgeTester#2026"></label>
+  <button id="go">Entrar y montar</button>
+  <button id="out">Cerrar sesion Bearer (revoca)</button>
+</div>
+<pre id="log">Sin sesion. Solo laboratorio: el password grant NO es para produccion.</pre>
+<div id="security"></div>
+<script type="module">
+// Host de ejemplo (ADR-031): dueño de la sesion. Token de SU cliente e2e-host via /kc-token (proxy del servidor de prueba).
+const PDP = "http://localhost:8088"; // edge (WAF) delante del PDP de prueba; CORS permite http://localhost:5190
+let token = null, exp = 0, tokenCalls = 0;
+window.__events = [];
+const log = (m) => { document.getElementById("log").textContent = m; window.__events.push(m); };
+async function login() {
+  const r = await fetch("/kc-token", { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ grant_type: "password", client_id: "e2e-host", username: u.value, password: p.value }) });
+  if (!r.ok) throw new Error("login " + r.status);
+  const j = await r.json(); token = j.access_token; exp = Date.now() + (j.expires_in - 30) * 1000;
+}
+go.onclick = async () => {
+  try {
+    await login();
+    const reg = await fetch(PDP + "/api/v1/applications", { method: "POST",
+      headers: { Authorization: "Bearer " + token, "content-type": "application/json" },
+      body: JSON.stringify({ name: "navegador-" + Date.now(), description: "App creada desde el host de prueba", baseUrl: "https://nav.example.invalid" }) });
+    if (!reg.ok) throw new Error("registro de aplicacion " + reg.status + " " + await reg.text());
+    const appId = (await reg.json()).data.id;
+    window.__appId = appId;
+    const { mount } = await import("/security-administration.js");
+    mount(document.getElementById("security"), {
+      applicationId: appId, apiBaseUrl: PDP,
+      getAccessToken: async () => { tokenCalls++; window.__tokenCalls = tokenCalls; if (Date.now() > exp) await login(); return token; },
+      onError: (e) => log("onError del host: " + JSON.stringify(e)),
+    });
+    log("Montado con Bearer. applicationId=" + appId);
+  } catch (e) { log(String(e)); }
+};
+out.onclick = async () => {
+  const r = await fetch(PDP + "/api/v1/session", { method: "DELETE", headers: { Authorization: "Bearer " + token } });
+  log("Logout Bearer -> HTTP " + r.status + " (el token queda revocado en Redis)");
+};
+</script></body></html>
