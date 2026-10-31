@@ -102,6 +102,12 @@ Al primer arranque, la imagen de Keycloak importa el realm `security-baseline` c
 - login, registro local y sesión BFF;
 - MFA deshabilitado para este laboratorio.
 
+### Si su aplicación entra por Bearer (aplicación externa)
+
+Cree el cliente de su aplicación en Keycloak y, en **Client scopes → Add client scope → Default**, agréguele los tres que trae el realm: **`profile`**, **`email`** y **`security-baseline-app`**. No necesita escribir ningún mapper: entre los tres el token sale con `sub`, la audiencia del PDP, el `tenant`, y `name`, `email` y `email_verified`, que es todo lo que el PDP lee.
+
+Si el cliente no incluye `name`, la persona se muestra con su `preferred_username`; si no incluye `email` verificado, se registra con un correo reservado (`<sujeto>@bearer.invalid`). Un token sin `sub` se rechaza con 401.
+
 No edite claims, clientes, secretos internos ni redirect URIs en la consola de Keycloak. La imagen los entrega coherentes entre sí. Para administración técnica local, Keycloak está en `http://keycloak.localhost:19090` con `admin` / `admin`; esas credenciales son exclusivamente de laboratorio.
 
 El usuario de demostración disponible es `security-demo` / `security-demo`. También se puede registrar un usuario local desde el flujo de inicio de sesión.
