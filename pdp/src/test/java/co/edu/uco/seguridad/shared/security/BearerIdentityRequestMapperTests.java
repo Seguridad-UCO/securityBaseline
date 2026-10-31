@@ -73,6 +73,30 @@ class BearerIdentityRequestMapperTests {
     }
 
     @Test
+    void uses_the_name_claim_when_present() {
+        ResolveBearerIdentityRequest request = BearerIdentityRequestMapper.toRequest(builder()
+                .claim("tenant", "universidad-uco").claim("name", "  Ana Pérez ").claim("preferred_username", "ana").build());
+
+        assertThat(request.name()).isEqualTo("Ana Pérez");
+    }
+
+    @Test
+    void falls_back_to_preferred_username_when_the_client_does_not_emit_name() {
+        ResolveBearerIdentityRequest request = BearerIdentityRequestMapper.toRequest(builder()
+                .claim("tenant", "universidad-uco").claim("preferred_username", "ana").build());
+
+        assertThat(request.name()).isEqualTo("ana");
+    }
+
+    @Test
+    void leaves_the_name_empty_when_the_token_has_neither_claim() {
+        ResolveBearerIdentityRequest request = BearerIdentityRequestMapper.toRequest(
+                builder().claim("tenant", "universidad-uco").build());
+
+        assertThat(request.name()).isEmpty();
+    }
+
+    @Test
     void lowercases_the_identity_provider_claim() {
         ResolveBearerIdentityRequest request = BearerIdentityRequestMapper.toRequest(builder()
                 .claim("tenant", "universidad-uco").claim("identity_provider", "Google").build());

@@ -21,6 +21,7 @@ public final class BearerIdentityRequestMapper {
     private static final String EMAIL_CLAIM = "email";
     private static final String EMAIL_VERIFIED_CLAIM = "email_verified";
     private static final String NAME_CLAIM = "name";
+    private static final String USERNAME_CLAIM = "preferred_username";
     private static final String IDENTITY_PROVIDER_CLAIM = "identity_provider";
     private static final String DEFAULT_PROVIDER = "keycloak-local";
 
@@ -34,7 +35,7 @@ public final class BearerIdentityRequestMapper {
                 new TenantId(jwt.getClaimAsString(TENANT_CLAIM)),
                 email(jwt),
                 Boolean.TRUE.equals(jwt.getClaimAsBoolean(EMAIL_VERIFIED_CLAIM)),
-                jwt.getClaimAsString(NAME_CLAIM),
+                displayName(jwt),
                 provider(jwt));
     }
 
@@ -44,6 +45,16 @@ public final class BearerIdentityRequestMapper {
         } catch (InvalidEmailException invalid) {
             return Optional.empty();
         }
+    }
+
+    /** Nombre para mostrar: {@code name}; si el cliente no lo emite, {@code preferred_username}; si no, vacío. */
+    private static String displayName(Jwt jwt) {
+        String name = jwt.getClaimAsString(NAME_CLAIM);
+        if (name != null && !name.isBlank()) {
+            return name.trim();
+        }
+        String username = jwt.getClaimAsString(USERNAME_CLAIM);
+        return username == null ? null : username.trim();
     }
 
     private static String provider(Jwt jwt) {
