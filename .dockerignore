@@ -1,7 +1,23 @@
+# Base para cualquier build con la raíz del repositorio como contexto. pdp/ y pep/ tienen su propia lista
+# blanca (pdp/Dockerfile.dockerignore, pep/Dockerfile.dockerignore); esta cubre el resto de usos.
 .git
-**/target
-**/.idea
+.gitignore
+.gitattributes
+.claude
+.idea
+.vscode
 **/.DS_Store
+**/target
+**/node_modules
+**/*.log
+**/*.iml
+**/.env
+**/.env.*
+# Documentación, pruebas de extremo a extremo y datos de observabilidad: ninguna imagen los necesita.
+docs
+e2e
+**/*.md
+observability/logs
 notes-security-demo
 pep-webflux-sample
 security-observability
