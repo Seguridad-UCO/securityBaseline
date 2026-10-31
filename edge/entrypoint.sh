@@ -20,6 +20,18 @@ esac
 case "${EDGE_PARANOIA:-1}" in 1|2|3|4) ;; *) fail "EDGE_PARANOIA debe ser 1..4" ;; esac
 case "${EDGE_ANOMALY_INBOUND:-5}" in ''|*[!0-9]*) fail "EDGE_ANOMALY_INBOUND debe ser un entero" ;; esac
 
+# Rotacion del audit log y sonda de deteccion (PLAN-HU-034 §5.5): enteros, o no se arranca.
+uint() { # $1=nombre $2=valor $3=minimo
+  case "$2" in ''|*[!0-9]*) fail "$1 debe ser un entero (recibido: '$2')" ;; esac
+  [ "$2" -ge "$3" ] || fail "$1 debe ser >= $3 (recibido: '$2')"
+}
+uint EDGE_AUDIT_MAX_BYTES "${EDGE_AUDIT_MAX_BYTES:-10485760}" 1
+uint EDGE_AUDIT_KEEP "${EDGE_AUDIT_KEEP:-5}" 1
+uint EDGE_AUDIT_ROTATE_INTERVAL "${EDGE_AUDIT_ROTATE_INTERVAL:-60}" 1
+uint EDGE_DETECT_PROBE_INTERVAL "${EDGE_DETECT_PROBE_INTERVAL:-600}" 0
+export EDGE_AUDIT_MAX_BYTES="${EDGE_AUDIT_MAX_BYTES:-10485760}" EDGE_AUDIT_KEEP="${EDGE_AUDIT_KEEP:-5}" \
+       EDGE_AUDIT_ROTATE_INTERVAL="${EDGE_AUDIT_ROTATE_INTERVAL:-60}" EDGE_DETECT_PROBE_INTERVAL="${EDGE_DETECT_PROBE_INTERVAL:-600}"
+
 # N/ventana -> events N, window ventana (caddy-ratelimit)
 split_rate() { # $1=valor $2=nombre
   case "$1" in
@@ -54,4 +66,6 @@ export EDGE_RULE_ENGINE="${RULE_ENGINE}"
 
 echo "edge: modo=${EDGE_MODE} (SecRuleEngine ${RULE_ENGINE}) paranoia=${EDGE_PARANOIA} umbral=${EDGE_ANOMALY_INBOUND} upstream=${EDGE_UPSTREAM} coraza-caddy=${CORAZA_CADDY_VERSION:-?}"
 caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile || fail "Caddyfile inválido: no se arranca"
+# Rotacion del audit en segundo plano (copytruncate; ver audit-rotate.sh). `sh <ruta>`: no depende del bit +x.
+sh /usr/local/bin/edge-audit-rotate.sh &
 exec caddy run --config /etc/caddy/Caddyfile --adapter caddyfile

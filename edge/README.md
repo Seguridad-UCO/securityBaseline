@@ -52,10 +52,39 @@ cliente del realm es un fixture local y nunca debe reutilizarse fuera de CI/Comp
 
 ## Observabilidad y estado
 
-Caddy elimina el query string, IPs y cabeceras del access log. Coraza mantiene el audit JSON local;
-el Collector solo exporta su `correlationId` y una marca de detección, no datos de petición ni
-detalles de reglas. El Collector y el dashboard usan `service.name = security-edge`; el scrape de
+Caddy elimina el query string, IPs y cabeceras del access log. Coraza mantiene el audit JSON local
+(partes `AKZ`, sin cabeceras ni cuerpos). La regla `85-audit-on-detection.conf` audita toda transacción
+con puntuación > 0 (salvo el latido `edge-healthcheck`) y escribe en su `logdata`
+`anomaly_score=… path=… correlationId=…`. El Collector **no** envía la línea cruda: la sustituye por una
+proyección saneada con `correlationId`, `edge.rule_ids`, `edge.rule_msgs`, `edge.rule_main`, `edge.score`,
+`edge.path` (sin query), `edge.method`, `edge.interrupted` y `edge.transaction_id`; `client_ip`, query y
+`Matched Data` no viajan. Regla, ruta y `correlationId` son *structured metadata* de Loki; solo
+`service_name` y `deployment_environment_name` son etiquetas. Esquema completo en
+[`observability/TELEMETRY-CONVENTION.md`](../observability/TELEMETRY-CONVENTION.md). El scrape de
 métricas llega por la red privada.
+
+### Rotación del audit y canario espaciado
+
+Coraza no reabre `SecAuditLog`, así que la única rotación posible sin reiniciar es *copytruncate*. El
+entrypoint lanza `edge-audit-rotate.sh` en segundo plano: cuando el audit supera el tope, lo copia, lo
+trunca y comprime la copia (`security-edge-audit.json.1.gz` … `.N.gz`, permisos 600). El Collector solo
+lee `security-edge-audit.json`.
+
+| Variable | Default | Efecto |
+|---|---|---|
+| `EDGE_AUDIT_MAX_BYTES` | `10485760` (10 MiB) | tamaño a partir del cual se rota |
+| `EDGE_AUDIT_KEEP` | `5` | archivos `.N.gz` conservados; cota total ≈ `(KEEP + 1) × MAX` (≤ 60 MB) |
+| `EDGE_AUDIT_ROTATE_INTERVAL` | `60` | segundos entre comprobaciones |
+| `EDGE_DETECT_PROBE_INTERVAL` | `600` | segundos entre sondas del motor en `detection` (`0` = en cada latido) |
+
+Los valores no enteros hacen que el edge no arranque. **Pérdida acotada:** lo que Coraza escriba entre el
+`cp` y el truncado (milisegundos) y lo que el Collector aún no hubiera leído si estaba caído; todo lo
+rotado queda en el `.json.1.gz`.
+
+En `detection` el healthcheck comprueba `/_edge/health` en cada latido, pero la sonda del motor (canario
+`edge-healthcheck-detect` y comprobación de que el audit cambia) solo corre cada
+`EDGE_DETECT_PROBE_INTERVAL`: antes eran ~95 MB/día de audit por el canario. Un motor roto se detecta con
+un retraso máximo de ese intervalo más un latido; en `blocking` el canario sigue siendo instantáneo.
 
 Latencia medida en Compose local (2026-10-30, `blocking`, 3x400 peticiones por caso, ver
 [`EVIDENCIA-HU-027.md`](../pdp/docs/ai-harness/workspace/reportes/EVIDENCIA-HU-027.md)): el edge añade

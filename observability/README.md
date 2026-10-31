@@ -18,3 +18,31 @@ Una solicitud que atraviese PEP y PDP debe producir métricas HTTP y de autoriza
 `security_access_events_total`, el evento `security.access.event.recorded` filtrable por
 `correlationId` en Loki y su traza W3C correspondiente en Jaeger. El contrato y los límites de
 privacidad están en [TELEMETRY-CONVENTION.md](TELEMETRY-CONVENTION.md).
+
+## Observabilidad del WAF (HU-034)
+
+Cada detección o bloqueo del edge llega a Loki con `service_name="security-edge"`, la regla, la
+puntuación, la ruta y el `correlationId` (esquema en [TELEMETRY-CONVENTION.md](TELEMETRY-CONVENTION.md)).
+Consultas de ejemplo:
+
+```logql
+{service_name="security-edge"} | correlationId="<id>"
+{service_name="security-edge"} | edge_rule_ids=~".*941100.*" | edge_path="/api/v1/applications"
+{service_name=~"security-(edge|pdp)"} | correlationId="<id>"
+```
+
+El dashboard `security-platform` incluye el panel 15 (detecciones), el 16 (por regla principal) y el 17
+(por ruta). "Por regla" es la regla principal (`edge.rule_main`); el conjunto completo está en
+`edge_rule_ids`.
+
+### Prueba de punta a punta
+
+`tests/Test-WafObservability.ps1` levanta una pila efímera (`compose.test.yml`: edge + stub de PDP +
+Collector + Loki + Grafana, proyecto `hu034-obs-test`), ataca el edge y comprueba Loki y Grafana. No
+descarga imágenes (exige que `security-edge:local`, `alpine:3.20`, el Collector, Loki y Grafana ya estén
+locales) y solo derriba su propio proyecto.
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File observability	ests\Test-WafObservability.ps1
+# opciones: -KeepStack, -SkipBlocking, -SkipRotation, -Fases deteccion,bloqueo,rotacion
+```
