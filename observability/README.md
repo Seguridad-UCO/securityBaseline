@@ -46,3 +46,9 @@ locales) y solo derriba su propio proyecto.
 powershell -NoProfile -ExecutionPolicy Bypass -File observability	ests\Test-WafObservability.ps1
 # opciones: -KeepStack, -SkipBlocking, -SkipRotation, -Fases deteccion,bloqueo,rotacion
 ```
+
+## Sin root
+
+Ningún servicio de este stack corre como root. El colector y Jaeger usan el uid 10001; un paso efímero (`volume-permissions`, sin red) entrega a ese uid sus volúmenes nombrados antes de arrancar y conserva los datos que ya existan (offsets del colector, trazas de Jaeger).
+
+Al actualizar desde una versión anterior: los archivos de `logs/` que escribió un contenedor root con modo 600 (p. ej. `security-edge.json`) no los puede leer el colector hasta que cambien de dueño: `chown 10001:10001 logs/security-edge.json` (o bórralos si ya no importan). Los que escriben el edge y el PDP desde ahora ya nacen con el uid 10001.
