@@ -127,7 +127,7 @@ public final class SurrealSecurityUserRepository implements SecurityUserReposito
     public Mono<ResultPage<SecurityUser>> findPageByTenant(TenantId tenantId, String query, PageWindow window) {
         String term = query == null ? "" : query.trim().toLowerCase();
         String statement = """
-                SELECT * FROM %1$s WHERE tenantId = $tenantId AND (string::lowercase(name) CONTAINS $query OR string::lowercase(email) CONTAINS $query) ORDER BY name ASC LIMIT %2$d START %3$d;
+                SELECT * FROM %1$s WHERE tenantId = $tenantId AND (string::lowercase(name) CONTAINS $query OR string::lowercase(email) CONTAINS $query) ORDER BY name COLLATE ASC LIMIT %2$d START %3$d;
                 SELECT count() FROM %1$s WHERE tenantId = $tenantId AND (string::lowercase(name) CONTAINS $query OR string::lowercase(email) CONTAINS $query) GROUP ALL;
                 """.formatted(IdentitySchema.USER_TABLE, window.limit(), window.offset());
         return client.execute(statement, Map.of("tenantId", tenantId.value(), "query", term)).map(results ->
