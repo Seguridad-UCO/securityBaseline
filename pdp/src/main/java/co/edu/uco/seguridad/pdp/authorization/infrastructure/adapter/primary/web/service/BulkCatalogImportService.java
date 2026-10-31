@@ -4,6 +4,8 @@ import co.edu.uco.seguridad.pdp.applications.application.primaryport.request.App
 import co.edu.uco.seguridad.pdp.applications.application.primaryport.response.RegisteredApplicationResponse;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationNameForTenantLookupValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministrationRequest;
+import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.TenantAdministrationRequest;
+import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.PrincipalMustAdministerAtLeastOneApplicationValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.PrincipalMustBeApplicationAdministratorValidator;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.BulkResourceValidationResponse;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.BulkResourceValidationResponse.BulkResourceRowError;
@@ -49,6 +51,12 @@ import java.util.stream.Collectors;
  * sola vez por aplicación y por llamada, antes de cualquier comprobación de duplicados, y cualquier fallo del gate
  * se reporta como {@code NOT_AUTHORIZED} (fail-closed). La aplicación se busca siempre dentro del tenant del
  * principal, de modo que una aplicación ajena es indistinguible de una inexistente.</p>
+ *
+ * <p>Quien carga una fila de alcance TENANT debe administrar al menos una aplicación del tenant (HU-036, ADR-036):
+ * el validador de inquilino se consulta de forma perezosa y una sola vez por llamada (la decisión, permiso o
+ * denegación, se reutiliza para las demás filas TENANT), también antes de cualquier comprobación de duplicados.
+ * Cualquier fallo —denegación, exigencia de MFA o error— se reporta como {@code NOT_AUTHORIZED} en el campo
+ * {@code Alcance*} (fail-closed).</p>
  */
 public final class BulkCatalogImportService {
     private static final String ROLES_MODE = "roles";
@@ -64,6 +72,7 @@ public final class BulkCatalogImportService {
     private static final String UNSUPPORTED_MODE_MESSAGE = "Modalidad de carga no soportada: use roles o profiles";
     private static final String APPLICATION_NOT_FOUND_MESSAGE = "No se encontró la aplicación en el tenant autenticado";
     private static final String NOT_AUTHORIZED_MESSAGE = "No está autorizado para administrar esta aplicación";
+    private static final String TENANT_NOT_AUTHORIZED_MESSAGE = "No está autorizado para definir roles ni perfiles de alcance TENANT: debe administrar al menos una aplicación del tenant";
     private static final String APPLICATION_ONLY_FOR_APPLICATION_SCOPE_MESSAGE = "Aplicación solo aplica al alcance APPLICATION";
     private static final String APPLICATION_SCOPE_REQUIRES_APPLICATION_MESSAGE = "APPLICATION requiere Aplicación";
     private static final String UNSUPPORTED_SCOPE_MESSAGE = "El alcance debe ser TENANT o APPLICATION";
@@ -91,16 +100,18 @@ public final class BulkCatalogImportService {
     private final ProtectedResourceRepository resources;
     private final ApplicationNameForTenantLookupValidator applications;
     private final PrincipalMustBeApplicationAdministratorValidator administrators;
+    private final PrincipalMustAdministerAtLeastOneApplicationValidator tenantAdministrators;
     private final IdentifierGenerator ids;
     private final TimeProvider time;
 
-    public BulkCatalogImportService(BulkCatalogWorkbookService books, RoleRepository roles, ProfileRepository profiles, ProtectedResourceRepository resources, ApplicationNameForTenantLookupValidator applications, PrincipalMustBeApplicationAdministratorValidator administrators, IdentifierGenerator ids, TimeProvider time) {
+    public BulkCatalogImportService(BulkCatalogWorkbookService books, RoleRepository roles, ProfileRepository profiles, ProtectedResourceRepository resources, ApplicationNameForTenantLookupValidator applications, PrincipalMustBeApplicationAdministratorValidator administrators, PrincipalMustAdministerAtLeastOneApplicationValidator tenantAdministrators, IdentifierGenerator ids, TimeProvider time) {
         this.books = books;
         this.roles = roles;
         this.profiles = profiles;
         this.resources = resources;
         this.applications = applications;
         this.administrators = Objects.requireNonNull(administrators, RequiredArgumentMessages.PRINCIPAL_MUST_BE_APPLICATION_ADMINISTRATOR_VALIDATOR);
+        this.tenantAdministrators = Objects.requireNonNull(tenantAdministrators, RequiredArgumentMessages.PRINCIPAL_MUST_ADMINISTER_AT_LEAST_ONE_APPLICATION_VALIDATOR);
         this.ids = ids;
         this.time = time;
     }
@@ -126,7 +137,7 @@ public final class BulkCatalogImportService {
         if (parsed.rows().isEmpty()) {
             return Mono.just(new Result(response(0, parsed.errors(), List.of()), List.of(), List.of()));
         }
-        Batch batch = new Batch(principal, userId, new ArrayList<>(parsed.errors()), new ArrayList<>(), new ArrayList<>(), new HashSet<>(), new HashMap<>(), rowsOf(parsed.errors()));
+        Batch batch = new Batch(principal, userId, new ArrayList<>(parsed.errors()), new ArrayList<>(), new ArrayList<>(), new HashSet<>(), new HashMap<>(), rowsOf(parsed.errors()), tenantDecision(principal, userId));
         return Flux.fromIterable(parsed.rows())
                 .concatMap(row -> resolve(roleMode, row, batch))
                 .doOnNext(batch.accepted()::add)
@@ -183,7 +194,7 @@ public final class BulkCatalogImportService {
         final String normalizedName = name;
         Mono<RoleScope> scope;
         if (level == RoleScopeLevel.TENANT) {
-            scope = Mono.just(RoleScope.ofTenant(batch.principal().tenantId()));
+            scope = authorizedTenantScope(row, batch);
         } else {
             final ApplicationName application;
             try {
@@ -216,6 +227,29 @@ public final class BulkCatalogImportService {
                     }
                     return Mono.just(RoleScope.ofApplication(tenant, application.id()));
                 }));
+    }
+
+    /** Alcance TENANT del principal, si administra al menos una aplicación del tenant (R1, HU-036). */
+    private Mono<RoleScope> authorizedTenantScope(BulkCatalogWorkbookService.CatalogRow row, Batch batch) {
+        return batch.tenantDecision().flatMap(allowed -> {
+            if (!allowed) {
+                batch.errors().add(error(row.row(), SCOPE_FIELD, "NOT_AUTHORIZED", TENANT_NOT_AUTHORIZED_MESSAGE));
+                return Mono.empty();
+            }
+            return Mono.just(RoleScope.ofTenant(batch.principal().tenantId()));
+        });
+    }
+
+    /**
+     * Decisión del validador de inquilino para esta llamada: perezosa (cero consultas si ninguna fila TENANT llega
+     * al gate) y memoizada con {@code cache()}, de modo que las demás filas TENANT reutilizan permiso o denegación.
+     * Fail-closed: cualquier error, incluida la exigencia de MFA, o una respuesta vacía es una denegación.
+     */
+    private Mono<Boolean> tenantDecision(PdpPrincipal principal, UserId userId) {
+        return Mono.defer(() -> tenantAdministrators.execute(new TenantAdministrationRequest(principal.tenantId(), userId, principal.subject(), principal.authenticationContext())))
+                .hasElement()
+                .onErrorReturn(false)
+                .cache();
     }
 
     /** Consulta el gate una sola vez por aplicación y por llamada; cualquier fallo del gate es una denegación. */
@@ -407,7 +441,7 @@ public final class BulkCatalogImportService {
     /** Estado de una sola llamada a validar o confirmar: nada se comparte entre llamadas. */
     private record Batch(PdpPrincipal principal, UserId userId, List<BulkResourceRowError> errors,
                          List<BulkResourceRowError> relationErrors, List<Entry> accepted, Set<String> seen,
-                         Map<ApplicationId, Boolean> decisions, Set<Integer> cellErrorRows) {
+                         Map<ApplicationId, Boolean> decisions, Set<Integer> cellErrorRows, Mono<Boolean> tenantDecision) {
     }
 
     private record Entry(BulkCatalogWorkbookService.CatalogRow row, RoleScope scope, String name,
