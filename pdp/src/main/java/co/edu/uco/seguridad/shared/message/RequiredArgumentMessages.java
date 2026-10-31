@@ -336,6 +336,15 @@ public final class RequiredArgumentMessages {
     public static final String ADMINISTRATION_OPERATION = "se requiere la operación administrativa";
     public static final String ADMINISTRATION_OUTCOME = "se requiere el resultado de la operación administrativa";
 
+    // HU-036 — gate de las escrituras de catálogo de alcance TENANT.
+    public static final String PRINCIPAL_MUST_ADMINISTER_AT_LEAST_ONE_APPLICATION_VALIDATOR =
+            "se requiere el validador de administrador de al menos una aplicación del inquilino";
+    public static final String RESOLVE_USER_APPLICATIONS_USE_CASE =
+            "se requiere el caso de uso de resolución de aplicaciones del usuario";
+    public static final String TENANT_ADMINISTRATION_REQUEST =
+            "se requiere la solicitud de administración de alcance inquilino";
+    public static final String CATALOG_ADMINISTRATION = "se requiere el gate de administración del catálogo";
+    // HU-038 — identidad del usuario Bearer.
     public static final String USER_EMAIL_AVAILABLE_RULE = "se requiere la regla de correo de usuario disponible";
     public static final String RESOLVE_BEARER_IDENTITY_USE_CASE = "se requiere el caso de uso de identidad Bearer";
 
