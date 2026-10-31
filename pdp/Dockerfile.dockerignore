@@ -4,6 +4,7 @@
 *
 !mvnw
 !.mvn
+!docker/java-entrypoint.sh
 !pdp/pom.xml
 # Solo el código de producción: el jar se empaqueta con -DskipTests, las pruebas no hacen falta en la imagen.
 !pdp/src/main

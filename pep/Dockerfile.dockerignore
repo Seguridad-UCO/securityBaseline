@@ -4,6 +4,7 @@
 *
 !mvnw
 !.mvn
+!docker/java-entrypoint.sh
 !pep/pom.xml
 !pep/src
 **/target

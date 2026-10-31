@@ -36,6 +36,8 @@ RUN groupadd --gid 10001 app \
  && useradd --uid 10001 --gid app --no-create-home --shell /usr/sbin/nologin app \
  && mkdir -p /app && chown app:app /app
 COPY --from=jre /javaruntime $JAVA_HOME
+# Suma al almacén de Java los certificados de CA montados en /certs (como la imagen eclipse-temurin).
+COPY --chmod=755 docker/java-entrypoint.sh /usr/local/bin/java-entrypoint.sh
 WORKDIR /app
 COPY --from=build /layers/dependencies/ ./
 COPY --from=build /layers/spring-boot-loader/ ./
@@ -43,4 +45,4 @@ COPY --from=build /layers/snapshot-dependencies/ ./
 COPY --from=build /layers/application/ ./
 USER 10001
 EXPOSE 8081
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["/usr/local/bin/java-entrypoint.sh", "-jar", "/app/app.jar"]

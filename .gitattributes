@@ -7,3 +7,6 @@
 # Mac/Windows, asi que fijarlo aqui es lo unico que lo mantiene reproducible en las dos.
 *.rego text eol=lf
 security-policy-engine/scripts/** text eol=lf
+
+# Scripts de arranque de las imagenes: el shebang falla con CRLF ("bad interpreter").
+docker/*.sh text eol=lf

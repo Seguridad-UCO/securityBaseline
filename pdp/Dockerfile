@@ -35,6 +35,8 @@ RUN groupadd --gid 10001 app \
  && mkdir -p /app/observability/logs /var/log/security \
  && chown -R app:app /app /var/log/security
 COPY --from=builder /javaruntime $JAVA_HOME
+# Suma al almacén de Java los certificados de CA montados en /certs (como la imagen eclipse-temurin).
+COPY --chmod=755 docker/java-entrypoint.sh /usr/local/bin/java-entrypoint.sh
 WORKDIR /app
 # De la capa que menos cambia a la que más: dependencias, cargador, snapshots, aplicación.
 COPY --from=builder /layers/dependencies/ ./
@@ -48,4 +50,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
   CMD ["bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET /actuator/health HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q '\"status\":\"UP\"' <&3"]
 
 EXPOSE 8080
-ENTRYPOINT ["java", "-Xmx512m", "-jar", "app.jar"]
+ENTRYPOINT ["/usr/local/bin/java-entrypoint.sh", "-Xmx512m", "-jar", "app.jar"]
