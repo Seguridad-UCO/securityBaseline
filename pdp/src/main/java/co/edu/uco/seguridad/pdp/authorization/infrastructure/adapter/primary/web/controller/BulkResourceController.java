@@ -5,11 +5,13 @@ import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkCatalogWorkbookService;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkResourceImportService;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkResourceWorkbookService;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.UnsupportedBulkModeException;
 import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserIdLookupValidator;
 import co.edu.uco.seguridad.shared.security.SecurityContext;
 import co.edu.uco.seguridad.shared.web.ApiResponse;
 import co.edu.uco.seguridad.shared.web.CorrelationWebFilter;
+import co.edu.uco.seguridad.shared.web.exception.MalformedRequestFieldException;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -42,17 +44,25 @@ final class BulkResourceController {
 
     @PostMapping(value = "/catalog/{mode}/validate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     Mono<ResponseEntity<ApiResponse<BulkResourceValidationResponse>>> validateCatalog(@PathVariable String mode, @RequestPart("file") FilePart file, ServerWebExchange exchange) {
-        return bytes(file).flatMap(bytes -> SecurityContext.currentPrincipal().flatMap(p -> catalogImports.validate(mode, bytes, p.tenantId()))).map(BulkCatalogImportService.Result::response).map(result -> ResponseEntity.ok(ApiResponse.success("BULK_CATALOG_VALIDATED", "Archivo validado", result, CorrelationWebFilter.context(exchange))));
+        return bytes(file).flatMap(bytes -> withUser(user -> catalogImports.validate(mode, bytes, user.principal(), user.id())))
+                .onErrorMap(UnsupportedBulkModeException.class, BulkResourceController::malformedMode)
+                .map(BulkCatalogImportService.Result::response)
+                .map(result -> ResponseEntity.ok(ApiResponse.success("BULK_CATALOG_VALIDATED", "Archivo validado", result, CorrelationWebFilter.context(exchange))));
     }
 
     @PostMapping(value = "/catalog/{mode}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     Mono<ResponseEntity<ApiResponse<BulkResourceValidationResponse>>> commitCatalog(@PathVariable String mode, @RequestPart("file") FilePart file, ServerWebExchange exchange) {
-        return bytes(file).flatMap(bytes -> SecurityContext.currentPrincipal().flatMap(p -> catalogImports.commit(mode, bytes, p.tenantId()))).map(BulkCatalogImportService.Result::response).map(result -> ResponseEntity.ok(ApiResponse.success("BULK_CATALOG_IMPORTED", "Carga masiva procesada", result, CorrelationWebFilter.context(exchange))));
+        return bytes(file).flatMap(bytes -> withUser(user -> catalogImports.commit(mode, bytes, user.principal(), user.id())))
+                .onErrorMap(UnsupportedBulkModeException.class, BulkResourceController::malformedMode)
+                .map(BulkCatalogImportService.Result::response)
+                .map(result -> ResponseEntity.ok(ApiResponse.success("BULK_CATALOG_IMPORTED", "Carga masiva procesada", result, CorrelationWebFilter.context(exchange))));
     }
 
     @PostMapping(value = "/catalog/{mode}/error-report", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     Mono<ResponseEntity<byte[]>> catalogErrorReport(@PathVariable String mode, @RequestPart("file") FilePart file) {
-        return bytes(file).flatMap(bytes -> SecurityContext.currentPrincipal().flatMap(p -> catalogImports.validate(mode, bytes, p.tenantId()).map(result -> ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM).header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename("reporte-errores.xlsx").build().toString()).body(catalogWorkbooks.errorReport(bytes, result.response().errors())))));
+        return bytes(file).flatMap(bytes -> withUser(user -> catalogImports.validate(mode, bytes, user.principal(), user.id())
+                        .map(result -> ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM).header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename("reporte-errores.xlsx").build().toString()).body(catalogWorkbooks.errorReport(bytes, result.response().errors())))))
+                .onErrorMap(UnsupportedBulkModeException.class, BulkResourceController::malformedMode);
     }
 
     @GetMapping("/catalog-template/{mode}")
@@ -61,9 +71,13 @@ final class BulkResourceController {
             return Mono.just(ResponseEntity.ok().contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                     .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename("plantilla-" + mode + ".xlsx").build().toString())
                     .body(catalogWorkbooks.template(mode)));
-        } catch (IllegalArgumentException error) {
-            return Mono.just(ResponseEntity.badRequest().build());
+        } catch (UnsupportedBulkModeException error) {
+            return Mono.error(malformedMode(error));
         }
+    }
+
+    private static MalformedRequestFieldException malformedMode(UnsupportedBulkModeException error) {
+        return new MalformedRequestFieldException("mode", error.getMessage());
     }
 
     @GetMapping("/template")

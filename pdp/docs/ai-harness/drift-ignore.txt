@@ -69,3 +69,21 @@ WebSessionServerSecurityContextRepository
 # cambio que retiro esta excepcion de OpaPolicyDecisionAdapter (la clase ya existe).
 doc:pdp/docs/ai-harness/workspace/HANDOFF-INTEGRACION-PEP-OPA.md
 doc:pdp/docs/ai-harness/workspace/INTEGRACION-PDP-PEP-OPA.md
+
+# --- Pendiente a proposito: persistencia de la auditoria administrativa (HU-021) -----------------
+# La validacion de HU-021 fue RECHAZADA; SurrealAdministrationEventSchemaInitializer es la clase que
+# falta implementar y el CHECKPOINT y el handoff de HU-027/029 lo dicen asi. Retirar esta linea
+# cuando la clase exista.
+SurrealAdministrationEventSchemaInitializer
+
+# --- Retiradas a proposito por HU-029 (ADR-033) ---------------------------------------------------
+# El plan y el handoff de HU-029 nombran el proxy de refresh que se borro, y los planes de HU-028/030
+# lo citan como historia. Acotado a estas dos clases; cualquier otra clase inexistente sigue fallando.
+KeycloakTokenRefreshAdapter
+TokenRefreshControllerTests
+
+# --- Retiradas a proposito por HU-030 (ADR-033 §2) -------------------------------------------------
+# El almacen Redis de refresh y el wrapper del token response se retiraron: la renovacion vive en
+# BffSessionTokenRenewer. Los planes y el handoff de HU-027/029/030 los nombran como historia.
+RedisRefreshTokenStoreAdapter*
+KeycloakAuthorizationCodeTokenResponseClient*

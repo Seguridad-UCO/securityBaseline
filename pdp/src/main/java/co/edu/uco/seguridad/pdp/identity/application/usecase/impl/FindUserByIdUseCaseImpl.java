@@ -9,6 +9,7 @@ import reactor.core.publisher.Mono;
 import java.util.Objects;
 
 public final class FindUserByIdUseCaseImpl implements FindUserByIdUseCase {
+
     private final SecurityUserRepository users;
 
     public FindUserByIdUseCaseImpl(SecurityUserRepository users) {
@@ -16,8 +17,8 @@ public final class FindUserByIdUseCaseImpl implements FindUserByIdUseCase {
     }
 
     @Override
-    public Mono<UserResponse> execute(UserId userId) {
-        return users.findById(userId).map(user -> new UserResponse(user.id(), user.email().value(), user.name(), "",
-                user.tenantId(), user.createdAt(), user.lastLoginAt()));
+    public Mono<UserResponse> execute(UserId id) {
+        return users.findById(id).map(u -> new UserResponse(u.id(), u.email().value(), u.name(), "",
+                u.tenantId(), u.createdAt(), u.lastLoginAt()));
     }
 }

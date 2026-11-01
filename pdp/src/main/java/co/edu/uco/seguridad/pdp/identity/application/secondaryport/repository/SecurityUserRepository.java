@@ -39,6 +39,14 @@ public interface SecurityUserRepository {
 
     Flux<SecurityUser> findAll();
 
+    /**
+     * Crea de forma atómica el usuario y su vínculo externo (HU-038). Si ya existe una identidad para
+     * ese (issuer, subject) —carrera perdida— no crea nada y devuelve la existente.
+     */
+    default Mono<ExternalIdentity> createUserWithIdentityIfAbsent(SecurityUser user, ExternalIdentity identity) {
+        return Mono.error(new UnsupportedOperationException("La creación atómica de usuario e identidad no está implementada"));
+    }
+
     /** Búsqueda administrativa paginada y aislada por tenant para autocompletados. */
     default Mono<ResultPage<SecurityUser>> findPageByTenant(TenantId tenantId, String query, PageWindow window) {
         return Mono.error(new UnsupportedOperationException("La búsqueda paginada no está implementada"));

@@ -2,6 +2,8 @@ package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.we
 
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministerResourceGrantRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministrationRequest;
+import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.CatalogAdministration;
+import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.TenantAdministrationRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerResourceGrantUseCase;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.GrantResourceRawRequest;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.RoleAdministrationWebResponse;
@@ -22,11 +24,12 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Implementación de {@link AdministerResourceGrantInteractor} (HU-016). A diferencia de
+ * Implementación de {@link AdministerResourceGrantInteractor} (HU-016, HU-036). A diferencia de
  * {@code AdministerRoleDefinitionInteractorImpl}, el applicationId no viene en la petición — se
  * resuelve del rol ya existente vía {@link RoleApplicationLookupValidator}, que también propaga
  * {@code RoleNotFoundException} si el rol no existe para el inquilino, antes de construir el
- * {@code Optional<AdministrationRequest>}.
+ * {@link CatalogAdministration}: aplicación presente ⇒ {@code OfApplication}; vacía (rol {@code TENANT})
+ * ⇒ {@code OfTenant}.
  */
 public final class AdministerResourceGrantInteractorImpl implements AdministerResourceGrantInteractor {
 
@@ -66,8 +69,11 @@ public final class AdministerResourceGrantInteractorImpl implements AdministerRe
         GrantResourceRequest grant = GrantResourceRequestMapper.toRequest(raw, principal.tenantId());
         return roleApplicationLookup.execute(new RoleOwnershipQuery(grant.roleId(), principal.tenantId()))
                 .map(maybeApplicationId -> maybeApplicationId
-                        .map(applicationId -> new AdministrationRequest(principal.tenantId(), applicationId, userId,
-                                principal.subject(), Set.<String>of(), principal.authenticationContext())))
+                        .<CatalogAdministration>map(applicationId -> new CatalogAdministration.OfApplication(
+                                new AdministrationRequest(principal.tenantId(), applicationId, userId,
+                                        principal.subject(), Set.<String>of(), principal.authenticationContext())))
+                        .orElseGet(() -> new CatalogAdministration.OfTenant(new TenantAdministrationRequest(
+                                principal.tenantId(), userId, principal.subject(), principal.authenticationContext()))))
                 .map(administration -> new AdministerResourceGrantRequest(administration, grant, revocation));
     }
 

@@ -28,6 +28,15 @@ primer nivel, con su propio build (`pdp/pom.xml` y `pep/pom.xml` son independien
 no comparten código — se pisan solo en los **contratos**, que viven en
 [`contracts/`](../contracts/README.md) desde la unificación del 2026-09-10.
 
+### Edge/WAF (capa transversal opcional)
+
+El overlay experimental de [`edge/`](../edge/) sitúa Caddy + Coraza/OWASP CRS delante del PDP o del
+PEP en sus topologías Compose. No sustituye sus endpoints ni implica que el tráfico de los entornos
+desplegados ya pase por el WAF. El modo local predeterminado sigue siendo `detection`; solo se
+promoverá a `blocking` después de ejecutar la suite de flujos y ataques y revisar sus evidencias.
+La telemetría del edge se entrega al Collector por la red interna dedicada `security-edge-metrics`;
+el admin API de Caddy queda enlazado a loopback y el endpoint de métricas no se publica en el host.
+
 ---
 
 ## 2. Diagrama de contenedores — lo que existe hoy

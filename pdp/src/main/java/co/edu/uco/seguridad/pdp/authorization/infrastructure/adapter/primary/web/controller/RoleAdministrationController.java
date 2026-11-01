@@ -126,11 +126,20 @@ final class RoleAdministrationController {
                     return Flux.concat(
                                     Flux.fromIterable(toGrant).concatMap(resource -> grantInteractor.execute(new GrantResourceRawRequest(roleId, resource.value().toString()))),
                                     Flux.fromIterable(toRevoke).concatMap(resource -> grantInteractor.revoke(new GrantResourceRawRequest(roleId, resource.value().toString()))))
-                            .last();
+                            // takeLast(1).next() y no last(): sin cambios el flujo queda vacío y last() lanzaría
+                            // NoSuchElementException (500) al guardar dos veces lo mismo.
+                            .takeLast(1).next()
+                            // Sin cambios la operación es idempotente: se confirma con el estado actual del rol
+                            // reconcediendo (idempotente) un recurso que ya tiene.
+                            .switchIfEmpty(Mono.defer(() -> requested.stream().findFirst()
+                                    .map(resource -> grantInteractor.execute(new GrantResourceRawRequest(roleId, resource.value().toString())))
+                                    .orElseGet(Mono::empty)));
                 })
-                .switchIfEmpty(Mono.error(new IllegalArgumentException("No hubo cambios para sincronizar")))
                 .map(response -> ResponseEntity.ok(ApiResponse.success("ROLE_RESOURCES_SYNCHRONIZED",
-                        "Los permisos de la aplicación fueron sincronizados", response, context)));
+                        "Los permisos de la aplicación fueron sincronizados", response, context)))
+                // Ni cambios ni recursos pedidos: el rol ya no tiene permisos en esta aplicación y no hay nada que hacer.
+                .switchIfEmpty(Mono.fromSupplier(() -> ResponseEntity.ok(ApiResponse.success("ROLE_RESOURCES_SYNCHRONIZED",
+                        "Los permisos de la aplicación ya estaban así", (RoleAdministrationWebResponse) null, context))));
     }
 
     private Mono<Void> validateRequestedApplication(BatchRoleResourcesRawRequest body) {

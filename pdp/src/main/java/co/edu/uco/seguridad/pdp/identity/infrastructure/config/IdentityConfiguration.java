@@ -20,6 +20,10 @@ import co.edu.uco.seguridad.pdp.identity.application.usecase.impl.ListUsersUseCa
 import co.edu.uco.seguridad.pdp.identity.application.usecase.impl.ProvisionIdentityUseCaseImpl;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.impl.ResolveExternalIdentityUseCaseImpl;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.impl.SearchUsersPageUseCaseImpl;
+import co.edu.uco.seguridad.pdp.identity.application.usecase.ResolveBearerIdentityUseCase;
+import co.edu.uco.seguridad.pdp.identity.application.usecase.impl.ResolveBearerIdentityUseCaseImpl;
+import co.edu.uco.seguridad.pdp.identity.domain.rule.UserEmailMustBeAvailableRule;
+import co.edu.uco.seguridad.pdp.identity.domain.rule.impl.UserEmailMustBeAvailableRuleImpl;
 import co.edu.uco.seguridad.pdp.identity.domain.rule.UserMustExistRule;
 import co.edu.uco.seguridad.pdp.identity.domain.rule.impl.UserMustExistRuleImpl;
 import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.interactor.AssignTenantInteractor;
@@ -111,6 +115,21 @@ public class IdentityConfiguration {
     @Bean
     UserMustExistValidator userMustExistValidator(SecurityUserRepository repository, UserMustExistRule mustExist) {
         return new UserMustExistValidatorImpl(repository, mustExist);
+    }
+
+    // HU-038 — canal Bearer: reconoce o aprovisiona la identidad del sub en el tenant del claim.
+    @Bean
+    UserEmailMustBeAvailableRule userEmailMustBeAvailableRule() {
+        return new UserEmailMustBeAvailableRuleImpl();
+    }
+
+    @Bean
+    ResolveBearerIdentityUseCase resolveBearerIdentityUseCase(SecurityUserRepository repository,
+                                                              TenantMustBeActiveValidator tenantMustBeActive,
+                                                              UserEmailMustBeAvailableRule emailMustBeAvailable,
+                                                              IdentifierGenerator identifiers, TimeProvider time) {
+        return new ResolveBearerIdentityUseCaseImpl(repository, tenantMustBeActive, emailMustBeAvailable,
+                identifiers, time);
     }
 
     // HU-015 (enmienda §14) — resuelve el UserId de quien llama cuando el principal no lo trae ya

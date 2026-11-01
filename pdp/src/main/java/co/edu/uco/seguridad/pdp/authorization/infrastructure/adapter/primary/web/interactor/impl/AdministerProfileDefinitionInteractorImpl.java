@@ -2,6 +2,8 @@ package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.we
 
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministerProfileDefinitionRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministrationRequest;
+import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.CatalogAdministration;
+import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.TenantAdministrationRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerProfileDefinitionUseCase;
 import co.edu.uco.seguridad.pdp.authorization.domain.message.AuthorizationMessages;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.DefineProfileRawRequest;
@@ -25,14 +27,13 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Implementación de {@link AdministerProfileDefinitionInteractor} (HU-019). Construye
- * {@code Optional<AdministrationRequest>} directo desde el {@code RoleScope} de la petición — vacío
- * para alcance {@code TENANT}, sin lookup — mismo criterio que
+ * Implementación de {@link AdministerProfileDefinitionInteractor} (HU-019, HU-036). Construye el
+ * {@link CatalogAdministration} directo desde el {@code RoleScope} de la petición — {@code OfApplication}
+ * para alcance {@code APPLICATION}, {@code OfTenant} para {@code TENANT}, sin lookup — mismo criterio que
  * {@code AdministerRoleDefinitionInteractorImpl} (HU-016).
  */
 public final class AdministerProfileDefinitionInteractorImpl implements AdministerProfileDefinitionInteractor {
@@ -70,9 +71,12 @@ public final class AdministerProfileDefinitionInteractorImpl implements Administ
                 : requireNoApplicationId(raw, principal.tenantId());
 
         DefineProfileRequest profile = new DefineProfileRequest(name, scope);
-        Optional<AdministrationRequest> administration = scope.applicationId()
-                .map(applicationId -> new AdministrationRequest(principal.tenantId(), applicationId, subjectUserId,
-                        principal.subject(), Set.of(), principal.authenticationContext()));
+        CatalogAdministration administration = scope.applicationId()
+                .<CatalogAdministration>map(applicationId -> new CatalogAdministration.OfApplication(
+                        new AdministrationRequest(principal.tenantId(), applicationId, subjectUserId,
+                                principal.subject(), Set.of(), principal.authenticationContext())))
+                .orElseGet(() -> new CatalogAdministration.OfTenant(new TenantAdministrationRequest(
+                        principal.tenantId(), subjectUserId, principal.subject(), principal.authenticationContext())));
         return new AdministerProfileDefinitionRequest(administration, profile);
     }
 

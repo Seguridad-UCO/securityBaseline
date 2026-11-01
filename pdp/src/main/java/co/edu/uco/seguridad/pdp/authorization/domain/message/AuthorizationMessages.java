@@ -40,6 +40,13 @@ public final class AuthorizationMessages {
         return "El sujeto no tiene evidencia de MFA para administrar la aplicación " + applicationId.value();
     }
 
+    // HU-036 — escrituras de catálogo de alcance TENANT: el actor es quien administra al menos una
+    // aplicación del inquilino (ADR-036).
+    public static String notAuthorizedToAdministerTenantCatalog() {
+        return "El sujeto no está autorizado a administrar el catálogo de alcance inquilino: debe administrar "
+                + "al menos una aplicación del inquilino";
+    }
+
     public static String currentUserApplicationsAccessDenied() {
         return "El sujeto autenticado no puede consultar sus aplicaciones";
     }

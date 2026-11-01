@@ -4,22 +4,20 @@ import co.edu.uco.seguridad.pdp.roles.application.primaryport.request.GrantResou
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
-import java.util.Optional;
 
 /**
- * Entrada de {@code AdministerResourceGrantUseCase} (HU-016): la solicitud de concesión de
- * recurso, más la administración a gatear si el rol que la recibe es de alcance {@code APPLICATION}.
- * Misma semántica de {@code administration} vacío que {@link AdministerRoleDefinitionRequest}.
+ * Entrada de {@code AdministerResourceGrantUseCase} (HU-016, HU-036): la solicitud de concesión o revocación
+ * de recurso, más el gate que exige el alcance del rol que la recibe. Ver {@link CatalogAdministration}.
  */
-public record AdministerResourceGrantRequest(Optional<AdministrationRequest> administration, GrantResourceRequest grant,
+public record AdministerResourceGrantRequest(CatalogAdministration administration, GrantResourceRequest grant,
                                              boolean revocation) {
 
     public AdministerResourceGrantRequest {
-        Objects.requireNonNull(administration, RequiredArgumentMessages.ADMINISTRATION);
+        Objects.requireNonNull(administration, RequiredArgumentMessages.CATALOG_ADMINISTRATION);
         Objects.requireNonNull(grant, RequiredArgumentMessages.GRANT_RESOURCE_REQUEST);
     }
 
-    public AdministerResourceGrantRequest(Optional<AdministrationRequest> administration, GrantResourceRequest grant) {
+    public AdministerResourceGrantRequest(CatalogAdministration administration, GrantResourceRequest grant) {
         this(administration, grant, false);
     }
 }

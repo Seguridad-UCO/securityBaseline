@@ -2,6 +2,8 @@ package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.we
 
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministerProfileRoleAdditionRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministrationRequest;
+import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.CatalogAdministration;
+import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.TenantAdministrationRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerProfileRoleAdditionUseCase;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.AddRoleToProfileRawRequest;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.ProfileAdministrationWebResponse;
@@ -26,9 +28,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Implementación de {@link AdministerProfileRoleAdditionInteractor} (HU-019). Resuelve el
+ * Implementación de {@link AdministerProfileRoleAdditionInteractor} (HU-019, HU-036). Resuelve el
  * {@code applicationId} vía {@link ProfileApplicationLookupValidator} — la petición no lo trae
- * directo. Mismo criterio que {@code AdministerResourceGrantInteractorImpl} (HU-016).
+ * directo. Mismo criterio que {@code AdministerResourceGrantInteractorImpl} (HU-016): aplicación presente
+ * ⇒ {@code OfApplication}; vacía (perfil {@code TENANT}) ⇒ {@code OfTenant}.
  */
 public final class AdministerProfileRoleAdditionInteractorImpl implements AdministerProfileRoleAdditionInteractor {
 
@@ -64,9 +67,13 @@ public final class AdministerProfileRoleAdditionInteractorImpl implements Admini
                     return Mono.zip(resolveUserId(principal),
                                     profileApplicationLookup.execute(new ProfileOwnershipQuery(principal.tenantId(), profileId)))
                             .map(tuple -> new AdministerProfileRoleAdditionRequest(
-                                    tuple.getT2().map(applicationId -> new AdministrationRequest(principal.tenantId(),
-                                            applicationId, tuple.getT1(), principal.subject(), Set.of(),
-                                            principal.authenticationContext())),
+                                    tuple.getT2().<CatalogAdministration>map(applicationId -> new CatalogAdministration.OfApplication(
+                                                    new AdministrationRequest(principal.tenantId(), applicationId,
+                                                            tuple.getT1(), principal.subject(), Set.of(),
+                                                            principal.authenticationContext())))
+                                            .orElseGet(() -> new CatalogAdministration.OfTenant(
+                                                    new TenantAdministrationRequest(principal.tenantId(), tuple.getT1(),
+                                                            principal.subject(), principal.authenticationContext()))),
                                     addition, removal));
                 })
                 .flatMap(useCase::execute)

@@ -7,11 +7,9 @@ import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.Princip
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.BulkResourceValidationResponse;
 import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository.ProtectedResourceRepository;
-import co.edu.uco.seguridad.pdp.resources.application.primaryport.request.RegisterProtectedResourceRequest;
-import co.edu.uco.seguridad.pdp.resources.application.primaryport.request.RegisterProtectedResourcesAtomicallyRequest;
-import co.edu.uco.seguridad.pdp.resources.application.usecase.RegisterProtectedResourcesAtomicallyUseCase;
 import co.edu.uco.seguridad.pdp.resources.domain.ProtectedResource;
 import co.edu.uco.seguridad.pdp.resources.domain.model.*;
+import co.edu.uco.seguridad.pdp.resources.application.usecase.RegisterProtectedResourcesInBulkUseCase;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
 import co.edu.uco.seguridad.shared.security.PdpPrincipal;
@@ -23,13 +21,13 @@ import java.util.*;
 public final class BulkResourceImportService {
  private final BulkResourceWorkbookService workbooks; private final ApplicationNameForTenantLookupValidator applications;
  private final PrincipalMustBeApplicationAdministratorValidator administrators; private final ProtectedResourceRepository resources;
- private final IdentifierGenerator identifiers; private final TimeProvider time; private final RegisterProtectedResourcesAtomicallyUseCase registerResources;
- public BulkResourceImportService(BulkResourceWorkbookService w, ApplicationNameForTenantLookupValidator a, PrincipalMustBeApplicationAdministratorValidator ad, ProtectedResourceRepository r, IdentifierGenerator i, TimeProvider t, RegisterProtectedResourcesAtomicallyUseCase registerResources){workbooks=w;applications=a;administrators=ad;resources=r;identifiers=i;time=t;this.registerResources=registerResources;}
+ private final IdentifierGenerator identifiers; private final TimeProvider time; private final RegisterProtectedResourcesInBulkUseCase bulkRegistration;
+ public BulkResourceImportService(BulkResourceWorkbookService w, ApplicationNameForTenantLookupValidator a, PrincipalMustBeApplicationAdministratorValidator ad, ProtectedResourceRepository r, IdentifierGenerator i, TimeProvider t, RegisterProtectedResourcesInBulkUseCase bulkRegistration){workbooks=w;applications=a;administrators=ad;resources=r;identifiers=i;time=t;this.bulkRegistration=bulkRegistration;}
  public Mono<Result> validate(byte[] bytes, PdpPrincipal principal, UserId userId) {
   BulkResourceWorkbookService.ParsedWorkbook parsed=workbooks.parse(bytes); List<BulkResourceValidationResponse.BulkResourceRowError> errors=new ArrayList<>(parsed.errors()); List<Resolved> valid=new ArrayList<>();
   return Flux.fromIterable(parsed.rows()).concatMap(row -> resolve(row,principal,userId,errors).doOnNext(valid::add)).then(Mono.fromSupplier(()->result(parsed.rows().size(),errors,valid)));
  }
- public Mono<Result> commit(byte[] bytes, PdpPrincipal principal, UserId userId) { return validate(bytes,principal,userId).flatMap(result -> result.response().ready() ? registerResources.execute(new RegisterProtectedResourcesAtomicallyRequest(result.resources().stream().map(resource -> new RegisterProtectedResourceRequest(resource.tenantId(), resource.applicationId(), resource.path(), resource.method())).toList())).thenReturn(result) : Mono.just(result)); }
+ public Mono<Result> commit(byte[] bytes, PdpPrincipal principal, UserId userId) { return validate(bytes,principal,userId).flatMap(result -> result.response().ready() ? bulkRegistration.execute(result.resources()).thenReturn(result) : Mono.just(result)); }
  private Mono<Resolved> resolve(BulkResourceWorkbookService.RowValue row,PdpPrincipal principal,UserId userId,List<BulkResourceValidationResponse.BulkResourceRowError> errors) {
   final ApplicationName name; final ResourcePath path; final HttpVerb method;
   try { name=new ApplicationName(row.applicationName()); path=new ResourcePath(row.path()); method=HttpVerb.parse(row.method()); }

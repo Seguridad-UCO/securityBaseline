@@ -1,6 +1,10 @@
-# Checkpoint — 2026-09-13
+# Checkpoint — actualización 2026-10-28
 
 Estado del trabajo para retomarlo en cualquier máquina. Se actualiza al cerrar cada tramo.
+
+> Para HU-027/028/029, este checkpoint histórico fue reconciliado con evidencia local reciente.
+> El estado por historia y las tareas para el validador están en
+> [`workspace/HANDOFF-VALIDACION-HU-027-029.md`](workspace/HANDOFF-VALIDACION-HU-027-029.md).
 
 ---
 
@@ -30,6 +34,18 @@ Estado del trabajo para retomarlo en cualquier máquina. Se actualiza al cerrar 
 | HU-022          | Revocación de tokens con Redis: `TokenRevocationPort`/`RedisTokenRevocationAdapter`, `RevocationAwareJwtDecoder` decora `internalEvidenceJwtDecoder` (canal interno PEP→PDP), efecto secundario automático desde `RevokeAssignmentUseCase`/`RemoveApplicationAdministratorUseCase`, fail-closed                                                                                                                                                                         | ✅ — validada, ver REPORTE-HU-022.md, pendiente commit/push (gate 2)                                                                       |
 | HU-023          | Caché distribuida de roles activos: `DistributedCachePort`/`RedisDistributedCachePort` (fail-open, TTL de respaldo), `ObservedDistributedCachePort` (métrica), lectura caché-aside en `ResolveActiveRolesUseCaseImpl`, invalidación desde los dos puntos raíz de escritura (`AssignRoleUseCase`/`RevokeAssignmentUseCase` — cubren las 7 rutas de mutación de HU-015 a HU-020 sin tocar `roles`/`profiles`)                                                             | ✅ — validada, ver REPORTE-HU-023.md, pendiente commit/push (gate 2)                                                                       |
 | HU-024          | MFA como step-up para operaciones administrativas: `AuthenticationContextEvidence`/`MfaEvidenceProperties` (`shared/security/mfa`), `MfaAwareApplicationAdministratorValidator` decora `PrincipalMustBeApplicationAdministratorValidator` en `AuthorizationConfiguration` (fail-closed mientras el realm de Keycloak no tenga MFA configurado), evidencia transportada desde el login (`OidcAuthenticationSuccessHandler`) hasta los 12 flujos administrativos gateados | ✅ — validada, ver REPORTE-HU-024.md, pendiente commit/push (gate 2)                                                                       |
+| HU-027          | WAF con Coraza y OWASP CRS v4 en contenedor edge delante del PDP: reglas, suites hurl, rate limiting por IP, healthcheck fail-closed y `/internal/*` en default-deny | 🟡 — parcial: criterios 1 (topología PDP), 2, 4, 6, 7, 9, 10 y 11 verificados; abiertos 3, 5 (HU-034), 8 (B1) y overlay PEP. Ver EVIDENCIA-HU-027.md |
+| HU-028          | Replanteada: cablear revocación en logout BFF y `DELETE /api/v1/session` para Bearer (ADR-034) | ✅ — validada, ver REPORTE-HU-028.md (revocación por cliente `azp`, canal bearer/cookie, entry point en bearer) |
+| HU-029          | Retiro del proxy `POST /api/v1/session/token/refresh` (ADR-033); cada cliente renueva con el suyo | ✅ — retirado el proxy; ver ADR-033 |
+| HU-030          | Renovación del token de la sesión BFF para el canal PEP (nueva) | ✅ — validada, ver REPORTE-HU-030.md |
+| HU-031          | El PEP propaga el `503` del canal BFF en vez de convertirlo en `401` (nueva) | ✅ — validada, ver REPORTE-HU-031.md (la suite del PEP conservaba un error heredado: resuelto en HU-032) |
+| HU-032          | Fronteras Modulith del PEP: `PepArchitectureTests` en verde sin relajar reglas (nueva; requiere ADR-035) | ✅ — validada, ver REPORTE-HU-032.md (ADR-035; `pep` verify 79 pruebas en verde) |
+| HU-033          | `MFA_REQUIRED` responde `403` y no `400` (ADR-031; nueva) | ✅ — validada, ver REPORTE-HU-033.md |
+| HU-034          | Observabilidad del WAF: bloqueos en Loki y Grafana con regla, ruta y `correlationId` (nueva; criterio 5 de HU-027) | ⏳ pendiente |
+| HU-035          | Endurecer la carga masiva de roles y perfiles de `develop`: gate de administrador de la aplicación, contadores, `mode`, límites y cabeceras (nueva) | ✅ — validada, ver REPORTE-HU-035.md |
+| HU-036          | Quién puede crear y editar roles y perfiles de alcance TENANT: gate «administra al menos una aplicación del tenant» en las seis vías (individual, edición, PATCH/DELETE y masiva) (nueva) | ✅ — validada, ver REPORTE-HU-036.md (ADR-036; verify 1125 pruebas, consistencia y drift en verde) |
+| HU-037          | Canal bearer del microfrontend de seguridad: `getAccessToken` y `onError` para el host (ADR-031; nueva; repositorio `security-ui`) | ✅ — ver `workspace/HU-037.md` (28 pruebas Vitest, `tsc` limpio, `dist/` regenerado). Probado de punta a punta en navegador con un host real (Bearer, renovación y revocación; 2026-10-30) |
+| HU-038          | El canal Bearer aprovisiona la identidad local del usuario (criterio 5 de HU-026 sin cumplir; nueva, hallada por la E2E) | ✅ — validada, ver `workspace/HU-038.md`: un usuario que nunca entró al panel se aprovisiona sola por Bearer |
 
 **Estado verificado el 2026-09-15 (working tree, sobre `develop` + HU-018/HU-019 sin comitear):**
 `mvnw clean verify` → **675 pruebas, 0 fallos, 0 errores**, cobertura ≥ 50 % por paquete,

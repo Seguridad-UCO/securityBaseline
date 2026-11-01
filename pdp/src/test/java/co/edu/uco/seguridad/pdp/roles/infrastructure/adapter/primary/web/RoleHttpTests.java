@@ -80,8 +80,11 @@ class RoleHttpTests extends AbstractSurrealDbIntegrationTest {
 
     @Test
     void defines_a_tenant_scoped_role() {
+        // HU-036: el rol TENANT lo define quien administra al menos una aplicación del inquilino (con MFA);
+        // registrar la aplicación deja al sujeto como su primer administrador (HU-015)
+        registerApplication(UCO, prefix + "-app-admin");
         client().post().uri("/api/v1/roles")
-                .header("Authorization", "Bearer " + TestJwtSupport.signedToken(UCO, "test-subject"))
+                .header("Authorization", "Bearer " + TestJwtSupport.signedTokenWithMfaEvidence(UCO, "test-subject"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("""
                         {"name":"%s-docente","scope":"TENANT"}""".formatted(prefix))
@@ -141,8 +144,10 @@ class RoleHttpTests extends AbstractSurrealDbIntegrationTest {
     }
 
     private String defineTenantScopedRole(String tenant, String name) {
+        // HU-036: ver defines_a_tenant_scoped_role — el sujeto necesita administrar una aplicación de ese inquilino
+        registerApplication(tenant, name + "-app");
         byte[] body = client().post().uri("/api/v1/roles")
-                .header("Authorization", "Bearer " + TestJwtSupport.signedToken(tenant, "test-subject"))
+                .header("Authorization", "Bearer " + TestJwtSupport.signedTokenWithMfaEvidence(tenant, "test-subject"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("""
                         {"name":"%s","scope":"TENANT"}""".formatted(name))

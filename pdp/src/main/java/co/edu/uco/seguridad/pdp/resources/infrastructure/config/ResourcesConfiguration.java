@@ -19,6 +19,8 @@ import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.int
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.audit.InMemoryAuditAdapter;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.persistence.repository.SurrealProtectedResourceRepository;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.persistence.schema.SurrealProtectedResourceSchemaInitializer;
+import co.edu.uco.seguridad.pdp.resources.application.usecase.RegisterProtectedResourcesInBulkUseCase;
+import co.edu.uco.seguridad.pdp.resources.application.usecase.impl.RegisterProtectedResourcesInBulkUseCaseImpl;
 import co.edu.uco.seguridad.shared.event.DomainEventPublisher;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
@@ -96,10 +98,9 @@ public class ResourcesConfiguration {
     }
 
     @Bean
-    RegisterProtectedResourcesAtomicallyUseCase registerProtectedResourcesAtomicallyUseCase(
-            ProtectedResourceRepository resources, DomainEventPublisher events, IdentifierGenerator identifiers,
-            TimeProvider time) {
-        return new RegisterProtectedResourcesAtomicallyUseCaseImpl(resources, events, identifiers, time);
+    RegisterProtectedResourcesInBulkUseCase registerProtectedResourcesInBulkUseCase(
+            ProtectedResourceRepository resources, DomainEventPublisher events) {
+        return new RegisterProtectedResourcesInBulkUseCaseImpl(resources, events);
     }
 
     @Bean

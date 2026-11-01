@@ -34,6 +34,14 @@ import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleScopeMustCo
 import co.edu.uco.seguridad.pdp.roles.application.usecase.DefineRoleUseCase;
 import co.edu.uco.seguridad.shared.cache.DistributedCachePort;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.ListActiveRoleAssignmentsByRolePageUseCase;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.ListActiveRoleAssignmentsByRolePageUseCaseImpl;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.ListActiveRoleAssignmentsByUserPageUseCase;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.ListActiveRoleAssignmentsByUserPageUseCaseImpl;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.ListActiveProfileAssignmentsByProfilePageUseCase;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.ListActiveProfileAssignmentsByProfilePageUseCaseImpl;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.ListActiveProfileAssignmentsByUserPageUseCase;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.ListActiveProfileAssignmentsByUserPageUseCaseImpl;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
 import co.edu.uco.seguridad.shared.security.revocation.TokenRevocationPort;
@@ -124,15 +132,23 @@ public class AssignmentsConfiguration {
     }
 
     @Bean
-    ListRoleApplicationAssignmentsPageUseCase listRoleApplicationAssignmentsPageUseCase(AssignmentRepository repository,
-                                                                                          TimeProvider time) {
-        return new ListRoleApplicationAssignmentsPageUseCaseImpl(repository, time);
+    ListActiveRoleAssignmentsByRolePageUseCase listActiveRoleAssignmentsByRolePageUseCase(AssignmentRepository repository, TimeProvider time) {
+        return new ListActiveRoleAssignmentsByRolePageUseCaseImpl(repository, time);
     }
 
     @Bean
-    ListUserApplicationRoleAssignmentsPageUseCase listUserApplicationRoleAssignmentsPageUseCase(
-            AssignmentRepository repository, TimeProvider time) {
-        return new ListUserApplicationRoleAssignmentsPageUseCaseImpl(repository, time);
+    ListActiveRoleAssignmentsByUserPageUseCase listActiveRoleAssignmentsByUserPageUseCase(AssignmentRepository repository, TimeProvider time) {
+        return new ListActiveRoleAssignmentsByUserPageUseCaseImpl(repository, time);
+    }
+
+    @Bean
+    ListActiveProfileAssignmentsByProfilePageUseCase listActiveProfileAssignmentsByProfilePageUseCase(ProfileAssignmentRepository repository, TimeProvider time) {
+        return new ListActiveProfileAssignmentsByProfilePageUseCaseImpl(repository, time);
+    }
+
+    @Bean
+    ListActiveProfileAssignmentsByUserPageUseCase listActiveProfileAssignmentsByUserPageUseCase(ProfileAssignmentRepository repository, TimeProvider time) {
+        return new ListActiveProfileAssignmentsByUserPageUseCaseImpl(repository, time);
     }
 
     @Bean
@@ -181,18 +197,6 @@ public class AssignmentsConfiguration {
     @Bean
     ListApplicationProfileAssignmentsPageUseCase listApplicationProfileAssignmentsPageUseCase(ProfileAssignmentRepository repository) {
         return new ListApplicationProfileAssignmentsPageUseCaseImpl(repository);
-    }
-
-    @Bean
-    ListProfileApplicationAssignmentsPageUseCase listProfileApplicationAssignmentsPageUseCase(
-            ProfileAssignmentRepository repository, TimeProvider time) {
-        return new ListProfileApplicationAssignmentsPageUseCaseImpl(repository, time);
-    }
-
-    @Bean
-    ListUserApplicationProfileAssignmentsPageUseCase listUserApplicationProfileAssignmentsPageUseCase(
-            ProfileAssignmentRepository repository, TimeProvider time) {
-        return new ListUserApplicationProfileAssignmentsPageUseCaseImpl(repository, time);
     }
 
     @Bean

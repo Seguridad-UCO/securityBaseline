@@ -1,0 +1,1 @@
+{"@timestamp":"2026-10-30T13:14:48.000000000Z","level":"INFO","message":"Petición HTTP finalizada","correlationId":"att-0001","event.name":"http.request.completed","http.response.status_code":200,"service.name":"security-pdp","deployment.environment.name":"test"}

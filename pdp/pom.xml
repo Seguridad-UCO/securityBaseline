@@ -221,6 +221,12 @@
                             <goal>check</goal>
                         </goals>
                         <configuration>
+                            <!-- La clase de arranque solo delega en SpringApplication.run: su unica linea ejecutable
+                                 no puede contar como cubierta sin levantar un segundo contexto completo (JaCoCo no
+                                 marca las lineas que terminan en excepcion). El umbral de 50% no cambia. -->
+                            <excludes>
+                                <exclude>co/edu/uco/seguridad/pdp/PdpApplication.class</exclude>
+                            </excludes>
                             <rules>
                                 <rule>
                                     <element>PACKAGE</element>
