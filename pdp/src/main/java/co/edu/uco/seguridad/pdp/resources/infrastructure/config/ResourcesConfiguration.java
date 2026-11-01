@@ -96,6 +96,13 @@ public class ResourcesConfiguration {
     }
 
     @Bean
+    RegisterProtectedResourcesAtomicallyUseCase registerProtectedResourcesAtomicallyUseCase(
+            ProtectedResourceRepository resources, DomainEventPublisher events, IdentifierGenerator identifiers,
+            TimeProvider time) {
+        return new RegisterProtectedResourcesAtomicallyUseCaseImpl(resources, events, identifiers, time);
+    }
+
+    @Bean
     ListProtectedResourcesUseCase listProtectedResourcesUseCase(ProtectedResourceRepository resources) {
         return new ListProtectedResourcesUseCaseImpl(resources);
     }

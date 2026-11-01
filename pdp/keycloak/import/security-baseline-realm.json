@@ -67,6 +67,16 @@
       "serviceAccountsEnabled": true,
       "standardFlowEnabled": false,
       "defaultClientScopes": ["security-baseline-claims"]
+    },
+    {
+      "clientId": "security-pdp-provisioner",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "change-me-in-production",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "defaultClientScopes": ["security-baseline-claims"]
     }
   ],
   "users": [
@@ -81,6 +91,14 @@
       "requiredActions": [],
       "attributes": {"security_subject": ["security-demo"]},
       "credentials": [{"type": "password", "value": "security-demo", "temporary": false}]
+    },
+    {
+      "username": "service-account-security-pdp-provisioner",
+      "enabled": true,
+      "serviceAccountClientId": "security-pdp-provisioner",
+      "clientRoles": {
+        "realm-management": ["manage-clients"]
+      }
     }
   ]
 }

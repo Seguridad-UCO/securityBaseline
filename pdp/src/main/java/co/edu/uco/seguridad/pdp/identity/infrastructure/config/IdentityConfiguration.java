@@ -8,12 +8,14 @@ import co.edu.uco.seguridad.pdp.identity.application.rule.validator.impl.UserMus
 import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.SecurityUserRepository;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.AssignTenantUseCase;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.FindAuthenticatedUserBySubjectUseCase;
+import co.edu.uco.seguridad.pdp.identity.application.usecase.FindUserByIdUseCase;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.ListUsersUseCase;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.ProvisionIdentityUseCase;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.ResolveExternalIdentityUseCase;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.SearchUsersPageUseCase;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.impl.AssignTenantUseCaseImpl;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.impl.FindAuthenticatedUserBySubjectUseCaseImpl;
+import co.edu.uco.seguridad.pdp.identity.application.usecase.impl.FindUserByIdUseCaseImpl;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.impl.ListUsersUseCaseImpl;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.impl.ProvisionIdentityUseCaseImpl;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.impl.ResolveExternalIdentityUseCaseImpl;
@@ -68,6 +70,11 @@ public class IdentityConfiguration {
     @Bean
     FindAuthenticatedUserBySubjectUseCase findAuthenticatedUserBySubjectUseCase(SecurityUserRepository repository) {
         return new FindAuthenticatedUserBySubjectUseCaseImpl(repository);
+    }
+
+    @Bean
+    FindUserByIdUseCase findUserByIdUseCase(SecurityUserRepository repository) {
+        return new FindUserByIdUseCaseImpl(repository);
     }
 
     @Bean

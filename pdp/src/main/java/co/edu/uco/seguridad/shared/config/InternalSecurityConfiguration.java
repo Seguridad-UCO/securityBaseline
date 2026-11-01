@@ -1,6 +1,7 @@
 package co.edu.uco.seguridad.shared.config;
 
 import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserIdLookupValidator;
+import co.edu.uco.seguridad.pdp.authorization.application.serviceidentity.port.ServiceIdentityRepository;
 import co.edu.uco.seguridad.shared.security.*;
 import co.edu.uco.seguridad.shared.security.revocation.RevocationAwareJwtDecoder;
 import co.edu.uco.seguridad.shared.security.revocation.TokenRevocationPort;
@@ -85,7 +86,8 @@ class InternalSecurityConfiguration {
      */
     @Bean
     ReactiveJwtDecoder internalEvidenceJwtDecoder(InternalEvidenceJwtProperties properties,
-                                                  TokenRevocationPort revocation, SubjectUserIdLookupValidator subjectUserIdLookup) {
+                                                  TokenRevocationPort revocation, SubjectUserIdLookupValidator subjectUserIdLookup,
+                                                  ServiceIdentityRepository serviceIdentities) {
         NimbusReactiveJwtDecoder decoder = NimbusReactiveJwtDecoder.withJwkSetUri(properties.jwkSetUri()).build();
         OAuth2TokenValidator<Jwt> validator = new DelegatingOAuth2TokenValidator<>(List.of(
                 new JwtTimestampValidator(),
@@ -94,6 +96,11 @@ class InternalSecurityConfiguration {
                 new JwtClaimValidator<List<String>>("aud",
                         audiences -> audiences != null && audiences.contains(properties.audience()))));
         decoder.setJwtValidator(validator);
-        return new RevocationAwareJwtDecoder(decoder, revocation, subjectUserIdLookup, properties.technicalClientId());
+        return new RevocationAwareJwtDecoder(decoder, revocation, subjectUserIdLookup, properties.technicalClientId(),
+                jwt -> {
+                    String clientId = jwt.getClaimAsString("azp");
+                    return clientId == null || clientId.isBlank() ? reactor.core.publisher.Mono.just(false)
+                            : serviceIdentities.findActiveByClientId(clientId).hasElement();
+                });
     }
 }

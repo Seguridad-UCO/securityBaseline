@@ -34,6 +34,11 @@ public final class AccessDecisionRawRequestMapper {
 
     public static InternalAccessRequest toRequest(AccessDecisionRawRequest raw, String subject,
                                                   Optional<UserId> subjectUserId) {
+        return toRequest(raw, subject, subjectUserId, "USER");
+    }
+
+    public static InternalAccessRequest toRequest(AccessDecisionRawRequest raw, String subject,
+                                                  Optional<UserId> subjectUserId, String subjectType) {
         String version = RequestFieldParser.requirePresent("version", raw.version());
         if (!"1".equals(version)) {
             throw new MalformedRequestFieldException("version", WebContractMessages.mustBeVersion1());
@@ -52,6 +57,6 @@ public final class AccessDecisionRawRequestMapper {
 
         return new InternalAccessRequest(subject, subjectUserId, applicationName, resourcePath, action, raw.requestId(), raw.correlationId(),
                 new InternalAccessRequest.RequestFacts(Instant.parse(timestamp), raw.application().environment(),
-                        RequestFieldParser.parse("context.method", raw.context().method(), HttpVerb::parse), raw.context().channel()));
+                        RequestFieldParser.parse("context.method", raw.context().method(), HttpVerb::parse), raw.context().channel()), subjectType);
     }
 }

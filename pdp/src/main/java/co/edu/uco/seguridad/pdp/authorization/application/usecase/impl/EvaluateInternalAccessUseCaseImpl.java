@@ -47,7 +47,7 @@ public final class EvaluateInternalAccessUseCaseImpl implements EvaluateInternal
                 .map(application -> new AccessRequest(application.tenantId(), input.subject(), application.id(),
                         input.resourcePath(), input.action(), input.requestId(), input.correlationId(),
                         input.subjectUserId(), Set.of(), input.facts().timestamp(), input.facts().environment(),
-                        input.facts().method(), input.facts().channel()))
+                        input.facts().method(), input.facts().channel(), input.subjectType()))
                 .flatMap(authorizeUseCase::execute)
                 .onErrorResume(error -> error instanceof ApplicationNotFoundException
                                 || error instanceof AmbiguousApplicationNameException,

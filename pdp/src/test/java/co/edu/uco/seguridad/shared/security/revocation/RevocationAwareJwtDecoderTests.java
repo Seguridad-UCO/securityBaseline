@@ -100,6 +100,25 @@ class RevocationAwareJwtDecoderTests {
                 .verifyComplete();
     }
 
+    @Test
+    void rejects_an_unregistered_managed_service_identity_without_falling_back_to_a_human_subject() {
+        Jwt serviceToken = Jwt.withTokenValue("service-token")
+                .header("alg", "RS256")
+                .subject("service-account-svc-notes-projects")
+                .issuer(TestJwtSupport.ISSUER)
+                .audience(java.util.List.of(TestJwtSupport.AUDIENCE))
+                .claim("azp", "svc-notes-projects")
+                .issuedAt(Instant.now())
+                .expiresAt(Instant.now().plusSeconds(300))
+                .build();
+        RevocationAwareJwtDecoder decoder = new RevocationAwareJwtDecoder(delegateReturning(serviceToken),
+                unreachableRevocation(), unreachableSubjectLookup(), TECHNICAL_CLIENT, jwt -> Mono.just(false));
+
+        StepVerifier.create(decoder.decode("token"))
+                .expectError(JwtValidationException.class)
+                .verify();
+    }
+
     private static ReactiveJwtDecoder delegateReturning(Jwt jwt) {
         return token -> Mono.just(jwt);
     }

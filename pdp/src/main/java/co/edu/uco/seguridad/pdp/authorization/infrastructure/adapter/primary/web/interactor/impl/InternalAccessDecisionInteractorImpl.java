@@ -1,6 +1,7 @@
 package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl;
 
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.EvaluateInternalAccessUseCase;
+import co.edu.uco.seguridad.pdp.authorization.application.serviceidentity.port.ServiceIdentityRepository;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.AccessDecisionRawRequest;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.AccessDecisionInternalWebResponse;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.InternalAccessDecisionInteractor;
@@ -33,11 +34,20 @@ public final class InternalAccessDecisionInteractorImpl implements InternalAcces
 
     private final EvaluateInternalAccessUseCase useCase;
     private final ResolveExternalIdentityUseCase identities;
+    private final ServiceIdentityRepository serviceIdentities;
+
+    public InternalAccessDecisionInteractorImpl(EvaluateInternalAccessUseCase useCase,
+                                                ResolveExternalIdentityUseCase identities, ServiceIdentityRepository serviceIdentities) {
+        this.useCase = Objects.requireNonNull(useCase, RequiredArgumentMessages.EVALUATE_INTERNAL_ACCESS_USE_CASE);
+        this.identities = Objects.requireNonNull(identities);
+        this.serviceIdentities = Objects.requireNonNull(serviceIdentities);
+    }
 
     public InternalAccessDecisionInteractorImpl(EvaluateInternalAccessUseCase useCase,
                                                 ResolveExternalIdentityUseCase identities) {
         this.useCase = Objects.requireNonNull(useCase, RequiredArgumentMessages.EVALUATE_INTERNAL_ACCESS_USE_CASE);
         this.identities = Objects.requireNonNull(identities);
+        this.serviceIdentities = null;
     }
 
     @Override
@@ -54,9 +64,7 @@ public final class InternalAccessDecisionInteractorImpl implements InternalAcces
                         "correlationId", WebContractMessages.headerBodyMismatch("correlationId")));
             }
             return currentEvidence()
-                    .flatMap(evidence -> identities.execute(new ResolveExternalIdentityRequest(
-                                    evidence.issuer(), evidence.subject()))
-                            .map(userId -> AccessDecisionRawRequestMapper.toRequest(input, evidence.subject(), userId)))
+                    .flatMap(evidence -> resolveRequest(input, evidence))
                     .flatMap(useCase::execute)
                     .map(AccessDecisionInternalResponseMapper::toResponse);
         });
@@ -73,9 +81,29 @@ public final class InternalAccessDecisionInteractorImpl implements InternalAcces
                 .map(SecurityContext::getAuthentication)
                 .map(Authentication::getPrincipal)
                 .cast(Jwt.class)
-                .map(jwt -> new EvidenceIdentity(jwt.getIssuer().toString(), jwt.getSubject()));
+                .map(jwt -> new EvidenceIdentity(jwt.getIssuer().toString(), jwt.getSubject(), jwt.getClaimAsString("azp")));
     }
 
-    private record EvidenceIdentity(String issuer, String subject) {
+    private Mono<co.edu.uco.seguridad.pdp.authorization.domain.serviceidentity.ServiceIdentity> activeServiceIdentity(String clientId) {
+        return serviceIdentities == null || clientId == null || clientId.isBlank() ? Mono.empty() : serviceIdentities.findActiveByClientId(clientId);
+    }
+
+    private Mono<co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.InternalAccessRequest> resolveRequest(
+            AccessDecisionRawRequest input, EvidenceIdentity evidence) {
+        Mono<co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.InternalAccessRequest> human = identities.execute(
+                new ResolveExternalIdentityRequest(evidence.issuer(), evidence.subject()))
+                .map(userId -> AccessDecisionRawRequestMapper.toRequest(input, evidence.subject(), userId));
+        if (!isManagedServiceIdentity(evidence.authorizedParty())) return human;
+        return activeServiceIdentity(evidence.authorizedParty())
+                .map(service -> AccessDecisionRawRequestMapper.toRequest(input, service.clientId(), java.util.Optional.empty(), "SERVICE"))
+                .switchIfEmpty(Mono.error(new org.springframework.security.oauth2.jwt.JwtValidationException(
+                        "la identidad de servicio no está registrada o está inactiva", java.util.List.of())));
+    }
+
+    private static boolean isManagedServiceIdentity(String clientId) {
+        return clientId != null && clientId.startsWith("svc-");
+    }
+
+    private record EvidenceIdentity(String issuer, String subject, String authorizedParty) {
     }
 }

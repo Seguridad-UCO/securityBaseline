@@ -18,6 +18,15 @@ import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.Administ
 import co.edu.uco.seguridad.pdp.authorization.application.secondaryport.PolicyDecisionPort;
 import co.edu.uco.seguridad.pdp.authorization.application.service.AuthorizationContextResolver;
 import co.edu.uco.seguridad.pdp.authorization.application.service.impl.AuthorizationContextResolverImpl;
+import co.edu.uco.seguridad.pdp.authorization.application.serviceidentity.port.ServiceClientProvisioner;
+import co.edu.uco.seguridad.pdp.authorization.application.serviceidentity.port.ServiceIdentityRepository;
+import co.edu.uco.seguridad.pdp.authorization.application.serviceidentity.service.ServiceIdentityAdministrationAuditor;
+import co.edu.uco.seguridad.pdp.authorization.application.serviceidentity.usecase.*;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.serviceidentity.KeycloakServiceClientProvisioner;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.serviceidentity.KeycloakServiceIdentityProperties;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.serviceidentity.SurrealServiceIdentitySchemaInitializer;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.serviceidentity.persistence.SurrealServiceIdentityRepository;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.serviceidentity.web.ServiceIdentityAdministrationInteractor;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.*;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.impl.*;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.*;
@@ -37,6 +46,7 @@ import co.edu.uco.seguridad.pdp.authorization.infrastructure.properties.OpaPrope
 import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserIdLookupValidator;
 import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.SecurityUserRepository;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.FindAuthenticatedUserBySubjectUseCase;
+import co.edu.uco.seguridad.pdp.identity.application.usecase.FindUserByIdUseCase;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.ResolveExternalIdentityUseCase;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.SearchUsersPageUseCase;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileApplicationLookupValidator;
@@ -47,6 +57,7 @@ import co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository.P
 import co.edu.uco.seguridad.pdp.resources.application.usecase.CountApplicationProtectedResourcesUseCase;
 import co.edu.uco.seguridad.pdp.resources.application.usecase.ListProtectedResourcesPageUseCase;
 import co.edu.uco.seguridad.pdp.resources.application.usecase.RegisterProtectedResourceUseCase;
+import co.edu.uco.seguridad.pdp.resources.application.usecase.RegisterProtectedResourcesAtomicallyUseCase;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleApplicationLookupValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleNamesLookupValidator;
 import co.edu.uco.seguridad.pdp.roles.application.secondaryport.repository.RoleRepository;
@@ -72,7 +83,7 @@ import tools.jackson.databind.ObjectMapper;
  * La unica clase consciente de Spring del modulo.
  */
 @Configuration
-@EnableConfigurationProperties({OpaProperties.class, MfaEvidenceProperties.class})
+@EnableConfigurationProperties({OpaProperties.class, MfaEvidenceProperties.class, KeycloakServiceIdentityProperties.class})
 public class AuthorizationConfiguration {
 
     @Bean
@@ -107,8 +118,9 @@ public class AuthorizationConfiguration {
     BulkResourceImportService bulkResourceImportService(BulkResourceWorkbookService workbooks,
                                                         ApplicationNameForTenantLookupValidator applications,
                                                         PrincipalMustBeApplicationAdministratorValidator administrators, ProtectedResourceRepository resources,
-                                                        IdentifierGenerator identifiers, TimeProvider time, DomainEventPublisher events) {
-        return new BulkResourceImportService(workbooks, applications, administrators, resources, identifiers, time, events);
+                                                        IdentifierGenerator identifiers, TimeProvider time,
+                                                        RegisterProtectedResourcesAtomicallyUseCase registerResources) {
+        return new BulkResourceImportService(workbooks, applications, administrators, resources, identifiers, time, registerResources);
     }
 
     // HU-006 (D9 del handoff PDP-PEP-OPA): reemplaza a DenyByDefaultPolicyDecisionAdapter, que se
@@ -145,8 +157,99 @@ public class AuthorizationConfiguration {
 
     @Bean
     AuthorizationContextResolver authorizationContextResolver(ResolveAuthorizationSubjectFactsUseCase facts,
-                                                              ProtectedResourceRepository resources) {
-        return new AuthorizationContextResolverImpl(facts, resources);
+                                                              ProtectedResourceRepository resources, ServiceIdentityRepository serviceIdentities) {
+        return new AuthorizationContextResolverImpl(facts, resources, serviceIdentities);
+    }
+
+    @Bean
+    ServiceIdentityRepository serviceIdentityRepository(SurrealDbClient client) {
+        return new SurrealServiceIdentityRepository(client);
+    }
+
+    @Bean
+    ApplicationRunner serviceIdentitySchemaInitializer(SurrealDbClient client) {
+        return new SurrealServiceIdentitySchemaInitializer(client);
+    }
+
+    @Bean
+    ServiceClientProvisioner serviceClientProvisioner(KeycloakServiceIdentityProperties properties, WebClient.Builder builder) {
+        return new KeycloakServiceClientProvisioner(properties, builder);
+    }
+
+    @Bean
+    ServiceIdentityAdministrationAuditor serviceIdentityAdministrationAuditor(AdministrationAuditRepository audit,
+                                                                               IdentifierGenerator identifiers,
+                                                                               TimeProvider time) {
+        return new ServiceIdentityAdministrationAuditor(audit, identifiers, time);
+    }
+
+    @Bean
+    CreateServiceIdentityUseCase createServiceIdentityUseCase(PrincipalMustBeApplicationAdministratorValidator administrators,
+                                                              ServiceClientProvisioner clients, ServiceIdentityRepository identities,
+                                                              IdentifierGenerator identifiers, TimeProvider time,
+                                                              ServiceIdentityAdministrationAuditor auditor) {
+        return new CreateServiceIdentityUseCaseImpl(administrators, clients, identities, identifiers, time, auditor);
+    }
+
+    @Bean
+    RequestServiceAccessUseCase requestServiceAccessUseCase(PrincipalMustBeApplicationAdministratorValidator administrators,
+                                                            ServiceIdentityRepository identities, ProtectedResourceRepository resources,
+                                                            IdentifierGenerator identifiers, TimeProvider time,
+                                                            ServiceIdentityAdministrationAuditor auditor) {
+        return new RequestServiceAccessUseCaseImpl(administrators, identities, resources, identifiers, time, auditor);
+    }
+
+    @Bean
+    CreateServiceTechnicalRoleUseCase createServiceTechnicalRoleUseCase(PrincipalMustBeApplicationAdministratorValidator administrators,
+                                                                         ServiceIdentityRepository identities, ProtectedResourceRepository resources,
+                                                                         IdentifierGenerator identifiers, TimeProvider time) {
+        return new CreateServiceTechnicalRoleUseCaseImpl(administrators, identities, resources, identifiers, time);
+    }
+
+    @Bean
+    RequestServiceTechnicalRoleAccessUseCase requestServiceTechnicalRoleAccessUseCase(PrincipalMustBeApplicationAdministratorValidator administrators,
+                                                                                        ServiceIdentityRepository identities, IdentifierGenerator identifiers,
+                                                                                        TimeProvider time, ServiceIdentityAdministrationAuditor auditor) {
+        return new RequestServiceTechnicalRoleAccessUseCaseImpl(administrators, identities, identifiers, time, auditor);
+    }
+
+    @Bean
+    AddServiceTechnicalRoleResourceUseCase addServiceTechnicalRoleResourceUseCase(PrincipalMustBeApplicationAdministratorValidator administrators,
+                                                                                    ServiceIdentityRepository identities, ProtectedResourceRepository resources) {
+        return new AddServiceTechnicalRoleResourceUseCaseImpl(administrators, identities, resources);
+    }
+
+    @Bean
+    RemoveServiceTechnicalRoleResourceUseCase removeServiceTechnicalRoleResourceUseCase(PrincipalMustBeApplicationAdministratorValidator administrators,
+                                                                                          ServiceIdentityRepository identities, ProtectedResourceRepository resources) {
+        return new RemoveServiceTechnicalRoleResourceUseCaseImpl(administrators, identities, resources);
+    }
+
+    @Bean
+    DecideServiceAccessUseCase decideServiceAccessUseCase(PrincipalMustBeApplicationAdministratorValidator administrators,
+                                                          ServiceIdentityRepository identities, TimeProvider time,
+                                                          ServiceIdentityAdministrationAuditor auditor) {
+        return new DecideServiceAccessUseCaseImpl(administrators, identities, time, auditor);
+    }
+
+    @Bean
+    RevokeServiceAccessUseCase revokeServiceAccessUseCase(PrincipalMustBeApplicationAdministratorValidator administrators,
+                                                          ServiceIdentityRepository identities, TimeProvider time,
+                                                          ServiceIdentityAdministrationAuditor auditor) {
+        return new RevokeServiceAccessUseCaseImpl(administrators, identities, time, auditor);
+    }
+
+    @Bean
+    ServiceIdentityAdministrationInteractor serviceIdentityAdministrationInteractor(CreateServiceIdentityUseCase create,
+                                                                                     RequestServiceAccessUseCase request, RequestServiceTechnicalRoleAccessUseCase requestRole,
+                                                                                     CreateServiceTechnicalRoleUseCase createRole,
+                                                                                     AddServiceTechnicalRoleResourceUseCase addRoleResource, RemoveServiceTechnicalRoleResourceUseCase removeRoleResource,
+                                                                                     DecideServiceAccessUseCase decide,
+                                                                                     RevokeServiceAccessUseCase revoke,
+                                                                                     SubjectUserIdLookupValidator users,
+                                                                                     PrincipalMustBeApplicationAdministratorValidator administrators,
+                                                                                     ServiceIdentityRepository identities, ProtectedResourceRepository resources) {
+        return new ServiceIdentityAdministrationInteractor(create, request, requestRole, createRole, addRoleResource, removeRoleResource, decide, revoke, users, administrators, identities, resources);
     }
 
     @Bean
@@ -177,8 +280,9 @@ public class AuthorizationConfiguration {
 
     @Bean
     InternalAccessDecisionInteractor internalAccessDecisionInteractor(EvaluateInternalAccessUseCase useCase,
-                                                                      ResolveExternalIdentityUseCase identities) {
-        return new InternalAccessDecisionInteractorImpl(useCase, identities);
+                                                                      ResolveExternalIdentityUseCase identities,
+                                                                      ServiceIdentityRepository serviceIdentities) {
+        return new InternalAccessDecisionInteractorImpl(useCase, identities, serviceIdentities);
     }
 
     @Bean
@@ -278,7 +382,7 @@ public class AuthorizationConfiguration {
     @Bean
     ListApplicationRoleAssignmentsInteractor listApplicationRoleAssignmentsInteractor(ApplicationOwnerLookupValidator ownerLookup,
                                                                                       SubjectUserIdLookupValidator subjectUserIdLookup, ListApplicationRoleAssignmentsUseCase useCase,
-                                                                                      SecurityUserRepository users, RoleRepository roles) {
+                                                                                      FindUserByIdUseCase users, FindRoleForTenantUseCase roles) {
         return new ListApplicationRoleAssignmentsInteractorImpl(ownerLookup, subjectUserIdLookup, useCase, users, roles);
     }
 
@@ -292,17 +396,22 @@ public class AuthorizationConfiguration {
     @Bean
     ListApplicationProfileAssignmentsInteractor listApplicationProfileAssignmentsInteractor(ApplicationOwnerLookupValidator ownerLookup,
                                                                                             SubjectUserIdLookupValidator subjectUserIdLookup, ListApplicationProfileAssignmentsUseCase useCase,
-                                                                                            SecurityUserRepository users, ProfileRepository profiles) {
+                                                                                            FindUserByIdUseCase users, FindProfileForTenantUseCase profiles) {
         return new ListApplicationProfileAssignmentsInteractorImpl(ownerLookup, subjectUserIdLookup, useCase, users, profiles);
     }
 
     @Bean
     AssignmentDetailReadInteractor assignmentDetailReadInteractor(ApplicationOwnerLookupValidator ownerLookup,
-                                                                  SubjectUserIdLookupValidator subjectUserIdLookup, PrincipalMustBeApplicationAdministratorValidator mustBeAdministrator,
-                                                                  AssignmentRepository assignments, ProfileAssignmentRepository profileAssignments, SecurityUserRepository users,
-                                                                  RoleRepository roles, ProfileRepository profiles, TimeProvider time) {
-        return new AssignmentDetailReadInteractorImpl(ownerLookup, subjectUserIdLookup, mustBeAdministrator, assignments,
-                profileAssignments, users, roles, profiles, time);
+                                                                  SubjectUserIdLookupValidator subjectUserIdLookup,
+                                                                  PrincipalMustBeApplicationAdministratorValidator administrators,
+                                                                  ListRoleApplicationAssignmentsPageUseCase roleAssignments,
+                                                                  ListProfileApplicationAssignmentsPageUseCase profileAssignments,
+                                                                  ListUserApplicationRoleAssignmentsPageUseCase userRoleAssignments,
+                                                                  ListUserApplicationProfileAssignmentsPageUseCase userProfileAssignments,
+                                                                  FindUserByIdUseCase users, FindRoleForTenantUseCase roles,
+                                                                  FindProfileForTenantUseCase profiles) {
+        return new AssignmentDetailReadInteractorImpl(ownerLookup, subjectUserIdLookup, administrators, roleAssignments,
+                profileAssignments, userRoleAssignments, userProfileAssignments, users, roles, profiles);
     }
 
     @Bean
@@ -328,7 +437,7 @@ public class AuthorizationConfiguration {
     @Bean
     ListApplicationSecurityAdministratorsInteractor listApplicationSecurityAdministratorsInteractor(
             ApplicationOwnerLookupValidator ownerLookup, SubjectUserIdLookupValidator subjectUserIdLookup,
-            ListApplicationSecurityAdministratorsUseCase useCase, SecurityUserRepository users) {
+            ListApplicationSecurityAdministratorsUseCase useCase, FindUserByIdUseCase users) {
         return new ListApplicationSecurityAdministratorsInteractorImpl(ownerLookup, subjectUserIdLookup, useCase, users);
     }
 

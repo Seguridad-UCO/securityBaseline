@@ -124,6 +124,18 @@ public class AssignmentsConfiguration {
     }
 
     @Bean
+    ListRoleApplicationAssignmentsPageUseCase listRoleApplicationAssignmentsPageUseCase(AssignmentRepository repository,
+                                                                                          TimeProvider time) {
+        return new ListRoleApplicationAssignmentsPageUseCaseImpl(repository, time);
+    }
+
+    @Bean
+    ListUserApplicationRoleAssignmentsPageUseCase listUserApplicationRoleAssignmentsPageUseCase(
+            AssignmentRepository repository, TimeProvider time) {
+        return new ListUserApplicationRoleAssignmentsPageUseCaseImpl(repository, time);
+    }
+
+    @Bean
     ListApplicationAdministratorsPageUseCase listApplicationAdministratorsPageUseCase(
             RoleLookupByNameInScopeValidator roles, AssignmentRepository repository, TimeProvider time) {
         return new ListApplicationAdministratorsPageUseCaseImpl(roles, repository, time);
@@ -169,6 +181,18 @@ public class AssignmentsConfiguration {
     @Bean
     ListApplicationProfileAssignmentsPageUseCase listApplicationProfileAssignmentsPageUseCase(ProfileAssignmentRepository repository) {
         return new ListApplicationProfileAssignmentsPageUseCaseImpl(repository);
+    }
+
+    @Bean
+    ListProfileApplicationAssignmentsPageUseCase listProfileApplicationAssignmentsPageUseCase(
+            ProfileAssignmentRepository repository, TimeProvider time) {
+        return new ListProfileApplicationAssignmentsPageUseCaseImpl(repository, time);
+    }
+
+    @Bean
+    ListUserApplicationProfileAssignmentsPageUseCase listUserApplicationProfileAssignmentsPageUseCase(
+            ProfileAssignmentRepository repository, TimeProvider time) {
+        return new ListUserApplicationProfileAssignmentsPageUseCaseImpl(repository, time);
     }
 
     @Bean

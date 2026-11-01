@@ -11,6 +11,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 
 /**
  * Decora un {@link ReactiveJwtDecoder} delegado con la verificación de revocación (HU-022, ADR-026)
@@ -33,6 +34,7 @@ public final class RevocationAwareJwtDecoder implements ReactiveJwtDecoder {
     private final TokenRevocationPort revocation;
     private final SubjectUserIdLookupValidator subjectUserIdLookup;
     private final String technicalClientId;
+    private final Function<Jwt, Mono<Boolean>> serviceIdentity;
 
     public RevocationAwareJwtDecoder(ReactiveJwtDecoder delegate, TokenRevocationPort revocation,
                                      SubjectUserIdLookupValidator subjectUserIdLookup) {
@@ -46,26 +48,57 @@ public final class RevocationAwareJwtDecoder implements ReactiveJwtDecoder {
      */
     public RevocationAwareJwtDecoder(ReactiveJwtDecoder delegate, TokenRevocationPort revocation,
                                      SubjectUserIdLookupValidator subjectUserIdLookup, String technicalClientId) {
+        this(delegate, revocation, subjectUserIdLookup, technicalClientId, jwt -> Mono.just(false));
+    }
+
+    /**
+     * Las identidades de servicio no son usuarios y por eso no tienen entrada en la lista de
+     * revocación de sesiones humanas. Se aceptan únicamente cuando el catálogo las reconoce como
+     * activas; una identidad inexistente, revocada o deshabilitada continúa fallando cerrada.
+     */
+    public RevocationAwareJwtDecoder(ReactiveJwtDecoder delegate, TokenRevocationPort revocation,
+                                     SubjectUserIdLookupValidator subjectUserIdLookup, String technicalClientId,
+                                     Function<Jwt, Mono<Boolean>> serviceIdentity) {
         this.delegate = Objects.requireNonNull(delegate, RequiredArgumentMessages.REACTIVE_JWT_DECODER_DELEGATE);
         this.revocation = Objects.requireNonNull(revocation, RequiredArgumentMessages.TOKEN_REVOCATION_PORT);
         this.subjectUserIdLookup = Objects.requireNonNull(subjectUserIdLookup,
                 RequiredArgumentMessages.SUBJECT_USER_ID_LOOKUP_VALIDATOR);
         this.technicalClientId = Objects.requireNonNull(technicalClientId, "technicalClientId");
+        this.serviceIdentity = Objects.requireNonNull(serviceIdentity, "serviceIdentity");
     }
 
     @Override
     public Mono<Jwt> decode(String token) {
-        return delegate.decode(token).flatMap(jwt -> isTechnicalPepToken(jwt) ? Mono.just(jwt) : subjectUserIdLookup.execute(jwt.getSubject())
+        return delegate.decode(token).flatMap(jwt -> {
+            if (isTechnicalPepToken(jwt)) return Mono.just(jwt);
+            return serviceIdentity.apply(jwt).flatMap(active -> {
+                if (active) return Mono.just(jwt);
+                if (isManagedServiceIdentityToken(jwt)) {
+                    return Mono.error(revocationCheckFailedException(
+                            "la identidad de servicio del token no está registrada o está inactiva"));
+                }
+                return verifyHumanToken(jwt);
+            });
+        });
+    }
+
+    private Mono<Jwt> verifyHumanToken(Jwt jwt) {
+        return subjectUserIdLookup.execute(jwt.getSubject())
                 .switchIfEmpty(Mono.error(() -> revocationCheckFailedException(
                         "no existe una identidad registrada para el subject del token; no se puede verificar su revocación")))
                 .flatMap(userId -> revocation.isRevoked(userId, jwt.getIssuedAt()))
                 .onErrorMap(error -> !(error instanceof JwtException), error -> revocationCheckFailedException(
                         "no se pudo verificar el estado de revocación del token"))
-                .flatMap(revoked -> revoked ? Mono.<Jwt>error(revokedException()) : Mono.just(jwt)));
+                .flatMap(revoked -> revoked ? Mono.<Jwt>error(revokedException()) : Mono.just(jwt));
     }
 
     private boolean isTechnicalPepToken(Jwt jwt) {
         return !technicalClientId.isBlank() && technicalClientId.equals(jwt.getClaimAsString("azp"));
+    }
+
+    private static boolean isManagedServiceIdentityToken(Jwt jwt) {
+        String clientId = jwt.getClaimAsString("azp");
+        return clientId != null && clientId.startsWith("svc-");
     }
 
     private static JwtValidationException revocationCheckFailedException(String reason) {
