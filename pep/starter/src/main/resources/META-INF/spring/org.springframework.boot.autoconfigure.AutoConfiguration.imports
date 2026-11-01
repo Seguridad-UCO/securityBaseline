@@ -1,2 +1,3 @@
 co.edu.uco.seguridad.pep.starter.PepRegistrationAutoConfiguration
 co.edu.uco.seguridad.pep.starter.PepEnforcementAutoConfiguration
+co.edu.uco.seguridad.pep.starter.m2m.ServiceIdentityAutoConfiguration
