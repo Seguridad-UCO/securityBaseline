@@ -3,8 +3,8 @@
 > Generado por `.claude/tools/mapa.ps1`. **No editar a mano** - se regenera desde el codigo.
 > Es el nivel 0 del grafo de conocimiento: responde "que existe y donde va lo nuevo".
 
-- Clases de produccion: **936**
-- Clases de prueba: **277**
+- Clases de produccion: **937**
+- Clases de prueba: **278**
 - Slices de negocio: **9** (applications, assignments, authorization, commons, identity, profiles, resources, roles, tenants)
 
 ---
@@ -280,7 +280,7 @@
 | `event` | `DomainEvent`, `DomainEventPublisher`, `SpringDomainEventPublisher` |
 | `message` | `RequiredArgumentMessages` |
 | `observability` | `ReactiveLogContext`, `ReactiveTelemetry` |
-| `persistence/surrealdb` | `SurrealDbClient`, `SurrealDbException`, `SurrealDbHealthIndicator`, `SurrealDbProperties`, `SurrealRecordId`, `SurrealSchemaInitializer` |
+| `persistence/surrealdb` | `SurrealDbClient`, `SurrealDbException`, `SurrealDbHealthIndicator`, `SurrealDbProperties`, `SurrealRecordId`, `SurrealSchemaInitializer`, `SurrealTokenAuthentication` |
 | `port` | `CredentialHasher`, `IdentifierGenerator`, `SecretGenerator`, `TimeProvider` |
 | `security` | `ApiAccessDeniedHandler`, `ApiAuthenticationEntryPoint`, `BearerIdentityClaim`, `BearerIdentityRequestMapper`, `CorsProperties`, `InternalEvidenceJwtProperties`, `InternalMtlsProperties`, `InternalMtlsWebFilter`, `JwtSecurityProperties`, `KeycloakSessionProperties`, `LocalIdentityStampingJwtDecoder`, `LocalUserPrincipal`, `PdpPrincipal`, `RevocationRetentionProperties`, `SecurityContext`, `SessionTokenRenewalProperties` |
 | `security/mfa` | `AuthenticationContextEvidence`, `MfaEvidenceProperties` |
@@ -405,6 +405,6 @@
 | `shared/auth` | `BffSessionTokenRenewerTests`, `KeycloakLoginControllerTests`, `KeycloakOidcSessionServiceTests`, `KeycloakRegistrationControllerTests`, `OidcAuthenticationFailureHandlerTests`, `OidcAuthenticationSuccessHandlerTests`, `OidcAuthorizationFlowServiceTests`, `OidcReturnTargetPolicyTests` |
 | `shared/cache` | `ObservedDistributedCachePortTests`, `RedisDistributedCachePortTests` |
 | `shared/config` | `BffSessionTokenRenewalIntegrationTests`, `CorsConfigurationTests`, `KeycloakSecurityConfigurationTests`, `SecurityConfigurationTests` |
-| `shared/persistence` | `SurrealDbClientTests`, `SurrealRecordIdTests`, `SurrealRepositoryIntegrationTests` |
+| `shared/persistence` | `SurrealDbClientTests`, `SurrealRecordIdTests`, `SurrealRepositoryIntegrationTests`, `SurrealTokenAuthenticationTests` |
 | `shared/security` | `ApiAccessDeniedHandlerTests`, `ApiAuthenticationEntryPointTests`, `BearerIdentityClaimTests`, `BearerIdentityRequestMapperTests`, `CorsPropertiesTests`, `InternalMtlsWebFilterTests`, `JwtSecurityPropertiesTests`, `LocalIdentityStampingJwtDecoderTests`, `MfaEvidencePropertiesTests`, `PdpPrincipalBearerIdentityTests`, `PdpPrincipalSecurityContextTests`, `RedisTokenRevocationAdapterTests`, `RevocationAwareJwtDecoderProvisioningTests`, `RevocationAwareJwtDecoderTests`, `SecurityWebFilterChainTests`, `SessionTokenRenewalPropertiesTests`, `TestJwtSupport` |
 | `shared/web` | `ApiErrorHandlerTests`, `CorrelationWebFilterTests`, `InternalBffSessionTokenControllerTests`, `KeycloakLogoutControllerTests`, `SessionControllerTests`, `SessionLogoutBearerIntegrationTests`, `SessionRevocationControllerTests`, `WebContractMessagesTests` |
