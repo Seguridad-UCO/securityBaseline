@@ -4,6 +4,7 @@ import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.Princip
 import co.edu.uco.seguridad.pdp.authorization.application.serviceidentity.port.ServiceIdentityRepository;
 import co.edu.uco.seguridad.pdp.authorization.application.serviceidentity.request.RequestServiceAccessRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.serviceidentity.service.ServiceIdentityAdministrationAuditor;
+import co.edu.uco.seguridad.pdp.authorization.domain.exception.DuplicateServiceAccessGrantException;
 import co.edu.uco.seguridad.pdp.authorization.domain.serviceidentity.ServiceAccessGrant;
 import co.edu.uco.seguridad.pdp.authorization.domain.serviceidentity.ServiceAccessStatus;
 import co.edu.uco.seguridad.pdp.authorization.domain.serviceidentity.ServiceIdentityStatus;
@@ -38,7 +39,7 @@ public final class RequestServiceAccessUseCaseImpl implements RequestServiceAcce
                 .then(resources.findByIdForTenant(input.resourceId(), input.administration().tenantId()))
                 .switchIfEmpty(Mono.error(new IllegalArgumentException("recurso destino inexistente")))
                 .flatMap(resource -> identities.hasPendingOrApprovedGrant(input.administration().tenantId(), input.serviceIdentityId(), resource.id())
-                        .flatMap(exists -> exists ? Mono.error(new IllegalArgumentException("ya existe una solicitud o permiso vigente para el recurso"))
+                        .flatMap(exists -> exists ? Mono.error(new DuplicateServiceAccessGrantException("el recurso solicitado"))
                                 : identities.saveGrant(new ServiceAccessGrant(ids.next(), input.administration().tenantId(), input.serviceIdentityId(), resource.applicationId(),
                                         resource.id(), null, ServiceTechnicalRole.SERVICE_CONSUMER.name(), ServiceAccessStatus.PENDING, time.now(), null)))))
                 .flatMap(grant -> auditor.record(input.administration(), AdministrationOperation.SERVICE_ACCESS_REQUESTED,

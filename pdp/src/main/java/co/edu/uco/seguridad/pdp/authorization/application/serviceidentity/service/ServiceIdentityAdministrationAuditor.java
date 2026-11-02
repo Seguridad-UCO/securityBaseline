@@ -30,6 +30,6 @@ public final class ServiceIdentityAdministrationAuditor {
         UUID eventId = identifiers.next();
         AdministrationEvent event = new AdministrationEvent(eventId, eventId.toString(), administration.tenantId(),
                 administration.applicationId(), administration.subject(), operation, outcome, time.now());
-        return audit.save(event).onErrorResume(error -> Mono.empty());
+        return Mono.defer(() -> audit.save(event)).onErrorResume(error -> Mono.empty());
     }
 }

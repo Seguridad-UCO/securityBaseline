@@ -4,6 +4,7 @@ import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.Princip
 import co.edu.uco.seguridad.pdp.authorization.application.serviceidentity.port.ServiceIdentityRepository;
 import co.edu.uco.seguridad.pdp.authorization.application.serviceidentity.request.RequestServiceTechnicalRoleAccessRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.serviceidentity.service.ServiceIdentityAdministrationAuditor;
+import co.edu.uco.seguridad.pdp.authorization.domain.exception.DuplicateServiceAccessGrantException;
 import co.edu.uco.seguridad.pdp.authorization.domain.serviceidentity.*;
 import co.edu.uco.seguridad.shared.audit.AdministrationOperation;
 import co.edu.uco.seguridad.shared.audit.AdministrationOutcome;
@@ -26,7 +27,7 @@ public final class RequestServiceTechnicalRoleAccessUseCaseImpl implements Reque
                 .then(identities.findTechnicalRole(input.administration().tenantId(), input.technicalRoleId()))
                 .switchIfEmpty(Mono.error(new IllegalArgumentException("rol técnico inexistente")))
                 .flatMap(role -> identities.hasPendingOrApprovedTechnicalRoleGrant(input.administration().tenantId(), input.serviceIdentityId(), role.id())
-                        .flatMap(exists -> exists ? Mono.error(new IllegalArgumentException("ya existe una solicitud o permiso vigente para el rol técnico"))
+                        .flatMap(exists -> exists ? Mono.error(new DuplicateServiceAccessGrantException("el rol técnico solicitado"))
                                 : identities.saveGrant(new ServiceAccessGrant(ids.next(), input.administration().tenantId(), input.serviceIdentityId(), role.applicationId(),
                                         null, role.id(), role.code(), ServiceAccessStatus.PENDING, time.now(), null))))
                 .flatMap(grant -> auditor.record(input.administration(), AdministrationOperation.SERVICE_ACCESS_REQUESTED, AdministrationOutcome.ALLOWED).thenReturn(grant))

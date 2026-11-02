@@ -15,7 +15,9 @@ import co.edu.uco.seguridad.shared.web.message.WebContractMessages;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtValidationException;
 import reactor.core.publisher.Mono;
 
 import java.util.Objects;
@@ -96,8 +98,12 @@ public final class InternalAccessDecisionInteractorImpl implements InternalAcces
         if (!isManagedServiceIdentity(evidence.authorizedParty())) return human;
         return activeServiceIdentity(evidence.authorizedParty())
                 .map(service -> AccessDecisionRawRequestMapper.toRequest(input, service.clientId(), java.util.Optional.empty(), "SERVICE"))
-                .switchIfEmpty(Mono.error(new org.springframework.security.oauth2.jwt.JwtValidationException(
-                        "la identidad de servicio no está registrada o está inactiva", java.util.List.of())));
+                .switchIfEmpty(Mono.error(() -> inactiveServiceIdentityException()));
+    }
+
+    private static JwtValidationException inactiveServiceIdentityException() {
+        String message = "la identidad de servicio no está registrada o está inactiva";
+        return new JwtValidationException(message, java.util.List.of(new OAuth2Error("invalid_token", message, null)));
     }
 
     private static boolean isManagedServiceIdentity(String clientId) {

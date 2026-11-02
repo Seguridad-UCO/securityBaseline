@@ -3,6 +3,7 @@ package co.edu.uco.seguridad.shared.web.exceptionhandler;
 import co.edu.uco.seguridad.pdp.applications.domain.exception.DuplicateApplicationException;
 import co.edu.uco.seguridad.pdp.applications.domain.exception.ReservedApplicationNameException;
 import co.edu.uco.seguridad.pdp.authorization.domain.exception.MfaEvidenceRequiredException;
+import co.edu.uco.seguridad.pdp.authorization.domain.exception.DuplicateServiceAccessGrantException;
 import co.edu.uco.seguridad.pdp.authorization.domain.exception.NotAuthorizedToAdministerException;
 import co.edu.uco.seguridad.pdp.authorization.domain.exception.NotAuthorizedToAdministerTenantCatalogException;
 import co.edu.uco.seguridad.pdp.authorization.domain.message.AuthorizationMessages;
@@ -66,6 +67,15 @@ class ApiErrorHandlerTests {
                 exchange());
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+    }
+
+    @Test
+    void a_duplicate_service_access_grant_becomes_a_409() {
+        ResponseEntity<ProblemDetail> response = handler.businessRule(
+                new DuplicateServiceAccessGrantException("el recurso solicitado"), exchange());
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(response.getBody().getProperties()).containsEntry("code", "SERVICE_ACCESS_GRANT_ALREADY_EXISTS");
     }
 
     @Test
