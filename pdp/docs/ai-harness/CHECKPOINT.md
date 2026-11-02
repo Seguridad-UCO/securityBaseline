@@ -49,6 +49,7 @@ Estado del trabajo para retomarlo en cualquier máquina. Se actualiza al cerrar 
 | HU-036          | Quién puede crear y editar roles y perfiles de alcance TENANT: gate «administra al menos una aplicación del tenant» en las seis vías (individual, edición, PATCH/DELETE y masiva) (nueva) | ✅ — validada, ver REPORTE-HU-036.md (ADR-036; verify 1125 pruebas, consistencia y drift en verde) |
 | HU-037          | Canal bearer del microfrontend de seguridad: `getAccessToken` y `onError` para el host (ADR-031; nueva; repositorio `security-ui`) | ✅ — ver `workspace/HU-037.md` (28 pruebas Vitest, `tsc` limpio, `dist/` regenerado). Probado de punta a punta en navegador con un host real (Bearer, renovación y revocación; 2026-10-30) |
 | HU-038          | El canal Bearer aprovisiona la identidad local del usuario (criterio 5 de HU-026 sin cumplir; nueva, hallada por la E2E) | ✅ — validada, ver `workspace/HU-038.md`: un usuario que nunca entró al panel se aprovisiona sola por Bearer |
+| HU-039          | Piloto de MessageUcoLab: confirmaciones del PDP y de la consola administradas fuera del código, con respaldo en cuatro niveles y sin MessageUcoLab en el camino de la petición (nueva) | ⏳ pendiente — requiere ADR-037 antes de planificar; ver `workspace/HU-039.md` |
 
 **Estado verificado el 2026-11-01** (rama `feature/HU-021-cierre-auditoria-administrativa`, sobre
 `develop`): `verificar.ps1` (`mvnw clean verify`) → **1198 pruebas, 0 fallos,
@@ -77,6 +78,8 @@ Tres arreglos de la suite en el mismo corte, para que el verde no dependa de la 
    consumirlo desde el PDP, la consola y `security-ui` para sacar los textos del código. El README de
    esa carpeta lista las cuatro decisiones previas a planificar (qué catálogos migran, disponibilidad
    con `MessageFallbackPort`, dependencia circular, correspondencia `code` ↔ `MSG_…`).
+   Primer paso escrito: **HU-039** (piloto con las confirmaciones, sin depender del componente); antes de
+   planificarla hace falta ADR-037.
 2. **Autorización entre aplicaciones.** La guía de MessageUcoLab deja su lectura pública «mientras
    seguridad habilita la autorización entre aplicaciones»: es una brecha nuestra que ya tiene un
    consumidor esperando.
