@@ -38,7 +38,7 @@ Elige una versión publicada concreta. No uses `latest`: todos los componentes d
 mkdir security-baseline-local
 cd security-baseline-local
 
-# Sustituya <VERSION> por la versión publicada, por ejemplo 0.1.6.
+# Sustituya <VERSION> por la versión publicada, por ejemplo 0.1.8.
 curl -LO https://github.com/Seguridad-UCO/securityBaseline/releases/download/v<VERSION>/compose.yaml
 curl -Lo .env https://github.com/Seguridad-UCO/securityBaseline/releases/download/v<VERSION>/.env.example
 ```
@@ -49,7 +49,7 @@ curl -Lo .env https://github.com/Seguridad-UCO/securityBaseline/releases/downloa
 mkdir security-baseline-local
 cd security-baseline-local
 
-# Sustituya <VERSION> por la versión publicada, por ejemplo 0.1.6.
+# Sustituya <VERSION> por la versión publicada, por ejemplo 0.1.8.
 Invoke-WebRequest https://github.com/Seguridad-UCO/securityBaseline/releases/download/v<VERSION>/compose.yaml -OutFile compose.yaml
 Invoke-WebRequest https://github.com/Seguridad-UCO/securityBaseline/releases/download/v<VERSION>/.env.example -OutFile .env
 ```
@@ -302,7 +302,7 @@ Para el canal Bearer, Seguridad debe dejar hecho por cada aplicación host:
 2. Un *mapper* que ponga en el token el claim `tenant` (atributo del usuario). El PDP toma el tenant del claim, nunca del cuerpo ni de la query; sin él, toda llamada responde `400 INVALID_TENANT_ID`. (La cookie BFF usa el tenant por defecto del PDP, por eso el laboratorio no lo muestra.)
 3. Su origen exacto en `pdp.security.cors.allowed-origins` (`PDP_CORS_ALLOWED_ORIGINS`); nunca `*`.
 4. Si el usuario administra seguridad, un token con la evidencia de MFA exigida (ADR-027); si el host no la eleva, esas operaciones responden `403 MFA_REQUIRED`, que es el comportamiento correcto.
-5. **Limitación actual:** el canal Bearer todavía no aprovisiona la identidad del usuario (HU-026, criterio 5). Un usuario que nunca ingresó al panel recibe `401` en todo; hasta que se implemente, cada usuario debe haber ingresado una vez por el panel (cookie BFF) o ser aprovisionado por Seguridad.
+5. Nada más por usuario: desde 0.1.8 el canal Bearer **aprovisiona la identidad** la primera vez que llega un token válido. Un usuario que nunca entró al panel ya no recibe `401`; queda registrado con el `tenant`, `name` y `email` de su token.
 
 ### 9.2 Montar el microfrontend de seguridad en su aplicación
 
@@ -363,6 +363,26 @@ docker compose logs -f pdp pep keycloak
 ```
 
 ## 11. Actualizar a una nueva versión
+
+### Qué cambia al pasar de 0.1.7 a 0.1.8
+
+No se retiró ni se renombró ningún endpoint: todo lo que funcionaba con 0.1.7 sigue respondiendo igual. Los cambios de comportamiento son estos:
+
+| Cambio | Qué nota su aplicación | ¿Tiene que hacer algo? |
+|---|---|---|
+| El PDP renueva solo el token de la sesión del panel antes de entregarlo al PEP (ADR-033) | Desaparece el corte de sesión cada 5 minutos en aplicaciones que entran con la cookie del panel | No. La sesión sigue terminando si el usuario pasa 30 minutos sin actividad o cierra sesión |
+| Si Keycloak no responde al renovar, el PEP responde `503` en lugar de `401` | Un `503` donde antes llegaba un `401` | Sí, si su pantalla trata todo error como "sesión perdida": ante `503` muestre "reintentar" y **no** lleve al login (9.3) |
+| Cerrar sesión desde el panel revoca de inmediato todos los tokens del usuario (ADR-034) | Tras cerrar sesión en cualquier pantalla que use la cookie del panel, todas quedan sin sesión, como antes, y además un token copiado deja de servir al instante | No. Si Redis no responde, el cierre de sesión responde `503` en lugar de completarse a medias |
+| `DELETE /api/v1/session` con Bearer revoca solo los tokens del cliente que lo pide | Una aplicación ya no puede cerrar la sesión del usuario en otras ni en el panel | Solo si su aplicación usa Bearer y quería un cierre global: ese cierre se hace desde el panel |
+| El canal Bearer aprovisiona la identidad del usuario | Usuarios nuevos entran por Bearer sin pasar antes por el panel | No |
+| Carga masiva de roles, perfiles y permisos de rol (nueva) | Nuevas plantillas en la consola | No. La carga masiva de recursos no cambia |
+| `MFA_REQUIRED` responde `403` (antes `400`) | Solo con `PDP_SECURITY_MFA_ENABLED=true` | No, con MFA desactivado (el valor del laboratorio) nada cambia |
+| El realm trae el scope `security-baseline-app` y el claim `email_verified` | Solo aplica a instalaciones nuevas | Si ya tiene el laboratorio instalado **y** va a crear un cliente Bearer, agregue el scope a mano en Keycloak o recree el volumen `keycloak-data` (borra usuarios) |
+
+Al recrear el PDP se pierden las sesiones abiertas (viven en memoria): cada usuario inicia sesión una vez más.
+
+### Pasos
+
 
 1. Detenga la aplicación consumidora si hace falta reiniciarla.
 2. Edite `SECURITY_VERSION` en `.env` y coloque el nuevo tag publicado.

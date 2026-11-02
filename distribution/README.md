@@ -6,8 +6,8 @@ Guía rápida de arranque. Para la integración completa de una aplicación, Mav
 
 ~~~sh
 mkdir security-baseline-local && cd security-baseline-local
-curl -LO https://github.com/Seguridad-UCO/securityBaseline/releases/download/v0.1.5/compose.yaml
-curl -Lo .env https://github.com/Seguridad-UCO/securityBaseline/releases/download/v0.1.5/.env.example
+curl -LO https://github.com/Seguridad-UCO/securityBaseline/releases/download/v0.1.8/compose.yaml
+curl -Lo .env https://github.com/Seguridad-UCO/securityBaseline/releases/download/v0.1.8/.env.example
 # En .env configure SECURITY_DOCKER_ORG y SECURITY_VERSION con la versión descargada.
 docker compose up -d
 docker compose ps
