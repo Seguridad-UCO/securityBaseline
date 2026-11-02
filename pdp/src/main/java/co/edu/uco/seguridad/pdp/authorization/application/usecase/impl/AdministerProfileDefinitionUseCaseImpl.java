@@ -58,7 +58,8 @@ public final class AdministerProfileDefinitionUseCaseImpl implements AdministerP
     @Override
     public Mono<ProfileResponse> execute(AdministerProfileDefinitionRequest input) {
         return switch (input.administration()) {
-            case CatalogAdministration.OfApplication application -> applicationScoped(application.administration(), input);
+            case CatalogAdministration.OfApplication application ->
+                    applicationScoped(application.administration(), input);
             case CatalogAdministration.OfTenant tenant -> tenantScoped(tenant.actor(), input);
         };
     }

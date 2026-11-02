@@ -25,6 +25,6 @@ public final class ListActiveProfileAssignmentsByProfilePageUseCaseImpl implemen
     public Mono<ResultPage<ProfileAssignmentResponse>> execute(ListActiveAssignmentsPageRequest<ProfileId> input) {
         return repository.findActivePageByProfileAndApplication(input.key(), input.tenantId(), input.applicationId(), time.now(), input.window())
                 .map(page -> page.map(a -> new ProfileAssignmentResponse(a.id(), a.userId(), a.tenantId(), a.applicationId(),
-                a.profileId(), a.generatedAssignmentIds(), a.validity().validFrom(), a.validity().validUntil())));
+                        a.profileId(), a.generatedAssignmentIds(), a.validity().validFrom(), a.validity().validUntil())));
     }
 }

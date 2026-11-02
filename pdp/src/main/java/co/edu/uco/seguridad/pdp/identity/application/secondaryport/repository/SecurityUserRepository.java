@@ -1,16 +1,18 @@
 package co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository;
 
-import co.edu.uco.seguridad.pdp.identity.domain.model.Email;
-import co.edu.uco.seguridad.pdp.identity.domain.model.ExternalIdentity;
-import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;
-import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
 import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
+import co.edu.uco.seguridad.pdp.commons.model.UserId;
+import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;
+import co.edu.uco.seguridad.pdp.identity.domain.model.Email;
+import co.edu.uco.seguridad.pdp.identity.domain.model.ExternalIdentity;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-/** Puerto secundario para almacenamiento de usuarios propios e identidades externas vinculadas. */
+/**
+ * Puerto secundario para almacenamiento de usuarios propios e identidades externas vinculadas.
+ */
 public interface SecurityUserRepository {
 
     Mono<ExternalIdentity> findIdentity(String issuer, String subject);
@@ -22,7 +24,9 @@ public interface SecurityUserRepository {
      */
     Mono<ExternalIdentity> findIdentityBySubject(String subject);
 
-    /** Resuelve la identidad local asociada al subject autenticado, si existe. */
+    /**
+     * Resuelve la identidad local asociada al subject autenticado, si existe.
+     */
     default Mono<SecurityUser> findUserBySubject(String subject) {
         return findIdentityBySubject(subject).flatMap(identity -> findById(identity.userId()));
     }
@@ -47,7 +51,9 @@ public interface SecurityUserRepository {
         return Mono.error(new UnsupportedOperationException("La creación atómica de usuario e identidad no está implementada"));
     }
 
-    /** Búsqueda administrativa paginada y aislada por tenant para autocompletados. */
+    /**
+     * Búsqueda administrativa paginada y aislada por tenant para autocompletados.
+     */
     default Mono<ResultPage<SecurityUser>> findPageByTenant(TenantId tenantId, String query, PageWindow window) {
         return Mono.error(new UnsupportedOperationException("La búsqueda paginada no está implementada"));
     }

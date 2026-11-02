@@ -32,7 +32,9 @@ public final class FixtureServers implements AutoCloseable {
     public final AtomicReference<Map<String, List<String>>> lastHeaders = new AtomicReference<>();
     public final AtomicReference<byte[]> lastBody = new AtomicReference<>();
     public final AtomicReference<String> lastUri = new AtomicReference<>();
-    /** Modo del canal BFF del PDP: OK, HTTP401 o HTTP503. */
+    /**
+     * Modo del canal BFF del PDP: OK, HTTP401 o HTTP503.
+     */
     public final AtomicReference<String> bffMode = new AtomicReference<>("OK");
     public final AtomicInteger bffSessionRequests = new AtomicInteger();
     public final AtomicInteger serviceTokenRequests = new AtomicInteger();

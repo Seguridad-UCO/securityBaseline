@@ -147,6 +147,25 @@ class RevocationAwareJwtDecoderTests {
     }
 
     @Test
+    void rejects_an_unregistered_managed_service_identity_without_falling_back_to_a_human_subject() {
+        Jwt serviceToken = Jwt.withTokenValue("service-token")
+                .header("alg", "RS256")
+                .subject("service-account-svc-notes-projects")
+                .issuer(TestJwtSupport.ISSUER)
+                .audience(List.of(TestJwtSupport.AUDIENCE))
+                .claim("azp", "svc-notes-projects")
+                .issuedAt(Instant.now())
+                .expiresAt(Instant.now().plusSeconds(300))
+                .build();
+        RevocationAwareJwtDecoder decoder = new RevocationAwareJwtDecoder(delegateReturning(serviceToken),
+                unreachableRevocation(), unreachableSubjectLookup(), TECHNICAL_CLIENT, jwt -> Mono.just(false));
+
+        StepVerifier.create(decoder.decode("token"))
+                .expectError(JwtValidationException.class)
+                .verify();
+    }
+
+    @Test
     void rejects_when_the_client_of_the_token_is_revoked_for_the_subject() {
         List<ClientQuery> queries = new ArrayList<>();
         RevocationAwareJwtDecoder decoder = new RevocationAwareJwtDecoder(
@@ -259,7 +278,9 @@ class RevocationAwareJwtDecoderTests {
                 .build();
     }
 
-    /** {@code isRevoked} e {@code isTokenRevoked} responden false; solo la consulta por cliente es configurable. */
+    /**
+     * {@code isRevoked} e {@code isTokenRevoked} responden false; solo la consulta por cliente es configurable.
+     */
     private static TokenRevocationPort revocationWithClientState(List<ClientQuery> queries,
                                                                  Function<ClientQuery, Mono<Boolean>> clientAnswer) {
         return new TokenRevocationPort() {

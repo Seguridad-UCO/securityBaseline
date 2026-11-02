@@ -20,7 +20,9 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.util.UUID;
 
-/** HTTP contract for the lazy, application-scoped security read model. */
+/**
+ * HTTP contract for the lazy, application-scoped security read model.
+ */
 @SpringBootTest(classes = PdpApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ApplicationSecurityHttpTests extends AbstractSurrealDbIntegrationTest {
     private static final String TENANT = "universidad-uco";
@@ -30,13 +32,27 @@ class ApplicationSecurityHttpTests extends AbstractSurrealDbIntegrationTest {
     private static final ObjectMapper JSON = new ObjectMapper();
     private static OpaFixtureServer opa;
 
-    @LocalServerPort int port;
+    @LocalServerPort
+    int port;
     private String applicationId;
 
-    @BeforeAll static void startOpa() throws Exception { opa = OpaFixtureServer.start(); }
-    @AfterAll static void stopOpa() { opa.stop(); }
-    @DynamicPropertySource static void opaProperties(DynamicPropertyRegistry registry) { registry.add("pdp.opa.base-url", () -> opa.baseUrl()); }
-    @DynamicPropertySource static void mfaProperties(DynamicPropertyRegistry registry) {
+    @BeforeAll
+    static void startOpa() throws Exception {
+        opa = OpaFixtureServer.start();
+    }
+
+    @AfterAll
+    static void stopOpa() {
+        opa.stop();
+    }
+
+    @DynamicPropertySource
+    static void opaProperties(DynamicPropertyRegistry registry) {
+        registry.add("pdp.opa.base-url", () -> opa.baseUrl());
+    }
+
+    @DynamicPropertySource
+    static void mfaProperties(DynamicPropertyRegistry registry) {
         // El application.properties de test sombrea al de main y no declara mfa.enabled: sin esto el
         // step-up queda apagado (el record resuelve enabled=false) y la falta de evidencia pasaría.
         registry.add("pdp.security.mfa.enabled", () -> "true");
@@ -44,7 +60,8 @@ class ApplicationSecurityHttpTests extends AbstractSurrealDbIntegrationTest {
         registry.add("pdp.security.mfa.accepted-values", () -> TestJwtSupport.MFA_ACCEPTED_ACR);
     }
 
-    @BeforeEach void createApplication() {
+    @BeforeEach
+    void createApplication() {
         opa.respondWithForPath(ADMIN_PATH, 200, ALLOW);
         linkTestIdentity(new TenantId(TENANT), "test-subject");
         applicationId = registerApplication("security-" + UUID.randomUUID().toString().substring(0, 8));
@@ -54,7 +71,8 @@ class ApplicationSecurityHttpTests extends AbstractSurrealDbIntegrationTest {
                 .exchange().expectStatus().isCreated();
     }
 
-    @Test void summary_is_small_and_all_collection_routes_use_page_response() {
+    @Test
+    void summary_is_small_and_all_collection_routes_use_page_response() {
         client().get().uri(security("summary")).header("Authorization", bearer()).exchange()
                 .expectStatus().isOk().expectBody()
                 .jsonPath("$.data.application.id").isEqualTo(applicationId)
@@ -62,7 +80,7 @@ class ApplicationSecurityHttpTests extends AbstractSurrealDbIntegrationTest {
                 .jsonPath("$.data.resources").doesNotExist()
                 .jsonPath("$.data.content").doesNotExist();
 
-        for (String collection : new String[] { "resources", "roles", "profiles", "administrators", "role-assignments", "profile-assignments" }) {
+        for (String collection : new String[]{"resources", "roles", "profiles", "administrators", "role-assignments", "profile-assignments"}) {
             client().get().uri(security(collection) + "?page=0&size=20").header("Authorization", bearer()).exchange()
                     .expectStatus().isOk().expectBody()
                     .jsonPath("$.data.content").isArray()
@@ -78,25 +96,28 @@ class ApplicationSecurityHttpTests extends AbstractSurrealDbIntegrationTest {
                 .jsonPath("$.data.limit").isEqualTo(20);
     }
 
-    @Test void supports_offset_limit_and_rejects_mixed_pagination_styles() {
+    @Test
+    void supports_offset_limit_and_rejects_mixed_pagination_styles() {
         client().get().uri(security("resources") + "?offset=0&limit=1").header("Authorization", bearer()).exchange()
                 .expectStatus().isOk().expectBody().jsonPath("$.data.page").isEqualTo(0).jsonPath("$.data.limit").isEqualTo(1);
         client().get().uri(security("resources") + "?page=0&offset=0").header("Authorization", bearer()).exchange()
                 .expectStatus().isBadRequest();
     }
 
-    @Test void denies_all_security_reads_when_the_administration_gate_denies() {
+    @Test
+    void denies_all_security_reads_when_the_administration_gate_denies() {
         opa.respondWithForPath(ADMIN_PATH, 200, DENY);
         client().get().uri(security("roles") + "?page=0&size=20").header("Authorization", bearer()).exchange()
                 .expectStatus().isForbidden();
         String id = UUID.randomUUID().toString();
-        for (String route : new String[] { "users/" + id + "/assignments", "roles/" + id + "/assignments", "profiles/" + id + "/assignments" }) {
+        for (String route : new String[]{"users/" + id + "/assignments", "roles/" + id + "/assignments", "profiles/" + id + "/assignments"}) {
             client().get().uri(security(route) + "?page=0&size=20").header("Authorization", bearer()).exchange()
                     .expectStatus().isForbidden();
         }
     }
 
-    @Test void an_administrative_read_without_mfa_evidence_is_a_403_mfa_required_problem_detail() {
+    @Test
+    void an_administrative_read_without_mfa_evidence_is_a_403_mfa_required_problem_detail() {
         String withoutEvidence = "Bearer " + TestJwtSupport.signedToken(TENANT, "test-subject");
         client().get().uri("/api/v1/applications/" + applicationId + "/administrators").header("Authorization", withoutEvidence).exchange()
                 .expectStatus().isForbidden()
@@ -107,9 +128,10 @@ class ApplicationSecurityHttpTests extends AbstractSurrealDbIntegrationTest {
                 .jsonPath("$.title").isEqualTo("MFA_REQUIRED");
     }
 
-    @Test void relationship_routes_are_application_scoped_and_paged() throws Exception {
+    @Test
+    void relationship_routes_are_application_scoped_and_paged() throws Exception {
         String resourceId = JSON.readTree(client().get().uri(security("resources") + "?page=0&size=20")
-                .header("Authorization", bearer()).exchange().expectStatus().isOk().expectBody().returnResult().getResponseBody())
+                        .header("Authorization", bearer()).exchange().expectStatus().isOk().expectBody().returnResult().getResponseBody())
                 .path("data").path("content").get(0).path("id").asString();
         String roleId = idOf(client().post().uri("/api/v1/roles").header("Authorization", bearer())
                 .contentType(MediaType.APPLICATION_JSON).bodyValue("{\"name\":\"LECTOR\",\"scope\":\"APPLICATION\",\"applicationId\":\"%s\"}".formatted(applicationId))
@@ -120,9 +142,10 @@ class ApplicationSecurityHttpTests extends AbstractSurrealDbIntegrationTest {
                 .expectStatus().isOk().expectBody().jsonPath("$.data.content[0].id").isEqualTo(resourceId).jsonPath("$.data.total").isEqualTo(1).jsonPath("$.data.limit").isEqualTo(1);
     }
 
-    @Test void synchronizing_the_same_permissions_twice_is_idempotent_instead_of_a_server_error() throws Exception {
+    @Test
+    void synchronizing_the_same_permissions_twice_is_idempotent_instead_of_a_server_error() throws Exception {
         String resourceId = JSON.readTree(client().get().uri(security("resources") + "?page=0&size=20")
-                .header("Authorization", bearer()).exchange().expectStatus().isOk().expectBody().returnResult().getResponseBody())
+                        .header("Authorization", bearer()).exchange().expectStatus().isOk().expectBody().returnResult().getResponseBody())
                 .path("data").path("content").get(0).path("id").asString();
         String roleId = idOf(client().post().uri("/api/v1/roles").header("Authorization", bearer())
                 .contentType(MediaType.APPLICATION_JSON).bodyValue("{\"name\":\"SINCRONIZA\",\"scope\":\"APPLICATION\",\"applicationId\":\"%s\"}".formatted(applicationId))
@@ -146,7 +169,8 @@ class ApplicationSecurityHttpTests extends AbstractSurrealDbIntegrationTest {
         }
     }
 
-    @Test void profile_role_relationship_route_is_application_scoped_and_paged() throws Exception {
+    @Test
+    void profile_role_relationship_route_is_application_scoped_and_paged() throws Exception {
         String roleId = idOf(client().post().uri("/api/v1/roles").header("Authorization", bearer()).contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("{\"name\":\"EDITOR\",\"scope\":\"APPLICATION\",\"applicationId\":\"%s\"}".formatted(applicationId)).exchange().expectStatus().isCreated().expectBody().returnResult().getResponseBody());
         String profileId = idOf(client().post().uri("/api/v1/profiles").header("Authorization", bearer()).contentType(MediaType.APPLICATION_JSON)
@@ -157,9 +181,10 @@ class ApplicationSecurityHttpTests extends AbstractSurrealDbIntegrationTest {
                 .expectStatus().isOk().expectBody().jsonPath("$.data.content[0].id").isEqualTo(roleId).jsonPath("$.data.total").isEqualTo(1).jsonPath("$.data.limit").isEqualTo(1);
     }
 
-    @Test void assignment_detail_routes_are_authorized_paginated_and_enriched() throws Exception {
+    @Test
+    void assignment_detail_routes_are_authorized_paginated_and_enriched() throws Exception {
         String userId = JSON.readTree(client().get().uri(security("users") + "?query=&page=0&size=20")
-                .header("Authorization", bearer()).exchange().expectStatus().isOk().expectBody().returnResult().getResponseBody())
+                        .header("Authorization", bearer()).exchange().expectStatus().isOk().expectBody().returnResult().getResponseBody())
                 .path("data").path("content").get(0).path("id").asString();
         String roleId = idOf(client().post().uri("/api/v1/roles").header("Authorization", bearer()).contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("{\"name\":\"OPERADOR\",\"scope\":\"APPLICATION\",\"applicationId\":\"%s\"}".formatted(applicationId)).exchange().expectStatus().isCreated().expectBody().returnResult().getResponseBody());
@@ -177,8 +202,14 @@ class ApplicationSecurityHttpTests extends AbstractSurrealDbIntegrationTest {
                 .expectStatus().isOk().expectBody().jsonPath("$.data.user.name").isNotEmpty().jsonPath("$.data.roleAssignments.content[0].role.name").isEqualTo("OPERADOR").jsonPath("$.data.profileAssignments.content[0].profile.name").isEqualTo("OPERADORES");
     }
 
-    private String security(String suffix) { return "/api/v1/applications/" + applicationId + "/security/" + suffix; }
-    private String bearer() { return "Bearer " + TestJwtSupport.signedTokenWithMfaEvidence(TENANT, "test-subject"); }
+    private String security(String suffix) {
+        return "/api/v1/applications/" + applicationId + "/security/" + suffix;
+    }
+
+    private String bearer() {
+        return "Bearer " + TestJwtSupport.signedTokenWithMfaEvidence(TENANT, "test-subject");
+    }
+
     private String registerApplication(String name) {
         byte[] body = client().post().uri("/api/v1/applications")
                 .header("Authorization", "Bearer " + TestJwtSupport.signedToken(TENANT, "test-subject"))
@@ -188,6 +219,12 @@ class ApplicationSecurityHttpTests extends AbstractSurrealDbIntegrationTest {
         JsonNode root = JSON.readTree(body);
         return root.path("data").path("id").asString();
     }
-    private String idOf(byte[] body) throws Exception { return JSON.readTree(body).path("data").path("id").asString(); }
-    private WebTestClient client() { return WebTestClient.bindToServer().baseUrl("http://localhost:" + port).build(); }
+
+    private String idOf(byte[] body) throws Exception {
+        return JSON.readTree(body).path("data").path("id").asString();
+    }
+
+    private WebTestClient client() {
+        return WebTestClient.bindToServer().baseUrl("http://localhost:" + port).build();
+    }
 }

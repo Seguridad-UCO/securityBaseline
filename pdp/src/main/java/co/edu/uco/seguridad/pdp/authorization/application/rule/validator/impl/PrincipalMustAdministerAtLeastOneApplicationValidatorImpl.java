@@ -14,11 +14,7 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Implementación de {@link PrincipalMustAdministerAtLeastOneApplicationValidator} (HU-036, ADR-036).
@@ -71,7 +67,9 @@ public final class PrincipalMustAdministerAtLeastOneApplicationValidatorImpl
                         new NotAuthorizedToAdministerTenantCatalogException(input.tenantId(), Optional.empty())));
     }
 
-    /** Emite la aplicación si el gate la permite; si no, recuerda por qué y no emite nada. */
+    /**
+     * Emite la aplicación si el gate la permite; si no, recuerda por qué y no emite nada.
+     */
     private Mono<ApplicationId> evaluate(TenantAdministrationRequest input, ApplicationId application, Evaluation evaluation) {
         return Mono.defer(() -> applicationAdministrator.execute(new AdministrationRequest(input.tenantId(), application,
                         input.subjectUserId(), input.subject(), Set.of(), input.authenticationContext())))
@@ -82,7 +80,9 @@ public final class PrincipalMustAdministerAtLeastOneApplicationValidatorImpl
                 });
     }
 
-    /** Lo recordado durante una sola ejecución; las consultas son secuenciales, así que no hay carreras. */
+    /**
+     * Lo recordado durante una sola ejecución; las consultas son secuenciales, así que no hay carreras.
+     */
     private static final class Evaluation {
 
         private Optional<ApplicationId> firstEvaluated = Optional.empty();
@@ -93,7 +93,9 @@ public final class PrincipalMustAdministerAtLeastOneApplicationValidatorImpl
             firstMfaRequirement = firstMfaRequirement.or(() -> mfaRequirementOf(error));
         }
 
-        /** Si alguna aplicación exigió MFA se propaga esa misma excepción (código {@code MFA_REQUIRED}). */
+        /**
+         * Si alguna aplicación exigió MFA se propaga esa misma excepción (código {@code MFA_REQUIRED}).
+         */
         RuntimeException rejection(TenantId tenantId) {
             return firstMfaRequirement
                     .<RuntimeException>map(requirement -> requirement)

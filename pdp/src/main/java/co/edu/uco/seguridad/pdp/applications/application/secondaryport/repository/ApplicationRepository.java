@@ -36,7 +36,9 @@ public interface ApplicationRepository {
         return Mono.error(() -> new UnsupportedOperationException("La búsqueda por nombre no está implementada"));
     }
 
-    /** Busca por nombre dentro de un tenant; nunca debe usarse la búsqueda global en flujos multi-tenant. */
+    /**
+     * Busca por nombre dentro de un tenant; nunca debe usarse la búsqueda global en flujos multi-tenant.
+     */
     default Mono<Application> findByTenantAndName(TenantId tenantId, ApplicationName name) {
         return Mono.error(() -> new UnsupportedOperationException("La búsqueda por tenant y nombre no está implementada"));
     }

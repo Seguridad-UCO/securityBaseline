@@ -26,32 +26,33 @@ revocación por evento de otros casos de uso, `jwtDecoder` de perfiles no-keyclo
 
 ## 2. Criterios de aceptación
 
-| # | Criterio | Resultado esperado |
-|---|---|---|
-| 1 | `GET /api/v1/session/logout` (cookie) | Sin cambios: global; token anterior → 401 después. `KeycloakLogoutController` **no se modifica** |
-| 2 | `DELETE /api/v1/session` bearer con `azp` | 204; el mismo JWT y otros del mismo `sub`+`azp` con `iat <= T` → 401 |
-| 2b | Otro cliente del mismo sub / sesión BFF | Otro cliente sigue 200; sesión BFF y refresh BFF intactos. Sin `azp`: solo su `jti` muere |
-| 3 | Revocación falla (Redis) | 503 envelope `DEPENDENCY_UNAVAILABLE`; nada más se ejecuta (sesión BFF no invalidada) |
-| 4 | Otro sujeto | Intacto |
-| 5 | Panel | Logout global como hoy |
-| 6 | `verificar.ps1` | Verde (los 2 errores/violaciones preexistentes del handoff no son de esta HU) |
+| #  | Criterio                                  | Resultado esperado                                                                               |
+|----|-------------------------------------------|--------------------------------------------------------------------------------------------------|
+| 1  | `GET /api/v1/session/logout` (cookie)     | Sin cambios: global; token anterior → 401 después. `KeycloakLogoutController` **no se modifica** |
+| 2  | `DELETE /api/v1/session` bearer con `azp` | 204; el mismo JWT y otros del mismo `sub`+`azp` con `iat <= T` → 401                             |
+| 2b | Otro cliente del mismo sub / sesión BFF   | Otro cliente sigue 200; sesión BFF y refresh BFF intactos. Sin `azp`: solo su `jti` muere        |
+| 3  | Revocación falla (Redis)                  | 503 envelope `DEPENDENCY_UNAVAILABLE`; nada más se ejecuta (sesión BFF no invalidada)            |
+| 4  | Otro sujeto                               | Intacto                                                                                          |
+| 5  | Panel                                     | Logout global como hoy                                                                           |
+| 6  | `verificar.ps1`                           | Verde (los 2 errores/violaciones preexistentes del handoff no son de esta HU)                    |
 
 ## 3. Reglas de negocio
 
 No hay `Rule` ni caso de uso: es política técnica de `shared` (adaptador primario → puerto de `shared`),
 no hay slice de negocio. Decisiones, todas síncronas salvo el I/O del puerto:
 
-| # | Regla | Dónde vive | Puerto | Excepción → HTTP |
-|---|---|---|---|---|
-| 1 | Canal = tipo de principal: `Jwt` = bearer; `LocalUserPrincipal`/`PdpPrincipal`/`Principal` = cookie BFF | `SessionRevocationController` (adaptador primario) | — | — |
-| 2 | Cookie: `revokeAllSince` global (+ jti si hubiera) + borrar refresh + invalidar sesión, **en ese orden** | ídem | `TokenRevocationPort`, `RefreshTokenStorePort` | fallo Redis → 503 |
-| 3 | Bearer con `azp`: `revokeToken(jti,exp)` + `revokeClientSince(user, azp, T)` | ídem | `TokenRevocationPort` | fallo Redis → 503 |
-| 4 | Bearer sin `azp` (ausente o en blanco): solo `revokeToken` | ídem | idem | idem |
-| 5 | Bearer: **nunca** `refreshTokenStore.delete` ni `webSession.invalidate` | ídem | — | — |
-| 6 | Decoder: además de `isRevoked` e `isTokenRevoked`, consulta `isClientRevoked(user, azp, iat)` si hay `azp`; fail-closed | `RevocationAwareJwtDecoder` | `TokenRevocationPort` | `JwtValidationException` → 401 (entry point) |
-| 7 | Bearer cuyo `sub` no resuelve `UserId` | controller | `SubjectUserIdLookupValidator` | `ResponseStatusException(401)` (hoy `IllegalStateException` → 500) |
+| # | Regla                                                                                                                   | Dónde vive                                         | Puerto                                         | Excepción → HTTP                                                   |
+|---|-------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------|------------------------------------------------|--------------------------------------------------------------------|
+| 1 | Canal = tipo de principal: `Jwt` = bearer; `LocalUserPrincipal`/`PdpPrincipal`/`Principal` = cookie BFF                 | `SessionRevocationController` (adaptador primario) | —                                              | —                                                                  |
+| 2 | Cookie: `revokeAllSince` global (+ jti si hubiera) + borrar refresh + invalidar sesión, **en ese orden**                | ídem                                               | `TokenRevocationPort`, `RefreshTokenStorePort` | fallo Redis → 503                                                  |
+| 3 | Bearer con `azp`: `revokeToken(jti,exp)` + `revokeClientSince(user, azp, T)`                                            | ídem                                               | `TokenRevocationPort`                          | fallo Redis → 503                                                  |
+| 4 | Bearer sin `azp` (ausente o en blanco): solo `revokeToken`                                                              | ídem                                               | idem                                           | idem                                                               |
+| 5 | Bearer: **nunca** `refreshTokenStore.delete` ni `webSession.invalidate`                                                 | ídem                                               | —                                              | —                                                                  |
+| 6 | Decoder: además de `isRevoked` e `isTokenRevoked`, consulta `isClientRevoked(user, azp, iat)` si hay `azp`; fail-closed | `RevocationAwareJwtDecoder`                        | `TokenRevocationPort`                          | `JwtValidationException` → 401 (entry point)                       |
+| 7 | Bearer cuyo `sub` no resuelve `UserId`                                                                                  | controller                                         | `SubjectUserIdLookupValidator`                 | `ResponseStatusException(401)` (hoy `IllegalStateException` → 500) |
 
 **Sobre de error (leído de `ApiErrorHandler` y `ApiAuthenticationEntryPoint`), sin tocar `ApiErrorHandler`:**
+
 - Token inválido/expirado/revocado/ausente: lo corta la cadena de filtros antes del controller →
   `ApiAuthenticationEntryPoint`, **401 `ProblemDetail`** `code=UNAUTHORIZED`, mismo cuerpo que
   `ApiErrorHandler`. Es la "carrera aceptable" de la HU.
@@ -77,9 +78,9 @@ crudo; no se crea VO: es una clave opaca del IdP, sin invariante propia en el PD
 
 ## 6. Endpoint
 
-| Verbo | Ruta | Éxito | Entrada | Salida |
-|---|---|---|---|---|
-| DELETE | `/api/v1/session` | 204 | ninguna (sujeto y cliente salen del principal/JWT) | vacío |
+| Verbo  | Ruta              | Éxito | Entrada                                            | Salida |
+|--------|-------------------|-------|----------------------------------------------------|--------|
+| DELETE | `/api/v1/session` | 204   | ninguna (sujeto y cliente salen del principal/JWT) | vacío  |
 
 - **Autorización:** requiere autenticación (`anyExchange().authenticated()` en ambas cadenas). El propio
   sujeto; cliente = `azp` del JWT. CSRF solo exigido con cookie `SECURITY_BASELINE_SESSION`; con bearer no.
@@ -93,14 +94,22 @@ crudo; no se crea VO: es una clave opaca del IdP, sin invariante propia en el PD
 
 ```java
 // shared/security/revocation/TokenRevocationPort.java   (MATERIALIZADO como esqueleto)
-default Mono<Void> revokeClientSince(UserId subject, String clientId, Instant since) { throw new UnsupportedOperationException("pendiente: HU-028"); }
-default Mono<Boolean> isClientRevoked(UserId subject, String clientId, Instant issuedAt) { throw new UnsupportedOperationException("pendiente: HU-028"); }
+default Mono<Void> revokeClientSince(UserId subject, String clientId, Instant since) {
+    throw new UnsupportedOperationException("pendiente: HU-028");
+}
+
+default Mono<Boolean> isClientRevoked(UserId subject, String clientId, Instant issuedAt) {
+    throw new UnsupportedOperationException("pendiente: HU-028");
+}
 ```
 
 ```java
 // shared/security/revocation/RedisTokenRevocationAdapter.java   (MATERIALIZADO como esqueleto)
-@Override public Mono<Void> revokeClientSince(UserId subject, String clientId, Instant since)
-@Override public Mono<Boolean> isClientRevoked(UserId subject, String clientId, Instant issuedAt)
+@Override
+public Mono<Void> revokeClientSince(UserId subject, String clientId, Instant since)
+
+@Override
+public Mono<Boolean> isClientRevoked(UserId subject, String clientId, Instant issuedAt)
 // Contrato: set("revoked-client-since:" + subject.value() + ":" + clientId, since.toString(), retention).then()
 //           get(...).map(Instant::parse).map(s -> !issuedAt.isAfter(s)).defaultIfEmpty(false)
 ```
@@ -128,6 +137,7 @@ alternativa aceptable es conservar los `default` (documentado, no recomendado).
 ```java
 // shared/web/session/SessionRevocationController.java — constructor y @DeleteMapping SIN cambio
 public SessionRevocationController(TokenRevocationPort, TimeProvider, SubjectUserIdLookupValidator, RefreshTokenStorePort)
+
 public Mono<Void> revokeSession(ServerWebExchange exchange)
 // Cambio: AuthenticatedSession gana canal (bearer si jwt != null). revoke():
 //   bearer: revokeToken(jti,exp) [si jti y exp] .then( azp ? revokeClientSince(user, azp, now) : empty )
@@ -162,33 +172,34 @@ pdp/src/test/java/co/edu/uco/seguridad/shared/   (lo toca el tester, no el plani
 ├── pdp/assignments/.../RemoveApplicationAdministratorUseCaseImplTests.java                                          (dobles)
 └── web/session/SessionLogoutBearerIntegrationTests.java   [N] E2E (nombre sugerido) + @TestConfiguration de fallo
 ```
+
 No hay clase nueva de `application`, así que no hay entrada nueva en ninguna `{Slice}Configuration`.
 Modulith: nada cruza módulos (`shared` es OPEN; el controller sigue dependiendo de `identity` por
 `SubjectUserIdLookupValidator` como hoy). Sin cambio de frontera.
 
 ## 9. Casos de prueba esperados
 
-| Capa | Clase | Casos |
-|---|---|---|
-| Adaptador Redis (Testcontainers, `AbstractRedisIntegrationTest`) | `RedisTokenRevocationAdapterTests` | `revokeClientSince` + `isClientRevoked` true con `iat<=T`, false con `iat>T`; otro `clientId` mismo usuario → false; otro usuario → false; segunda revocación sobrescribe; sin clave → false; TTL = retención (ver `ttl` de la clave); independiente de `revoked-since:` |
-| Decoder (fakes) | `RevocationAwareJwtDecoderTests` | token con `azp` revocado por cliente → `JwtValidationException`; con `azp` no revocado pasa; sin `azp` **no** invoca `isClientRevoked` (doble que lanza `AssertionError`); `azp` en blanco = sin `azp`; `isClientRevoked` falla (Redis) → `JwtValidationException`; token técnico PEP no consulta nada |
-| Controller (`MockServerWebExchange`, a mano) | `SessionRevocationControllerTests` | bearer con azp: `revokeToken` + `revokeClientSince(user,azp,FIXED_NOW)`, **no** `revokeAllSince`, **no** `delete(sid)` (store que lanza `AssertionError`), sesión web no invalidada aunque exista; bearer sin azp: solo `revokeToken`, nunca `revokeClientSince`; cookie (`LocalUserPrincipal`): `revokeAllSince` + delete refresh + sesión invalidada (regresión); `PdpPrincipal`: `revokeAllSince`; Redis falla en bearer → propaga `RedisSystemException` y no invalida; Jwt sin identidad → `ResponseStatusException` 401; **reescribir** los tests actuales `revokes_tokens_and_removes_refresh_credential...` y `rejects_the_same_bearer...` (afirman el contrato viejo: delete de sid) |
-| Logout panel | `KeycloakLogoutControllerTests` | sin lógica nueva; solo ajustar dobles |
-| E2E (`@SpringBootTest` RANDOM_PORT, perfil `keycloak`, bearer real) | `SessionLogoutBearerIntegrationTests` | (a) `DELETE` con bearer cliente A → 204; (b) mismo JWT → `GET` autenticado = 401 envelope `UNAUTHORIZED`; (c) otro JWT mismo sub+azp A con `iat<=T` → 401; (d) JWT mismo sub, azp B → 200; (e) JWT sin azp: `DELETE` → solo ese jti muere, otro JWT sin azp sigue 200; (f) otro `sub` → 200; (g) JWT de A con `iat` posterior a T (firmado con `iat = now+5s`, no `Thread.sleep`) → 200; (h) escritura falla (decorador) → 503 `DEPENDENCY_UNAVAILABLE` y el JWT sigue válido; (i) sin bearer → 401; (j) con cookie de sesión BFF presente y bearer, la sesión no se invalida (opcional) |
+| Capa                                                                | Clase                                 | Casos                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+|---------------------------------------------------------------------|---------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Adaptador Redis (Testcontainers, `AbstractRedisIntegrationTest`)    | `RedisTokenRevocationAdapterTests`    | `revokeClientSince` + `isClientRevoked` true con `iat<=T`, false con `iat>T`; otro `clientId` mismo usuario → false; otro usuario → false; segunda revocación sobrescribe; sin clave → false; TTL = retención (ver `ttl` de la clave); independiente de `revoked-since:`                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Decoder (fakes)                                                     | `RevocationAwareJwtDecoderTests`      | token con `azp` revocado por cliente → `JwtValidationException`; con `azp` no revocado pasa; sin `azp` **no** invoca `isClientRevoked` (doble que lanza `AssertionError`); `azp` en blanco = sin `azp`; `isClientRevoked` falla (Redis) → `JwtValidationException`; token técnico PEP no consulta nada                                                                                                                                                                                                                                                                                                                                                                                        |
+| Controller (`MockServerWebExchange`, a mano)                        | `SessionRevocationControllerTests`    | bearer con azp: `revokeToken` + `revokeClientSince(user,azp,FIXED_NOW)`, **no** `revokeAllSince`, **no** `delete(sid)` (store que lanza `AssertionError`), sesión web no invalidada aunque exista; bearer sin azp: solo `revokeToken`, nunca `revokeClientSince`; cookie (`LocalUserPrincipal`): `revokeAllSince` + delete refresh + sesión invalidada (regresión); `PdpPrincipal`: `revokeAllSince`; Redis falla en bearer → propaga `RedisSystemException` y no invalida; Jwt sin identidad → `ResponseStatusException` 401; **reescribir** los tests actuales `revokes_tokens_and_removes_refresh_credential...` y `rejects_the_same_bearer...` (afirman el contrato viejo: delete de sid) |
+| Logout panel                                                        | `KeycloakLogoutControllerTests`       | sin lógica nueva; solo ajustar dobles                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| E2E (`@SpringBootTest` RANDOM_PORT, perfil `keycloak`, bearer real) | `SessionLogoutBearerIntegrationTests` | (a) `DELETE` con bearer cliente A → 204; (b) mismo JWT → `GET` autenticado = 401 envelope `UNAUTHORIZED`; (c) otro JWT mismo sub+azp A con `iat<=T` → 401; (d) JWT mismo sub, azp B → 200; (e) JWT sin azp: `DELETE` → solo ese jti muere, otro JWT sin azp sigue 200; (f) otro `sub` → 200; (g) JWT de A con `iat` posterior a T (firmado con `iat = now+5s`, no `Thread.sleep`) → 200; (h) escritura falla (decorador) → 503 `DEPENDENCY_UNAVAILABLE` y el JWT sigue válido; (i) sin bearer → 401; (j) con cookie de sesión BFF presente y bearer, la sesión no se invalida (opcional)                                                                                                      |
 
 Presupuesto: ≈ 7 + 6 + 8 + 9 pruebas; el E2E es la 5.ª clase con contexto Spring y está justificado
 por el criterio de aceptación (handoff punto 3).
 
 ## 10. Trazabilidad
 
-| Fase | Estado | Fecha |
-|---|---|---|
-| Plan | ✅ Generado (esqueletos [N] listos; sin compilar, ver §11-4) | 2026-10-28 |
-| Contrato aprobado (gate 1) | ⏳ Pendiente | |
-| Pruebas en rojo | ⏳ Pendiente | |
-| Implementación en verde | ⏳ Pendiente | |
-| Validación | ⏳ Pendiente | |
-| Entrega (gate 2) | ⏳ Pendiente | |
+| Fase                       | Estado                                                      | Fecha      |
+|----------------------------|-------------------------------------------------------------|------------|
+| Plan                       | ✅ Generado (esqueletos [N] listos; sin compilar, ver §11-4) | 2026-10-28 |
+| Contrato aprobado (gate 1) | ⏳ Pendiente                                                 |            |
+| Pruebas en rojo            | ⏳ Pendiente                                                 |            |
+| Implementación en verde    | ⏳ Pendiente                                                 |            |
+| Validación                 | ⏳ Pendiente                                                 |            |
+| Entrega (gate 2)           | ⏳ Pendiente                                                 |            |
 
 ## 11. Ambigüedades y riesgos
 
@@ -202,7 +213,8 @@ por el criterio de aceptación (handoff punto 3).
    revocation-aware del **perfil por defecto de test (`test`, `!keycloak`) NO existe** — `jwtDecoder` de
    `SecurityConfiguration` no envuelve `RevocationAwareJwtDecoder`; solo lo hacen `keycloakBearerJwtDecoder`
    e `internalEvidenceJwtDecoder`. Por eso el E2E debe correr con `@ActiveProfiles("keycloak")`.
-   (b) Ese perfil exige el repositorio reactivo de registros de cliente de Spring: `application-keycloak.properties` trae
+   (b) Ese perfil exige el repositorio reactivo de registros de cliente de Spring: `application-keycloak.properties`
+   trae
    `issuer-uri` con descubrimiento OIDC **eager al arrancar**, y `client-secret=${PDP_KEYCLOAK_CLIENT_SECRET}`
    sin default. En el `@DynamicPropertySource`: fijar `client-secret` a un valor de prueba; sobrescribir
    `pdp.security.jwt.{jwk-set-uri,issuer,audience}` al JWKS local; y resolver el descubrimiento —

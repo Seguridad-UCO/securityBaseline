@@ -1,82 +1,98 @@
-> **REEMPLAZADO (2026-10-28):** este documento describe el endpoint `POST /api/v1/session/token/refresh`, que fue retirado por ADR-033 (HU-029 replanteada como retiro del proxy). Se conserva solo como historico; el plan vigente es `workspace/PLAN-HU-029.md`.
+> **REEMPLAZADO (2026-10-28):** este documento describe el endpoint `POST /api/v1/session/token/refresh`, que fue
+> retirado por ADR-033 (HU-029 replanteada como retiro del proxy). Se conserva solo como historico; el plan vigente es
+`workspace/PLAN-HU-029.md`.
 
 # PLAN: Endpoint de refresco de token para aplicaciones externas (POST /api/v1/session/token/refresh)
 
 ## Metadata
 
 - **ID:** HU-029
-- **Slice:** `shared` (específicamente `shared/web/session` y `shared/auth`)
-- **Tipo:** Mixto (intercambio con IdP / emisión / revocación)
+- **Slice:** `shared` (especï¿½ficamente `shared/web/session` y `shared/auth`)
+- **Tipo:** Mixto (intercambio con IdP / emisiï¿½n / revocaciï¿½n)
 - **Fecha:** 2026-10-21
 - **Rama sugerida:** `feature/HU-029-refresh-token-externo`
-- **Fuentes:** `pdp/docs/ai-harness/workspace/HU-029.md`, `ADR-026-redis-cache-and-token-revocation.md`, `ADR-031-security-microfrontend-identity.md`, `PLAN-HU-028.md`, `TokenRevocationPort.java`, `KeycloakSecurityConfiguration.java`
-- **Criterios de la línea base que toca:** 1 (Clean Architecture), 2 (Contratos de servicios), 9 (Mapeo de errores consistente), 11 (Interacción entre capas), 12 (Inyección de dependencias), 21 (Modelos inmutables), 22 (Reactivo sin block), 23 (Arquitectura y pruebas en verde).
+- **Fuentes:** `pdp/docs/ai-harness/workspace/HU-029.md`, `ADR-026-redis-cache-and-token-revocation.md`,
+  `ADR-031-security-microfrontend-identity.md`, `PLAN-HU-028.md`, `TokenRevocationPort.java`,
+  `KeycloakSecurityConfiguration.java`
+- **Criterios de la lï¿½nea base que toca:** 1 (Clean Architecture), 2 (Contratos de servicios), 9 (Mapeo de errores
+  consistente), 11 (Interacciï¿½n entre capas), 12 (Inyecciï¿½n de dependencias), 21 (Modelos inmutables), 22 (Reactivo sin
+  block), 23 (Arquitectura y pruebas en verde).
 
 ## 1. Resumen funcional
 
-Permite a las aplicaciones externas integradas (microfrontends `security-ui`, portales SPA) renovar su token de sesión consumiendo directamente la plataforma de seguridad con su token actual, sin tener que implementar flujos OIDC propios contra Keycloak.
-Expone `POST /api/v1/session/token/refresh`. Al recibir el token actual, la plataforma valida la sesión, renueva el acceso contra Keycloak de forma reactiva, revoca el token anterior vía `TokenRevocationPort` para cerrar la ventana de reutilización, y responde con el nuevo access token y su tiempo de expiración.
-Permite además que las aplicaciones gestionen sus propios mecanismos de inactividad: si expira el tiempo de inactividad, la aplicación invoca el cierre explícito (`DELETE /api/v1/session`, HU-028) o detecta si el token ya no puede refrescarse.
-No expone el `refresh_token` a los clientes (el servidor actúa como intermediario seguro).
+Permite a las aplicaciones externas integradas (microfrontends `security-ui`, portales SPA) renovar su token de sesiï¿½n
+consumiendo directamente la plataforma de seguridad con su token actual, sin tener que implementar flujos OIDC propios
+contra Keycloak.
+Expone `POST /api/v1/session/token/refresh`. Al recibir el token actual, la plataforma valida la sesiï¿½n, renueva el
+acceso contra Keycloak de forma reactiva, revoca el token anterior vï¿½a `TokenRevocationPort` para cerrar la ventana de
+reutilizaciï¿½n, y responde con el nuevo access token y su tiempo de expiraciï¿½n.
+Permite ademï¿½s que las aplicaciones gestionen sus propios mecanismos de inactividad: si expira el tiempo de inactividad,
+la aplicaciï¿½n invoca el cierre explï¿½cito (`DELETE /api/v1/session`, HU-028) o detecta si el token ya no puede
+refrescarse.
+No expone el `refresh_token` a los clientes (el servidor actï¿½a como intermediario seguro).
 
-## 2. Criterios de aceptación
+## 2. Criterios de aceptaciï¿½n
 
-| # | Criterio | Resultado esperado |
-|---|---|---|
-| 1 | Refresco con token válido | Al enviar `POST /api/v1/session/token/refresh` con `Authorization: Bearer <token_actual>`, devuelve `200 OK` con `{ "accessToken": "...", "expiresIn": 300, "tokenType": "Bearer" }`. El token anterior queda revocado inmediatamente. |
-| 2 | Intento de reusar token anterior | Una petición que utilice el token anterior tras haber sido refrescado es rechazada con `401 Unauthorized` por revocación en Redis. |
-| 3 | Sesión expirada en IdP | Si la sesión en Keycloak ya no es renovable (refresh token vencido o usuario deshabilitado), responde `401 Unauthorized` con código `SESSION_EXPIRED`. |
-| 4 | Fallo de disponibilidad de Keycloak | Si Keycloak no responde, responde `503 Service Unavailable`. El token actual NO se revoca (fail-closed seguro). |
-| 5 | Confidencialidad de tokens de refresco | La respuesta nunca contiene `refresh_token` ni credenciales del cliente OIDC. |
-| 6 | CORS para orígenes autorizados | El endpoint responde cabeceras CORS correctas a los orígenes definidos en `pdp.security.cors.allowed-origins`. |
-| 7 | Verde | `verificar.ps1` en verde. |
+| # | Criterio                               | Resultado esperado                                                                                                                                                                                                                     |
+|---|----------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1 | Refresco con token vï¿½lido              | Al enviar `POST /api/v1/session/token/refresh` con `Authorization: Bearer <token_actual>`, devuelve `200 OK` con `{ "accessToken": "...", "expiresIn": 300, "tokenType": "Bearer" }`. El token anterior queda revocado inmediatamente. |
+| 2 | Intento de reusar token anterior       | Una peticiï¿½n que utilice el token anterior tras haber sido refrescado es rechazada con `401 Unauthorized` por revocaciï¿½n en Redis.                                                                                                     |
+| 3 | Sesiï¿½n expirada en IdP                 | Si la sesiï¿½n en Keycloak ya no es renovable (refresh token vencido o usuario deshabilitado), responde `401 Unauthorized` con cï¿½digo `SESSION_EXPIRED`.                                                                                 |
+| 4 | Fallo de disponibilidad de Keycloak    | Si Keycloak no responde, responde `503 Service Unavailable`. El token actual NO se revoca (fail-closed seguro).                                                                                                                        |
+| 5 | Confidencialidad de tokens de refresco | La respuesta nunca contiene `refresh_token` ni credenciales del cliente OIDC.                                                                                                                                                          |
+| 6 | CORS para orï¿½genes autorizados         | El endpoint responde cabeceras CORS correctas a los orï¿½genes definidos en `pdp.security.cors.allowed-origins`.                                                                                                                         |
+| 7 | Verde                                  | `verificar.ps1` en verde.                                                                                                                                                                                                              |
 
 ## 3. Reglas de negocio
 
-| # | Regla | Dónde vive (VO / Rule) | Puerto que trae el dato | Excepción ? HTTP |
-|---|---|---|---|---|
-| R1 | Petición requiere token bearer actual no revocado | `RevocationAwareJwtDecoder` / Filtro seguridad | `TokenRevocationPort` | `InvalidTokenException` ? 401 |
-| R2 | Sesión no renovable en IdP | `TokenRefreshPort` (adaptador Keycloak) | Keycloak Token Endpoint | `SessionExpiredException` ? 401 |
-| R3 | IdP inaccesible | `TokenRefreshPort` | Keycloak | `ServiceUnavailableException` ? 503 |
+| #  | Regla                                             | Dï¿½nde vive (VO / Rule)                         | Puerto que trae el dato | Excepciï¿½n ? HTTP                    |
+|----|---------------------------------------------------|------------------------------------------------|-------------------------|-------------------------------------|
+| R1 | Peticiï¿½n requiere token bearer actual no revocado | `RevocationAwareJwtDecoder` / Filtro seguridad | `TokenRevocationPort`   | `InvalidTokenException` ? 401       |
+| R2 | Sesiï¿½n no renovable en IdP                        | `TokenRefreshPort` (adaptador Keycloak)        | Keycloak Token Endpoint | `SessionExpiredException` ? 401     |
+| R3 | IdP inaccesible                                   | `TokenRefreshPort`                             | Keycloak                | `ServiceUnavailableException` ? 503 |
 
 ## 4. Modelo de dominio afectado
 
 ### Value objects / DTOs
 
-| DTO / Objeto | Nuevo o existente | Invariantes | Vive en |
-|---|---|---|---|
-| `TokenRefreshResponse` | Nuevo | `accessToken` no nulo ni vacío, `expiresIn > 0`, `tokenType` por defecto "Bearer" | `shared/web/session/dto` |
-| `TokenRefreshResult` | Nuevo | Resultado del puerto de IdP con nuevo access token y duración | `shared/auth/model` |
+| DTO / Objeto           | Nuevo o existente | Invariantes                                                                       | Vive en                  |
+|------------------------|-------------------|-----------------------------------------------------------------------------------|--------------------------|
+| `TokenRefreshResponse` | Nuevo             | `accessToken` no nulo ni vacï¿½o, `expiresIn > 0`, `tokenType` por defecto "Bearer" | `shared/web/session/dto` |
+| `TokenRefreshResult`   | Nuevo             | Resultado del puerto de IdP con nuevo access token y duraciï¿½n                     | `shared/auth/model`      |
 
 ## 5. Persistencia
-No toca base de datos relacional. Utiliza Redis vía `TokenRevocationPort` para invalidar el token anterior y opcionalmente almacenar la correlación de sesión si el perfil lo requiere.
+
+No toca base de datos relacional. Utiliza Redis vï¿½a `TokenRevocationPort` para invalidar el token anterior y
+opcionalmente almacenar la correlaciï¿½n de sesiï¿½n si el perfil lo requiere.
 
 ## 6. Endpoint
 
-| Verbo | Ruta | Código de éxito | Cuerpo de entrada | Cuerpo de salida |
-|---|---|---|---|---|
-| POST | `/api/v1/session/token/refresh` | 200 OK | Vacío (usa `Authorization: Bearer <token>`) | `{ "accessToken": "...", "expiresIn": 300, "tokenType": "Bearer" }` |
+| Verbo | Ruta                            | Cï¿½digo de ï¿½xito | Cuerpo de entrada                           | Cuerpo de salida                                                    |
+|-------|---------------------------------|-----------------|---------------------------------------------|---------------------------------------------------------------------|
+| POST  | `/api/v1/session/token/refresh` | 200 OK          | Vacï¿½o (usa `Authorization: Bearer <token>`) | `{ "accessToken": "...", "expiresIn": 300, "tokenType": "Bearer" }` |
 
-- **Autorización:** Requiere autenticación `Bearer` (`authenticated()`), sujeto obtenido del contexto reactivo.
+- **Autorizaciï¿½n:** Requiere autenticaciï¿½n `Bearer` (`authenticated()`), sujeto obtenido del contexto reactivo.
 - **Errores esperados:**
-  - Token inválido/revocado: 401
-  - Sesión en IdP expirada: 401 (código `SESSION_EXPIRED`)
-  - Keycloak no disponible: 503
+    - Token invï¿½lido/revocado: 401
+    - Sesiï¿½n en IdP expirada: 401 (cï¿½digo `SESSION_EXPIRED`)
+    - Keycloak no disponible: 503
 
-## 7. SPEC — el contrato
+## 7. SPEC ï¿½ el contrato
 
 ### [N] `co.edu.uco.seguridad.shared.web.session.dto.TokenRefreshResponse`
+
 ```java
 package co.edu.uco.seguridad.shared.web.session.dto;
 
 public record TokenRefreshResponse(String accessToken, long expiresIn, String tokenType) {
     public TokenRefreshResponse {
-        // Constructor compacto vacío en esqueleto
+        // Constructor compacto vacï¿½o en esqueleto
     }
 }
 ```
 
 ### [N] `co.edu.uco.seguridad.shared.auth.port.TokenRefreshPort`
+
 ```java
 package co.edu.uco.seguridad.shared.auth.port;
 
@@ -90,6 +106,7 @@ public interface TokenRefreshPort {
 ```
 
 ### [N] `co.edu.uco.seguridad.shared.web.session.TokenRefreshController`
+
 ```java
 package co.edu.uco.seguridad.shared.web.session;
 
@@ -129,13 +146,13 @@ public final class TokenRefreshController {
 }
 ```
 
-## 8. Árbol de archivos
+## 8. ï¿½rbol de archivos
 
 ```
 pdp/src/main/java/co/edu/uco/seguridad/shared/
 +-- auth/
-¦   +-- port/
-¦       +-- [N] TokenRefreshPort.java
+ï¿½   +-- port/
+ï¿½       +-- [N] TokenRefreshPort.java
 +-- web/
     +-- session/
         +-- [N] TokenRefreshController.java
@@ -145,23 +162,26 @@ pdp/src/main/java/co/edu/uco/seguridad/shared/
 
 ## 9. Casos de prueba esperados
 
-| Capa | Clase de prueba | Casos |
-|---|---|---|
-| Web / Controlador | `TokenRefreshControllerTests` | 1. Token válido: renueva exitosamente, revoca token previo e incrementa timestamp de revocación.<br>2. Fallo de Keycloak: propaga error 503 sin revocar el token actual.<br>3. Sesión de Keycloak expirada: responde 401 con código `SESSION_EXPIRED`. |
-| Adaptador IdP | `KeycloakTokenRefreshAdapterTests` | 1. Intercambio exitoso contra endpoint `/protocol/openid-connect/token`.<br>2. Error 400 de Keycloak (grant invalid): mapea a `SessionExpiredException`.<br>3. Timeout o fallo de red: mapea a `ServiceUnavailableException`. |
-| Integración HTTP | `TokenRefreshHttpTests` | Flujo completo: autenticación inicial ? refresh ? verificación de 200 con nuevo token ? intento con token antiguo falla con 401 por revocación. |
+| Capa              | Clase de prueba                    | Casos                                                                                                                                                                                                                                                  |
+|-------------------|------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Web / Controlador | `TokenRefreshControllerTests`      | 1. Token vï¿½lido: renueva exitosamente, revoca token previo e incrementa timestamp de revocaciï¿½n.<br>2. Fallo de Keycloak: propaga error 503 sin revocar el token actual.<br>3. Sesiï¿½n de Keycloak expirada: responde 401 con cï¿½digo `SESSION_EXPIRED`. |
+| Adaptador IdP     | `KeycloakTokenRefreshAdapterTests` | 1. Intercambio exitoso contra endpoint `/protocol/openid-connect/token`.<br>2. Error 400 de Keycloak (grant invalid): mapea a `SessionExpiredException`.<br>3. Timeout o fallo de red: mapea a `ServiceUnavailableException`.                          |
+| Integraciï¿½n HTTP  | `TokenRefreshHttpTests`            | Flujo completo: autenticaciï¿½n inicial ? refresh ? verificaciï¿½n de 200 con nuevo token ? intento con token antiguo falla con 401 por revocaciï¿½n.                                                                                                        |
 
 ## 10. Trazabilidad
 
-| Fase | Estado | Fecha |
-|---|---|---|
-| Plan | ? Generado | 2026-10-21 |
-| Contrato aprobado (gate 1) | ? Pendiente | |
-| Pruebas en rojo | ? Pendiente | |
-| Implementación en verde | ? Pendiente | |
-| Validación | ? Pendiente | |
-| Entrega (gate 2) | ? Pendiente | |
+| Fase                       | Estado      | Fecha      |
+|----------------------------|-------------|------------|
+| Plan                       | ? Generado  | 2026-10-21 |
+| Contrato aprobado (gate 1) | ? Pendiente |            |
+| Pruebas en rojo            | ? Pendiente |            |
+| Implementaciï¿½n en verde    | ? Pendiente |            |
+| Validaciï¿½n                 | ? Pendiente |            |
+| Entrega (gate 2)           | ? Pendiente |            |
 
-## 11. Ambigüedades pendientes
+## 11. Ambigï¿½edades pendientes
 
-1. **Gestión del refresh_token en el perfil Keycloak**: si el cliente externo no posee un `refresh_token` directo, el backend PDP almacena temporalmente en Redis (con TTL ligado a la sesión) el `refresh_token` emitido por Keycloak para ese `UserId`, permitiendo renovarlo en `POST /api/v1/session/token/refresh` de forma transparente. El implementador confirmará esta estrategia en el adaptador `KeycloakTokenRefreshAdapter`.
+1. **Gestiï¿½n del refresh_token en el perfil Keycloak**: si el cliente externo no posee un `refresh_token` directo, el
+   backend PDP almacena temporalmente en Redis (con TTL ligado a la sesiï¿½n) el `refresh_token` emitido por Keycloak para
+   ese `UserId`, permitiendo renovarlo en `POST /api/v1/session/token/refresh` de forma transparente. El implementador
+   confirmarï¿½ esta estrategia en el adaptador `KeycloakTokenRefreshAdapter`.

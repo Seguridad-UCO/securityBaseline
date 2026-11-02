@@ -8,14 +8,9 @@ import co.edu.uco.seguridad.pdp.assignments.application.usecase.ResolveUserAppli
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.RoleId;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 public final class ResolveUserApplicationsUseCaseImpl implements ResolveUserApplicationsUseCase {
     private final AssignmentRepository assignments;
@@ -24,11 +19,13 @@ public final class ResolveUserApplicationsUseCaseImpl implements ResolveUserAppl
 
     public ResolveUserApplicationsUseCaseImpl(AssignmentRepository assignments, ProfileAssignmentRepository profileAssignments,
                                               TimeProvider time) {
-        this.assignments = Objects.requireNonNull(assignments); this.profileAssignments = Objects.requireNonNull(profileAssignments);
+        this.assignments = Objects.requireNonNull(assignments);
+        this.profileAssignments = Objects.requireNonNull(profileAssignments);
         this.time = Objects.requireNonNull(time);
     }
 
-    @Override public Mono<UserApplicationAssignmentsResponse> execute(ResolveUserApplicationsRequest input) {
+    @Override
+    public Mono<UserApplicationAssignmentsResponse> execute(ResolveUserApplicationsRequest input) {
         var now = time.now();
         Mono<Map<ApplicationId, Set<RoleId>>> direct = assignments.findActiveByUserAndTenant(input.userId(), input.tenantId(), now)
                 .collect(HashMap<ApplicationId, Set<RoleId>>::new,

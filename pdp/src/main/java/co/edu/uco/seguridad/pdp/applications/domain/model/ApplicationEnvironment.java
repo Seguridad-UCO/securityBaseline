@@ -4,7 +4,9 @@ import co.edu.uco.seguridad.pdp.applications.domain.exception.InvalidApplication
 
 import java.util.Locale;
 
-/** Ambientes soportados para desplegar una aplicación registrada. */
+/**
+ * Ambientes soportados para desplegar una aplicación registrada.
+ */
 public enum ApplicationEnvironment {
     DEV, LAB, PROD;
 

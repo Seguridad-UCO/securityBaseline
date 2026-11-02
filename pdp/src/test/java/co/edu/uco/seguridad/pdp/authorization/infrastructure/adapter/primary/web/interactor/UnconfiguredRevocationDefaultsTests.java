@@ -4,7 +4,9 @@ import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-/** Sin implementación explícita, quitar un rol de un perfil o revocar un recurso falla con claridad. */
+/**
+ * Sin implementación explícita, quitar un rol de un perfil o revocar un recurso falla con claridad.
+ */
 class UnconfiguredRevocationDefaultsTests {
 
     @Test

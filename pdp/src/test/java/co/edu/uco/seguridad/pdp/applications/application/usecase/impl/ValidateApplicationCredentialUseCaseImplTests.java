@@ -16,8 +16,8 @@ import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.util.UUID;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * La regla real (no un dummy): esta prueba también demuestra que la regla y el validador encajan,
@@ -90,7 +90,7 @@ class ValidateApplicationCredentialUseCaseImplTests {
     }
 
     private static ApplicationRepository repository(Mono<ApplicationCredentialHash> hash, Mono<TenantId> tenantId,
-                                                     Set<ApplicationEnvironment> environments) {
+                                                    Set<ApplicationEnvironment> environments) {
         return new ApplicationRepository() {
             @Override
             public Mono<Boolean> existsByTenantAndName(TenantId tenantId, ApplicationName name) {

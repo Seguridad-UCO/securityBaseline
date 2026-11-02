@@ -4,8 +4,8 @@ import co.edu.uco.seguridad.pdp.assignments.domain.ProfileAssignment;
 import co.edu.uco.seguridad.pdp.assignments.domain.ProfileAssignmentCriteria;
 import co.edu.uco.seguridad.pdp.assignments.domain.model.ProfileAssignmentId;
 import co.edu.uco.seguridad.pdp.commons.model.*;
-import reactor.core.publisher.Mono;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.util.Set;
@@ -35,12 +35,20 @@ public interface ProfileAssignmentRepository {
                                                                       PageWindow window) {
         return Mono.error(new UnsupportedOperationException("La consulta paginada no está implementada"));
     }
-    default Mono<Long> countByApplication(TenantId tenantId, ApplicationId applicationId) { return Mono.error(new UnsupportedOperationException()); }
+
+    default Mono<Long> countByApplication(TenantId tenantId, ApplicationId applicationId) {
+        return Mono.error(new UnsupportedOperationException());
+    }
 
     default Mono<ResultPage<ProfileAssignment>> findActivePageByProfileAndApplication(ProfileId profileId, TenantId tenantId,
-            ApplicationId applicationId, Instant now, PageWindow window) { return Mono.error(new UnsupportedOperationException()); }
+                                                                                      ApplicationId applicationId, Instant now, PageWindow window) {
+        return Mono.error(new UnsupportedOperationException());
+    }
+
     default Mono<ResultPage<ProfileAssignment>> findActivePageByUserAndApplication(UserId userId, TenantId tenantId,
-            ApplicationId applicationId, Instant now, PageWindow window) { return Mono.error(new UnsupportedOperationException()); }
+                                                                                   ApplicationId applicationId, Instant now, PageWindow window) {
+        return Mono.error(new UnsupportedOperationException());
+    }
 
     /**
      * Identificadores de perfiles asignados y vigentes para el sujeto y la aplicación.
@@ -49,7 +57,9 @@ public interface ProfileAssignmentRepository {
         return Mono.just(Set.of());
     }
 
-    /** Asignaciones de perfil vigentes de un usuario, limitadas siempre al tenant indicado. */
+    /**
+     * Asignaciones de perfil vigentes de un usuario, limitadas siempre al tenant indicado.
+     */
     default Flux<ProfileAssignment> findActiveByUserAndTenant(UserId userId, TenantId tenantId, Instant now) {
         return Flux.empty();
     }

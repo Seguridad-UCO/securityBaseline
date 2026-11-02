@@ -20,9 +20,9 @@ public final class ReadApplicationAssignmentCountsUseCaseImpl implements ReadApp
     private final TimeProvider time;
 
     public ReadApplicationAssignmentCountsUseCaseImpl(AssignmentRepository assignments,
-                                                       ProfileAssignmentRepository profileAssignments,
-                                                       RoleLookupByNameInScopeValidator roles,
-                                                       TimeProvider time) {
+                                                      ProfileAssignmentRepository profileAssignments,
+                                                      RoleLookupByNameInScopeValidator roles,
+                                                      TimeProvider time) {
         this.assignments = assignments;
         this.profileAssignments = profileAssignments;
         this.roles = roles;
@@ -32,12 +32,12 @@ public final class ReadApplicationAssignmentCountsUseCaseImpl implements ReadApp
     @Override
     public Mono<ApplicationAssignmentCountsResponse> execute(ApplicationAssignmentCountsRequest request) {
         return Mono.zip(
-                assignments.countByApplication(request.tenantId(), request.applicationId()),
-                profileAssignments.countByApplication(request.tenantId(), request.applicationId()),
-                roles.execute(new RoleNameInScopeQuery(ADMIN,
-                                RoleScope.ofApplication(request.tenantId(), request.applicationId())))
-                        .flatMap(role -> assignments.countActiveByRoleAndApplication(role, request.tenantId(),
-                                request.applicationId(), time.now())))
+                        assignments.countByApplication(request.tenantId(), request.applicationId()),
+                        profileAssignments.countByApplication(request.tenantId(), request.applicationId()),
+                        roles.execute(new RoleNameInScopeQuery(ADMIN,
+                                        RoleScope.ofApplication(request.tenantId(), request.applicationId())))
+                                .flatMap(role -> assignments.countActiveByRoleAndApplication(role, request.tenantId(),
+                                        request.applicationId(), time.now())))
                 .map(counts -> new ApplicationAssignmentCountsResponse(counts.getT1(), counts.getT2(), counts.getT3()));
     }
 }

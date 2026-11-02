@@ -11,8 +11,8 @@ import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealRecordId;
-import reactor.core.publisher.Mono;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import tools.jackson.databind.JsonNode;
 
 import java.time.Instant;
@@ -84,14 +84,15 @@ public final class SurrealAssignmentRepository implements AssignmentRepository {
                 .map(results -> ResultPage.of(results.get(0).valueStream().map(SurrealAssignmentRepository::toDomain).toList(), totalOf(results.get(1)), window));
     }
 
-    @Override public Mono<Long> countByApplication(TenantId tenantId, ApplicationId applicationId) {
+    @Override
+    public Mono<Long> countByApplication(TenantId tenantId, ApplicationId applicationId) {
         return client.execute("SELECT count() FROM %s WHERE tenantId = $tenantId AND applicationId = $applicationId GROUP ALL;".formatted(AssignmentSchema.TABLE), Map.of("tenantId", tenantId.value(), "applicationId", applicationId.value().toString()))
                 .map(r -> totalOf(r.get(0)));
     }
 
     @Override
     public Mono<ResultPage<Assignment>> findActivePageByRoleAndApplication(RoleId roleId, TenantId tenantId,
-            ApplicationId applicationId, Instant now, PageWindow window) {
+                                                                           ApplicationId applicationId, Instant now, PageWindow window) {
         String query = """
                 SELECT * FROM %1$s WHERE roleId = $roleId AND tenantId = $tenantId AND applicationId = $applicationId AND validFrom <= <datetime>$now AND (validUntil = NONE OR validUntil > <datetime>$now) ORDER BY validFrom DESC LIMIT %2$d START %3$d;
                 SELECT count() FROM %1$s WHERE roleId = $roleId AND tenantId = $tenantId AND applicationId = $applicationId AND validFrom <= <datetime>$now AND (validUntil = NONE OR validUntil > <datetime>$now) GROUP ALL;
@@ -100,14 +101,16 @@ public final class SurrealAssignmentRepository implements AssignmentRepository {
                 .map(results -> ResultPage.of(results.get(0).valueStream().map(SurrealAssignmentRepository::toDomain).toList(), totalOf(results.get(1)), window));
     }
 
-    @Override public Mono<Long> countActiveByRoleAndApplication(RoleId roleId, TenantId tenantId, ApplicationId applicationId, Instant now) {
+    @Override
+    public Mono<Long> countActiveByRoleAndApplication(RoleId roleId, TenantId tenantId, ApplicationId applicationId, Instant now) {
         return client.execute("SELECT count() FROM %s WHERE roleId = $roleId AND tenantId = $tenantId AND applicationId = $applicationId AND validFrom <= <datetime>$now AND (validUntil = NONE OR validUntil > <datetime>$now) GROUP ALL;".formatted(AssignmentSchema.TABLE), Map.of("roleId", roleId.value().toString(), "tenantId", tenantId.value(), "applicationId", applicationId.value().toString(), "now", now.toString()))
                 .map(r -> totalOf(r.get(0)));
     }
 
-    @Override public Mono<ResultPage<Assignment>> findActivePageByUserAndApplication(UserId userId, TenantId tenantId, ApplicationId applicationId, Instant now, PageWindow window) {
+    @Override
+    public Mono<ResultPage<Assignment>> findActivePageByUserAndApplication(UserId userId, TenantId tenantId, ApplicationId applicationId, Instant now, PageWindow window) {
         String query = "SELECT * FROM %1$s WHERE userId = $userId AND tenantId = $tenantId AND applicationId = $applicationId AND validFrom <= <datetime>$now AND (validUntil = NONE OR validUntil > <datetime>$now) ORDER BY validFrom DESC LIMIT %2$d START %3$d; SELECT count() FROM %1$s WHERE userId = $userId AND tenantId = $tenantId AND applicationId = $applicationId AND validFrom <= <datetime>$now AND (validUntil = NONE OR validUntil > <datetime>$now) GROUP ALL;".formatted(AssignmentSchema.TABLE, window.limit(), window.offset());
-        return client.execute(query, Map.of("userId",userId.value().toString(),"tenantId",tenantId.value(),"applicationId",applicationId.value().toString(),"now",now.toString())).map(rows -> ResultPage.of(rows.get(0).valueStream().map(SurrealAssignmentRepository::toDomain).toList(), totalOf(rows.get(1)), window));
+        return client.execute(query, Map.of("userId", userId.value().toString(), "tenantId", tenantId.value(), "applicationId", applicationId.value().toString(), "now", now.toString())).map(rows -> ResultPage.of(rows.get(0).valueStream().map(SurrealAssignmentRepository::toDomain).toList(), totalOf(rows.get(1)), window));
     }
 
     private static long totalOf(JsonNode countResult) {
@@ -134,9 +137,9 @@ public final class SurrealAssignmentRepository implements AssignmentRepository {
     @Override
     public Flux<Assignment> findActiveByUserAndTenant(UserId userId, TenantId tenantId, Instant now) {
         return client.execute("""
-                        SELECT * FROM %s WHERE userId = $userId AND tenantId = $tenantId
-                        AND validFrom <= <datetime>$now AND (validUntil = NONE OR validUntil > <datetime>$now);
-                        """.formatted(AssignmentSchema.TABLE),
+                                SELECT * FROM %s WHERE userId = $userId AND tenantId = $tenantId
+                                AND validFrom <= <datetime>$now AND (validUntil = NONE OR validUntil > <datetime>$now);
+                                """.formatted(AssignmentSchema.TABLE),
                         Map.of("userId", userId.value().toString(), "tenantId", tenantId.value(), "now", now.toString()))
                 .flatMapMany(results -> Flux.fromIterable(results.get(0).valueStream().toList()))
                 .map(SurrealAssignmentRepository::toDomain);

@@ -2,8 +2,8 @@ package co.edu.uco.seguridad.shared.security.revocation;
 
 import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
-import co.edu.uco.seguridad.shared.security.RevocationRetentionProperties;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
+import co.edu.uco.seguridad.shared.security.RevocationRetentionProperties;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import reactor.core.publisher.Mono;
 
@@ -66,13 +66,17 @@ public final class RedisTokenRevocationAdapter implements TokenRevocationPort {
                 .hasElement();
     }
 
-    /** HU-028 / ADR-034: clave {@code revoked-client-since:{userId}:{clientId}}. */
+    /**
+     * HU-028 / ADR-034: clave {@code revoked-client-since:{userId}:{clientId}}.
+     */
     @Override
     public Mono<Void> revokeClientSince(UserId subject, String clientId, Instant since) {
         return redis.opsForValue().set(clientKeyFor(subject, clientId), since.toString(), properties.retention()).then();
     }
 
-    /** HU-028 / ADR-034. */
+    /**
+     * HU-028 / ADR-034.
+     */
     @Override
     public Mono<Boolean> isClientRevoked(UserId subject, String clientId, Instant issuedAt) {
         return redis.opsForValue().get(clientKeyFor(subject, clientId))

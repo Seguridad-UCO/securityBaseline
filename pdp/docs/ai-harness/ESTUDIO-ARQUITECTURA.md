@@ -322,7 +322,7 @@ Probarlas es `assertThatThrownBy(() -> rule.execute(...))`: sin `StepVerifier`, 
    ganancia. El valor real del paso A4 estaba en A6 —adelgazar el puerto— y eso sí se hizo:
 
    | Antes | Ahora |
-      |---|---|
+         |---|---|
    | `ApplicationRepository.findByTenantAndId` → `Mono<Application>` | `existsByTenantAndId` → `Mono<Boolean>` |
    | `TenantRepository.findById` → `Mono<Tenant>` | `findStatusById` → `Mono<TenantStatus>` |
 

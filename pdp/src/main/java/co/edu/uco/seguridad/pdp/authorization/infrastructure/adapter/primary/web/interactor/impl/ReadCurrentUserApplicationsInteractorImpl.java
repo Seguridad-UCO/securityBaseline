@@ -16,15 +16,17 @@ public final class ReadCurrentUserApplicationsInteractorImpl implements ReadCurr
     private final ReadCurrentUserApplicationsUseCase useCase;
 
     public ReadCurrentUserApplicationsInteractorImpl(FindAuthenticatedUserBySubjectUseCase users, ReadCurrentUserApplicationsUseCase useCase) {
-        this.users = Objects.requireNonNull(users); this.useCase = Objects.requireNonNull(useCase);
+        this.users = Objects.requireNonNull(users);
+        this.useCase = Objects.requireNonNull(useCase);
     }
 
-    @Override public Mono<CurrentUserApplicationsWebResponse> execute() {
+    @Override
+    public Mono<CurrentUserApplicationsWebResponse> execute() {
         return SecurityContext.currentPrincipal().flatMap(principal -> users.execute(principal.subject())
-                .switchIfEmpty(Mono.error(new AccessDeniedException("No local user for authenticated subject")))
-                .filter(user -> user.tenantId().equals(principal.tenantId()))
-                .switchIfEmpty(Mono.error(new AccessDeniedException("Authenticated subject belongs to another tenant")))
-                .flatMap(user -> useCase.execute(new ReadCurrentUserApplicationsRequest(user.userId(), principal.tenantId(), user.name(), user.email()))))
+                        .switchIfEmpty(Mono.error(new AccessDeniedException("No local user for authenticated subject")))
+                        .filter(user -> user.tenantId().equals(principal.tenantId()))
+                        .switchIfEmpty(Mono.error(new AccessDeniedException("Authenticated subject belongs to another tenant")))
+                        .flatMap(user -> useCase.execute(new ReadCurrentUserApplicationsRequest(user.userId(), principal.tenantId(), user.name(), user.email()))))
                 .map(response -> new CurrentUserApplicationsWebResponse(
                         new CurrentUserApplicationsWebResponse.Tenant(response.tenantName()),
                         new CurrentUserApplicationsWebResponse.User(response.userName(), response.email()),

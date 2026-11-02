@@ -13,21 +13,22 @@ bearer y no tenía prueba de extremo a extremo con un bearer real
 
 ## Criterios
 
-| # | Criterio | Resultado | Evidencia |
-|---|---|---|---|
-| 1 | Logout del panel (cookie) revoca todo el sujeto, borra refresh e invalida la sesión | ✅ | `SessionRevocationControllerTests` (canal cookie) |
-| 2 | `DELETE /api/v1/session` con bearer: `204`; ese JWT y los del mismo cliente (`azp`) anteriores a T reciben `401` | ✅ | E2E `SessionLogoutBearerIntegrationTests` (servidor integrado, perfil `keycloak`, JWT RS256 firmado con JWKS local) |
-| 2b | Otro cliente del mismo sujeto sigue válido; la sesión BFF y su refresh no se tocan; bearer sin `azp` solo revoca su `jti` | ✅ | E2E + `SessionRevocationControllerTests` |
-| 3 | Redis falla al escribir → `503`; con Redis totalmente caído el decoder responde `401` (fail-closed) | ✅ | E2E con decorador `@Primary` que falla solo las escrituras |
-| 4 | Otro sujeto no se afecta; `iat` posterior a T tampoco | ✅ | E2E con `iat` explícitos, sin `sleep` |
-| 5 | El panel sigue igual | ✅ | rama cookie sin cambios de comportamiento |
-| 6 | Un bearer inválido, expirado, de firma alterada o revocado recibe `401` con el sobre `UNAUTHORIZED` (`application/problem+json`) | ✅ | E2E (3 casos). Era un defecto: respondía cuerpo vacío |
-| 7 | Sin identidad local → `401` (antes `500`) | ✅ | `SessionRevocationControllerTests` |
-| 8 | `verificar.ps1` completo, `consistencia`, `drift` | ✅ | **867 pruebas, 0 fallos, 0 errores**, JaCoCo ≥ 50 % por paquete; CONSISTENTE; SIN DERIVA |
+| #  | Criterio                                                                                                                         | Resultado | Evidencia                                                                                                           |
+|----|----------------------------------------------------------------------------------------------------------------------------------|-----------|---------------------------------------------------------------------------------------------------------------------|
+| 1  | Logout del panel (cookie) revoca todo el sujeto, borra refresh e invalida la sesión                                              | ✅         | `SessionRevocationControllerTests` (canal cookie)                                                                   |
+| 2  | `DELETE /api/v1/session` con bearer: `204`; ese JWT y los del mismo cliente (`azp`) anteriores a T reciben `401`                 | ✅         | E2E `SessionLogoutBearerIntegrationTests` (servidor integrado, perfil `keycloak`, JWT RS256 firmado con JWKS local) |
+| 2b | Otro cliente del mismo sujeto sigue válido; la sesión BFF y su refresh no se tocan; bearer sin `azp` solo revoca su `jti`        | ✅         | E2E + `SessionRevocationControllerTests`                                                                            |
+| 3  | Redis falla al escribir → `503`; con Redis totalmente caído el decoder responde `401` (fail-closed)                              | ✅         | E2E con decorador `@Primary` que falla solo las escrituras                                                          |
+| 4  | Otro sujeto no se afecta; `iat` posterior a T tampoco                                                                            | ✅         | E2E con `iat` explícitos, sin `sleep`                                                                               |
+| 5  | El panel sigue igual                                                                                                             | ✅         | rama cookie sin cambios de comportamiento                                                                           |
+| 6  | Un bearer inválido, expirado, de firma alterada o revocado recibe `401` con el sobre `UNAUTHORIZED` (`application/problem+json`) | ✅         | E2E (3 casos). Era un defecto: respondía cuerpo vacío                                                               |
+| 7  | Sin identidad local → `401` (antes `500`)                                                                                        | ✅         | `SessionRevocationControllerTests`                                                                                  |
+| 8  | `verificar.ps1` completo, `consistencia`, `drift`                                                                                | ✅         | **867 pruebas, 0 fallos, 0 errores**, JaCoCo ≥ 50 % por paquete; CONSISTENTE; SIN DERIVA                            |
 
 ## Cambios de producción (solo `pdp/src/main/.../shared`)
 
-- `TokenRevocationPort`: `revokeClientSince` / `isClientRevoked` (sin `default`: un doble sin implementarlos no compila).
+- `TokenRevocationPort`: `revokeClientSince` / `isClientRevoked` (sin `default`: un doble sin implementarlos no
+  compila).
 - `RedisTokenRevocationAdapter`: clave `revoked-client-since:{userId}:{clientId}`, misma retención y comparación `<=`.
 - `RevocationAwareJwtDecoder`: tercera comprobación por `azp`, solo si el token lo trae; fail-closed.
 - `SessionRevocationController`: canal por tipo de principal; borrado del refresh en `Mono.defer`.

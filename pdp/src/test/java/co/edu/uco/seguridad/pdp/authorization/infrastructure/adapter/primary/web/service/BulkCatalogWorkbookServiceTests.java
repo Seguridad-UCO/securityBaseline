@@ -15,9 +15,7 @@ import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.tuple;
+import static org.assertj.core.api.Assertions.*;
 
 /**
  * Plantillas, lectura y reporte de errores del libro de carga masiva de catálogo (roles, perfiles y sus relaciones).
@@ -45,7 +43,9 @@ class BulkCatalogWorkbookServiceTests {
         return headers;
     }
 
-    /** Fila, campo, código y descripción de un error: lo que el contrato fija (el {@code value} no se afirma). */
+    /**
+     * Fila, campo, código y descripción de un error: lo que el contrato fija (el {@code value} no se afirma).
+     */
     private static void assertSingleError(List<BulkResourceRowError> errors, int row, String field, String code,
                                           String description) {
         assertThat(errors).singleElement().satisfies(error -> {

@@ -41,6 +41,7 @@ public final class RevocationAwareJwtDecoder implements ReactiveJwtDecoder {
     private final Function<Jwt, Mono<UserId>> userIdResolver;
     private final BiFunction<Jwt, UserId, Jwt> delivery;
     private final String technicalClientId;
+    private final Function<Jwt, Mono<Boolean>> serviceIdentity;
 
     public RevocationAwareJwtDecoder(ReactiveJwtDecoder delegate, TokenRevocationPort revocation,
                                      SubjectUserIdLookupValidator subjectUserIdLookup) {
@@ -55,18 +56,32 @@ public final class RevocationAwareJwtDecoder implements ReactiveJwtDecoder {
     public RevocationAwareJwtDecoder(ReactiveJwtDecoder delegate, TokenRevocationPort revocation,
                                      SubjectUserIdLookupValidator subjectUserIdLookup, String technicalClientId) {
         this(delegate, revocation, lookupOnly(Objects.requireNonNull(subjectUserIdLookup,
-                RequiredArgumentMessages.SUBJECT_USER_ID_LOOKUP_VALIDATOR)), (jwt, userId) -> jwt,
-                Objects.requireNonNull(technicalClientId, "technicalClientId"));
+                        RequiredArgumentMessages.SUBJECT_USER_ID_LOOKUP_VALIDATOR)), (jwt, userId) -> jwt,
+                Objects.requireNonNull(technicalClientId, "technicalClientId"), jwt -> Mono.just(false));
+    }
+
+    /**
+     * Las identidades de servicio no pertenecen al catálogo de usuarios. Antes de intentar
+     * resolver un {@code UserId}, se validan contra el catálogo de identidades M2M activas.
+     */
+    public RevocationAwareJwtDecoder(ReactiveJwtDecoder delegate, TokenRevocationPort revocation,
+                                     SubjectUserIdLookupValidator subjectUserIdLookup, String technicalClientId,
+                                     Function<Jwt, Mono<Boolean>> serviceIdentity) {
+        this(delegate, revocation, lookupOnly(Objects.requireNonNull(subjectUserIdLookup,
+                        RequiredArgumentMessages.SUBJECT_USER_ID_LOOKUP_VALIDATOR)), (jwt, userId) -> jwt,
+                Objects.requireNonNull(technicalClientId, "technicalClientId"), serviceIdentity);
     }
 
     private RevocationAwareJwtDecoder(ReactiveJwtDecoder delegate, TokenRevocationPort revocation,
                                       Function<Jwt, Mono<UserId>> userIdResolver,
-                                      BiFunction<Jwt, UserId, Jwt> delivery, String technicalClientId) {
+                                      BiFunction<Jwt, UserId, Jwt> delivery, String technicalClientId,
+                                      Function<Jwt, Mono<Boolean>> serviceIdentity) {
         this.delegate = Objects.requireNonNull(delegate, RequiredArgumentMessages.REACTIVE_JWT_DECODER_DELEGATE);
         this.revocation = Objects.requireNonNull(revocation, RequiredArgumentMessages.TOKEN_REVOCATION_PORT);
         this.userIdResolver = userIdResolver;
         this.delivery = delivery;
         this.technicalClientId = technicalClientId;
+        this.serviceIdentity = Objects.requireNonNull(serviceIdentity, "serviceIdentity");
     }
 
     /**
@@ -80,19 +95,31 @@ public final class RevocationAwareJwtDecoder implements ReactiveJwtDecoder {
         Objects.requireNonNull(identities, RequiredArgumentMessages.RESOLVE_BEARER_IDENTITY_USE_CASE);
         return new RevocationAwareJwtDecoder(delegate, revocation,
                 jwt -> Mono.defer(() -> identities.execute(BearerIdentityRequestMapper.toRequest(jwt))),
-                (jwt, userId) -> BearerIdentityClaim.stamp(jwt, Optional.of(userId)), "");
+                (jwt, userId) -> BearerIdentityClaim.stamp(jwt, Optional.of(userId)), "", jwt -> Mono.just(false));
     }
 
     @Override
     public Mono<Jwt> decode(String token) {
-        return delegate.decode(token).flatMap(jwt -> isTechnicalPepToken(jwt) ? Mono.just(jwt) : userIdResolver.apply(jwt)
-                .flatMap(userId -> revoked(userId, jwt)
-                        .flatMap(revoked -> revoked ? Mono.<Jwt>error(revokedException()) : Mono.just(delivery.apply(jwt, userId))))
-                .onErrorMap(RevocationAwareJwtDecoder::isCheckFailure, error -> revocationCheckFailedException(
-                        "no se pudo verificar el estado de revocación del token")));
+        return delegate.decode(token).flatMap(jwt -> {
+            if (isTechnicalPepToken(jwt)) return Mono.just(jwt);
+            return serviceIdentity.apply(jwt).flatMap(active -> {
+                if (active) return Mono.just(jwt);
+                if (isManagedServiceIdentityToken(jwt)) {
+                    return Mono.error(revocationCheckFailedException(
+                            "la identidad de servicio del token no está registrada o está inactiva"));
+                }
+                return userIdResolver.apply(jwt)
+                        .flatMap(userId -> revoked(userId, jwt)
+                                .flatMap(revoked -> revoked ? Mono.<Jwt>error(revokedException()) : Mono.just(delivery.apply(jwt, userId))))
+                        .onErrorMap(RevocationAwareJwtDecoder::isCheckFailure, error -> revocationCheckFailedException(
+                                "no se pudo verificar el estado de revocación del token"));
+            });
+        });
     }
 
-    /** Solo una {@code Exception} es fail-closed: un {@code Error} de la JVM no se disfraza de 401. */
+    /**
+     * Solo una {@code Exception} es fail-closed: un {@code Error} de la JVM no se disfraza de 401.
+     */
     private static boolean isCheckFailure(Throwable error) {
         return error instanceof Exception && !(error instanceof JwtException);
     }
@@ -111,7 +138,9 @@ public final class RevocationAwareJwtDecoder implements ReactiveJwtDecoder {
                 .map(revocationState -> revocationState.getT1() || revocationState.getT2() || revocationState.getT3());
     }
 
-    /** HU-028 / ADR-034: solo consulta la revocación por cliente cuando el token trae {@code azp}. */
+    /**
+     * HU-028 / ADR-034: solo consulta la revocación por cliente cuando el token trae {@code azp}.
+     */
     private Mono<Boolean> clientRevoked(UserId userId, Jwt jwt) {
         String clientId = jwt.getClaimAsString("azp");
         return clientId == null || clientId.isBlank()
@@ -121,6 +150,11 @@ public final class RevocationAwareJwtDecoder implements ReactiveJwtDecoder {
 
     private boolean isTechnicalPepToken(Jwt jwt) {
         return !technicalClientId.isBlank() && technicalClientId.equals(jwt.getClaimAsString("azp"));
+    }
+
+    private static boolean isManagedServiceIdentityToken(Jwt jwt) {
+        String clientId = jwt.getClaimAsString("azp");
+        return clientId != null && clientId.startsWith("svc-");
     }
 
     private static JwtValidationException revocationCheckFailedException(String reason) {

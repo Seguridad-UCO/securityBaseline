@@ -4,8 +4,8 @@ import co.edu.uco.seguridad.pdp.assignments.application.primaryport.request.List
 import co.edu.uco.seguridad.pdp.assignments.application.primaryport.response.ProfileAssignmentResponse;
 import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository.ProfileAssignmentRepository;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.ListActiveProfileAssignmentsByUserPageUseCase;
-import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
+import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
 import reactor.core.publisher.Mono;
 
@@ -25,6 +25,6 @@ public final class ListActiveProfileAssignmentsByUserPageUseCaseImpl implements 
     public Mono<ResultPage<ProfileAssignmentResponse>> execute(ListActiveAssignmentsPageRequest<UserId> input) {
         return repository.findActivePageByUserAndApplication(input.key(), input.tenantId(), input.applicationId(), time.now(), input.window())
                 .map(page -> page.map(a -> new ProfileAssignmentResponse(a.id(), a.userId(), a.tenantId(), a.applicationId(),
-                a.profileId(), a.generatedAssignmentIds(), a.validity().validFrom(), a.validity().validUntil())));
+                        a.profileId(), a.generatedAssignmentIds(), a.validity().validFrom(), a.validity().validUntil())));
     }
 }

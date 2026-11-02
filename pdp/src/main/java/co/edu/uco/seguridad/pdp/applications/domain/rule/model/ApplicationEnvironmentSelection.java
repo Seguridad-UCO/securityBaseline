@@ -4,7 +4,9 @@ import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationEnvironment
 
 import java.util.Set;
 
-/** Ambientes seleccionados para una aplicación, normalizados para que la regla sea pura. */
+/**
+ * Ambientes seleccionados para una aplicación, normalizados para que la regla sea pura.
+ */
 public record ApplicationEnvironmentSelection(Set<ApplicationEnvironment> enabledEnvironments) {
 
     public ApplicationEnvironmentSelection {

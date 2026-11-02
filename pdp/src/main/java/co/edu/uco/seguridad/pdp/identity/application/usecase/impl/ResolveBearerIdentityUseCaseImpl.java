@@ -23,7 +23,9 @@ import java.util.Objects;
  */
 public final class ResolveBearerIdentityUseCaseImpl implements ResolveBearerIdentityUseCase {
 
-    /** TLD reservado (RFC 2606): nunca colisiona con un correo real. */
+    /**
+     * TLD reservado (RFC 2606): nunca colisiona con un correo real.
+     */
     private static final String PLACEHOLDER_EMAIL_DOMAIN = "@bearer.invalid";
 
     private final SecurityUserRepository repository;
@@ -69,7 +71,9 @@ public final class ResolveBearerIdentityUseCaseImpl implements ResolveBearerIden
         return repository.createUserWithIdentityIfAbsent(user, identity).map(ExternalIdentity::userId);
     }
 
-    /** Solo se confía en el correo del token si el IdP lo verificó; si no, uno reservado único por sujeto. */
+    /**
+     * Solo se confía en el correo del token si el IdP lo verificó; si no, uno reservado único por sujeto.
+     */
     private static Email effectiveEmail(ResolveBearerIdentityRequest input) {
         return input.email().filter(email -> input.emailVerified())
                 .orElseGet(() -> new Email(input.subject() + PLACEHOLDER_EMAIL_DOMAIN));

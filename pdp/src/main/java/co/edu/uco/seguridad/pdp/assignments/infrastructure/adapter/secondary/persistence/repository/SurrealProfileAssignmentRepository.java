@@ -11,8 +11,8 @@ import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealRecordId;
-import reactor.core.publisher.Mono;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import tools.jackson.databind.JsonNode;
 
 import java.time.Instant;
@@ -86,20 +86,25 @@ public final class SurrealProfileAssignmentRepository implements ProfileAssignme
                 .map(results -> ResultPage.of(results.get(0).valueStream().map(SurrealProfileAssignmentRepository::toDomain).toList(), totalOf(results.get(1)), window));
     }
 
-    @Override public Mono<Long> countByApplication(TenantId tenantId, ApplicationId applicationId) {
+    @Override
+    public Mono<Long> countByApplication(TenantId tenantId, ApplicationId applicationId) {
         return client.execute("SELECT count() FROM %s WHERE tenantId = $tenantId AND applicationId = $applicationId GROUP ALL;".formatted(ProfileAssignmentSchema.TABLE), Map.of("tenantId", tenantId.value(), "applicationId", applicationId.value().toString()))
                 .map(r -> totalOf(r.get(0)));
     }
 
-    @Override public Mono<ResultPage<ProfileAssignment>> findActivePageByProfileAndApplication(ProfileId profileId, TenantId tenantId, ApplicationId applicationId, Instant now, PageWindow window) {
+    @Override
+    public Mono<ResultPage<ProfileAssignment>> findActivePageByProfileAndApplication(ProfileId profileId, TenantId tenantId, ApplicationId applicationId, Instant now, PageWindow window) {
         return findActive("profileId", profileId.value().toString(), tenantId, applicationId, now, window);
     }
-    @Override public Mono<ResultPage<ProfileAssignment>> findActivePageByUserAndApplication(UserId userId, TenantId tenantId, ApplicationId applicationId, Instant now, PageWindow window) {
+
+    @Override
+    public Mono<ResultPage<ProfileAssignment>> findActivePageByUserAndApplication(UserId userId, TenantId tenantId, ApplicationId applicationId, Instant now, PageWindow window) {
         return findActive("userId", userId.value().toString(), tenantId, applicationId, now, window);
     }
+
     private Mono<ResultPage<ProfileAssignment>> findActive(String field, String id, TenantId tenantId, ApplicationId applicationId, Instant now, PageWindow window) {
         String query = "SELECT * FROM %1$s WHERE %2$s = $id AND tenantId = $tenantId AND applicationId = $applicationId AND validFrom <= <datetime>$now AND (validUntil = NONE OR validUntil > <datetime>$now) ORDER BY validFrom DESC LIMIT %3$d START %4$d; SELECT count() FROM %1$s WHERE %2$s = $id AND tenantId = $tenantId AND applicationId = $applicationId AND validFrom <= <datetime>$now AND (validUntil = NONE OR validUntil > <datetime>$now) GROUP ALL;".formatted(ProfileAssignmentSchema.TABLE, field, window.limit(), window.offset());
-        return client.execute(query, Map.of("id",id,"tenantId",tenantId.value(),"applicationId",applicationId.value().toString(),"now",now.toString())).map(rows -> ResultPage.of(rows.get(0).valueStream().map(SurrealProfileAssignmentRepository::toDomain).toList(), totalOf(rows.get(1)), window));
+        return client.execute(query, Map.of("id", id, "tenantId", tenantId.value(), "applicationId", applicationId.value().toString(), "now", now.toString())).map(rows -> ResultPage.of(rows.get(0).valueStream().map(SurrealProfileAssignmentRepository::toDomain).toList(), totalOf(rows.get(1)), window));
     }
 
     private static long totalOf(JsonNode countResult) {
@@ -124,9 +129,9 @@ public final class SurrealProfileAssignmentRepository implements ProfileAssignme
     @Override
     public Flux<ProfileAssignment> findActiveByUserAndTenant(UserId userId, TenantId tenantId, Instant now) {
         return client.execute("""
-                        SELECT * FROM %s WHERE userId = $userId AND tenantId = $tenantId
-                        AND validFrom <= <datetime>$now AND (validUntil = NONE OR validUntil > <datetime>$now);
-                        """.formatted(ProfileAssignmentSchema.TABLE),
+                                SELECT * FROM %s WHERE userId = $userId AND tenantId = $tenantId
+                                AND validFrom <= <datetime>$now AND (validUntil = NONE OR validUntil > <datetime>$now);
+                                """.formatted(ProfileAssignmentSchema.TABLE),
                         Map.of("userId", userId.value().toString(), "tenantId", tenantId.value(), "now", now.toString()))
                 .flatMapMany(results -> Flux.fromIterable(results.get(0).valueStream().toList()))
                 .map(SurrealProfileAssignmentRepository::toDomain);

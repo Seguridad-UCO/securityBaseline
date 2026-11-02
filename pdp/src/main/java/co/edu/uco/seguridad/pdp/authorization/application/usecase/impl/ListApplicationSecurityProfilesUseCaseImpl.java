@@ -12,9 +12,15 @@ import reactor.core.publisher.Mono;
 public final class ListApplicationSecurityProfilesUseCaseImpl implements ListApplicationSecurityProfilesUseCase {
     private final PrincipalMustBeApplicationAdministratorValidator gate;
     private final ListApplicationProfilesPageUseCase profiles;
+
     public ListApplicationSecurityProfilesUseCaseImpl(PrincipalMustBeApplicationAdministratorValidator gate,
-                                                      ListApplicationProfilesPageUseCase profiles) { this.gate = gate; this.profiles = profiles; }
-    @Override public Mono<ResultPage<ProfileResponse>> execute(ListApplicationSecurityProfilesRequest request) {
+                                                      ListApplicationProfilesPageUseCase profiles) {
+        this.gate = gate;
+        this.profiles = profiles;
+    }
+
+    @Override
+    public Mono<ResultPage<ProfileResponse>> execute(ListApplicationSecurityProfilesRequest request) {
         var administration = request.administration();
         return gate.execute(administration).then(Mono.defer(() -> profiles.execute(
                 new ListApplicationProfilesPageRequest(administration.tenantId(), administration.applicationId(), request.window()))));

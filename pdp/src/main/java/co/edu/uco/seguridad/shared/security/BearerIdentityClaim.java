@@ -12,13 +12,17 @@ import java.util.Optional;
  */
 public final class BearerIdentityClaim {
 
-    /** Nombre del claim interno. */
+    /**
+     * Nombre del claim interno.
+     */
     public static final String NAME = "pdp_user_id";
 
     private BearerIdentityClaim() {
     }
 
-    /** Devuelve un {@code Jwt} cuyo claim interno es exactamente {@code userId} (o ausente si vacío). */
+    /**
+     * Devuelve un {@code Jwt} cuyo claim interno es exactamente {@code userId} (o ausente si vacío).
+     */
     public static Jwt stamp(Jwt jwt, Optional<UserId> userId) {
         if (userId.isEmpty() && !jwt.hasClaim(NAME)) {
             return jwt;
@@ -33,7 +37,9 @@ public final class BearerIdentityClaim {
                 .build();
     }
 
-    /** Lee el claim interno; vacío si no está. Un valor que no sea UUID lanza {@code InvalidIdentifierException}. */
+    /**
+     * Lee el claim interno; vacío si no está. Un valor que no sea UUID lanza {@code InvalidIdentifierException}.
+     */
     public static Optional<UserId> read(Jwt jwt) {
         return Optional.ofNullable(jwt.getClaimAsString(NAME)).map(UserId::of);
     }

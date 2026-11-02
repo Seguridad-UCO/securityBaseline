@@ -122,6 +122,11 @@ public class ProfilesConfiguration {
     }
 
     @Bean
+    FindProfileForTenantUseCase findProfileForTenantUseCase(ProfileRepository repository) {
+        return new FindProfileForTenantUseCaseImpl(repository);
+    }
+
+    @Bean
     UpdateProfileUseCase updateProfileUseCase(ProfileRepository repository) {
         return new UpdateProfileUseCaseImpl(repository);
     }

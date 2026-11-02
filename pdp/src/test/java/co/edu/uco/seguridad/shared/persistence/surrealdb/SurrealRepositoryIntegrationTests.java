@@ -525,7 +525,7 @@ class SurrealRepositoryIntegrationTests extends AbstractSurrealDbIntegrationTest
 
         SecurityUserRepository repository = new SurrealSecurityUserRepository(client);
         TenantId tenant = new TenantId("surreal-it-alphabetical-" + UUID.randomUUID().toString().substring(0, 8));
-        for (String name : new String[] {"Zoe Ruiz", "ana gomez", "Álvaro Díaz", "Beatriz Mora", "adriana lopez"}) {
+        for (String name : new String[]{"Zoe Ruiz", "ana gomez", "Álvaro Díaz", "Beatriz Mora", "adriana lopez"}) {
             String mail = name.toLowerCase().replace(" ", ".").replace("á", "a").replace("í", "i") + "@uco.edu";
             StepVerifier.create(repository.save(SecurityUser.provision(new UserId(UUID.randomUUID()), tenant,
                     new Email(mail), name, Instant.now()))).expectNextCount(1).verifyComplete();

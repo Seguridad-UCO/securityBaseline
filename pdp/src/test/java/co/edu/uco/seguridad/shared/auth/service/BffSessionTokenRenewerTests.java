@@ -8,11 +8,7 @@ import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.client.ClientAuthorizationException;
-import org.springframework.security.oauth2.client.ClientAuthorizationRequiredException;
-import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
-import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.*;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
@@ -368,7 +364,9 @@ class BffSessionTokenRenewerTests {
                 .build();
     }
 
-    /** Suma las entradas de todo campo {@link Map} del renovador: el contrato es que no retiene nada al terminar. */
+    /**
+     * Suma las entradas de todo campo {@link Map} del renovador: el contrato es que no retiene nada al terminar.
+     */
     private static int inFlightEntries(BffSessionTokenRenewer renewer) {
         int total = 0;
         try {

@@ -24,7 +24,7 @@ public record AccessRequest(TenantId tenantId, String subject, ApplicationId app
                             ResourcePath resourcePath, HttpVerb action, String requestId, String correlationId,
                             Optional<UserId> subjectUserId, Set<String> subjectRoles, Instant timestamp,
                             String environment,
-                            HttpVerb contextMethod, String channel) {
+                            HttpVerb contextMethod, String channel, String subjectType) {
 
     public AccessRequest {
         Objects.requireNonNull(tenantId, RequiredArgumentMessages.TENANT_ID);
@@ -36,13 +36,25 @@ public record AccessRequest(TenantId tenantId, String subject, ApplicationId app
         Objects.requireNonNull(correlationId, RequiredArgumentMessages.CORRELATION_ID);
         Objects.requireNonNull(subjectUserId, RequiredArgumentMessages.PRINCIPAL_USER_ID);
         subjectRoles = Set.copyOf(Objects.requireNonNull(subjectRoles, RequiredArgumentMessages.SUBJECT_ROLES));
+        subjectType = subjectType == null || subjectType.isBlank() ? "USER" : subjectType;
     }
 
     public AccessRequest(TenantId tenantId, String subject, ApplicationId applicationId, ResourcePath resourcePath,
                          HttpVerb action, String requestId, String correlationId, Optional<UserId> subjectUserId,
                          Set<String> subjectRoles) {
         this(tenantId, subject, applicationId, resourcePath, action, requestId, correlationId, subjectUserId,
-                subjectRoles, null, null, null, null);
+                subjectRoles, null, null, null, null, "USER");
+    }
+
+    /**
+     * Compatibilidad con el contrato interno previo que incluía hechos de contexto.
+     */
+    public AccessRequest(TenantId tenantId, String subject, ApplicationId applicationId, ResourcePath resourcePath,
+                         HttpVerb action, String requestId, String correlationId, Optional<UserId> subjectUserId,
+                         Set<String> subjectRoles, Instant timestamp, String environment, HttpVerb contextMethod,
+                         String channel) {
+        this(tenantId, subject, applicationId, resourcePath, action, requestId, correlationId, subjectUserId,
+                subjectRoles, timestamp, environment, contextMethod, channel, "USER");
     }
 
     /**
@@ -50,6 +62,6 @@ public record AccessRequest(TenantId tenantId, String subject, ApplicationId app
      */
     public AccessRequest withSubjectRoles(Set<String> roles) {
         return new AccessRequest(tenantId, subject, applicationId, resourcePath, action, requestId, correlationId,
-                subjectUserId, roles, timestamp, environment, contextMethod, channel);
+                subjectUserId, roles, timestamp, environment, contextMethod, channel, subjectType);
     }
 }

@@ -34,14 +34,6 @@ import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleScopeMustCo
 import co.edu.uco.seguridad.pdp.roles.application.usecase.DefineRoleUseCase;
 import co.edu.uco.seguridad.shared.cache.DistributedCachePort;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.ListActiveRoleAssignmentsByRolePageUseCase;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.ListActiveRoleAssignmentsByRolePageUseCaseImpl;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.ListActiveRoleAssignmentsByUserPageUseCase;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.ListActiveRoleAssignmentsByUserPageUseCaseImpl;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.ListActiveProfileAssignmentsByProfilePageUseCase;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.ListActiveProfileAssignmentsByProfilePageUseCaseImpl;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.ListActiveProfileAssignmentsByUserPageUseCase;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.ListActiveProfileAssignmentsByUserPageUseCaseImpl;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
 import co.edu.uco.seguridad.shared.security.revocation.TokenRevocationPort;
@@ -172,7 +164,7 @@ public class AssignmentsConfiguration {
 
     @Bean
     ResolveUserApplicationsUseCase resolveUserApplicationsUseCase(AssignmentRepository assignments,
-            ProfileAssignmentRepository profiles, TimeProvider time) {
+                                                                  ProfileAssignmentRepository profiles, TimeProvider time) {
         return new ResolveUserApplicationsUseCaseImpl(assignments, profiles, time);
     }
 
