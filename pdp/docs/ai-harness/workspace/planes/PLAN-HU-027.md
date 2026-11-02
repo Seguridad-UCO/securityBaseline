@@ -3,23 +3,34 @@
 ## Metadata
 
 - **ID:** HU-027
-- **Slice:** `nuevo: edge` — **no es un slice del PDP**: es un componente de infraestructura en `edge/` (raíz del monorepo), sin código Java
+- **Slice:** `nuevo: edge` — **no es un slice del PDP**: es un componente de infraestructura en `edge/` (raíz del
+  monorepo), sin código Java
 - **Tipo:** Infraestructura (topología, configuración, pruebas de caja negra, CI)
 - **Fecha:** 2026-09-20
 - **Rama sugerida:** `feature/HU-027-edge-waf-coraza`
-- **Fuentes:** `security-platform-architecture/docs/01-governance/adr/ADR-032-web-application-firewall.md` (decisión), ADR-025, ADR-014, ADR-007, ADR-010, ADR-020, ADR-022; `observability/TELEMETRY-CONVENTION.md`, `observability/collector.yml`, `observability/compose.yml`; `pdp/docker-compose.yml`, `pep/compose.integration.yml`, `pdp/Dockerfile`; `shared/web/handler/ApiAccessDeniedHandler`, `shared/web/handler/ApiErrorHandler`, `shared/web/filter/CorrelationWebFilter`; `KeycloakSecurityConfiguration` (rutas públicas del BFF); `ci/templates/stage-deploy.yml`, `ci/pep-pipeline.yml`; `pdp/infra/README.md`; `az network nsg rule list` (NSG de Keycloak) y `curl -I` al endpoint público de Keycloak
-- **Criterios de la línea base que toca:** 4 (correlación `X-Request-Id`/`X-Correlation-Id` de punta a punta), 5 y 9 (el bloqueo responde con el mismo `ProblemDetail` y un `code` estable, sin `RuntimeException` ni formato ad hoc), 8 (log JSON sin datos sensibles, bajo la convención de telemetría), 23 (`verify` en verde, ningún secreto en el repositorio). Los estructurales 1, 2, 11, 12, 21 y 22 **no se tocan**: la historia no modifica Java; el validador comprueba que siguen en verde, no que cambiaron.
+- **Fuentes:** `security-platform-architecture/docs/01-governance/adr/ADR-032-web-application-firewall.md` (decisión),
+  ADR-025, ADR-014, ADR-007, ADR-010, ADR-020, ADR-022; `observability/TELEMETRY-CONVENTION.md`,
+  `observability/collector.yml`, `observability/compose.yml`; `pdp/docker-compose.yml`, `pep/compose.integration.yml`,
+  `pdp/Dockerfile`; `shared/web/handler/ApiAccessDeniedHandler`, `shared/web/handler/ApiErrorHandler`,
+  `shared/web/filter/CorrelationWebFilter`; `KeycloakSecurityConfiguration` (rutas públicas del BFF);
+  `ci/templates/stage-deploy.yml`, `ci/pep-pipeline.yml`; `pdp/infra/README.md`; `az network nsg rule list` (NSG de
+  Keycloak) y `curl -I` al endpoint público de Keycloak
+- **Criterios de la línea base que toca:** 4 (correlación `X-Request-Id`/`X-Correlation-Id` de punta a punta), 5 y 9 (el
+  bloqueo responde con el mismo `ProblemDetail` y un `code` estable, sin `RuntimeException` ni formato ad hoc), 8 (log
+  JSON sin datos sensibles, bajo la convención de telemetría), 23 (`verify` en verde, ningún secreto en el repositorio).
+  Los estructurales 1, 2, 11, 12, 21 y 22 **no se tocan**: la historia no modifica Java; el validador comprueba que
+  siguen en verde, no que cambiaron.
 
 ## 0. Hallazgos de la fase 2 que cambian la historia
 
 La HU se escribió con tres supuestos que el estado real no sostiene. El plan parte del estado real:
 
-| Supuesto de la HU | Estado real | Consecuencia en el plan |
-|---|---|---|
-| "Compose es la única topología donde hoy corren PEP y PDP juntos" | **No existe tal topología.** `pdp/docker-compose.yml` levanta solo SurrealDB, Keycloak y Redis (el PDP corre en el host con `mvnw`); `pep/compose.integration.yml` es una demo con fixtures en red interna | Dos overlays (`edge/compose.pdp.yml`, `edge/compose.pep.yml`), misma imagen y reglas — decisión de Sebastián en la fase 3 |
-| "La suite E2E del PDP pasa por el edge" | **No hay suite HTTP de caja negra.** Las pruebas de integración son `WebTestClient` in-process; `verificar.ps1` es solo Maven | Suite nueva en `hurl`, ejecutada como servicio del mismo Compose (resuelve `edge`/`keycloak` por nombre) — decisión de Sebastián |
+| Supuesto de la HU                                                        | Estado real                                                                                                                                                                                                                                                                                                       | Consecuencia en el plan                                                                                                                     |
+|--------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| "Compose es la única topología donde hoy corren PEP y PDP juntos"        | **No existe tal topología.** `pdp/docker-compose.yml` levanta solo SurrealDB, Keycloak y Redis (el PDP corre en el host con `mvnw`); `pep/compose.integration.yml` es una demo con fixtures en red interna                                                                                                        | Dos overlays (`edge/compose.pdp.yml`, `edge/compose.pep.yml`), misma imagen y reglas — decisión de Sebastián en la fase 3                   |
+| "La suite E2E del PDP pasa por el edge"                                  | **No hay suite HTTP de caja negra.** Las pruebas de integración son `WebTestClient` in-process; `verificar.ps1` es solo Maven                                                                                                                                                                                     | Suite nueva en `hurl`, ejecutada como servicio del mismo Compose (resuelve `edge`/`keycloak` por nombre) — decisión de Sebastián            |
 | "Keycloak: ADR-020 dice NSG restringido; el login necesita al navegador" | **Ambas cosas son ciertas a la vez.** El 8080 está restringido a las IPs de los App Service; el **443 es público**, servido por un **Caddy** en la VM (`Via: 1.1 Caddy`, HSTS, certificado válido). ADR-020 ("sin TLS") está desactualizada y **la config de ese Caddy no está versionada en ningún repositorio** | Keycloak queda **fuera** de esta historia (decisión de Sebastián). Hallazgo registrado en §11 para el reporte y para una historia siguiente |
-| Realm local importable | `pdp/keycloak/import/` está **vacío**: el realm local se configura a mano | La suite necesita un realm de CI versionado (§7.6). Es un activo que el proyecto no tenía y el README de Keycloak pedía |
+| Realm local importable                                                   | `pdp/keycloak/import/` está **vacío**: el realm local se configura a mano                                                                                                                                                                                                                                         | La suite necesita un realm de CI versionado (§7.6). Es un activo que el proyecto no tenía y el README de Keycloak pedía                     |
 
 Y un hallazgo a favor: que Keycloak ya esté detrás de Caddy en producción es el desempate del motor
 (§1).
@@ -37,14 +48,14 @@ inicio decide si el edge llega también a App Service como sidecar del PDP.
 
 **Motor: Coraza sobre Caddy.** Contra los cinco criterios de ADR-032:
 
-| Criterio | `owasp/modsecurity-crs` (nginx) | Coraza + Caddy |
-|---|---|---|
-| Procesa cuerpos JSON | Sí | Sí (`SecRequestBodyAccess On` + procesador JSON) |
-| Log JSON a stdout | Sí (`SecAuditLogFormat JSON`) | Sí: Caddy loguea JSON nativo; Coraza audit log JSON |
-| Healthcheck real del motor | Requiere petición canario | Igual: petición canario (§7.4). Además Caddy **no arranca** con una directiva inválida |
-| Imagen mantenida | Sí, por el proyecto CRS (libmodsecurity v3 en mantenimiento) | Sí, releases de `coraza-caddy`; se construye con `xcaddy` y versiones fijadas |
-| Huella en B1 | nginx + libmodsecurity (C) | Un binario Go; sin dependencias nativas |
-| **Desempate** | — | **Ya hay un Caddy en producción delante de Keycloak.** Un solo proxy/motor para Compose, sidecar y VM, con TLS automático. Una historia siguiente puede activar Coraza en ese Caddy sin introducir otra pieza |
+| Criterio                   | `owasp/modsecurity-crs` (nginx)                              | Coraza + Caddy                                                                                                                                                                                                |
+|----------------------------|--------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Procesa cuerpos JSON       | Sí                                                           | Sí (`SecRequestBodyAccess On` + procesador JSON)                                                                                                                                                              |
+| Log JSON a stdout          | Sí (`SecAuditLogFormat JSON`)                                | Sí: Caddy loguea JSON nativo; Coraza audit log JSON                                                                                                                                                           |
+| Healthcheck real del motor | Requiere petición canario                                    | Igual: petición canario (§7.4). Además Caddy **no arranca** con una directiva inválida                                                                                                                        |
+| Imagen mantenida           | Sí, por el proyecto CRS (libmodsecurity v3 en mantenimiento) | Sí, releases de `coraza-caddy`; se construye con `xcaddy` y versiones fijadas                                                                                                                                 |
+| Huella en B1               | nginx + libmodsecurity (C)                                   | Un binario Go; sin dependencias nativas                                                                                                                                                                       |
+| **Desempate**              | —                                                            | **Ya hay un Caddy en producción delante de Keycloak.** Un solo proxy/motor para Compose, sidecar y VM, con TLS automático. Una historia siguiente puede activar Coraza en ese Caddy sin introducir otra pieza |
 
 **No cubre:** Keycloak (fuera, con hallazgo); WAF administrado; limitación por identidad; PL2;
 cambios en aplicaciones protegidas o en casos de uso del PDP; CSP del frontend; `threat-model.md`
@@ -53,35 +64,35 @@ aparte, §11).
 
 ## 2. Criterios de aceptación
 
-| # | Criterio | Resultado esperado |
-|---|---|---|
-| 1 | Bloqueo | Con `EDGE_MODE=blocking`, cada petición de `edge/tests/attacks/*.hurl` recibe `403`, `Content-Type: application/problem+json`, `code = REQUEST_REJECTED` y un `correlationId`; el log del PDP/PEP **no** registra esa petición |
-| 2 | Sin falsos positivos | `edge/tests/flows/*.hurl` (registro/consulta de aplicaciones, administradores, autorización, **login OIDC → sesión → CSRF → API → logout** contra el Keycloak del Compose) pasa completo con los códigos esperados y el audit log de Coraza queda **vacío** para esas peticiones |
-| 3 | Exclusión sin prueba falla | `edge/tools/check-exclusions.sh` falla si existe `edge/rules/exclusions/<id>.conf` sin `edge/tests/exclusions/<id>.hurl` (o al revés); corre en el pipeline antes que la suite |
-| 4 | Fail-closed | Con un archivo de reglas corrupto, `edge` no pasa su healthcheck y `docker compose up --wait` termina en error; `pdp`/`pep` no publican puertos en los overlays (verificado con `docker compose config`) |
-| 5 | Evidencia | Cada bloqueo aparece en Loki con `rule_id`, `anomaly_score`, ruta y `correlationId` (`service.name = security-edge`); para una petición que sí pasó, el mismo `correlationId` aparece en el log del PDP. El panel de Grafana tiene la fila "Edge" (bloqueos por regla, por ruta; 403/429 y latencia) |
-| 6 | Limitación por IP | N+1 peticiones a `/api/v1/authorize` desde una IP en la ventana → la última recibe `429`; el mismo volumen desde dos IPs (dos servicios `hurl` en el Compose) no dispara |
-| 7 | Cabeceras | Toda respuesta a través del edge lleva `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `Cache-Control: no-store` |
-| 8 | Medición | `edge/README.md` registra p50/p95 de `flows/` con y sin edge (misma suite, misma máquina) y, si el spike del sidecar pasa, la memoria de `edge` y `pdp` en B1 |
-| 9 | Nada se relajó | `git diff` de `pep/src/main/resources/application.properties`, `CorsProperties`/`pdp.security.cors.*` y `SecurityConfiguration`/`KeycloakSecurityConfiguration` es vacío |
-| 10 | Paso a bloqueo documentado | `edge/README.md` contiene la checklist detección → bloqueo (§6) y el estado en que queda cada overlay (`EDGE_MODE` por defecto) |
-| 11 | Verde | `verificar.ps1` (suite completa) en verde; `ci/edge-pipeline.yml` en verde |
+| #  | Criterio                   | Resultado esperado                                                                                                                                                                                                                                                                                   |
+|----|----------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1  | Bloqueo                    | Con `EDGE_MODE=blocking`, cada petición de `edge/tests/attacks/*.hurl` recibe `403`, `Content-Type: application/problem+json`, `code = REQUEST_REJECTED` y un `correlationId`; el log del PDP/PEP **no** registra esa petición                                                                       |
+| 2  | Sin falsos positivos       | `edge/tests/flows/*.hurl` (registro/consulta de aplicaciones, administradores, autorización, **login OIDC → sesión → CSRF → API → logout** contra el Keycloak del Compose) pasa completo con los códigos esperados y el audit log de Coraza queda **vacío** para esas peticiones                     |
+| 3  | Exclusión sin prueba falla | `edge/tools/check-exclusions.sh` falla si existe `edge/rules/exclusions/<id>.conf` sin `edge/tests/exclusions/<id>.hurl` (o al revés); corre en el pipeline antes que la suite                                                                                                                       |
+| 4  | Fail-closed                | Con un archivo de reglas corrupto, `edge` no pasa su healthcheck y `docker compose up --wait` termina en error; `pdp`/`pep` no publican puertos en los overlays (verificado con `docker compose config`)                                                                                             |
+| 5  | Evidencia                  | Cada bloqueo aparece en Loki con `rule_id`, `anomaly_score`, ruta y `correlationId` (`service.name = security-edge`); para una petición que sí pasó, el mismo `correlationId` aparece en el log del PDP. El panel de Grafana tiene la fila "Edge" (bloqueos por regla, por ruta; 403/429 y latencia) |
+| 6  | Limitación por IP          | N+1 peticiones a `/api/v1/authorize` desde una IP en la ventana → la última recibe `429`; el mismo volumen desde dos IPs (dos servicios `hurl` en el Compose) no dispara                                                                                                                             |
+| 7  | Cabeceras                  | Toda respuesta a través del edge lleva `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `Cache-Control: no-store`                                                                                                                                     |
+| 8  | Medición                   | `edge/README.md` registra p50/p95 de `flows/` con y sin edge (misma suite, misma máquina) y, si el spike del sidecar pasa, la memoria de `edge` y `pdp` en B1                                                                                                                                        |
+| 9  | Nada se relajó             | `git diff` de `pep/src/main/resources/application.properties`, `CorsProperties`/`pdp.security.cors.*` y `SecurityConfiguration`/`KeycloakSecurityConfiguration` es vacío                                                                                                                             |
+| 10 | Paso a bloqueo documentado | `edge/README.md` contiene la checklist detección → bloqueo (§6) y el estado en que queda cada overlay (`EDGE_MODE` por defecto)                                                                                                                                                                      |
+| 11 | Verde                      | `verificar.ps1` (suite completa) en verde; `ci/edge-pipeline.yml` en verde                                                                                                                                                                                                                           |
 
 ## 3. Reglas del edge (invariantes de configuración)
 
 No hay reglas de negocio: hay invariantes de configuración que el validador comprueba en archivos.
 
-| # | Invariante | Dónde vive | Cómo se verifica |
-|---|---|---|---|
-| E1 | Solo `edge` publica puertos en los overlays | `edge/compose.*.yml` | `docker compose -f … config` no muestra `ports:` en `pdp`/`pep` |
-| E2 | Modo por variable, nunca hardcodeado: `EDGE_MODE ∈ {detection, blocking}` | `edge/Caddyfile` + `edge/rules/00-engine.conf` | El mismo `Caddyfile` sirve a ambos modos |
-| E3 | CRS v4 fijado por versión y checksum, paranoia 1, `ANOMALY_INBOUND=5` | `edge/Dockerfile`, `edge/rules/01-crs-setup.conf` | Versión y SHA en el Dockerfile; `PARANOIA`/umbral en `crs-setup` |
-| E4 | Exclusiones solo por regla **y** por ruta (`ctl:ruleRemoveTargetById` / `ruleRemoveById` bajo un `SecRule REQUEST_URI`), nunca `SecRuleRemoveById` global ni cambio de umbral | `edge/rules/exclusions/*.conf` | `check-exclusions.sh` rechaza un archivo con `SecRuleRemoveById` fuera de un `SecRule REQUEST_URI` |
-| E5 | Una exclusión ↔ una prueba, mismo id | `edge/rules/exclusions/<id>.conf` ↔ `edge/tests/exclusions/<id>.hurl` | `check-exclusions.sh` |
-| E6 | El bloqueo nunca revela regla ni puntuación en la respuesta | `edge/Caddyfile` (handler de error) | `attacks/*.hurl` asserta ausencia de `rule` en el cuerpo |
-| E7 | `X-Request-Id`/`X-Correlation-Id` se generan si faltan y se propagan al upstream **con esos mismos nombres** (los que lee `CorrelationWebFilter`) | `edge/Caddyfile` | `flows/correlation.hurl`: manda un `X-Correlation-Id` y lo recibe de vuelta; sin mandarlo, recibe uno |
-| E8 | Ningún secreto en `edge/` | `edge/` | `grep` del pipeline; el client secret del BFF de CI vive en el realm de CI, que es un secreto de **prueba** documentado como tal |
-| E9 | El edge no reescribe rutas ni cuerpos: solo inspecciona, limita, añade cabeceras y proxya | `edge/Caddyfile` | `flows/` cubre rutas con query, cuerpo JSON y redirecciones OIDC intactas |
+| #  | Invariante                                                                                                                                                                    | Dónde vive                                                            | Cómo se verifica                                                                                                                 |
+|----|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| E1 | Solo `edge` publica puertos en los overlays                                                                                                                                   | `edge/compose.*.yml`                                                  | `docker compose -f … config` no muestra `ports:` en `pdp`/`pep`                                                                  |
+| E2 | Modo por variable, nunca hardcodeado: `EDGE_MODE ∈ {detection, blocking}`                                                                                                     | `edge/Caddyfile` + `edge/rules/00-engine.conf`                        | El mismo `Caddyfile` sirve a ambos modos                                                                                         |
+| E3 | CRS v4 fijado por versión y checksum, paranoia 1, `ANOMALY_INBOUND=5`                                                                                                         | `edge/Dockerfile`, `edge/rules/01-crs-setup.conf`                     | Versión y SHA en el Dockerfile; `PARANOIA`/umbral en `crs-setup`                                                                 |
+| E4 | Exclusiones solo por regla **y** por ruta (`ctl:ruleRemoveTargetById` / `ruleRemoveById` bajo un `SecRule REQUEST_URI`), nunca `SecRuleRemoveById` global ni cambio de umbral | `edge/rules/exclusions/*.conf`                                        | `check-exclusions.sh` rechaza un archivo con `SecRuleRemoveById` fuera de un `SecRule REQUEST_URI`                               |
+| E5 | Una exclusión ↔ una prueba, mismo id                                                                                                                                          | `edge/rules/exclusions/<id>.conf` ↔ `edge/tests/exclusions/<id>.hurl` | `check-exclusions.sh`                                                                                                            |
+| E6 | El bloqueo nunca revela regla ni puntuación en la respuesta                                                                                                                   | `edge/Caddyfile` (handler de error)                                   | `attacks/*.hurl` asserta ausencia de `rule` en el cuerpo                                                                         |
+| E7 | `X-Request-Id`/`X-Correlation-Id` se generan si faltan y se propagan al upstream **con esos mismos nombres** (los que lee `CorrelationWebFilter`)                             | `edge/Caddyfile`                                                      | `flows/correlation.hurl`: manda un `X-Correlation-Id` y lo recibe de vuelta; sin mandarlo, recibe uno                            |
+| E8 | Ningún secreto en `edge/`                                                                                                                                                     | `edge/`                                                               | `grep` del pipeline; el client secret del BFF de CI vive en el realm de CI, que es un secreto de **prueba** documentado como tal |
+| E9 | El edge no reescribe rutas ni cuerpos: solo inspecciona, limita, añade cabeceras y proxya                                                                                     | `edge/Caddyfile`                                                      | `flows/` cubre rutas con query, cuerpo JSON y redirecciones OIDC intactas                                                        |
 
 ## 4. Modelo de dominio afectado
 
@@ -95,20 +106,20 @@ No aplica.
 
 ### 6.1 Rutas
 
-| Ruta en el edge | Qué hace | Upstream |
-|---|---|---|
-| `/_edge/health` | `200` estático — vivo | ninguno |
-| `/_edge/canary` | `200` estático, **pero pasa por el WAF**: `GET /_edge/canary?p=<script>` debe dar `403` en `blocking`. Es el healthcheck del motor | ninguno |
-| `/*` (overlay PDP) | WAF → rate limit por ruta → cabeceras → proxy | `http://pdp:8080` |
-| `/*` (overlay PEP) | Igual | `http://pep:8081` |
+| Ruta en el edge    | Qué hace                                                                                                                           | Upstream          |
+|--------------------|------------------------------------------------------------------------------------------------------------------------------------|-------------------|
+| `/_edge/health`    | `200` estático — vivo                                                                                                              | ninguno           |
+| `/_edge/canary`    | `200` estático, **pero pasa por el WAF**: `GET /_edge/canary?p=<script>` debe dar `403` en `blocking`. Es el healthcheck del motor | ninguno           |
+| `/*` (overlay PDP) | WAF → rate limit por ruta → cabeceras → proxy                                                                                      | `http://pdp:8080` |
+| `/*` (overlay PEP) | Igual                                                                                                                              | `http://pep:8081` |
 
 Limitación por IP (valores iniciales, **se ajustan con la fase de detección**, §6.2):
 
-| Zona | Rutas | Ventana | Clave |
-|---|---|---|---|
-| `authorize` | `/api/v1/authorize` | 60 req / 1 min | IP cliente |
-| `session` | `/api/v1/session*`, `/oauth2/*`, `/login/*` | 30 req / 1 min | IP cliente |
-| `default` | resto | 300 req / 1 min | IP cliente |
+| Zona        | Rutas                                       | Ventana         | Clave      |
+|-------------|---------------------------------------------|-----------------|------------|
+| `authorize` | `/api/v1/authorize`                         | 60 req / 1 min  | IP cliente |
+| `session`   | `/api/v1/session*`, `/oauth2/*`, `/login/*` | 30 req / 1 min  | IP cliente |
+| `default`   | resto                                       | 300 req / 1 min | IP cliente |
 
 IP cliente: en Compose, la remota; en App Service, `X-Forwarded-For` **solo** si viene del
 front-end de Azure (`trusted_proxies` en el Caddyfile). Sin esa lista, un cliente podría falsificar
@@ -146,18 +157,18 @@ edge/Dockerfile
   HEALTHCHECK → /usr/local/bin/edge-healthcheck.sh
 ```
 
-| Variable | Valores | Default | Uso |
-|---|---|---|---|
-| `EDGE_MODE` | `detection` \| `blocking` | `detection` | `SecRuleEngine DetectionOnly` / `On` |
-| `EDGE_UPSTREAM` | URL | — (obligatoria) | `reverse_proxy` |
-| `EDGE_LISTEN` | `:puerto` | `:8088` | Puerto de escucha (en sidecar no puede ser 8080: lo usa el PDP en el mismo namespace de red) |
-| `EDGE_PARANOIA` | `1` | `1` | `tx.blocking_paranoia_level` — PL2 fuera de alcance |
-| `EDGE_ANOMALY_INBOUND` | entero | `5` | Umbral entrante CRS |
-| `EDGE_TRUSTED_PROXIES` | CIDRs separados por coma | vacío | `trusted_proxies` para `X-Forwarded-For` (App Service) |
-| `EDGE_RATE_AUTHORIZE`, `EDGE_RATE_SESSION`, `EDGE_RATE_DEFAULT` | `N/ventana` (p. ej. `60/1m`) | los de §6.1 | Zonas de rate limit |
-| `EDGE_LOG_DIR` | ruta | `/var/log/security` | Destino de `security-edge.json` y `security-edge-audit.json` |
-| `OTEL_SERVICE_NAME` | string | `security-edge` | Solo documental — el collector lo añade como recurso (§7.7) |
-| `DEPLOYMENT_ENVIRONMENT` | string | `local` | Idem |
+| Variable                                                        | Valores                      | Default             | Uso                                                                                          |
+|-----------------------------------------------------------------|------------------------------|---------------------|----------------------------------------------------------------------------------------------|
+| `EDGE_MODE`                                                     | `detection` \| `blocking`    | `detection`         | `SecRuleEngine DetectionOnly` / `On`                                                         |
+| `EDGE_UPSTREAM`                                                 | URL                          | — (obligatoria)     | `reverse_proxy`                                                                              |
+| `EDGE_LISTEN`                                                   | `:puerto`                    | `:8088`             | Puerto de escucha (en sidecar no puede ser 8080: lo usa el PDP en el mismo namespace de red) |
+| `EDGE_PARANOIA`                                                 | `1`                          | `1`                 | `tx.blocking_paranoia_level` — PL2 fuera de alcance                                          |
+| `EDGE_ANOMALY_INBOUND`                                          | entero                       | `5`                 | Umbral entrante CRS                                                                          |
+| `EDGE_TRUSTED_PROXIES`                                          | CIDRs separados por coma     | vacío               | `trusted_proxies` para `X-Forwarded-For` (App Service)                                       |
+| `EDGE_RATE_AUTHORIZE`, `EDGE_RATE_SESSION`, `EDGE_RATE_DEFAULT` | `N/ventana` (p. ej. `60/1m`) | los de §6.1         | Zonas de rate limit                                                                          |
+| `EDGE_LOG_DIR`                                                  | ruta                         | `/var/log/security` | Destino de `security-edge.json` y `security-edge-audit.json`                                 |
+| `OTEL_SERVICE_NAME`                                             | string                       | `security-edge`     | Solo documental — el collector lo añade como recurso (§7.7)                                  |
+| `DEPLOYMENT_ENVIRONMENT`                                        | string                       | `local`             | Idem                                                                                         |
 
 ### 7.2 Estructura del `Caddyfile` (orden de handlers, sin cuerpo)
 
@@ -285,8 +296,16 @@ edge/compose.pep.yml     (con: docker compose -f pep/compose.integration.yml -f 
 
 `observability/collector.yml` **[M]**:
 
-- Receptor `filelog/edge`: `include: [/var/log/security/security-edge.json, /var/log/security/security-edge-audit.json]`; operadores: `json_parser` (timestamp desde `@timestamp`), `add` `resource["service.name"]=security-edge`, `add` `resource["deployment.environment.name"]=${env:DEPLOYMENT_ENVIRONMENT}`, y para el audit log: `move` de `transaction.id` → `attributes.correlationId` **solo si** Coraza lo toma de la cabecera (si no, el implementador incluye `X-Correlation-Id` en el audit log vía `SecAuditLogParts` y lo extrae con `regex_parser`), `move` de la primera regla disparada → `attributes.rule_id`, `attributes.anomaly_score`.
-- Job Prometheus `security-edge` → `edge:2019/metrics` (métricas de Caddy: peticiones por status, latencia). Las cifras **por regla** salen de Loki (LogQL sobre `rule_id`), no de Prometheus — coherente con la convención: sin rutas ni ids como etiquetas de Prometheus.
+- Receptor `filelog/edge`:
+  `include: [/var/log/security/security-edge.json, /var/log/security/security-edge-audit.json]`; operadores:
+  `json_parser` (timestamp desde `@timestamp`), `add` `resource["service.name"]=security-edge`, `add`
+  `resource["deployment.environment.name"]=${env:DEPLOYMENT_ENVIRONMENT}`, y para el audit log: `move` de
+  `transaction.id` → `attributes.correlationId` **solo si** Coraza lo toma de la cabecera (si no, el implementador
+  incluye `X-Correlation-Id` en el audit log vía `SecAuditLogParts` y lo extrae con `regex_parser`), `move` de la
+  primera regla disparada → `attributes.rule_id`, `attributes.anomaly_score`.
+- Job Prometheus `security-edge` → `edge:2019/metrics` (métricas de Caddy: peticiones por status, latencia). Las cifras
+  **por regla** salen de Loki (LogQL sobre `rule_id`), no de Prometheus — coherente con la convención: sin rutas ni ids
+  como etiquetas de Prometheus.
 - Pipeline `logs`: añadir `filelog/edge` a `receivers`.
 
 `observability/grafana/dashboards/security-platform.json` **[M]**: fila "Edge": 403/429 por minuto
@@ -316,11 +335,11 @@ Objetivo: en `app-pdp-dev`, `edge` como contenedor principal (`WEBSITES_PORT=808
 `pdp` como sidecar sin puerto expuesto, `EDGE_UPSTREAM=http://localhost:8080`,
 `EDGE_TRUSTED_PROXIES` con el rango del front-end de App Service.
 
-| Criterio de caída | Consecuencia |
-|---|---|
+| Criterio de caída                                                                                                    | Consecuencia                                                                                               |
+|----------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
 | `az` del agente de CI no soporta `sitecontainers` y `az rest` contra la API de sitecontainers tampoco funciona en B1 | Sidecar fuera; `ci/templates/stage-deploy.yml` no cambia; se documenta en §11 y en ADR-032 §Implementación |
-| Memoria: `edge` + `pdp` superan el límite de B1 bajo `flows/` | Idem |
-| Latencia p95 del edge > 20 ms añadidos en DEV | Se registra; no es caída por sí sola |
+| Memoria: `edge` + `pdp` superan el límite de B1 bajo `flows/`                                                        | Idem                                                                                                       |
+| Latencia p95 del edge > 20 ms añadidos en DEV                                                                        | Se registra; no es caída por sí sola                                                                       |
 
 Si pasa: `ci/templates/stage-deploy.yml` **[M]** — reemplaza `az webapp config container set` por la
 configuración de sitecontainers (edge principal + pdp sidecar), `EDGE_MODE=detection` en DEV.
@@ -366,40 +385,40 @@ Nada en `pdp/src/**` ni en `pep/src/**`.
 > Aquí las pruebas son `hurl`, no JUnit. El presupuesto de `sb-testing` se traduce en: una prueba
 > por comportamiento del contrato, sin duplicar entre `attacks/` y `flows/`.
 
-| Carpeta | Archivo | Casos |
-|---|---|---|
-| `attacks/` | `sqli-query.hurl` | `GET /api/v1/applications?name=' OR 1=1--` → 403, problem+json, `code=REQUEST_REJECTED`, sin `rule` en cuerpo |
-| | `sqli-json-body.hurl` | `POST /api/v1/applications` con `{"name":"x' UNION SELECT"}` → 403 (prueba el procesador JSON) |
-| | `xss-query.hurl` | `?q=<script>alert(1)</script>` → 403 |
-| | `path-traversal.hurl` | `GET /api/v1/../../etc/passwd` y `/.env`, `/.git/config` → 403 |
-| | `scanner-user-agent.hurl` | `User-Agent: sqlmap/1.0` → 403 |
-| | `method-not-allowed.hurl` | `TRACE /api/v1/session` → 403 (o 405 del edge, no del PDP) |
-| | `content-type-mismatch.hurl` | `POST /api/v1/applications` con `Content-Type: text/xml` → 403 |
-| | `canary.hurl` | `/_edge/canary?p=<script>` → 403 en blocking |
-| `flows/` | `health.hurl` | `/_edge/health` 200; `/actuator/health` vía edge 200 |
-| | `correlation.hurl` | con `X-Correlation-Id: abc` → respuesta trae `abc`; sin él → trae un UUID; el log del PDP contiene el mismo id (assert sobre el archivo de log, vía un `hurl` que lo lee del volumen o un paso del pipeline) |
-| | `headers.hurl` | las cuatro cabeceras de seguridad presentes; `Server` ausente |
-| | `oidc-login-session-logout.hurl` | redirección a Keycloak, formulario, callback, cookie `SECURITY_BASELINE_SESSION`, `GET /api/v1/session` 200, `XSRF-TOKEN` presente, `POST` con `X-XSRF-TOKEN` aceptado, logout 200/302 |
-| | `applications-register-list.hurl` | registro con nombre con acentos y comillas simples legítimas (`"O'Higgins"`) → 201; listado paginado → 200 (candidato a FP: 942100) |
-| | `administrators-list-add-remove.hurl` | HU-020 vía edge → 200/201/204 (o 403 por MFA fail-closed de HU-024 — documentar el esperado real) |
-| | `authorize.hurl` | `POST /api/v1/authorize` con cuerpo real → 200 |
-| | `rate-limit-under-threshold.hurl` | N-1 peticiones → todas 200 |
-| `ratelimit/` | `over-threshold.hurl` | N+1 → la última 429 con `Retry-After` y problem+json `RATE_LIMITED`; ejecutado en paralelo desde `hurl-second-ip` para el caso "dos IPs no disparan" |
-| `exclusions/` | `<id>-<slug>.hurl` | reproduce el FP exacto y asserta 2xx |
-| Pipeline | fail-closed | overlay con `broken-rule.conf` → `up --wait` falla en ≤ 60 s |
-| Pipeline | detección limpia | tras `flows/` en `detection`, `security-edge-audit.json` no contiene transacciones con `rule_id` |
+| Carpeta       | Archivo                               | Casos                                                                                                                                                                                                        |
+|---------------|---------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `attacks/`    | `sqli-query.hurl`                     | `GET /api/v1/applications?name=' OR 1=1--` → 403, problem+json, `code=REQUEST_REJECTED`, sin `rule` en cuerpo                                                                                                |
+|               | `sqli-json-body.hurl`                 | `POST /api/v1/applications` con `{"name":"x' UNION SELECT"}` → 403 (prueba el procesador JSON)                                                                                                               |
+|               | `xss-query.hurl`                      | `?q=<script>alert(1)</script>` → 403                                                                                                                                                                         |
+|               | `path-traversal.hurl`                 | `GET /api/v1/../../etc/passwd` y `/.env`, `/.git/config` → 403                                                                                                                                               |
+|               | `scanner-user-agent.hurl`             | `User-Agent: sqlmap/1.0` → 403                                                                                                                                                                               |
+|               | `method-not-allowed.hurl`             | `TRACE /api/v1/session` → 403 (o 405 del edge, no del PDP)                                                                                                                                                   |
+|               | `content-type-mismatch.hurl`          | `POST /api/v1/applications` con `Content-Type: text/xml` → 403                                                                                                                                               |
+|               | `canary.hurl`                         | `/_edge/canary?p=<script>` → 403 en blocking                                                                                                                                                                 |
+| `flows/`      | `health.hurl`                         | `/_edge/health` 200; `/actuator/health` vía edge 200                                                                                                                                                         |
+|               | `correlation.hurl`                    | con `X-Correlation-Id: abc` → respuesta trae `abc`; sin él → trae un UUID; el log del PDP contiene el mismo id (assert sobre el archivo de log, vía un `hurl` que lo lee del volumen o un paso del pipeline) |
+|               | `headers.hurl`                        | las cuatro cabeceras de seguridad presentes; `Server` ausente                                                                                                                                                |
+|               | `oidc-login-session-logout.hurl`      | redirección a Keycloak, formulario, callback, cookie `SECURITY_BASELINE_SESSION`, `GET /api/v1/session` 200, `XSRF-TOKEN` presente, `POST` con `X-XSRF-TOKEN` aceptado, logout 200/302                       |
+|               | `applications-register-list.hurl`     | registro con nombre con acentos y comillas simples legítimas (`"O'Higgins"`) → 201; listado paginado → 200 (candidato a FP: 942100)                                                                          |
+|               | `administrators-list-add-remove.hurl` | HU-020 vía edge → 200/201/204 (o 403 por MFA fail-closed de HU-024 — documentar el esperado real)                                                                                                            |
+|               | `authorize.hurl`                      | `POST /api/v1/authorize` con cuerpo real → 200                                                                                                                                                               |
+|               | `rate-limit-under-threshold.hurl`     | N-1 peticiones → todas 200                                                                                                                                                                                   |
+| `ratelimit/`  | `over-threshold.hurl`                 | N+1 → la última 429 con `Retry-After` y problem+json `RATE_LIMITED`; ejecutado en paralelo desde `hurl-second-ip` para el caso "dos IPs no disparan"                                                         |
+| `exclusions/` | `<id>-<slug>.hurl`                    | reproduce el FP exacto y asserta 2xx                                                                                                                                                                         |
+| Pipeline      | fail-closed                           | overlay con `broken-rule.conf` → `up --wait` falla en ≤ 60 s                                                                                                                                                 |
+| Pipeline      | detección limpia                      | tras `flows/` en `detection`, `security-edge-audit.json` no contiene transacciones con `rule_id`                                                                                                             |
 
 ## 10. Trazabilidad
 
-| Fase | Estado | Fecha |
-|---|---|---|
-| Plan | ✅ Generado | 2026-09-20 |
-| Contrato aprobado (gate 1) | ⏳ Pendiente | |
-| Pruebas en rojo (`hurl`) | ⏳ Pendiente | |
-| Spike sidecar | ⏳ Pendiente | |
-| Implementación en verde (detection + blocking) | ⏳ Pendiente | |
-| Validación | ⏳ Pendiente | |
-| Entrega (gate 2) | ⏳ Pendiente | |
+| Fase                                           | Estado      | Fecha      |
+|------------------------------------------------|-------------|------------|
+| Plan                                           | ✅ Generado  | 2026-09-20 |
+| Contrato aprobado (gate 1)                     | ⏳ Pendiente |            |
+| Pruebas en rojo (`hurl`)                       | ⏳ Pendiente |            |
+| Spike sidecar                                  | ⏳ Pendiente |            |
+| Implementación en verde (detection + blocking) | ⏳ Pendiente |            |
+| Validación                                     | ⏳ Pendiente |            |
+| Entrega (gate 2)                               | ⏳ Pendiente |            |
 
 ## 11. Ambigüedades pendientes y hallazgos para el reporte
 

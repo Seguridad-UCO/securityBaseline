@@ -16,9 +16,9 @@ import reactor.core.publisher.Mono;
 import tools.jackson.databind.JsonNode;
 
 import java.time.Instant;
-import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -69,7 +69,8 @@ public final class SurrealProtectedResourceRepository implements ProtectedResour
                         results.get(1).isEmpty() ? 0L : results.get(1).get(0).path("count").asLong(0L), window));
     }
 
-    @Override public Mono<Long> countByApplication(ApplicationId applicationId) {
+    @Override
+    public Mono<Long> countByApplication(ApplicationId applicationId) {
         return client.execute("SELECT count() FROM %s WHERE applicationId = $applicationId GROUP ALL;".formatted(ProtectedResourceSchema.TABLE), Map.of("applicationId", applicationId.value().toString()))
                 .map(r -> r.get(0).isEmpty() ? 0L : r.get(0).get(0).path("count").asLong(0));
     }
@@ -104,9 +105,12 @@ public final class SurrealProtectedResourceRepository implements ProtectedResour
                     .append(") SET applicationId=$applicationId").append(suffix).append(", tenantId=$tenantId").append(suffix)
                     .append(", path=$path").append(suffix).append(", method=$method").append(suffix)
                     .append(", registeredAt=<datetime>$registeredAt").append(suffix).append("; ");
-            parameters.put("id" + suffix, resource.id().value().toString()); parameters.put("applicationId" + suffix, resource.applicationId().value().toString());
-            parameters.put("tenantId" + suffix, resource.tenantId().value()); parameters.put("path" + suffix, resource.path().value());
-            parameters.put("method" + suffix, resource.method().name()); parameters.put("registeredAt" + suffix, resource.registeredAt().toString());
+            parameters.put("id" + suffix, resource.id().value().toString());
+            parameters.put("applicationId" + suffix, resource.applicationId().value().toString());
+            parameters.put("tenantId" + suffix, resource.tenantId().value());
+            parameters.put("path" + suffix, resource.path().value());
+            parameters.put("method" + suffix, resource.method().name());
+            parameters.put("registeredAt" + suffix, resource.registeredAt().toString());
         }
         query.append("COMMIT TRANSACTION;");
         return client.execute(query.toString(), parameters).then();

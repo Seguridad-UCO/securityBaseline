@@ -17,7 +17,8 @@ import java.util.Optional;
  */
 public record InternalAccessRequest(String subject, Optional<UserId> subjectUserId, ApplicationName applicationName,
                                     ResourcePath resourcePath,
-                                    HttpVerb action, String requestId, String correlationId, RequestFacts facts, String subjectType) {
+                                    HttpVerb action, String requestId, String correlationId, RequestFacts facts,
+                                    String subjectType) {
 
     public InternalAccessRequest {
         Objects.requireNonNull(subject, RequiredArgumentMessages.SUBJECT);

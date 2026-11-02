@@ -10,8 +10,13 @@ import reactor.core.publisher.Mono;
 
 public final class ListApplicationProfilesPageUseCaseImpl implements ListApplicationProfilesPageUseCase {
     private final ProfileRepository repository;
-    public ListApplicationProfilesPageUseCaseImpl(ProfileRepository repository) { this.repository = repository; }
-    @Override public Mono<ResultPage<ProfileResponse>> execute(ListApplicationProfilesPageRequest request) {
+
+    public ListApplicationProfilesPageUseCaseImpl(ProfileRepository repository) {
+        this.repository = repository;
+    }
+
+    @Override
+    public Mono<ResultPage<ProfileResponse>> execute(ListApplicationProfilesPageRequest request) {
         return repository.findBy(ProfileCriteria.ofApplication(request.tenantId(), request.applicationId()), request.window())
                 .map(page -> page.map(profile -> new ProfileResponse(profile.id(), profile.name(), profile.scope(), profile.roles(), profile.registeredAt())));
     }

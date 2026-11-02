@@ -37,10 +37,13 @@ class CreateServiceIdentityUseCaseImplTests {
     void compensates_the_keycloak_client_when_the_identity_cannot_be_persisted() {
         AtomicBoolean deprovisioned = new AtomicBoolean();
         ServiceClientProvisioner clients = new ServiceClientProvisioner() {
-            @Override public Mono<ProvisionedServiceClient> provision(String clientId) {
+            @Override
+            public Mono<ProvisionedServiceClient> provision(String clientId) {
                 return Mono.just(new ProvisionedServiceClient(clientId, "secret"));
             }
-            @Override public Mono<Void> deprovision(String clientId) {
+
+            @Override
+            public Mono<Void> deprovision(String clientId) {
                 deprovisioned.set(true);
                 return Mono.empty();
             }
@@ -63,29 +66,120 @@ class CreateServiceIdentityUseCaseImplTests {
 
     private static ServiceIdentityRepository failingRepository() {
         return new ServiceIdentityRepository() {
-            @Override public Mono<ServiceIdentity> saveIdentity(ServiceIdentity identity) { return Mono.error(new IllegalStateException("surreal unavailable")); }
-            @Override public Mono<ServiceIdentity> findIdentity(TenantId tenantId, ServiceIdentityId id) { return Mono.empty(); }
-            @Override public Mono<ServiceIdentity> findActiveByClientId(String clientId) { return Mono.empty(); }
-            @Override public Flux<ServiceIdentity> findByConsumer(TenantId tenantId, ApplicationId applicationId) { return Flux.empty(); }
-            @Override public Mono<ServiceAccessGrant> saveGrant(ServiceAccessGrant grant) { return Mono.empty(); }
-            @Override public Mono<Boolean> hasPendingOrApprovedGrant(TenantId tenantId, ServiceIdentityId identityId, ResourceId resourceId) { return Mono.just(false); }
-            @Override public Mono<ServiceAccessGrant> findGrant(TenantId tenantId, UUID id) { return Mono.empty(); }
-            @Override public Flux<ServiceAccessGrant> findGrants(TenantId tenantId, ServiceIdentityId identityId) { return Flux.empty(); }
-            @Override public Flux<ServiceAccessGrant> findGrantsForTarget(TenantId tenantId, ApplicationId targetApplicationId) { return Flux.empty(); }
-            @Override public Mono<Set<ResourceId>> findApprovedResourceIds(TenantId tenantId, ServiceIdentityId identityId, ApplicationId targetApplicationId) { return Mono.just(Set.of()); }
-            @Override public Mono<Set<String>> findApprovedTechnicalRoleCodes(TenantId tenantId, ServiceIdentityId identityId, ApplicationId targetApplicationId) { return Mono.just(Set.of()); }
-            @Override public Mono<co.edu.uco.seguridad.pdp.authorization.domain.serviceidentity.ServiceTechnicalRoleDefinition> saveTechnicalRole(co.edu.uco.seguridad.pdp.authorization.domain.serviceidentity.ServiceTechnicalRoleDefinition role) { return Mono.just(role); }
-            @Override public Mono<co.edu.uco.seguridad.pdp.authorization.domain.serviceidentity.ServiceTechnicalRoleDefinition> findTechnicalRole(TenantId tenantId, UUID id) { return Mono.empty(); }
-            @Override public Flux<co.edu.uco.seguridad.pdp.authorization.domain.serviceidentity.ServiceTechnicalRoleDefinition> findTechnicalRoles(TenantId tenantId, ApplicationId applicationId) { return Flux.empty(); }
-            @Override public Mono<Boolean> hasPendingOrApprovedTechnicalRoleGrant(TenantId tenantId, ServiceIdentityId identityId, UUID roleId) { return Mono.just(false); }
-            @Override public Mono<Void> replaceTechnicalRoleResources(TenantId tenantId, UUID roleId, Set<ResourceId> resourceIds) { return Mono.empty(); }
-            @Override public Mono<Set<ResourceId>> findTechnicalRoleResourceIds(TenantId tenantId, UUID roleId) { return Mono.just(Set.of()); }
-            @Override public Mono<co.edu.uco.seguridad.pdp.commons.model.ResultPage<co.edu.uco.seguridad.pdp.authorization.domain.serviceidentity.ServiceTechnicalRoleDefinition>> findTechnicalRolesPage(TenantId tenantId, ApplicationId applicationId, co.edu.uco.seguridad.pdp.commons.model.PageWindow window) { return Mono.just(co.edu.uco.seguridad.pdp.commons.model.ResultPage.of(java.util.List.of(),0,window)); }
-            @Override public Mono<co.edu.uco.seguridad.pdp.commons.model.ResultPage<ResourceId>> findTechnicalRoleResourceIdsPage(TenantId tenantId, UUID roleId, co.edu.uco.seguridad.pdp.commons.model.PageWindow window) { return Mono.just(co.edu.uco.seguridad.pdp.commons.model.ResultPage.of(java.util.List.of(),0,window)); }
-            @Override public Mono<Long> countTechnicalRoleResources(TenantId tenantId, UUID roleId) { return Mono.just(0L); }
-            @Override public Mono<Void> addTechnicalRoleResource(TenantId tenantId, UUID roleId, ResourceId resourceId) { return Mono.empty(); }
-            @Override public Mono<Void> removeTechnicalRoleResource(TenantId tenantId, UUID roleId, ResourceId resourceId) { return Mono.empty(); }
-            @Override public Mono<Boolean> hasTechnicalRoleResource(TenantId tenantId, UUID roleId, ResourceId resourceId) { return Mono.just(false); }
+            @Override
+            public Mono<ServiceIdentity> saveIdentity(ServiceIdentity identity) {
+                return Mono.error(new IllegalStateException("surreal unavailable"));
+            }
+
+            @Override
+            public Mono<ServiceIdentity> findIdentity(TenantId tenantId, ServiceIdentityId id) {
+                return Mono.empty();
+            }
+
+            @Override
+            public Mono<ServiceIdentity> findActiveByClientId(String clientId) {
+                return Mono.empty();
+            }
+
+            @Override
+            public Flux<ServiceIdentity> findByConsumer(TenantId tenantId, ApplicationId applicationId) {
+                return Flux.empty();
+            }
+
+            @Override
+            public Mono<ServiceAccessGrant> saveGrant(ServiceAccessGrant grant) {
+                return Mono.empty();
+            }
+
+            @Override
+            public Mono<Boolean> hasPendingOrApprovedGrant(TenantId tenantId, ServiceIdentityId identityId, ResourceId resourceId) {
+                return Mono.just(false);
+            }
+
+            @Override
+            public Mono<ServiceAccessGrant> findGrant(TenantId tenantId, UUID id) {
+                return Mono.empty();
+            }
+
+            @Override
+            public Flux<ServiceAccessGrant> findGrants(TenantId tenantId, ServiceIdentityId identityId) {
+                return Flux.empty();
+            }
+
+            @Override
+            public Flux<ServiceAccessGrant> findGrantsForTarget(TenantId tenantId, ApplicationId targetApplicationId) {
+                return Flux.empty();
+            }
+
+            @Override
+            public Mono<Set<ResourceId>> findApprovedResourceIds(TenantId tenantId, ServiceIdentityId identityId, ApplicationId targetApplicationId) {
+                return Mono.just(Set.of());
+            }
+
+            @Override
+            public Mono<Set<String>> findApprovedTechnicalRoleCodes(TenantId tenantId, ServiceIdentityId identityId, ApplicationId targetApplicationId) {
+                return Mono.just(Set.of());
+            }
+
+            @Override
+            public Mono<co.edu.uco.seguridad.pdp.authorization.domain.serviceidentity.ServiceTechnicalRoleDefinition> saveTechnicalRole(co.edu.uco.seguridad.pdp.authorization.domain.serviceidentity.ServiceTechnicalRoleDefinition role) {
+                return Mono.just(role);
+            }
+
+            @Override
+            public Mono<co.edu.uco.seguridad.pdp.authorization.domain.serviceidentity.ServiceTechnicalRoleDefinition> findTechnicalRole(TenantId tenantId, UUID id) {
+                return Mono.empty();
+            }
+
+            @Override
+            public Flux<co.edu.uco.seguridad.pdp.authorization.domain.serviceidentity.ServiceTechnicalRoleDefinition> findTechnicalRoles(TenantId tenantId, ApplicationId applicationId) {
+                return Flux.empty();
+            }
+
+            @Override
+            public Mono<Boolean> hasPendingOrApprovedTechnicalRoleGrant(TenantId tenantId, ServiceIdentityId identityId, UUID roleId) {
+                return Mono.just(false);
+            }
+
+            @Override
+            public Mono<Void> replaceTechnicalRoleResources(TenantId tenantId, UUID roleId, Set<ResourceId> resourceIds) {
+                return Mono.empty();
+            }
+
+            @Override
+            public Mono<Set<ResourceId>> findTechnicalRoleResourceIds(TenantId tenantId, UUID roleId) {
+                return Mono.just(Set.of());
+            }
+
+            @Override
+            public Mono<co.edu.uco.seguridad.pdp.commons.model.ResultPage<co.edu.uco.seguridad.pdp.authorization.domain.serviceidentity.ServiceTechnicalRoleDefinition>> findTechnicalRolesPage(TenantId tenantId, ApplicationId applicationId, co.edu.uco.seguridad.pdp.commons.model.PageWindow window) {
+                return Mono.just(co.edu.uco.seguridad.pdp.commons.model.ResultPage.of(java.util.List.of(), 0, window));
+            }
+
+            @Override
+            public Mono<co.edu.uco.seguridad.pdp.commons.model.ResultPage<ResourceId>> findTechnicalRoleResourceIdsPage(TenantId tenantId, UUID roleId, co.edu.uco.seguridad.pdp.commons.model.PageWindow window) {
+                return Mono.just(co.edu.uco.seguridad.pdp.commons.model.ResultPage.of(java.util.List.of(), 0, window));
+            }
+
+            @Override
+            public Mono<Long> countTechnicalRoleResources(TenantId tenantId, UUID roleId) {
+                return Mono.just(0L);
+            }
+
+            @Override
+            public Mono<Void> addTechnicalRoleResource(TenantId tenantId, UUID roleId, ResourceId resourceId) {
+                return Mono.empty();
+            }
+
+            @Override
+            public Mono<Void> removeTechnicalRoleResource(TenantId tenantId, UUID roleId, ResourceId resourceId) {
+                return Mono.empty();
+            }
+
+            @Override
+            public Mono<Boolean> hasTechnicalRoleResource(TenantId tenantId, UUID roleId, ResourceId resourceId) {
+                return Mono.just(false);
+            }
         };
     }
 }

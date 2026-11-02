@@ -7,7 +7,9 @@ import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 
-/** Cache de proceso, por identidad, para client_credentials. No persiste el token ni el secreto. */
+/**
+ * Cache de proceso, por identidad, para client_credentials. No persiste el token ni el secreto.
+ */
 final class KeycloakServiceAccessTokenProvider implements ServiceAccessTokenProvider {
     private final ServiceIdentityProperties properties;
     private final WebClient client;
@@ -48,8 +50,13 @@ final class KeycloakServiceAccessTokenProvider implements ServiceAccessTokenProv
         return inFlight;
     }
 
-    private synchronized void clearInFlight() { inFlight = null; }
+    private synchronized void clearInFlight() {
+        inFlight = null;
+    }
 
-    private record TokenResponse(String access_token, long expires_in) { }
-    private record CachedToken(String value, Instant refreshAt) { }
+    private record TokenResponse(String access_token, long expires_in) {
+    }
+
+    private record CachedToken(String value, Instant refreshAt) {
+    }
 }

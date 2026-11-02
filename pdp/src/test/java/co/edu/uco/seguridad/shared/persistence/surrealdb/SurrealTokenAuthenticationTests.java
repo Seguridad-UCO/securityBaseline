@@ -146,7 +146,9 @@ class SurrealTokenAuthenticationTests {
         return new SurrealTokenAuthentication(signin, PROPERTIES, new ObjectMapper(), clock::get);
     }
 
-    /** Un cuerpo de {@code /signin} con un JWT {@code token-N.<payload>.firma} cuyo {@code exp} vence {@code lifetime} después del reloj. */
+    /**
+     * Un cuerpo de {@code /signin} con un JWT {@code token-N.<payload>.firma} cuyo {@code exp} vence {@code lifetime} después del reloj.
+     */
     private Mono<String> signinReturning(Duration lifetime) {
         return Mono.fromCallable(() -> {
             int number = signins.incrementAndGet();
@@ -164,7 +166,9 @@ class SurrealTokenAuthenticationTests {
         };
     }
 
-    /** Guarda solo {@code Bearer token-N}: el resto del JWT no aporta a las aserciones. */
+    /**
+     * Guarda solo {@code Bearer token-N}: el resto del JWT no aporta a las aserciones.
+     */
     private void record(ClientRequest request) {
         String authorization = request.headers().getFirst(HttpHeaders.AUTHORIZATION);
         authorizationHeaders.add(authorization == null ? "" : authorization.split("\\.")[0]);

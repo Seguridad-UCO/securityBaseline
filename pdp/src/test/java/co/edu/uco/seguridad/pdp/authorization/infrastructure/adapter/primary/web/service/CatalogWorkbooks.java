@@ -6,11 +6,7 @@ import org.apache.poi.poifs.crypt.EncryptionInfo;
 import org.apache.poi.poifs.crypt.EncryptionMode;
 import org.apache.poi.poifs.crypt.Encryptor;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.FormulaError;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.ByteArrayInputStream;
@@ -33,11 +29,15 @@ final class CatalogWorkbooks {
     static final String[] PROFILE_ROLE_HEADERS = {"Nombre de perfil*", "Alcance del perfil*", "Aplicación del perfil",
             "Nombre de rol*", "Alcance del rol*", "Aplicación del rol"};
 
-    /** Celda de fórmula. */
+    /**
+     * Celda de fórmula.
+     */
     record Formula(String expression) {
     }
 
-    /** Celda de error de Excel ({@code #DIV/0!}). */
+    /**
+     * Celda de error de Excel ({@code #DIV/0!}).
+     */
     record ErrorCell() {
     }
 
@@ -72,7 +72,9 @@ final class CatalogWorkbooks {
         return sheet("PerfilesxRol", PROFILE_ROLE_HEADERS, rows);
     }
 
-    /** {@code count} filas de rol de alcance TENANT con nombres distintos ({@code prefix-0001}, ...). */
+    /**
+     * {@code count} filas de rol de alcance TENANT con nombres distintos ({@code prefix-0001}, ...).
+     */
     static String[][] tenantRoleRows(String prefix, int count) {
         String[][] rows = new String[count][];
         for (int i = 0; i < count; i++) {
@@ -97,7 +99,9 @@ final class CatalogWorkbooks {
         }
     }
 
-    /** Libro xlsx cifrado con contraseña (cifrado Agile de Office): no se puede leer sin ella. */
+    /**
+     * Libro xlsx cifrado con contraseña (cifrado Agile de Office): no se puede leer sin ella.
+     */
     static byte[] encrypted(String password, SheetData... sheets) throws Exception {
         byte[] plain = xlsx(sheets);
         try (POIFSFileSystem fileSystem = new POIFSFileSystem(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {

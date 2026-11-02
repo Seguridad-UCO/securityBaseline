@@ -30,7 +30,9 @@ public record PdpPrincipal(TenantId tenantId, String subject, String tokenId, Op
         Objects.requireNonNull(authenticationContext, RequiredArgumentMessages.AUTHENTICATION_CONTEXT_EVIDENCE);
     }
 
-    /** {@code userId} sale del claim interno que el decoder Bearer sella (HU-038); vacío si no hay identidad. */
+    /**
+     * {@code userId} sale del claim interno que el decoder Bearer sella (HU-038); vacío si no hay identidad.
+     */
     public static PdpPrincipal from(Jwt jwt) {
         return new PdpPrincipal(new TenantId(jwt.getClaimAsString("tenant")), jwt.getSubject(), jwt.getId(),
                 BearerIdentityClaim.read(jwt), AuthenticationContextEvidence.from(jwt));

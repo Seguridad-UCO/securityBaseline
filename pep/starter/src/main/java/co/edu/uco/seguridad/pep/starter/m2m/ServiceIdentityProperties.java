@@ -5,7 +5,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.net.URI;
 import java.time.Duration;
 
-/** Propiedades de una identidad M2M concreta, normalmente inyectadas por el gestor de secretos. */
+/**
+ * Propiedades de una identidad M2M concreta, normalmente inyectadas por el gestor de secretos.
+ */
 @ConfigurationProperties("security.pep.service-identity")
 public record ServiceIdentityProperties(URI tokenUri, String clientId, String clientSecret,
                                         Duration timeout, Duration refreshSkew) {

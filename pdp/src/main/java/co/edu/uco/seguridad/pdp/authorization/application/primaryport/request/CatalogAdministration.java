@@ -13,7 +13,9 @@ import java.util.Objects;
  */
 public sealed interface CatalogAdministration {
 
-    /** Objetivo de alcance {@code APPLICATION}: se exige administrar esa aplicación (ADR-023). */
+    /**
+     * Objetivo de alcance {@code APPLICATION}: se exige administrar esa aplicación (ADR-023).
+     */
     record OfApplication(AdministrationRequest administration) implements CatalogAdministration {
 
         public OfApplication {
@@ -21,7 +23,9 @@ public sealed interface CatalogAdministration {
         }
     }
 
-    /** Objetivo de alcance {@code TENANT}: se exige administrar al menos una aplicación del inquilino (ADR-036). */
+    /**
+     * Objetivo de alcance {@code TENANT}: se exige administrar al menos una aplicación del inquilino (ADR-036).
+     */
     record OfTenant(TenantAdministrationRequest actor) implements CatalogAdministration {
 
         public OfTenant {

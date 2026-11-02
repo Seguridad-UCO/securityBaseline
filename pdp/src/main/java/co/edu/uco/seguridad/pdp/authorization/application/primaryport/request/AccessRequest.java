@@ -46,7 +46,9 @@ public record AccessRequest(TenantId tenantId, String subject, ApplicationId app
                 subjectRoles, null, null, null, null, "USER");
     }
 
-    /** Compatibilidad con el contrato interno previo que incluía hechos de contexto. */
+    /**
+     * Compatibilidad con el contrato interno previo que incluía hechos de contexto.
+     */
     public AccessRequest(TenantId tenantId, String subject, ApplicationId applicationId, ResourcePath resourcePath,
                          HttpVerb action, String requestId, String correlationId, Optional<UserId> subjectUserId,
                          Set<String> subjectRoles, Instant timestamp, String environment, HttpVerb contextMethod,

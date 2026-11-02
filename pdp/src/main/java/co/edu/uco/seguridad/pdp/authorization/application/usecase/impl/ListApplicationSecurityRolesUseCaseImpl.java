@@ -12,9 +12,15 @@ import reactor.core.publisher.Mono;
 public final class ListApplicationSecurityRolesUseCaseImpl implements ListApplicationSecurityRolesUseCase {
     private final PrincipalMustBeApplicationAdministratorValidator gate;
     private final ListApplicationRolesPageUseCase roles;
+
     public ListApplicationSecurityRolesUseCaseImpl(PrincipalMustBeApplicationAdministratorValidator gate,
-                                                   ListApplicationRolesPageUseCase roles) { this.gate = gate; this.roles = roles; }
-    @Override public Mono<ResultPage<RoleResponse>> execute(ListApplicationSecurityRolesRequest request) {
+                                                   ListApplicationRolesPageUseCase roles) {
+        this.gate = gate;
+        this.roles = roles;
+    }
+
+    @Override
+    public Mono<ResultPage<RoleResponse>> execute(ListApplicationSecurityRolesRequest request) {
         var administration = request.administration();
         return gate.execute(administration).then(Mono.defer(() -> roles.execute(
                 new ListApplicationRolesPageRequest(administration.tenantId(), administration.applicationId(), request.window()))));

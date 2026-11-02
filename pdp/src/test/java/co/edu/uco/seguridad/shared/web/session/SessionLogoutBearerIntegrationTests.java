@@ -30,7 +30,6 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 import java.net.InetSocketAddress;
@@ -263,7 +262,9 @@ class SessionLogoutBearerIntegrationTests extends AbstractSurrealDbIntegrationTe
 
     // ---- ayudas ----
 
-    /** 401 con el sobre de {@code ApiAuthenticationEntryPoint}: problem+json y {@code code=UNAUTHORIZED}. */
+    /**
+     * 401 con el sobre de {@code ApiAuthenticationEntryPoint}: problem+json y {@code code=UNAUTHORIZED}.
+     */
     private static void assertUnauthorizedEnvelope(Response response) {
         assertThat(response).isNotNull();
         assertThat(response.status()).isEqualTo(401);
@@ -295,7 +296,9 @@ class SessionLogoutBearerIntegrationTests extends AbstractSurrealDbIntegrationTe
         return WebClient.builder().baseUrl("http://localhost:" + port).build();
     }
 
-    /** Subject único por llamada: la base compartida no se limpia entre pruebas ni corridas. */
+    /**
+     * Subject único por llamada: la base compartida no se limpia entre pruebas ni corridas.
+     */
     private static String newLinkedSubject() {
         String subject = "hu028-" + UUID.randomUUID();
         UserId linked = linkTestIdentity(new TenantId(TENANT), subject);
@@ -303,7 +306,9 @@ class SessionLogoutBearerIntegrationTests extends AbstractSurrealDbIntegrationTe
         return subject;
     }
 
-    /** {@code azp} nulo omite el claim; {@code issuedAt} explícito (pasado o futuro), sin dormir. */
+    /**
+     * {@code azp} nulo omite el claim; {@code issuedAt} explícito (pasado o futuro), sin dormir.
+     */
     private static String signedToken(String subject, String authorizedParty, String tokenId, Instant issuedAt) {
         return signedToken(subject, authorizedParty, tokenId, issuedAt, Instant.now().plusSeconds(7200));
     }

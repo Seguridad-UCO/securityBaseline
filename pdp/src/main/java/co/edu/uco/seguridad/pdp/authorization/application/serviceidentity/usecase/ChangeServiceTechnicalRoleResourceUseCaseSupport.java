@@ -7,7 +7,9 @@ import co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository.P
 import reactor.core.publisher.Mono;
 
 final class ChangeServiceTechnicalRoleResourceUseCaseSupport {
-    private ChangeServiceTechnicalRoleResourceUseCaseSupport() { }
+    private ChangeServiceTechnicalRoleResourceUseCaseSupport() {
+    }
+
     static Mono<Void> validate(ChangeServiceTechnicalRoleResourceRequest input, PrincipalMustBeApplicationAdministratorValidator administrators,
                                ServiceIdentityRepository identities, ProtectedResourceRepository resources) {
         return administrators.execute(input.administration())

@@ -135,7 +135,7 @@ Ninguno nuevo. `DecisionState`, `ReasonCode` (de HU-002) se reutilizan sin cambi
 - **Errores esperados:**
 
   | Causa | HTTP |
-    |---|---|
+      |---|---|
   | Sin certificado de cliente, o sujeto no admitido | 403 |
   | JWT de evidencia ausente/inválido/expirado | 401 |
   | `version` ≠ `"1"`, `timestamp` mal formado | 400 |

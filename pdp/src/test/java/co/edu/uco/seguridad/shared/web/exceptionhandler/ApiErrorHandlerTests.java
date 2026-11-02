@@ -2,8 +2,8 @@ package co.edu.uco.seguridad.shared.web.exceptionhandler;
 
 import co.edu.uco.seguridad.pdp.applications.domain.exception.DuplicateApplicationException;
 import co.edu.uco.seguridad.pdp.applications.domain.exception.ReservedApplicationNameException;
-import co.edu.uco.seguridad.pdp.authorization.domain.exception.MfaEvidenceRequiredException;
 import co.edu.uco.seguridad.pdp.authorization.domain.exception.DuplicateServiceAccessGrantException;
+import co.edu.uco.seguridad.pdp.authorization.domain.exception.MfaEvidenceRequiredException;
 import co.edu.uco.seguridad.pdp.authorization.domain.exception.NotAuthorizedToAdministerException;
 import co.edu.uco.seguridad.pdp.authorization.domain.exception.NotAuthorizedToAdministerTenantCatalogException;
 import co.edu.uco.seguridad.pdp.authorization.domain.message.AuthorizationMessages;

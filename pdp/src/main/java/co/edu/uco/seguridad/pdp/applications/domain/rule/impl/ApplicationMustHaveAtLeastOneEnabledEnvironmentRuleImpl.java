@@ -4,7 +4,9 @@ import co.edu.uco.seguridad.pdp.applications.domain.exception.ApplicationWithout
 import co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationMustHaveAtLeastOneEnabledEnvironmentRule;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.model.ApplicationEnvironmentSelection;
 
-/** Decisión pura sobre una selección de ambientes ya normalizada. */
+/**
+ * Decisión pura sobre una selección de ambientes ya normalizada.
+ */
 public final class ApplicationMustHaveAtLeastOneEnabledEnvironmentRuleImpl
         implements ApplicationMustHaveAtLeastOneEnabledEnvironmentRule {
 

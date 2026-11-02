@@ -1,2 +1,4 @@
 package co.edu.uco.seguridad.pdp.authorization.infrastructure.serviceidentity.web;
-public record DecideServiceAccessRawRequest(boolean approve) { }
+
+public record DecideServiceAccessRawRequest(boolean approve) {
+}

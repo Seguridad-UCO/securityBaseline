@@ -239,6 +239,7 @@ un `
 En un equipo mixto Mac/Windows eso significa que la validación pasaba para unos y fallaba para
 otros, sin que el archivo cambiara. Resuelto fijando `*.rego` y `security-policy-engine/scripts/**`
 a `eol=lf` en `.gitattributes`, y normalizando el árbol.
+
 # Consulta de aplicaciones desde una SPA integrada
 
 La librería PEP continúa protegiendo las APIs de negocio y no invoca este endpoint. Una SPA que

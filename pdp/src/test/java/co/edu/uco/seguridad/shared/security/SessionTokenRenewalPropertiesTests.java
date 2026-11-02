@@ -10,7 +10,9 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/** HU-030 (D1): margen y tope de espera de la renovacion del token BFF. */
+/**
+ * HU-030 (D1): margen y tope de espera de la renovacion del token BFF.
+ */
 class SessionTokenRenewalPropertiesTests {
 
     private static final String PREFIX = "pdp.security.session";

@@ -14,7 +14,9 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Lectura y anotación del libro de carga masiva: el contrato de columnas, duplicados y errores por fila. */
+/**
+ * Lectura y anotación del libro de carga masiva: el contrato de columnas, duplicados y errores por fila.
+ */
 class BulkResourceWorkbookParsingTests {
 
     private static final String[] HEADERS = {"Aplicación*", "Ruta*", "Método HTTP*"};

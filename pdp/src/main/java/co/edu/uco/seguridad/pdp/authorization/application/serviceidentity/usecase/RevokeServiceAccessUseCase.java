@@ -4,4 +4,5 @@ import co.edu.uco.seguridad.pdp.authorization.application.serviceidentity.reques
 import co.edu.uco.seguridad.pdp.authorization.domain.serviceidentity.ServiceAccessGrant;
 import co.edu.uco.seguridad.shared.contract.ReactiveOperation;
 
-public interface RevokeServiceAccessUseCase extends ReactiveOperation<RevokeServiceAccessRequest, ServiceAccessGrant> { }
+public interface RevokeServiceAccessUseCase extends ReactiveOperation<RevokeServiceAccessRequest, ServiceAccessGrant> {
+}

@@ -278,7 +278,9 @@ class RevocationAwareJwtDecoderTests {
                 .build();
     }
 
-    /** {@code isRevoked} e {@code isTokenRevoked} responden false; solo la consulta por cliente es configurable. */
+    /**
+     * {@code isRevoked} e {@code isTokenRevoked} responden false; solo la consulta por cliente es configurable.
+     */
     private static TokenRevocationPort revocationWithClientState(List<ClientQuery> queries,
                                                                  Function<ClientQuery, Mono<Boolean>> clientAnswer) {
         return new TokenRevocationPort() {

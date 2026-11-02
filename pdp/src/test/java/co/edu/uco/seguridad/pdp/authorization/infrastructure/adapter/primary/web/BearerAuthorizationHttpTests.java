@@ -196,7 +196,9 @@ class BearerAuthorizationHttpTests extends AbstractSurrealDbIntegrationTest {
     @TestConfiguration
     static class ProvisioningDecoderConfiguration {
 
-        /** La cadena de seguridad inyecta el bean {@code jwtDecoder} por nombre: se envuelve ese, no se añade otro. */
+        /**
+         * La cadena de seguridad inyecta el bean {@code jwtDecoder} por nombre: se envuelve ese, no se añade otro.
+         */
         @Bean
         static BeanPostProcessor provisioningJwtDecoder(ObjectProvider<ResolveBearerIdentityUseCase> identities) {
             return new BeanPostProcessor() {

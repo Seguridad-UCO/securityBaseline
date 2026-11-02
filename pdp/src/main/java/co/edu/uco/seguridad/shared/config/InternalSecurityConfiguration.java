@@ -1,7 +1,7 @@
 package co.edu.uco.seguridad.shared.config;
 
-import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserIdLookupValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.serviceidentity.port.ServiceIdentityRepository;
+import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserIdLookupValidator;
 import co.edu.uco.seguridad.shared.security.*;
 import co.edu.uco.seguridad.shared.security.revocation.RevocationAwareJwtDecoder;
 import co.edu.uco.seguridad.shared.security.revocation.TokenRevocationPort;

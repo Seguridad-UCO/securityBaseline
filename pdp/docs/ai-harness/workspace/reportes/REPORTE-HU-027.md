@@ -15,14 +15,14 @@
 
 ## Comprobaciones locales ejecutadas
 
-| Comprobación | Resultado |
-|---|---|
-| Flujos Hurl en `blocking`, secuencial (`--jobs 1`) | ✅ 8 archivos, 89 solicitudes |
-| Ataques Hurl en `blocking` con `--path-as-is` | ✅ 8 archivos, 11 solicitudes |
-| Rate limit: 61 solicitudes desde una IP y 50 desde otra, en paralelo | ✅ Ambos casos |
-| Login OIDC BFF, sesión y logout a través de Edge/Keycloak | ✅ 9 solicitudes |
-| `authorize.hurl` | ✅ Corregido `action: read` a verbo HTTP `GET` requerido por el PDP |
-| Edge/PDP/Keycloak/Redis de Compose | ✅ Stack local healthy para la ejecución |
+| Comprobación                                                         | Resultado                                                          |
+|----------------------------------------------------------------------|--------------------------------------------------------------------|
+| Flujos Hurl en `blocking`, secuencial (`--jobs 1`)                   | ✅ 8 archivos, 89 solicitudes                                       |
+| Ataques Hurl en `blocking` con `--path-as-is`                        | ✅ 8 archivos, 11 solicitudes                                       |
+| Rate limit: 61 solicitudes desde una IP y 50 desde otra, en paralelo | ✅ Ambos casos                                                      |
+| Login OIDC BFF, sesión y logout a través de Edge/Keycloak            | ✅ 9 solicitudes                                                    |
+| `authorize.hurl`                                                     | ✅ Corregido `action: read` a verbo HTTP `GET` requerido por el PDP |
+| Edge/PDP/Keycloak/Redis de Compose                                   | ✅ Stack local healthy para la ejecución                            |
 
 Las corridas autenticadas se ejecutaron secuencialmente para no activar el bloqueo anti-fuerza-bruta
 de Keycloak. Una primera ejecución paralela sí bloqueó temporalmente al usuario local `edge-tester`;

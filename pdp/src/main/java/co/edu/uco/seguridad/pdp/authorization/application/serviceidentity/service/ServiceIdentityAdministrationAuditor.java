@@ -12,7 +12,9 @@ import reactor.core.publisher.Mono;
 import java.util.Objects;
 import java.util.UUID;
 
-/** Registra intentos M2M sin exponer secretos ni cambiar el resultado de la operación. */
+/**
+ * Registra intentos M2M sin exponer secretos ni cambiar el resultado de la operación.
+ */
 public final class ServiceIdentityAdministrationAuditor {
     private final AdministrationAuditRepository audit;
     private final IdentifierGenerator identifiers;

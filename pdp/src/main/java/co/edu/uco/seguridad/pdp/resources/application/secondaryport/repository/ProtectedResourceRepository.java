@@ -6,6 +6,7 @@ import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
 import java.util.List;
 
 /**
@@ -30,11 +31,16 @@ public interface ProtectedResourceRepository {
     default Mono<ResultPage<ProtectedResource>> findPageByApplication(ApplicationId applicationId, PageWindow window) {
         return Mono.error(new UnsupportedOperationException("La consulta paginada no está implementada"));
     }
-    default Mono<Long> countByApplication(ApplicationId applicationId) { return Mono.error(new UnsupportedOperationException()); }
+
+    default Mono<Long> countByApplication(ApplicationId applicationId) {
+        return Mono.error(new UnsupportedOperationException());
+    }
 
     Mono<ProtectedResource> save(ProtectedResource resource);
 
-    /** Inserta el lote como una sola unidad de persistencia; ante conflicto no deja altas parciales. */
+    /**
+     * Inserta el lote como una sola unidad de persistencia; ante conflicto no deja altas parciales.
+     */
     default Mono<Void> saveAllAtomically(List<ProtectedResource> resources) {
         return Mono.error(new UnsupportedOperationException("La inserción atómica por lote no está implementada"));
     }
@@ -71,7 +77,7 @@ public interface ProtectedResourceRepository {
     }
 
     default Mono<ResourceId> findIdByApplicationPathAndMethod(ApplicationId applicationId, ResourcePath path,
-                                                               HttpVerb method) {
+                                                              HttpVerb method) {
         return findByApplicationPathAndMethod(applicationId, path, method).map(ProtectedResource::id);
     }
 }

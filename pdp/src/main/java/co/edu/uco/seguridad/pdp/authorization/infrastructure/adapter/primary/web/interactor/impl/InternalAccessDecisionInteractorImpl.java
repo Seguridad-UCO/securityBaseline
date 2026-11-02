@@ -1,7 +1,7 @@
 package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl;
 
-import co.edu.uco.seguridad.pdp.authorization.application.usecase.EvaluateInternalAccessUseCase;
 import co.edu.uco.seguridad.pdp.authorization.application.serviceidentity.port.ServiceIdentityRepository;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.EvaluateInternalAccessUseCase;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.AccessDecisionRawRequest;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.AccessDecisionInternalWebResponse;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.InternalAccessDecisionInteractor;
@@ -93,7 +93,7 @@ public final class InternalAccessDecisionInteractorImpl implements InternalAcces
     private Mono<co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.InternalAccessRequest> resolveRequest(
             AccessDecisionRawRequest input, EvidenceIdentity evidence) {
         Mono<co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.InternalAccessRequest> human = identities.execute(
-                new ResolveExternalIdentityRequest(evidence.issuer(), evidence.subject()))
+                        new ResolveExternalIdentityRequest(evidence.issuer(), evidence.subject()))
                 .map(userId -> AccessDecisionRawRequestMapper.toRequest(input, evidence.subject(), userId));
         if (!isManagedServiceIdentity(evidence.authorizedParty())) return human;
         return activeServiceIdentity(evidence.authorizedParty())

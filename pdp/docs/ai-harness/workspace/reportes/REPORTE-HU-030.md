@@ -12,17 +12,17 @@ rojo por compilación, esperable: las firmas nuevas no existían) → `@3-implem
 
 ## Criterios
 
-| # | Criterio | Resultado | Evidencia |
-|---|---|---|---|
-| 1 | Token vencido + sesión viva → el endpoint interno devuelve uno nuevo y vigente y la sesión guarda la rotación | ✅ | `BffSessionTokenRenewalIntegrationTests` (Keycloak simulado que rota el refresh token) |
-| 2 | Token vigente → no se llama a Keycloak; dentro del margen (skew) sí renueva | ✅ | integración + `BffSessionTokenRenewerTests` |
-| 3 | Dos peticiones concurrentes → **un** solo canje | ✅ | integración (concurrencia = 1 canje) y unitaria de single-flight |
-| 4 | `invalid_grant` → `401` y no se vuelve a llamar a Keycloak en la segunda petición | ✅ | integración |
-| 5 | Keycloak caído / `5xx` / timeout → `503`; nunca se entrega un token vencido | ✅ | integración + unitarias (tiempo virtual) |
-| 6 | Sin `RefreshTokenStorePort`, almacén Redis, tracker ni wrapper; el login funciona sin `refresh_expires_in` | ✅ | `grep` en `pdp/src/main`: cero referencias; `OidcAuthenticationSuccessHandlerTests` |
-| 7 | El login sigue fallando explícito sin refresh token o sin `sid`; no escribe nada si falla | ✅ | `OidcAuthenticationSuccessHandlerTests` |
-| 8 | El navegador no recibe tokens | ✅ | el controlador es interno (canal PEP→PDP) y no se añadió ninguna ruta pública |
-| 9 | `verificar.ps1` completo, `consistencia`, `drift` | ✅ | **899 pruebas, 0 fallos, 0 errores**, JaCoCo ≥ 50 % por paquete; CONSISTENTE; SIN DERIVA |
+| # | Criterio                                                                                                      | Resultado | Evidencia                                                                                |
+|---|---------------------------------------------------------------------------------------------------------------|-----------|------------------------------------------------------------------------------------------|
+| 1 | Token vencido + sesión viva → el endpoint interno devuelve uno nuevo y vigente y la sesión guarda la rotación | ✅         | `BffSessionTokenRenewalIntegrationTests` (Keycloak simulado que rota el refresh token)   |
+| 2 | Token vigente → no se llama a Keycloak; dentro del margen (skew) sí renueva                                   | ✅         | integración + `BffSessionTokenRenewerTests`                                              |
+| 3 | Dos peticiones concurrentes → **un** solo canje                                                               | ✅         | integración (concurrencia = 1 canje) y unitaria de single-flight                         |
+| 4 | `invalid_grant` → `401` y no se vuelve a llamar a Keycloak en la segunda petición                             | ✅         | integración                                                                              |
+| 5 | Keycloak caído / `5xx` / timeout → `503`; nunca se entrega un token vencido                                   | ✅         | integración + unitarias (tiempo virtual)                                                 |
+| 6 | Sin `RefreshTokenStorePort`, almacén Redis, tracker ni wrapper; el login funciona sin `refresh_expires_in`    | ✅         | `grep` en `pdp/src/main`: cero referencias; `OidcAuthenticationSuccessHandlerTests`      |
+| 7 | El login sigue fallando explícito sin refresh token o sin `sid`; no escribe nada si falla                     | ✅         | `OidcAuthenticationSuccessHandlerTests`                                                  |
+| 8 | El navegador no recibe tokens                                                                                 | ✅         | el controlador es interno (canal PEP→PDP) y no se añadió ninguna ruta pública            |
+| 9 | `verificar.ps1` completo, `consistencia`, `drift`                                                             | ✅         | **899 pruebas, 0 fallos, 0 errores**, JaCoCo ≥ 50 % por paquete; CONSISTENTE; SIN DERIVA |
 
 ## Desviación aceptada
 

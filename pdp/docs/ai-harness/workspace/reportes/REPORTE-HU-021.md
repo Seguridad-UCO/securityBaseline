@@ -40,6 +40,7 @@ esconde que la auditoría real nunca ocurre.
 ## Bloqueantes
 
 ### [FASE 2 — archivo que existe pero sigue lanzando
+
 `UnsupportedOperationException`] — Persistencia real de la auditoría sin implementar
 
 - **Archivo:**
@@ -55,7 +56,9 @@ esconde que la auditoría real nunca ocurre.
   `AdministrationEventPersistenceMapper` — declarados en PLAN-HU-021.md §8 y todavía inexistentes.
 
 ### [FASE 2 — archivo que existe pero sigue lanzando
-`UnsupportedOperationException`] — Observabilidad de la auditoría sin implementar (criterio de aceptación #4 sin cumplir)
+
+`UnsupportedOperationException`] — Observabilidad de la auditoría sin implementar (criterio de aceptación #4 sin
+cumplir)
 
 - **Archivo:**
   `pdp/src/main/java/co/edu/uco/seguridad/pdp/authorization/infrastructure/adapter/secondary/observability/ObservedAdministrationAuditRepository.java`

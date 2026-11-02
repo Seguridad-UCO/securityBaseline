@@ -56,7 +56,7 @@ public final class RevocationAwareJwtDecoder implements ReactiveJwtDecoder {
     public RevocationAwareJwtDecoder(ReactiveJwtDecoder delegate, TokenRevocationPort revocation,
                                      SubjectUserIdLookupValidator subjectUserIdLookup, String technicalClientId) {
         this(delegate, revocation, lookupOnly(Objects.requireNonNull(subjectUserIdLookup,
-                RequiredArgumentMessages.SUBJECT_USER_ID_LOOKUP_VALIDATOR)), (jwt, userId) -> jwt,
+                        RequiredArgumentMessages.SUBJECT_USER_ID_LOOKUP_VALIDATOR)), (jwt, userId) -> jwt,
                 Objects.requireNonNull(technicalClientId, "technicalClientId"), jwt -> Mono.just(false));
     }
 
@@ -68,7 +68,7 @@ public final class RevocationAwareJwtDecoder implements ReactiveJwtDecoder {
                                      SubjectUserIdLookupValidator subjectUserIdLookup, String technicalClientId,
                                      Function<Jwt, Mono<Boolean>> serviceIdentity) {
         this(delegate, revocation, lookupOnly(Objects.requireNonNull(subjectUserIdLookup,
-                RequiredArgumentMessages.SUBJECT_USER_ID_LOOKUP_VALIDATOR)), (jwt, userId) -> jwt,
+                        RequiredArgumentMessages.SUBJECT_USER_ID_LOOKUP_VALIDATOR)), (jwt, userId) -> jwt,
                 Objects.requireNonNull(technicalClientId, "technicalClientId"), serviceIdentity);
     }
 
@@ -117,7 +117,9 @@ public final class RevocationAwareJwtDecoder implements ReactiveJwtDecoder {
         });
     }
 
-    /** Solo una {@code Exception} es fail-closed: un {@code Error} de la JVM no se disfraza de 401. */
+    /**
+     * Solo una {@code Exception} es fail-closed: un {@code Error} de la JVM no se disfraza de 401.
+     */
     private static boolean isCheckFailure(Throwable error) {
         return error instanceof Exception && !(error instanceof JwtException);
     }
@@ -136,7 +138,9 @@ public final class RevocationAwareJwtDecoder implements ReactiveJwtDecoder {
                 .map(revocationState -> revocationState.getT1() || revocationState.getT2() || revocationState.getT3());
     }
 
-    /** HU-028 / ADR-034: solo consulta la revocación por cliente cuando el token trae {@code azp}. */
+    /**
+     * HU-028 / ADR-034: solo consulta la revocación por cliente cuando el token trae {@code azp}.
+     */
     private Mono<Boolean> clientRevoked(UserId userId, Jwt jwt) {
         String clientId = jwt.getClaimAsString("azp");
         return clientId == null || clientId.isBlank()

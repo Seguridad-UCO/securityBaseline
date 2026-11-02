@@ -2,8 +2,11 @@ package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.we
 
 import java.util.List;
 
-/** Diagnóstico no persistente de un archivo de carga masiva. */
+/**
+ * Diagnóstico no persistente de un archivo de carga masiva.
+ */
 public record BulkResourceValidationResponse(boolean ready, int totalRows, int validRows, int invalidRows,
                                              List<BulkResourceRowError> errors) {
-    public record BulkResourceRowError(int row, String field, String value, String code, String description) { }
+    public record BulkResourceRowError(int row, String field, String value, String code, String description) {
+    }
 }

@@ -7,7 +7,18 @@ import co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository.P
 import reactor.core.publisher.Mono;
 
 public final class RemoveServiceTechnicalRoleResourceUseCaseImpl implements RemoveServiceTechnicalRoleResourceUseCase {
-    private final PrincipalMustBeApplicationAdministratorValidator administrators; private final ServiceIdentityRepository identities; private final ProtectedResourceRepository resources;
-    public RemoveServiceTechnicalRoleResourceUseCaseImpl(PrincipalMustBeApplicationAdministratorValidator administrators, ServiceIdentityRepository identities, ProtectedResourceRepository resources) { this.administrators=administrators; this.identities=identities; this.resources=resources; }
-    @Override public Mono<Void> execute(ChangeServiceTechnicalRoleResourceRequest input) { return ChangeServiceTechnicalRoleResourceUseCaseSupport.validate(input,administrators,identities,resources).then(identities.removeTechnicalRoleResource(input.administration().tenantId(),input.technicalRoleId(),input.resourceId())); }
+    private final PrincipalMustBeApplicationAdministratorValidator administrators;
+    private final ServiceIdentityRepository identities;
+    private final ProtectedResourceRepository resources;
+
+    public RemoveServiceTechnicalRoleResourceUseCaseImpl(PrincipalMustBeApplicationAdministratorValidator administrators, ServiceIdentityRepository identities, ProtectedResourceRepository resources) {
+        this.administrators = administrators;
+        this.identities = identities;
+        this.resources = resources;
+    }
+
+    @Override
+    public Mono<Void> execute(ChangeServiceTechnicalRoleResourceRequest input) {
+        return ChangeServiceTechnicalRoleResourceUseCaseSupport.validate(input, administrators, identities, resources).then(identities.removeTechnicalRoleResource(input.administration().tenantId(), input.technicalRoleId(), input.resourceId()));
+    }
 }

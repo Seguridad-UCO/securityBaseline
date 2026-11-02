@@ -21,11 +21,13 @@ class ServiceIdentityAdministrationAuditorTests {
     @Test
     void keeps_the_business_operation_successful_when_audit_repository_throws_synchronously() {
         AdministrationAuditRepository unavailable = new AdministrationAuditRepository() {
-            @Override public reactor.core.publisher.Mono<Void> save(AdministrationEvent event) {
+            @Override
+            public reactor.core.publisher.Mono<Void> save(AdministrationEvent event) {
                 throw new UnsupportedOperationException("audit unavailable");
             }
 
-            @Override public Flux<AdministrationEvent> findByCorrelationId(String correlationId) {
+            @Override
+            public Flux<AdministrationEvent> findByCorrelationId(String correlationId) {
                 return Flux.empty();
             }
         };

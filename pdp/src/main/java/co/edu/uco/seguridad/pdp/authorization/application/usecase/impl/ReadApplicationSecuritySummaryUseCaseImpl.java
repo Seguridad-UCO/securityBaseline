@@ -45,11 +45,11 @@ public final class ReadApplicationSecuritySummaryUseCaseImpl implements ReadAppl
     public Mono<ApplicationSecuritySummaryResponse> execute(ReadApplicationSecuritySummaryRequest request) {
         var administration = request.administration();
         return gate.execute(administration).then(Mono.defer(() -> Mono.zip(
-                applications.execute(administration.applicationId()),
-                resources.execute(administration.applicationId()),
-                roles.execute(new ApplicationRoleCountRequest(administration.tenantId(), administration.applicationId())),
-                profiles.execute(new ApplicationProfileCountRequest(administration.tenantId(), administration.applicationId())),
-                assignments.execute(new ApplicationAssignmentCountsRequest(administration.tenantId(), administration.applicationId())))
+                        applications.execute(administration.applicationId()),
+                        resources.execute(administration.applicationId()),
+                        roles.execute(new ApplicationRoleCountRequest(administration.tenantId(), administration.applicationId())),
+                        profiles.execute(new ApplicationProfileCountRequest(administration.tenantId(), administration.applicationId())),
+                        assignments.execute(new ApplicationAssignmentCountsRequest(administration.tenantId(), administration.applicationId())))
                 .map(result -> new ApplicationSecuritySummaryResponse(
                         new ApplicationSecuritySummaryResponse.Application(result.getT1().id().value().toString(),
                                 result.getT1().name().value(), result.getT1().description(), result.getT1().baseUrl().value()),

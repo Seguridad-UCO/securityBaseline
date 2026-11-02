@@ -228,15 +228,15 @@ prueba, precisamente porque toca 15 clases ya existentes en vez de construir una
 
 ## 10. Trazabilidad
 
-| Fase                       | Estado                                         | Fecha      |
-|----------------------------|------------------------------------------------|------------|
-| Plan                       | ✅ Generado                                     | 2026-09-15 |
-| Contrato aprobado (gate 1) | ✅ Aprobado                                     | 2026-09-15 |
-| Pruebas en rojo            | ✅ Confirmado (dos pasadas de `2-tester-spec`)  | 2026-09-15 |
-| Implementación en verde    | ⚠️ Verde en pruebas, incompleta contra el plan | 2026-09-15 |
-| Validación                 | ⛔ RECHAZADO — ver REPORTE-HU-021.md            | 2026-09-15 |
+| Fase                       | Estado                                                                                    | Fecha      |
+|----------------------------|-------------------------------------------------------------------------------------------|------------|
+| Plan                       | ✅ Generado                                                                                | 2026-09-15 |
+| Contrato aprobado (gate 1) | ✅ Aprobado                                                                                | 2026-09-15 |
+| Pruebas en rojo            | ✅ Confirmado (dos pasadas de `2-tester-spec`)                                             | 2026-09-15 |
+| Implementación en verde    | ⚠️ Verde en pruebas, incompleta contra el plan                                            | 2026-09-15 |
+| Validación                 | ⛔ RECHAZADO — ver REPORTE-HU-021.md                                                       | 2026-09-15 |
 | Bloqueantes corregidos     | ✅ Persistencia SurrealDB real, observabilidad e inicializador de esquema — ver nota abajo | 2026-11-01 |
-| Entrega (gate 2)           | ⏳ PR `feature/HU-021-cierre-auditoria-administrativa` |            |
+| Entrega (gate 2)           | ⏳ PR `feature/HU-021-cierre-auditoria-administrativa`                                     |            |
 
 **Cierre (2026-11-01).** Los tres bloqueantes de REPORTE-HU-021.md quedan resueltos sin tocar el
 retrofit de los 13 casos de uso: `AdministrationEventEntity`, `AdministrationEventPersistenceMapper`,

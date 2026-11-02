@@ -11,8 +11,14 @@ import reactor.core.publisher.Mono;
 public final class ListRoleApplicationAssignmentsPageUseCaseImpl implements ListRoleApplicationAssignmentsPageUseCase {
     private final AssignmentRepository assignments;
     private final TimeProvider time;
-    public ListRoleApplicationAssignmentsPageUseCaseImpl(AssignmentRepository assignments, TimeProvider time) { this.assignments = assignments; this.time = time; }
-    @Override public Mono<ResultPage<AssignmentResponse>> execute(ListRoleApplicationAssignmentsPageRequest input) {
+
+    public ListRoleApplicationAssignmentsPageUseCaseImpl(AssignmentRepository assignments, TimeProvider time) {
+        this.assignments = assignments;
+        this.time = time;
+    }
+
+    @Override
+    public Mono<ResultPage<AssignmentResponse>> execute(ListRoleApplicationAssignmentsPageRequest input) {
         return assignments.findActivePageByRoleAndApplication(input.roleId(), input.tenantId(), input.applicationId(), time.now(), input.window()).map(page -> page.map(AssignmentPageResponses::role));
     }
 }

@@ -1,15 +1,15 @@
 package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.controller;
 
+import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationOwnerLookupValidator;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.BatchRoleResourcesRawRequest;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.DefineRoleRawRequest;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.GrantResourceRawRequest;
-import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.BatchRoleResourcesRawRequest;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.RoleAdministrationWebResponse;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.AdministerResourceGrantInteractor;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.AdministerRoleDefinitionInteractor;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.ResourceId;
 import co.edu.uco.seguridad.pdp.commons.model.RoleId;
-import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationOwnerLookupValidator;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceOwnerLookupValidator;
 import co.edu.uco.seguridad.pdp.roles.application.rule.validator.RoleResourcesLookupValidator;
 import co.edu.uco.seguridad.pdp.roles.domain.exception.ResourceOutsideRoleScopeException;
@@ -17,13 +17,13 @@ import co.edu.uco.seguridad.shared.web.ApiResponse;
 import co.edu.uco.seguridad.shared.web.CorrelationWebFilter;
 import co.edu.uco.seguridad.shared.web.RequestContext;
 import co.edu.uco.seguridad.shared.web.message.WebContractMessages;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ServerWebExchange;
-import reactor.core.publisher.Mono;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 import java.util.Set;
@@ -97,8 +97,8 @@ final class RoleAdministrationController {
      */
     @PostMapping("/{roleId}/resources/batch")
     Mono<ResponseEntity<ApiResponse<RoleAdministrationWebResponse>>> grantResources(@PathVariable String roleId,
-                                                                                     @RequestBody BatchRoleResourcesRawRequest body,
-                                                                                     ServerWebExchange exchange) {
+                                                                                    @RequestBody BatchRoleResourcesRawRequest body,
+                                                                                    ServerWebExchange exchange) {
         RequestContext context = CorrelationWebFilter.context(exchange);
         return validateRequestedApplication(body)
                 .thenMany(Flux.fromIterable(body.resourceIds()).distinct())
@@ -109,11 +109,13 @@ final class RoleAdministrationController {
                         "Los recursos fueron concedidos al rol", response, context)));
     }
 
-    /** Sincroniza exclusivamente las asociaciones cuyo recurso pertenece a la aplicación indicada. */
+    /**
+     * Sincroniza exclusivamente las asociaciones cuyo recurso pertenece a la aplicación indicada.
+     */
     @PutMapping("/{roleId}/resources")
     Mono<ResponseEntity<ApiResponse<RoleAdministrationWebResponse>>> synchronizeResources(@PathVariable String roleId,
-                                                                                            @RequestBody BatchRoleResourcesRawRequest body,
-                                                                                            ServerWebExchange exchange) {
+                                                                                          @RequestBody BatchRoleResourcesRawRequest body,
+                                                                                          ServerWebExchange exchange) {
         RequestContext context = CorrelationWebFilter.context(exchange);
         RoleId parsedRoleId = RoleId.of(roleId);
         Set<ResourceId> requested = body.resourceIds().stream().map(ResourceId::of).collect(Collectors.toUnmodifiableSet());
@@ -146,9 +148,9 @@ final class RoleAdministrationController {
         ApplicationId applicationId = ApplicationId.of(body.applicationId());
         return applicationOwner.execute(applicationId)
                 .thenMany(Flux.fromIterable(body.resourceIds()).distinct().map(ResourceId::of)
-                .flatMap(resourceId -> resourceOwner.execute(resourceId)
-                        .filter(applicationId::equals)
-                        .switchIfEmpty(Mono.error(new ResourceOutsideRoleScopeException(resourceId)))))
+                        .flatMap(resourceId -> resourceOwner.execute(resourceId)
+                                .filter(applicationId::equals)
+                                .switchIfEmpty(Mono.error(new ResourceOutsideRoleScopeException(resourceId)))))
                 .then();
     }
 

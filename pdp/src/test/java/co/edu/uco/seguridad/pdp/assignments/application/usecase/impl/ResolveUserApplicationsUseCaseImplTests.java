@@ -3,20 +3,14 @@ package co.edu.uco.seguridad.pdp.assignments.application.usecase.impl;
 import co.edu.uco.seguridad.pdp.assignments.application.primaryport.request.ResolveUserApplicationsRequest;
 import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository.AssignmentRepository;
 import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository.ProfileAssignmentRepository;
+import co.edu.uco.seguridad.pdp.assignments.application.usecase.ResolveUserApplicationsUseCase;
 import co.edu.uco.seguridad.pdp.assignments.domain.Assignment;
 import co.edu.uco.seguridad.pdp.assignments.domain.AssignmentCriteria;
 import co.edu.uco.seguridad.pdp.assignments.domain.ProfileAssignment;
 import co.edu.uco.seguridad.pdp.assignments.domain.ProfileAssignmentCriteria;
 import co.edu.uco.seguridad.pdp.assignments.domain.model.AssignmentId;
 import co.edu.uco.seguridad.pdp.assignments.domain.model.ProfileAssignmentId;
-import co.edu.uco.seguridad.pdp.assignments.application.usecase.ResolveUserApplicationsUseCase;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.model.ProfileId;
-import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
-import co.edu.uco.seguridad.pdp.commons.model.RoleId;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
-import co.edu.uco.seguridad.pdp.commons.model.UserId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
@@ -95,22 +89,64 @@ class ResolveUserApplicationsUseCaseImplTests {
 
     private static AssignmentRepository assignmentRepository(List<Assignment> active) {
         return new AssignmentRepository() {
-            @Override public Mono<Boolean> existsActiveByUserApplicationRole(UserId userId, ApplicationId applicationId, RoleId roleId, Instant now) { return Mono.just(false); }
-            @Override public Mono<Assignment> findByIdForTenant(AssignmentId assignmentId, TenantId tenantId) { return Mono.empty(); }
-            @Override public Mono<ResultPage<Assignment>> findBy(AssignmentCriteria criteria, PageWindow window) { return Mono.just(ResultPage.of(List.of(), 0, window)); }
-            @Override public Mono<Set<RoleId>> findActiveRoleIdsFor(UserId userId, ApplicationId applicationId, Instant now) { return Mono.just(Set.of()); }
-            @Override public Flux<Assignment> findActiveByUserAndTenant(UserId userId, TenantId tenantId, Instant now) { return Flux.fromIterable(active); }
-            @Override public Mono<Assignment> save(Assignment assignment) { return Mono.just(assignment); }
+            @Override
+            public Mono<Boolean> existsActiveByUserApplicationRole(UserId userId, ApplicationId applicationId, RoleId roleId, Instant now) {
+                return Mono.just(false);
+            }
+
+            @Override
+            public Mono<Assignment> findByIdForTenant(AssignmentId assignmentId, TenantId tenantId) {
+                return Mono.empty();
+            }
+
+            @Override
+            public Mono<ResultPage<Assignment>> findBy(AssignmentCriteria criteria, PageWindow window) {
+                return Mono.just(ResultPage.of(List.of(), 0, window));
+            }
+
+            @Override
+            public Mono<Set<RoleId>> findActiveRoleIdsFor(UserId userId, ApplicationId applicationId, Instant now) {
+                return Mono.just(Set.of());
+            }
+
+            @Override
+            public Flux<Assignment> findActiveByUserAndTenant(UserId userId, TenantId tenantId, Instant now) {
+                return Flux.fromIterable(active);
+            }
+
+            @Override
+            public Mono<Assignment> save(Assignment assignment) {
+                return Mono.just(assignment);
+            }
         };
     }
 
     private static ProfileAssignmentRepository profileAssignmentRepository(List<ProfileAssignment> active) {
         return new ProfileAssignmentRepository() {
-            @Override public Mono<Boolean> existsActiveByUserApplicationProfile(UserId userId, ApplicationId applicationId, ProfileId profileId, Instant now) { return Mono.just(false); }
-            @Override public Mono<ProfileAssignment> findByIdForTenant(ProfileAssignmentId id, TenantId tenantId) { return Mono.empty(); }
-            @Override public Mono<ResultPage<ProfileAssignment>> findBy(ProfileAssignmentCriteria criteria, PageWindow window) { return Mono.just(ResultPage.of(List.of(), 0, window)); }
-            @Override public Mono<ProfileAssignment> save(ProfileAssignment assignment) { return Mono.just(assignment); }
-            @Override public Flux<ProfileAssignment> findActiveByUserAndTenant(UserId userId, TenantId tenantId, Instant now) { return Flux.fromIterable(active); }
+            @Override
+            public Mono<Boolean> existsActiveByUserApplicationProfile(UserId userId, ApplicationId applicationId, ProfileId profileId, Instant now) {
+                return Mono.just(false);
+            }
+
+            @Override
+            public Mono<ProfileAssignment> findByIdForTenant(ProfileAssignmentId id, TenantId tenantId) {
+                return Mono.empty();
+            }
+
+            @Override
+            public Mono<ResultPage<ProfileAssignment>> findBy(ProfileAssignmentCriteria criteria, PageWindow window) {
+                return Mono.just(ResultPage.of(List.of(), 0, window));
+            }
+
+            @Override
+            public Mono<ProfileAssignment> save(ProfileAssignment assignment) {
+                return Mono.just(assignment);
+            }
+
+            @Override
+            public Flux<ProfileAssignment> findActiveByUserAndTenant(UserId userId, TenantId tenantId, Instant now) {
+                return Flux.fromIterable(active);
+            }
         };
     }
 }

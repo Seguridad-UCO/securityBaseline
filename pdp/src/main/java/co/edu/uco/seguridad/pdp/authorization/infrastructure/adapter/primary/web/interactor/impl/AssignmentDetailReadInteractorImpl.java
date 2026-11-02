@@ -10,7 +10,8 @@ import co.edu.uco.seguridad.pdp.assignments.application.usecase.ListActiveRoleAs
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.ListActiveRoleAssignmentsByUserPageUseCase;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministrationRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.PrincipalMustBeApplicationAdministratorValidator;
-import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.*;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.ApplicationSecurityPageRawRequest;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.ListApplicationSecurityRelationRawRequest;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.*;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.AssignmentDetailReadInteractor;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.mapper.ApplicationSecurityPageRequestMapper;
@@ -20,12 +21,18 @@ import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserI
 import co.edu.uco.seguridad.pdp.identity.application.usecase.FindUserByIdUseCase;
 import co.edu.uco.seguridad.pdp.profiles.application.secondaryport.repository.ProfileRepository;
 import co.edu.uco.seguridad.pdp.roles.application.secondaryport.repository.RoleRepository;
-import co.edu.uco.seguridad.shared.security.*;
-import co.edu.uco.seguridad.shared.web.*;
-import reactor.core.publisher.*;
+import co.edu.uco.seguridad.shared.security.PdpPrincipal;
+import co.edu.uco.seguridad.shared.security.SecurityContext;
+import co.edu.uco.seguridad.shared.web.PageResponse;
+import co.edu.uco.seguridad.shared.web.RequestFieldParser;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 import java.util.Set;
 
-/** Reads only relationships inside an application after the PDP administration decision. */
+/**
+ * Reads only relationships inside an application after the PDP administration decision.
+ */
 public final class AssignmentDetailReadInteractorImpl implements AssignmentDetailReadInteractor {
 
     private final ApplicationOwnerLookupValidator owner;
@@ -40,12 +47,12 @@ public final class AssignmentDetailReadInteractorImpl implements AssignmentDetai
     private final ProfileRepository profiles;
 
     public AssignmentDetailReadInteractorImpl(ApplicationOwnerLookupValidator owner,
-            SubjectUserIdLookupValidator subjects, PrincipalMustBeApplicationAdministratorValidator gate,
-            ListActiveRoleAssignmentsByRolePageUseCase roleAssignmentsByRole,
-            ListActiveRoleAssignmentsByUserPageUseCase roleAssignmentsByUser,
-            ListActiveProfileAssignmentsByProfilePageUseCase profileAssignmentsByProfile,
-            ListActiveProfileAssignmentsByUserPageUseCase profileAssignmentsByUser,
-            FindUserByIdUseCase users, RoleRepository roles, ProfileRepository profiles) {
+                                              SubjectUserIdLookupValidator subjects, PrincipalMustBeApplicationAdministratorValidator gate,
+                                              ListActiveRoleAssignmentsByRolePageUseCase roleAssignmentsByRole,
+                                              ListActiveRoleAssignmentsByUserPageUseCase roleAssignmentsByUser,
+                                              ListActiveProfileAssignmentsByProfilePageUseCase profileAssignmentsByProfile,
+                                              ListActiveProfileAssignmentsByUserPageUseCase profileAssignmentsByUser,
+                                              FindUserByIdUseCase users, RoleRepository roles, ProfileRepository profiles) {
         this.owner = owner;
         this.subjects = subjects;
         this.gate = gate;

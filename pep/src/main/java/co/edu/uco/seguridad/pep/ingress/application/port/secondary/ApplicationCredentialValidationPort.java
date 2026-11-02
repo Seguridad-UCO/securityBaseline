@@ -8,7 +8,9 @@ import reactor.core.publisher.Mono;
 public interface ApplicationCredentialValidationPort {
     Mono<Void> validate(String applicationName, String secret);
 
-    /** Validación contextual para integraciones que declaran ambiente. */
+    /**
+     * Validación contextual para integraciones que declaran ambiente.
+     */
     default Mono<Void> validate(String applicationName, String environment, String secret) {
         return validate(applicationName, secret);
     }

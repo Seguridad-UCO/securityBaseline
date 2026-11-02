@@ -1,6 +1,8 @@
 package co.edu.uco.seguridad.pdp.authorization.domain.serviceidentity;
 
-/** Rol técnico mínimo exigido para que un grant M2M proyecte un entitlement en el PDP. */
+/**
+ * Rol técnico mínimo exigido para que un grant M2M proyecte un entitlement en el PDP.
+ */
 public enum ServiceTechnicalRole {
     SERVICE_CONSUMER;
 

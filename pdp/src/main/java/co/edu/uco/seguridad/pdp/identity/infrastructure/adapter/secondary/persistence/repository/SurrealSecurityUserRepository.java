@@ -1,13 +1,13 @@
 package co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.repository;
 
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
 import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
+import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.SecurityUserRepository;
+import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;
 import co.edu.uco.seguridad.pdp.identity.domain.model.Email;
 import co.edu.uco.seguridad.pdp.identity.domain.model.ExternalIdentity;
-import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;
-import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.entity.ExternalIdentityEntity;
 import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.entity.SecurityUserEntity;
 import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.mapper.SecurityUserPersistenceMapper;
@@ -20,12 +20,13 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import tools.jackson.databind.JsonNode;
 
-import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-/** Adaptador secundario (driven) real sobre SurrealDB (ADR-0004). */
+/**
+ * Adaptador secundario (driven) real sobre SurrealDB (ADR-0004).
+ */
 public final class SurrealSecurityUserRepository implements SecurityUserRepository {
 
     private static final String DEFAULT_PROVIDER = "keycloak-local";
@@ -87,10 +88,10 @@ public final class SurrealSecurityUserRepository implements SecurityUserReposito
     public Mono<SecurityUser> save(SecurityUser user) {
         return client.execute(
                         """
-                        UPSERT type::record('%s', $id) SET \
-                        email = $email, name = $name, tenantId = $tenantId, \
-                        createdAt = <datetime>$createdAt, lastLoginAt = <datetime>$lastLoginAt;\
-                        """.formatted(IdentitySchema.USER_TABLE),
+                                UPSERT type::record('%s', $id) SET \
+                                email = $email, name = $name, tenantId = $tenantId, \
+                                createdAt = <datetime>$createdAt, lastLoginAt = <datetime>$lastLoginAt;\
+                                """.formatted(IdentitySchema.USER_TABLE),
                         Map.of(
                                 "id", user.id().value().toString(),
                                 "email", user.email().value(),
@@ -105,9 +106,9 @@ public final class SurrealSecurityUserRepository implements SecurityUserReposito
     public Mono<Void> linkIdentity(ExternalIdentity identity) {
         return client.execute(
                         """
-                        CREATE type::record('%s', $id) SET \
-                        userId = $userId, issuer = $issuer, subject = $subject, provider = $provider;\
-                        """.formatted(IdentitySchema.IDENTITY_TABLE),
+                                CREATE type::record('%s', $id) SET \
+                                userId = $userId, issuer = $issuer, subject = $subject, provider = $provider;\
+                                """.formatted(IdentitySchema.IDENTITY_TABLE),
                         Map.of(
                                 "id", UUID.randomUUID().toString(),
                                 "userId", identity.userId().value().toString(),
@@ -121,14 +122,14 @@ public final class SurrealSecurityUserRepository implements SecurityUserReposito
     public Mono<ExternalIdentity> createUserWithIdentityIfAbsent(SecurityUser user, ExternalIdentity identity) {
         return client.execute(
                         """
-                        BEGIN TRANSACTION; \
-                        CREATE type::record('%1$s', $userId) SET \
-                        email = $email, name = $name, tenantId = $tenantId, \
-                        createdAt = <datetime>$createdAt, lastLoginAt = <datetime>$lastLoginAt; \
-                        CREATE type::record('%2$s', $identityId) SET \
-                        userId = $userId, issuer = $issuer, subject = $subject, provider = $provider; \
-                        COMMIT TRANSACTION;\
-                        """.formatted(IdentitySchema.USER_TABLE, IdentitySchema.IDENTITY_TABLE),
+                                BEGIN TRANSACTION; \
+                                CREATE type::record('%1$s', $userId) SET \
+                                email = $email, name = $name, tenantId = $tenantId, \
+                                createdAt = <datetime>$createdAt, lastLoginAt = <datetime>$lastLoginAt; \
+                                CREATE type::record('%2$s', $identityId) SET \
+                                userId = $userId, issuer = $issuer, subject = $subject, provider = $provider; \
+                                COMMIT TRANSACTION;\
+                                """.formatted(IdentitySchema.USER_TABLE, IdentitySchema.IDENTITY_TABLE),
                         Map.of(
                                 "userId", user.id().value().toString(),
                                 "email", user.email().value(),
