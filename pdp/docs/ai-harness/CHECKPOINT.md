@@ -126,6 +126,35 @@ nadie actualizara este archivo — la brecha que motivó la regla nueva.
 
 ---
 
+## Informe de Asistencias UCO sobre 0.1.9: SU-01 y SU-02 (2026-11-02)
+
+**SU-01 — el catálogo de usuarios no tenía control de acceso.** `GET /api/v1/users` listaba **todos** los
+usuarios de **todos** los inquilinos a cualquier token válido, y `PUT /api/v1/users/{id}/tenant` permitía a
+cualquier usuario autenticado mover a cualquier persona a otro inquilino (Asistencias solo reportó la
+lectura; la escritura la halló la revisión del código y se comprobó en local). Ahora los dos viven en
+`authorization` (`UserAdministrationController`), exigen ser actor de inquilino (administrar al menos una
+aplicación del inquilino, ADR-036), el listado se limita al inquilino del principal y la reasignación nunca
+cruza inquilinos (`UserTenantAssignmentMustStayInActorTenantRule`); se audita como `USER_TENANT_ASSIGNED`.
+Es un cambio de contrato: quien no administra ninguna aplicación recibe `403
+NOT_AUTHORIZED_TO_ADMINISTER_TENANT_CATALOG` donde antes recibía `200`. La consola trata ese `403` en el
+listado como lista vacía.
+
+**SU-02 — la validación de la credencial era el cuello de botella.** El starter valida la credencial de la
+aplicación en cada decisión y el PDP la comparaba con BCrypt de forma síncrona (~70 ms de CPU por decisión).
+Se guarda ahora con SHA-256 (ADR-038, secreto aleatorio de 256 bits), con migración perezosa de los hashes
+BCrypt. Medido dentro de la red del stack (como el PEP): validación en serie 151 → 25 ms; 50 simultáneas
+767 → 368 ms de mediana; 100 simultáneas 1417 → 649 ms. **Queda un techo de ~150 validaciones por segundo**
+en el canal interno que no se investigó: SU-02 no se da por cerrado hasta repetir la ráfaga de 50 decisiones
+completas a través del PEP.
+
+**Lección de medición.** Medir desde el host contra `localhost` suma ~22 ms a cada `POST` con cuerpo (el
+port-forward de Docker Desktop parte cabeceras y cuerpo en dos paquetes; con un socket crudo el mismo
+rechazo tarda 3,9 ms). Las cifras absolutas de `POST` desde el host están infladas por igual en todas las
+versiones; para medir hay que ejecutar el generador de carga dentro de la red del stack.
+
+**`develop` sigue en rojo por cobertura**, heredado de #101 (identidades de servicio): 7 paquetes
+`serviceidentity` bajo el 50 % (el de persistencia, al 4 %). Las 1229 pruebas pasan.
+
 ## Latencia del PDP por autenticación básica contra SurrealDB (2026-11-02, versión 0.1.9)
 
 Asistencias UCO reportó con 0.1.8 ~650 ms por decisión (0.1.7: ~405 ms) y `503` del PEP cuando su panel
