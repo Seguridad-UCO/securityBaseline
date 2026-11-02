@@ -31,7 +31,8 @@ services:
       retries: 24
 
   redis:
-    image: redis:7.4-alpine
+    # Versión fija: un tag flotante cambia Redis sin aviso en cada `docker compose pull`.
+    image: redis:7.4.12-alpine
     command: redis-server --appendonly yes
     volumes: ["redis-data:/data"]
     healthcheck:
@@ -59,6 +60,10 @@ services:
       PDP_KEYCLOAK_BEARER_AUDIENCE: security-baseline-pdp
       PDP_SECURITY_SESSION_SECURE_COOKIES: "false"
       PDP_SECURITY_MFA_ENABLED: ${PDP_SECURITY_MFA_ENABLED:-false}
+      # Orígenes de los frontends que llaman al PDP (CORS) y a los que el login puede volver.
+      # Agregue el de su aplicación en `.env`, separado por comas; nunca `*`.
+      PDP_CORS_ALLOWED_ORIGINS: ${PDP_CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:5174}
+      PDP_LOGIN_ALLOWED_RETURN_ORIGINS: ${PDP_LOGIN_ALLOWED_RETURN_ORIGINS:-http://localhost:5174}
     extra_hosts: ["keycloak.localhost:host-gateway"]
     ports: ["${PDP_PORT:-18080}:8080"]
     depends_on:

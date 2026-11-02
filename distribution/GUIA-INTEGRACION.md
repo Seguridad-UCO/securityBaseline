@@ -38,7 +38,7 @@ Elige una versión publicada concreta. No uses `latest`: todos los componentes d
 mkdir security-baseline-local
 cd security-baseline-local
 
-# Sustituya <VERSION> por la versión publicada, por ejemplo 0.1.8.
+# Sustituya <VERSION> por la versión publicada, por ejemplo 0.1.9.
 curl -LO https://github.com/Seguridad-UCO/securityBaseline/releases/download/v<VERSION>/compose.yaml
 curl -Lo .env https://github.com/Seguridad-UCO/securityBaseline/releases/download/v<VERSION>/default.env.example
 ```
@@ -49,7 +49,7 @@ curl -Lo .env https://github.com/Seguridad-UCO/securityBaseline/releases/downloa
 mkdir security-baseline-local
 cd security-baseline-local
 
-# Sustituya <VERSION> por la versión publicada, por ejemplo 0.1.8.
+# Sustituya <VERSION> por la versión publicada, por ejemplo 0.1.9.
 Invoke-WebRequest https://github.com/Seguridad-UCO/securityBaseline/releases/download/v<VERSION>/compose.yaml -OutFile compose.yaml
 Invoke-WebRequest https://github.com/Seguridad-UCO/securityBaseline/releases/download/v<VERSION>/default.env.example -OutFile .env
 ```
@@ -65,7 +65,14 @@ PEP_PORT=18081
 
 # Solo para laboratorio local: no exige OTP ni WebAuthn al administrar seguridad.
 PDP_SECURITY_MFA_ENABLED=false
+
+# Orígenes de sus frontends (CORS) y a los que el login puede volver, separados por comas.
+# Agregue el de su aplicación; no borre los que ya estén ni use `*`.
+PDP_CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174
+PDP_LOGIN_ALLOWED_RETURN_ORIGINS=http://localhost:5174
 ```
+
+Si cambia alguna de estas dos variables, aplique el cambio con `docker compose up -d pdp`.
 
 El archivo `.env` se crea manualmente por cada equipo y es local: no se debe subir al repositorio de su aplicación si contiene valores propios del entorno.
 
@@ -363,6 +370,16 @@ docker compose logs -f pdp pep keycloak
 ```
 
 ## 11. Actualizar a una nueva versión
+
+### Qué cambia al pasar de 0.1.8 a 0.1.9
+
+No se retiró ni se renombró ningún endpoint, y el starter Java no cambia.
+
+| Cambio | Qué nota su aplicación | ¿Tiene que hacer algo? |
+|---|---|---|
+| El PDP se autentica contra SurrealDB con un token de sesión en lugar de usuario y contraseña en cada consulta | Las decisiones y las pantallas de seguridad responden mucho más rápido, y las ráfagas de peticiones simultáneas ya no se acercan al timeout del PEP (5 s) | No |
+| El `compose.yaml` pasa al PDP `PDP_CORS_ALLOWED_ORIGINS` y `PDP_LOGIN_ALLOWED_RETURN_ORIGINS` | Antes esas variables del `.env` no llegaban al PDP y hacía falta un override; los valores por defecto no cambian | Si su frontend no está en 5173/5174, agregue su origen a las dos variables en `.env`. Si usaba un override para eso, puede quitarlo |
+| Redis queda fijo en `7.4.12-alpine` | Nada: es la misma versión que traía el tag flotante | No |
 
 ### Qué cambia al pasar de 0.1.7 a 0.1.8
 

@@ -126,6 +126,38 @@ nadie actualizara este archivo — la brecha que motivó la regla nueva.
 
 ---
 
+## Latencia del PDP por autenticación básica contra SurrealDB (2026-11-02, versión 0.1.9)
+
+Asistencias UCO reportó con 0.1.8 ~650 ms por decisión (0.1.7: ~405 ms) y `503` del PEP cuando su panel
+lanzaba ráfagas: algunas decisiones superaban el timeout PEP→PDP de 5 s. La CPU del PDP estaba en reposo:
+el tiempo se iba esperando.
+
+**Causa.** `SurrealDbConfiguration` enviaba usuario y contraseña (autenticación básica) en cada consulta, y
+SurrealDB verifica esa contraseña con Argon2 en cada petición: **~70 ms por consulta**, frente a 4–5 ms con un
+token de sesión (medido contra SurrealDB v3.3.0 desde la red del stack). Con 10 consultas simultáneas cada una
+subía a ~200 ms. Una petición del PDP hace varias consultas seguidas, así que ese costo dominaba toda la
+latencia. Ya existía en 0.1.7; 0.1.8 lo agravó porque HU-038 hizo que el canal Bearer resuelva identidad y
+roles (antes se los saltaba y respondía siempre `DENY`): más consultas por decisión.
+
+**Arreglo.** `SurrealTokenAuthentication` (filtro del `WebClient`): `/signin` una vez, token reutilizado hasta
+un minuto antes de su `exp` (SurrealDB v3 lo emite por 60 min), un solo inicio de sesión compartido entre
+peticiones simultáneas y un único reintento ante `401`. 8 pruebas en `SurrealTokenAuthenticationTests`; las
+pruebas HTTP con contexto completo ya lo ejercitan contra SurrealDB real.
+
+**Benchmark** (stack de la distribución, canal Bearer, mismos datos y script; p50 / p95):
+
+| Prueba | 0.1.8 | 0.1.9 |
+|---|---|---|
+| `POST /api/v1/authorize` en serie | 319 / 438 ms | 72 / 88 ms |
+| `GET …/security/summary` en serie | 513 / 772 ms | 54 / 65 ms |
+| `GET /api/v1/session` en serie | 92 / 105 ms | 22 / 29 ms |
+| Ráfaga de 20 simultáneas | 1077 / 1535 ms | 231 / 358 ms |
+| Ráfaga de 50 simultáneas | 2217 / 3478 ms (máx. 3752) | 484 / 750 ms (máx. 836) |
+
+En el mismo corte: el `compose.yaml` de la distribución pasa por fin `PDP_CORS_ALLOWED_ORIGINS` y
+`PDP_LOGIN_ALLOWED_RETURN_ORIGINS` (antes no llegaban al PDP y cada equipo necesitaba un override) y Redis
+queda fijo en `7.4.12-alpine`.
+
 ## Un bug de producción encontrado fuera del flujo de historias (2026-09-13)
 
 Verificando `develop` tras fusionar HU-015 (`clean verify`, no `-Rapido`: el único que corre
