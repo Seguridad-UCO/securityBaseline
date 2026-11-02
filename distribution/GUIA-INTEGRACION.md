@@ -40,7 +40,7 @@ cd security-baseline-local
 
 # Sustituya <VERSION> por la versión publicada, por ejemplo 0.1.8.
 curl -LO https://github.com/Seguridad-UCO/securityBaseline/releases/download/v<VERSION>/compose.yaml
-curl -Lo .env https://github.com/Seguridad-UCO/securityBaseline/releases/download/v<VERSION>/.env.example
+curl -Lo .env https://github.com/Seguridad-UCO/securityBaseline/releases/download/v<VERSION>/default.env.example
 ```
 
 ### Windows PowerShell
@@ -51,7 +51,7 @@ cd security-baseline-local
 
 # Sustituya <VERSION> por la versión publicada, por ejemplo 0.1.8.
 Invoke-WebRequest https://github.com/Seguridad-UCO/securityBaseline/releases/download/v<VERSION>/compose.yaml -OutFile compose.yaml
-Invoke-WebRequest https://github.com/Seguridad-UCO/securityBaseline/releases/download/v<VERSION>/.env.example -OutFile .env
+Invoke-WebRequest https://github.com/Seguridad-UCO/securityBaseline/releases/download/v<VERSION>/default.env.example -OutFile .env
 ```
 
 Abra el archivo `.env` que acaba de descargar y deje, como mínimo, esta configuración:
