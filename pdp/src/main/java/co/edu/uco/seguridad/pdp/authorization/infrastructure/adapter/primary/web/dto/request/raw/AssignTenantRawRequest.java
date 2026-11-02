@@ -1,4 +1,4 @@
-package co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.dto.request.raw;
+package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw;
 
 /**
  * Nivel uno de la estrategia de entrada en dos niveles. {@code userId} llega de la ruta, no del

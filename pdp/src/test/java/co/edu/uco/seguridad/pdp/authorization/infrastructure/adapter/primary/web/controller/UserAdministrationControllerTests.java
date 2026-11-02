@@ -1,7 +1,7 @@
-package co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.controller;
+package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.controller;
 
-import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.dto.request.raw.AssignTenantBodyRequest;
-import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.dto.response.UserWebResponse;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.AssignTenantBodyRequest;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.UserWebResponse;
 import co.edu.uco.seguridad.shared.web.CorrelationWebFilter;
 import co.edu.uco.seguridad.shared.web.RequestContext;
 import org.junit.jupiter.api.Test;
@@ -16,13 +16,13 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class UserControllerTests {
+class UserAdministrationControllerTests {
 
     @Test
     void list_delegates_to_the_interactor_and_replies_with_200() {
         UserWebResponse user = new UserWebResponse(UUID.randomUUID().toString(), "david@uco.edu", "David", "google",
                 "universidad-uco", Instant.now(), Instant.now());
-        UserController controller = new UserController(() -> Mono.just(List.of(user)), raw -> Mono.empty());
+        UserAdministrationController controller = new UserAdministrationController(() -> Mono.just(List.of(user)), raw -> Mono.empty());
         MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/api/v1/users").build());
         exchange.getAttributes().put(CorrelationWebFilter.CONTEXT_ATTRIBUTE, new RequestContext("req-1", "corr-1"));
 
@@ -37,7 +37,7 @@ class UserControllerTests {
         String id = UUID.randomUUID().toString();
         UserWebResponse updated = new UserWebResponse(id, "david@uco.edu", "David", "google",
                 "otra-universidad", Instant.now(), Instant.now());
-        UserController controller = new UserController(() -> Mono.empty(), raw -> {
+        UserAdministrationController controller = new UserAdministrationController(() -> Mono.empty(), raw -> {
             assertThat(raw.userId()).isEqualTo(id);
             assertThat(raw.tenantCode()).isEqualTo("otra-universidad");
             return Mono.just(updated);

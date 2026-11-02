@@ -10,4 +10,12 @@ public interface CredentialHasher {
     String hash(String plaintext);
 
     boolean matches(String plaintext, String hash);
+
+    /**
+     * Si un hash guardado está en un formato anterior y conviene reescribirlo tras una validación
+     * correcta (SU-02: BCrypt → SHA-256). Por omisión, nunca.
+     */
+    default boolean needsRehash(String hash) {
+        return false;
+    }
 }

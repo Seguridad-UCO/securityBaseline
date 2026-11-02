@@ -1,5 +1,18 @@
 package co.edu.uco.seguridad.pdp.authorization.infrastructure.config;
 
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerUserListingUseCase;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.AdministerUserTenantAssignmentUseCase;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.impl.AdministerUserListingUseCaseImpl;
+import co.edu.uco.seguridad.pdp.authorization.application.usecase.impl.AdministerUserTenantAssignmentUseCaseImpl;
+import co.edu.uco.seguridad.pdp.authorization.domain.rule.UserTenantAssignmentMustStayInActorTenantRule;
+import co.edu.uco.seguridad.pdp.authorization.domain.rule.impl.UserTenantAssignmentMustStayInActorTenantRuleImpl;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.AdministerUserListingInteractor;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.AdministerUserTenantAssignmentInteractor;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.AdministerUserListingInteractorImpl;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.AdministerUserTenantAssignmentInteractorImpl;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.TenantActorResolver;
+import co.edu.uco.seguridad.pdp.identity.application.usecase.AssignTenantUseCase;
+import co.edu.uco.seguridad.pdp.identity.application.usecase.ListUsersUseCase;
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.*;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RemoveApplicationUseCase;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.RotateApplicationCredentialUseCase;
@@ -704,6 +717,44 @@ public class AuthorizationConfiguration {
             ApplicationOwnerLookupValidator ownerLookup, SubjectUserIdLookupValidator subjectUserIdLookup,
             AdministerApplicationAdministratorListUseCase useCase) {
         return new AdministerApplicationAdministratorListInteractorImpl(ownerLookup, subjectUserIdLookup, useCase);
+    }
+
+    // SU-01 — catálogo de usuarios gateado por actor de inquilino (ADR-036); nunca entre inquilinos.
+    @Bean
+    UserTenantAssignmentMustStayInActorTenantRule userTenantAssignmentMustStayInActorTenantRule() {
+        return new UserTenantAssignmentMustStayInActorTenantRuleImpl();
+    }
+
+    @Bean
+    AdministerUserListingUseCase administerUserListingUseCase(
+            PrincipalMustAdministerAtLeastOneApplicationValidator mustAdministerSomeApplication, ListUsersUseCase listUsers) {
+        return new AdministerUserListingUseCaseImpl(mustAdministerSomeApplication, listUsers);
+    }
+
+    @Bean
+    AdministerUserTenantAssignmentUseCase administerUserTenantAssignmentUseCase(
+            PrincipalMustAdministerAtLeastOneApplicationValidator mustAdministerSomeApplication, FindUserByIdUseCase users,
+            UserTenantAssignmentMustStayInActorTenantRule mustStayInActorTenant, AssignTenantUseCase assignTenant,
+            AdministrationAuditRepository audit, IdentifierGenerator identifiers, TimeProvider time) {
+        return new AdministerUserTenantAssignmentUseCaseImpl(mustAdministerSomeApplication, users, mustStayInActorTenant,
+                assignTenant, audit, identifiers, time);
+    }
+
+    @Bean
+    TenantActorResolver tenantActorResolver(SubjectUserIdLookupValidator subjectUserIdLookup) {
+        return new TenantActorResolver(subjectUserIdLookup);
+    }
+
+    @Bean
+    AdministerUserListingInteractor administerUserListingInteractor(AdministerUserListingUseCase useCase,
+                                                                    TenantActorResolver actors) {
+        return new AdministerUserListingInteractorImpl(useCase, actors);
+    }
+
+    @Bean
+    AdministerUserTenantAssignmentInteractor administerUserTenantAssignmentInteractor(
+            AdministerUserTenantAssignmentUseCase useCase, TenantActorResolver actors) {
+        return new AdministerUserTenantAssignmentInteractorImpl(useCase, actors);
     }
 
 }

@@ -1,4 +1,4 @@
-package co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.dto.response;
+package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response;
 
 import java.time.Instant;
 
