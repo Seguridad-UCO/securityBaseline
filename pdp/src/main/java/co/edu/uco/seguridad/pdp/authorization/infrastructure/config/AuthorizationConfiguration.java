@@ -35,6 +35,7 @@ import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.o
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.persistence.repository.SurrealAccessAuditRepository;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.persistence.repository.SurrealAdministrationAuditRepository;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.persistence.schema.SurrealAccessEventSchemaInitializer;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.persistence.schema.SurrealAdministrationEventSchemaInitializer;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.OpaAdministrationDecisionAdapter;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.OpaPolicyDecisionAdapter;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.properties.OpaProperties;
@@ -146,6 +147,11 @@ public class AuthorizationConfiguration {
     @Bean
     ApplicationRunner accessEventSchemaInitializer(SurrealDbClient client) {
         return new SurrealAccessEventSchemaInitializer(client);
+    }
+
+    @Bean
+    ApplicationRunner administrationEventSchemaInitializer(SurrealDbClient client) {
+        return new SurrealAdministrationEventSchemaInitializer(client);
     }
 
     @Bean

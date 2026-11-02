@@ -1,9 +1,12 @@
-# Checkpoint — actualización 2026-10-28
+# Checkpoint — actualización 2026-11-01
 
 Estado del trabajo para retomarlo en cualquier máquina. Se actualiza al cerrar cada tramo.
 
-> Para HU-027/028/029, este checkpoint histórico fue reconciliado con evidencia local reciente.
-> El estado por historia y las tareas para el validador están en
+> **Revalidación 2026-11-01**, sobre `develop` (`a358220`) más el cierre de HU-021: todo el backlog
+> HU-001 a HU-038 queda cerrado. HU-027 y HU-034 se confirmaron en ejecución (WAF bloqueando y reglas
+> con `correlationId` en Grafana). Lo que sigue está en «Lo siguiente», más abajo.
+>
+> Para el detalle histórico de HU-027/028/029, ver
 > [`workspace/HANDOFF-VALIDACION-HU-027-029.md`](workspace/HANDOFF-VALIDACION-HU-027-029.md).
 
 ---
@@ -30,60 +33,57 @@ Estado del trabajo para retomarlo en cualquier máquina. Se actualiza al cerrar 
 | HU-018          | Gatea `AssignRoleUseCase`/`RevokeAssignmentUseCase` (slice `assignments`) por administración de aplicación                                                                                                                                                                                                                                                                                                                                                              | ✅ — comiteada (`92585ab`), pendiente push (gate 2)                                                                                        |
 | HU-019          | Gatea `DefineProfileUseCase`/`AddRoleToProfileUseCase`/`AssignProfileUseCase`/`RevokeProfileAssignmentUseCase` por administración de aplicación                                                                                                                                                                                                                                                                                                                         | ✅ — comiteada (`92585ab`), pendiente push (gate 2)                                                                                        |
 | HU-020          | Autoservicio de administradores: agregar/quitar/listar administradores de aplicación por HTTP público, sin pasar por el canal interno mTLS                                                                                                                                                                                                                                                                                                                              | ✅ — validada, ver REPORTE-HU-020.md, pendiente commit/push (gate 2)                                                                       |
-| HU-021          | Auditoría de operaciones administrativas (`AdministrationEvent`, retrofit de 13 `Administer*UseCaseImpl`)                                                                                                                                                                                                                                                                                                                                                               | 🟡 — validación RECHAZADA (3 bloqueantes: persistencia SurrealDB y observabilidad Prometheus/logs sin implementar), ver REPORTE-HU-021.md |
+| HU-021          | Auditoría de operaciones administrativas (`AdministrationEvent`, retrofit de 13 `Administer*UseCaseImpl`) | ✅ — cerrada el 2026-11-01: persistencia SurrealDB real, inicializador de esquema y telemetría (`security.administration.events` + fallos visibles); ver nota en `PLAN-HU-021.md` §10 |
 | HU-022          | Revocación de tokens con Redis: `TokenRevocationPort`/`RedisTokenRevocationAdapter`, `RevocationAwareJwtDecoder` decora `internalEvidenceJwtDecoder` (canal interno PEP→PDP), efecto secundario automático desde `RevokeAssignmentUseCase`/`RemoveApplicationAdministratorUseCase`, fail-closed                                                                                                                                                                         | ✅ — validada, ver REPORTE-HU-022.md, pendiente commit/push (gate 2)                                                                       |
 | HU-023          | Caché distribuida de roles activos: `DistributedCachePort`/`RedisDistributedCachePort` (fail-open, TTL de respaldo), `ObservedDistributedCachePort` (métrica), lectura caché-aside en `ResolveActiveRolesUseCaseImpl`, invalidación desde los dos puntos raíz de escritura (`AssignRoleUseCase`/`RevokeAssignmentUseCase` — cubren las 7 rutas de mutación de HU-015 a HU-020 sin tocar `roles`/`profiles`)                                                             | ✅ — validada, ver REPORTE-HU-023.md, pendiente commit/push (gate 2)                                                                       |
 | HU-024          | MFA como step-up para operaciones administrativas: `AuthenticationContextEvidence`/`MfaEvidenceProperties` (`shared/security/mfa`), `MfaAwareApplicationAdministratorValidator` decora `PrincipalMustBeApplicationAdministratorValidator` en `AuthorizationConfiguration` (fail-closed mientras el realm de Keycloak no tenga MFA configurado), evidencia transportada desde el login (`OidcAuthenticationSuccessHandler`) hasta los 12 flujos administrativos gateados | ✅ — validada, ver REPORTE-HU-024.md, pendiente commit/push (gate 2)                                                                       |
-| HU-027          | WAF con Coraza y OWASP CRS v4 en contenedor edge delante del PDP: reglas, suites hurl, rate limiting por IP, healthcheck fail-closed y `/internal/*` en default-deny | 🟡 — parcial: criterios 1 (topología PDP), 2, 4, 6, 7, 9, 10 y 11 verificados; abiertos 3, 5 (HU-034), 8 (B1) y overlay PEP. Ver EVIDENCIA-HU-027.md |
+| HU-027          | WAF con Coraza y OWASP CRS v4 en contenedor edge delante del PDP: reglas, suites hurl, rate limiting por IP, healthcheck fail-closed y `/internal/*` en default-deny | ✅ — validada (2026-11-01, confirmada por el responsable en ejecución conjunta). Ver EVIDENCIA-HU-027.md |
 | HU-028          | Replanteada: cablear revocación en logout BFF y `DELETE /api/v1/session` para Bearer (ADR-034) | ✅ — validada, ver REPORTE-HU-028.md (revocación por cliente `azp`, canal bearer/cookie, entry point en bearer) |
 | HU-029          | Retiro del proxy `POST /api/v1/session/token/refresh` (ADR-033); cada cliente renueva con el suyo | ✅ — retirado el proxy; ver ADR-033 |
 | HU-030          | Renovación del token de la sesión BFF para el canal PEP (nueva) | ✅ — validada, ver REPORTE-HU-030.md |
 | HU-031          | El PEP propaga el `503` del canal BFF en vez de convertirlo en `401` (nueva) | ✅ — validada, ver REPORTE-HU-031.md (la suite del PEP conservaba un error heredado: resuelto en HU-032) |
 | HU-032          | Fronteras Modulith del PEP: `PepArchitectureTests` en verde sin relajar reglas (nueva; requiere ADR-035) | ✅ — validada, ver REPORTE-HU-032.md (ADR-035; `pep` verify 79 pruebas en verde) |
 | HU-033          | `MFA_REQUIRED` responde `403` y no `400` (ADR-031; nueva) | ✅ — validada, ver REPORTE-HU-033.md |
-| HU-034          | Observabilidad del WAF: bloqueos en Loki y Grafana con regla, ruta y `correlationId` (nueva; criterio 5 de HU-027) | ⏳ pendiente |
+| HU-034          | Observabilidad del WAF: bloqueos en Loki y Grafana con regla, ruta y `correlationId` (nueva; criterio 5 de HU-027) | ✅ — fusionada (PR #88) y confirmada en Grafana con `correlationId` (2026-11-01) |
 | HU-035          | Endurecer la carga masiva de roles y perfiles de `develop`: gate de administrador de la aplicación, contadores, `mode`, límites y cabeceras (nueva) | ✅ — validada, ver REPORTE-HU-035.md |
 | HU-036          | Quién puede crear y editar roles y perfiles de alcance TENANT: gate «administra al menos una aplicación del tenant» en las seis vías (individual, edición, PATCH/DELETE y masiva) (nueva) | ✅ — validada, ver REPORTE-HU-036.md (ADR-036; verify 1125 pruebas, consistencia y drift en verde) |
 | HU-037          | Canal bearer del microfrontend de seguridad: `getAccessToken` y `onError` para el host (ADR-031; nueva; repositorio `security-ui`) | ✅ — ver `workspace/HU-037.md` (28 pruebas Vitest, `tsc` limpio, `dist/` regenerado). Probado de punta a punta en navegador con un host real (Bearer, renovación y revocación; 2026-10-30) |
 | HU-038          | El canal Bearer aprovisiona la identidad local del usuario (criterio 5 de HU-026 sin cumplir; nueva, hallada por la E2E) | ✅ — validada, ver `workspace/HU-038.md`: un usuario que nunca entró al panel se aprovisiona sola por Bearer |
 
-**Estado verificado el 2026-09-15 (working tree, sobre `develop` + HU-018/HU-019 sin comitear):**
-`mvnw clean verify` → **675 pruebas, 0 fallos, 0 errores**, cobertura ≥ 50 % por paquete,
-`LayeredArchitectureTests`/`ModulithStructureTests` en verde, `consistencia.ps1` CONSISTENTE
-(8 slices), `drift.ps1` SIN DERIVA. Detalle completo, con lo que sigue pendiente por prioridad, en
-[`workspace/MAPA-PLATAFORMA-SEGURIDAD.md`](workspace/MAPA-PLATAFORMA-SEGURIDAD.md).
+**Estado verificado el 2026-11-01** (rama `feature/HU-021-cierre-auditoria-administrativa`, sobre
+`develop`): `verificar.ps1` (`mvnw clean verify`) → **1198 pruebas, 0 fallos,
+0 errores**, cobertura y arquitectura en verde, **sin Redis local y con el `OPENSSL_CONF` roto de esta
+máquina**; `consistencia.ps1` CONSISTENTE (8 slices); `drift.ps1` SIN DERIVA. Detalle de la plataforma
+en [`workspace/MAPA-PLATAFORMA-SEGURIDAD.md`](workspace/MAPA-PLATAFORMA-SEGURIDAD.md).
 
-**Lo siguiente:** backlog ordenado de 12 historias (HU-016 a HU-027) — ver
-`workspace/HU-016.md` a `workspace/HU-027.md` y `ADR-023` a `ADR-032` en
-`security-platform-architecture` (`docs/01-governance/adr/`). Reorganizado el 2026-09-13 al decidir
-que caché distribuida, revocación de tokens y MFA sí se construyen ahora (ya no "sin prioridad" —
-decisión explícita de Sebastián), y no solo se evalúan. **HU-016 a HU-020, HU-022, HU-023 y HU-024
-ya se cerraron** (filas arriba) — queda:
+Tres arreglos de la suite en el mismo corte, para que el verde no dependa de la máquina:
 
-1. **HU-021** — auditoría de operaciones administrativas (evento propio, no `AccessEvent`). Plan
-   aprobado, retrofit de los 13 casos de uso implementado y probado, **validación rechazada** —
-   falta implementar la persistencia real en SurrealDB (`SurrealAdministrationAuditRepository`,
-   `AdministrationEventEntity`/`Mapper`, `SurrealAdministrationEventSchemaInitializer`) y la
-   observabilidad (`ObservedAdministrationAuditRepository`, contador Prometheus + log estructurado).
-   Ver REPORTE-HU-021.md antes de retomarla — **no volver a planificar, solo terminar de implementar**.
+- **`/actuator/health` en `503` sin un Redis local.** Producción desactiva el indicador de Redis
+  (`management.health.redis.enabled=false`), pero el `application.properties` de pruebas reemplaza al
+  de producción entero y esa línea se perdía: `CorsConfigurationTests` y `SecurityWebFilterChainTests`
+  solo pasaban con un Redis en `localhost:6379`. Copiada la decisión al archivo de pruebas.
+- **`InternalSecurityChainIntegrationTests` dependía del orden.** `linkTestIdentity` se llama desde
+  `@BeforeAll`, antes de que exista el contexto de Spring de la clase, y suponía que otra clase ya había
+  creado el esquema; ejecutada sola fallaba con «Couldn't write to a read only transaction». Ahora corre
+  el inicializador real de identidad (idempotente) antes de escribir.
+- **`OPENSSL_CONF` huérfano.** La misma variable del bug de 2026-09-13 volvió a aparecer en esta máquina;
+  la prueba ahora la ignora si apunta a un archivo inexistente, en vez de fallar sin explicación.
 
-2. **HU-026** — canal bearer en el perfil `keycloak` (+ aprovisionamiento perezoso de identidad).
-   Nueva (2026-09-18), del lado del PDP, ciclo normal del harness. Deriva de `ADR-031`. Hoy el perfil
-   real solo acepta sesión BFF por cookie: ningún cliente de otro origen puede hablar con `/api/v1/**`.
-   Ver `workspace/HU-026.md`.
+**Lo siguiente** (ya no queda ninguna historia abierta del backlog HU-001 a HU-038):
 
-3. **HU-025** — PoC del microfrontend de seguridad. Nueva (2026-09-18). **No se implementa en este
-   repositorio**: vive en un repo nuevo `security-ui` (Vue 3 + Vite) más tres hosts de prueba, y se
-   ejecuta a mano — el harness está afinado para el backend Java. Depende de HU-026. Deriva de
-   `ADR-029` (aislamiento por Shadow DOM y design tokens), `ADR-030` (contrato de montaje agnóstico de
-   framework; Module Federation y ESM como canales) y `ADR-031` (el host provee el bearer).
-   Ver `workspace/HU-025.md`.
-
-4. **HU-027** — edge con WAF (OWASP CRS) delante del PEP y del PDP. Nueva (2026-09-20), deriva de
-   `ADR-032`. **Independiente de todo lo anterior** — protege lo que ya está desplegado hoy. No toca
-   código Java: topología Compose, pila de observabilidad, despliegue a Azure (sidecar en App
-   Service, a validar) y las primeras filas reales de `threat-model.md`. El paso que importa no es
-   instalar el WAF sino llevarlo de detección a bloqueo con exclusiones probadas. Ver `workspace/HU-027.md`.
+1. **Integrar MessageUcoLab, el componente de mensajes del semillero.** Guía, rutas y paquete local en
+   `security-platform-architecture/docs/03-architecture/integrations/messageucolab/`. Tiene dos caras:
+   proteger a MessageUcoLab como aplicación detrás del PEP (la guía ya lo cubre con lo que existe) y
+   consumirlo desde el PDP, la consola y `security-ui` para sacar los textos del código. El README de
+   esa carpeta lista las cuatro decisiones previas a planificar (qué catálogos migran, disponibilidad
+   con `MessageFallbackPort`, dependencia circular, correspondencia `code` ↔ `MSG_…`).
+2. **Autorización entre aplicaciones.** La guía de MessageUcoLab deja su lectura pública «mientras
+   seguridad habilita la autorización entre aplicaciones»: es una brecha nuestra que ya tiene un
+   consumidor esperando.
+3. **HU-025 / PD-16.** El componente de `security-ui` existe y funciona en un host real (HU-037); falta
+   la PoC con los tres hosts hostiles y, con ella, cerrar el modelo de marca.
+4. **Política de aplicación real en OPA** (`security-policy-engine/`, Laura) — sigue siendo lo que
+   impide el primer `ALLOW` de negocio.
 
 **Microfrontend de seguridad — desbloqueado por decisión (2026-09-18).** Era el ítem P3 del mapa
 ("bloqueado por decisión y por arrancar el proyecto"). Se evaluó la hipótesis del equipo —fijar una
