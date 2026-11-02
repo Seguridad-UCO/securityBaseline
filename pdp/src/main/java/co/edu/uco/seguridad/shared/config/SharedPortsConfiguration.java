@@ -4,9 +4,9 @@ import co.edu.uco.seguridad.shared.port.CredentialHasher;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
 import co.edu.uco.seguridad.shared.port.SecretGenerator;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
+import co.edu.uco.seguridad.shared.security.Sha256CredentialHasher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.security.SecureRandom;
 import java.time.Clock;
@@ -43,19 +43,9 @@ class SharedPortsConfiguration {
         };
     }
 
+    // SU-02 — SHA-256 para secretos de 256 bits; acepta y migra los BCrypt existentes.
     @Bean
     CredentialHasher credentialHasher() {
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        return new CredentialHasher() {
-            @Override
-            public String hash(String plaintext) {
-                return encoder.encode(plaintext);
-            }
-
-            @Override
-            public boolean matches(String plaintext, String hash) {
-                return encoder.matches(plaintext, hash);
-            }
-        };
+        return new Sha256CredentialHasher();
     }
 }

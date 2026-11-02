@@ -1,16 +1,21 @@
-package co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.controller;
+package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.controller;
 
-import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.dto.request.raw.AssignTenantBodyRequest;
-import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.dto.request.raw.AssignTenantRawRequest;
-import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.dto.response.UserWebResponse;
-import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.interactor.AssignTenantInteractor;
-import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.interactor.ListUsersInteractor;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.AssignTenantBodyRequest;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.AssignTenantRawRequest;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.UserWebResponse;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.AdministerUserTenantAssignmentInteractor;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.AdministerUserListingInteractor;
 import co.edu.uco.seguridad.shared.web.ApiResponse;
 import co.edu.uco.seguridad.shared.web.CorrelationWebFilter;
 import co.edu.uco.seguridad.shared.web.RequestContext;
 import co.edu.uco.seguridad.shared.web.message.WebContractMessages;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -18,16 +23,18 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Adaptador primario del catálogo de usuarios. Operación administrativa.
+ * Adaptador primario del catálogo de usuarios (SU-01). Vive en {@code authorization} porque las dos
+ * operaciones son administrativas y se gatean aquí: solo un actor de inquilino (ADR-036) lista los
+ * usuarios de su inquilino o reasigna uno, y nunca hacia otro inquilino.
  */
 @RestController
 @RequestMapping("/api/v1/users")
-final class UserController {
+final class UserAdministrationController {
 
-    private final ListUsersInteractor listInteractor;
-    private final AssignTenantInteractor assignInteractor;
+    private final AdministerUserListingInteractor listInteractor;
+    private final AdministerUserTenantAssignmentInteractor assignInteractor;
 
-    UserController(ListUsersInteractor listInteractor, AssignTenantInteractor assignInteractor) {
+    UserAdministrationController(AdministerUserListingInteractor listInteractor, AdministerUserTenantAssignmentInteractor assignInteractor) {
         this.listInteractor = Objects.requireNonNull(listInteractor);
         this.assignInteractor = Objects.requireNonNull(assignInteractor);
     }
