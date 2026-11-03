@@ -4,8 +4,11 @@ package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.we
  * Ruta y parámetros crudos comunes de una colección de seguridad por aplicación.
  */
 public record ListApplicationSecurityRawRequest(String applicationId, String page, String size, String offset,
-                                                String limit, String query) {
+                                                String limit, String query, String method) {
     public ListApplicationSecurityRawRequest(String applicationId, String page, String size, String offset, String limit) {
-        this(applicationId, page, size, offset, limit, null);
+        this(applicationId, page, size, offset, limit, null, null);
+    }
+    public ListApplicationSecurityRawRequest(String applicationId, String page, String size, String offset, String limit, String query) {
+        this(applicationId, page, size, offset, limit, query, null);
     }
 }

@@ -66,9 +66,9 @@ final class ApplicationSecurityController {
     Mono<ResponseEntity<ApiResponse<PageResponse<ApplicationSecurityResourceWebResponse>>>> resources(
             @PathVariable String applicationId, @RequestParam(required = false) String page,
             @RequestParam(required = false) String size, @RequestParam(required = false) String offset,
-            @RequestParam(required = false) String limit, @RequestParam(required = false) String query,
+            @RequestParam(required = false) String limit, @RequestParam(required = false) String query, @RequestParam(required = false) String method,
             ServerWebExchange exchange) {
-        return resources.execute(pageRequest(applicationId, page, size, offset, limit, query))
+        return resources.execute(new ListApplicationSecurityRawRequest(applicationId, page, size, offset, limit, query, method))
                 .map(data -> ok("APPLICATION_SECURITY_RESOURCES_LISTED", data, exchange));
     }
 
