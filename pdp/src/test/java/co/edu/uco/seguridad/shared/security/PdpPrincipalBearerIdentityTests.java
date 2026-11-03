@@ -11,7 +11,9 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/** HU-038: {@code PdpPrincipal.from(Jwt)} lee el claim interno que sella el decoder Bearer. */
+/**
+ * HU-038: {@code PdpPrincipal.from(Jwt)} lee el claim interno que sella el decoder Bearer.
+ */
 class PdpPrincipalBearerIdentityTests {
 
     private static final UUID USER = UUID.fromString("11111111-1111-1111-1111-111111111111");

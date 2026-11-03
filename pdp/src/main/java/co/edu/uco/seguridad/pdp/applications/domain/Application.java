@@ -10,8 +10,8 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.time.Instant;
 import java.util.EnumSet;
-import java.util.Set;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Entidad de aplicación: Java puro, inmutable, sin setters ni anotaciones de framework.

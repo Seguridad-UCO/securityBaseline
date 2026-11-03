@@ -1,7 +1,7 @@
 package co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.mapper;
 
-import co.edu.uco.seguridad.pdp.assignments.application.primaryport.request.RegisterApplicationWithFirstAdministratorRequest;
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationEnvironment;
+import co.edu.uco.seguridad.pdp.assignments.application.primaryport.request.RegisterApplicationWithFirstAdministratorRequest;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.dto.request.raw.RegisterApplicationWithFirstAdministratorRawRequest;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.commons.model.UserId;
@@ -9,8 +9,8 @@ import co.edu.uco.seguridad.shared.web.exception.MalformedRequestFieldException;
 import co.edu.uco.seguridad.shared.web.exception.MissingRequestFieldException;
 import org.junit.jupiter.api.Test;
 
-import java.util.UUID;
 import java.util.EnumSet;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

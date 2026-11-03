@@ -169,8 +169,8 @@ sitio.
 - **Campos:** `id`, `userId`, `tenantId`, `applicationId`, `profileId`, `generatedAssignmentIds`
   (lista de String), `validFrom`, `validUntil` — plano.
 - **Consultas nuevas en el puerto `ProfileAssignmentRepository`:**
-    -
-    `Mono<Boolean> existsActiveByUserApplicationProfile(UserId userId, ApplicationId applicationId, ProfileId profileId, Instant now)`
+  -
+  `Mono<Boolean> existsActiveByUserApplicationProfile(UserId userId, ApplicationId applicationId, ProfileId profileId, Instant now)`
     - `Mono<ProfileAssignment> findByIdForTenant(ProfileAssignmentId id, TenantId tenantId)`
     - `Mono<ProfileAssignment> save(ProfileAssignment profileAssignment)`
 - **Índice:** ninguno nuevo obligatorio — la tabla es pequeña y se consulta por id o por la tripleta

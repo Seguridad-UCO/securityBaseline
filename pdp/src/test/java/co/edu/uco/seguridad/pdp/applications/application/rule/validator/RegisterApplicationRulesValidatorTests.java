@@ -5,9 +5,9 @@ import co.edu.uco.seguridad.pdp.applications.application.rule.validator.impl.Reg
 import co.edu.uco.seguridad.pdp.applications.application.secondaryport.repository.ApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
 import co.edu.uco.seguridad.pdp.applications.domain.ApplicationCriteria;
+import co.edu.uco.seguridad.pdp.applications.domain.exception.ApplicationWithoutEnabledEnvironmentException;
 import co.edu.uco.seguridad.pdp.applications.domain.exception.DuplicateApplicationException;
 import co.edu.uco.seguridad.pdp.applications.domain.exception.ReservedApplicationNameException;
-import co.edu.uco.seguridad.pdp.applications.domain.exception.ApplicationWithoutEnabledEnvironmentException;
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationMustHaveAtLeastOneEnabledEnvironmentRuleImpl;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationNameMustBeUniqueForTenantRuleImpl;

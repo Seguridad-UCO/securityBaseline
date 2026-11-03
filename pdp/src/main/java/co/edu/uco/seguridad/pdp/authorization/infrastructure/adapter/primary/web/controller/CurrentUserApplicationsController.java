@@ -16,7 +16,10 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/api/v1/me/applications")
 final class CurrentUserApplicationsController {
     private final ReadCurrentUserApplicationsInteractor interactor;
-    CurrentUserApplicationsController(ReadCurrentUserApplicationsInteractor interactor) { this.interactor = interactor; }
+
+    CurrentUserApplicationsController(ReadCurrentUserApplicationsInteractor interactor) {
+        this.interactor = interactor;
+    }
 
     @GetMapping
     Mono<ResponseEntity<ApiResponse<CurrentUserApplicationsWebResponse>>> list(ServerWebExchange exchange) {

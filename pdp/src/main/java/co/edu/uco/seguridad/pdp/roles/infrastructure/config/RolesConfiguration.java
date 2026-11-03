@@ -114,6 +114,11 @@ public class RolesConfiguration {
     }
 
     @Bean
+    FindRoleForTenantUseCase findRoleForTenantUseCase(RoleRepository repository) {
+        return new FindRoleForTenantUseCaseImpl(repository);
+    }
+
+    @Bean
     UpdateRoleUseCase updateRoleUseCase(RoleRepository repository) {
         return new UpdateRoleUseCaseImpl(repository);
     }

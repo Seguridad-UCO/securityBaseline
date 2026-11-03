@@ -98,7 +98,7 @@ class BffSessionTokenResolverTests {
     @Test
     void maps_a_pdp_401_with_www_authenticate_to_unauthenticated_token_invalid() {
         StepVerifier.create(resolver(request -> Mono.just(ClientResponse.create(HttpStatus.UNAUTHORIZED)
-                                .header(HttpHeaders.WWW_AUTHENTICATE, "Bearer").build()))
+                        .header(HttpHeaders.WWW_AUTHENTICATE, "Bearer").build()))
                         .resolve(exchange(COOKIE)))
                 .expectErrorSatisfies(error -> assertFailure(error, EnforcementFailure.Kind.UNAUTHENTICATED, "TOKEN_INVALID"))
                 .verify();
@@ -148,7 +148,7 @@ class BffSessionTokenResolverTests {
     @Test
     void fails_closed_when_a_200_has_an_empty_body() {
         StepVerifier.create(resolver(request -> Mono.just(ClientResponse.create(HttpStatus.OK)
-                                .header(HttpHeaders.CONTENT_TYPE, "application/json").build()))
+                        .header(HttpHeaders.CONTENT_TYPE, "application/json").build()))
                         .resolve(exchange(COOKIE)))
                 .expectErrorSatisfies(error -> assertFailure(error, EnforcementFailure.Kind.UNAVAILABLE, "BFF_SESSION_UNAVAILABLE"))
                 .verify();

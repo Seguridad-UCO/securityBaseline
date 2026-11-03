@@ -8,7 +8,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/** Asignaciones vigentes del sujeto, conservando su aplicación y origen. */
+/**
+ * Asignaciones vigentes del sujeto, conservando su aplicación y origen.
+ */
 public record UserApplicationAssignmentsResponse(Map<ApplicationId, ApplicationAssignments> assignmentsByApplication) {
     public UserApplicationAssignmentsResponse {
         assignmentsByApplication = assignmentsByApplication.entrySet().stream()

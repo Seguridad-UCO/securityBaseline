@@ -11,9 +11,12 @@ import java.util.Objects;
 public final class FindTenantNameByCodeUseCaseImpl implements FindTenantNameByCodeUseCase {
     private final TenantRepository tenants;
 
-    public FindTenantNameByCodeUseCaseImpl(TenantRepository tenants) { this.tenants = Objects.requireNonNull(tenants); }
+    public FindTenantNameByCodeUseCaseImpl(TenantRepository tenants) {
+        this.tenants = Objects.requireNonNull(tenants);
+    }
 
-    @Override public Mono<TenantNameResponse> execute(TenantId tenantId) {
+    @Override
+    public Mono<TenantNameResponse> execute(TenantId tenantId) {
         return tenants.findById(tenantId).map(tenant -> new TenantNameResponse(tenant.name().value()));
     }
 }

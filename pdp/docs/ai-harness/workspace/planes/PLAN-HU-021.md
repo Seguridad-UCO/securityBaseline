@@ -228,14 +228,28 @@ prueba, precisamente porque toca 15 clases ya existentes en vez de construir una
 
 ## 10. Trazabilidad
 
-| Fase                       | Estado                                         | Fecha      |
-|----------------------------|------------------------------------------------|------------|
-| Plan                       | ✅ Generado                                     | 2026-09-15 |
-| Contrato aprobado (gate 1) | ✅ Aprobado                                     | 2026-09-15 |
-| Pruebas en rojo            | ✅ Confirmado (dos pasadas de `2-tester-spec`)  | 2026-09-15 |
-| Implementación en verde    | ⚠️ Verde en pruebas, incompleta contra el plan | 2026-09-15 |
-| Validación                 | ⛔ RECHAZADO — ver REPORTE-HU-021.md            | 2026-09-15 |
-| Entrega (gate 2)           | ⏳ Bloqueada hasta corregir los 3 bloqueantes   |            |
+| Fase                       | Estado                                                                                    | Fecha      |
+|----------------------------|-------------------------------------------------------------------------------------------|------------|
+| Plan                       | ✅ Generado                                                                                | 2026-09-15 |
+| Contrato aprobado (gate 1) | ✅ Aprobado                                                                                | 2026-09-15 |
+| Pruebas en rojo            | ✅ Confirmado (dos pasadas de `2-tester-spec`)                                             | 2026-09-15 |
+| Implementación en verde    | ⚠️ Verde en pruebas, incompleta contra el plan                                            | 2026-09-15 |
+| Validación                 | ⛔ RECHAZADO — ver REPORTE-HU-021.md                                                       | 2026-09-15 |
+| Bloqueantes corregidos     | ✅ Persistencia SurrealDB real, observabilidad e inicializador de esquema — ver nota abajo | 2026-11-01 |
+| Entrega (gate 2)           | ⏳ PR `feature/HU-021-cierre-auditoria-administrativa`                                     |            |
+
+**Cierre (2026-11-01).** Los tres bloqueantes de REPORTE-HU-021.md quedan resueltos sin tocar el
+retrofit de los 13 casos de uso: `AdministrationEventEntity`, `AdministrationEventPersistenceMapper`,
+`SurrealAdministrationEventSchemaInitializer` (cableado en `AuthorizationConfiguration`), el SurrealQL
+real de `SurrealAdministrationAuditRepository` y el contador `security.administration.events`
+(`operation`/`outcome`) con log estructurado en `ObservedAdministrationAuditRepository`. Añadido sobre
+el plan: como los casos de uso absorben el fallo de auditoría (best-effort, §0), el decorador cuenta
+`security.administration.audit.failures` y deja un `WARN` estructurado — sin eso un fallo de
+persistencia volvía a ser invisible, que fue exactamente lo que ocultó el esqueleto durante
+semanas. Pruebas: `ObservedAdministrationAuditRepositoryTests` (4) y dos casos nuevos en
+`SurrealRepositoryIntegrationTests` contra SurrealDB real. Observación que queda abierta, no
+bloqueante: el `correlationId` del evento es su propio `eventId`, no el de la petición HTTP — la
+evidencia no se puede cruzar todavía con el `correlationId` del WAF/PEP.
 
 ## 11. Ambigüedades pendientes
 

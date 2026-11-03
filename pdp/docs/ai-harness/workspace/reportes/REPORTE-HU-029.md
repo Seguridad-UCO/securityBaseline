@@ -15,17 +15,17 @@ clases aún inexistentes.
 
 ## Criterios
 
-| # | Criterio | Resultado | Evidencia |
-|---|---|---|---|
-| A1 | No queda `TokenRefresh*` / `refreshSessionToken` | ✅ | `grep` en `pdp/src`, `securityBaseline-vue/src`, `security-ui/src`: sin coincidencias |
-| A2 | La ruta solo existe como constante de prueba | ✅ | única aparición: `SecurityWebFilterChainTests` |
-| A3 | Ningún controlador expuesto canjea `grant_type=refresh_token` | ✅ | `refresh_token` en `src/main` solo dentro del cliente OIDC del login y el almacén (HU-030) |
-| A4 | Ruta autenticada → 404 `RESOURCE_NOT_FOUND`; anónima → 401 `UNAUTHORIZED` | ✅ | `SecurityWebFilterChainTests`, 12 pruebas, 0 fallos (guardas de regresión: el controlador era `@Profile("keycloak")` y las pruebas corren en el perfil por defecto) |
-| A5 | El panel Vue no llama a la ruta; keepalive = `GET /api/v1/session` | ✅ | `useInactivityTracker.ts` → `refreshSession()` |
-| A6 | Typecheck del Vue | ✅ | `npm run typecheck` (vue-tsc), exit 0 |
-| A9 | `consistencia.ps1` y `drift.ps1` limpios | ✅ | CONSISTENTE; SIN DERIVA (2 clases retiradas declaradas en `drift-ignore.txt`) |
-| A10 | `verificar.ps1` completo en verde | ✅ | `mvnw clean verify`: **837 pruebas, 0 fallos, 0 errores**, JaCoCo ≥ 50 % por paquete |
-| A11 | `PROJECT-MAP.md` sin referencias | ✅ | regenerado con `mapa.ps1`; sin `TokenRefresh` |
+| #   | Criterio                                                                  | Resultado | Evidencia                                                                                                                                                           |
+|-----|---------------------------------------------------------------------------|-----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| A1  | No queda `TokenRefresh*` / `refreshSessionToken`                          | ✅         | `grep` en `pdp/src`, `securityBaseline-vue/src`, `security-ui/src`: sin coincidencias                                                                               |
+| A2  | La ruta solo existe como constante de prueba                              | ✅         | única aparición: `SecurityWebFilterChainTests`                                                                                                                      |
+| A3  | Ningún controlador expuesto canjea `grant_type=refresh_token`             | ✅         | `refresh_token` en `src/main` solo dentro del cliente OIDC del login y el almacén (HU-030)                                                                          |
+| A4  | Ruta autenticada → 404 `RESOURCE_NOT_FOUND`; anónima → 401 `UNAUTHORIZED` | ✅         | `SecurityWebFilterChainTests`, 12 pruebas, 0 fallos (guardas de regresión: el controlador era `@Profile("keycloak")` y las pruebas corren en el perfil por defecto) |
+| A5  | El panel Vue no llama a la ruta; keepalive = `GET /api/v1/session`        | ✅         | `useInactivityTracker.ts` → `refreshSession()`                                                                                                                      |
+| A6  | Typecheck del Vue                                                         | ✅         | `npm run typecheck` (vue-tsc), exit 0                                                                                                                               |
+| A9  | `consistencia.ps1` y `drift.ps1` limpios                                  | ✅         | CONSISTENTE; SIN DERIVA (2 clases retiradas declaradas en `drift-ignore.txt`)                                                                                       |
+| A10 | `verificar.ps1` completo en verde                                         | ✅         | `mvnw clean verify`: **837 pruebas, 0 fallos, 0 errores**, JaCoCo ≥ 50 % por paquete                                                                                |
+| A11 | `PROJECT-MAP.md` sin referencias                                          | ✅         | regenerado con `mapa.ps1`; sin `TokenRefresh`                                                                                                                       |
 
 ## No ejecutado (honesto)
 

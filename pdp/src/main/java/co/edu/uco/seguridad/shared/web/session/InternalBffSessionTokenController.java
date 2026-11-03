@@ -1,5 +1,9 @@
 package co.edu.uco.seguridad.shared.web.session;
 
+import co.edu.uco.seguridad.shared.auth.model.BffSessionExpiredException;
+import co.edu.uco.seguridad.shared.auth.model.TokenRenewalUnavailableException;
+import co.edu.uco.seguridad.shared.auth.service.BffSessionTokenRenewer;
+import co.edu.uco.seguridad.shared.security.LocalUserPrincipal;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -7,10 +11,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.web.server.context.WebSessionServerSecurityContextRepository;
-import co.edu.uco.seguridad.shared.auth.model.BffSessionExpiredException;
-import co.edu.uco.seguridad.shared.auth.model.TokenRenewalUnavailableException;
-import co.edu.uco.seguridad.shared.auth.service.BffSessionTokenRenewer;
-import co.edu.uco.seguridad.shared.security.LocalUserPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

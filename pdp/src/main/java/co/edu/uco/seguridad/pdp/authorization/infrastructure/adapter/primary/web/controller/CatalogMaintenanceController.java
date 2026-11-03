@@ -1,8 +1,8 @@
 package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.controller;
 
 import co.edu.uco.seguridad.pdp.applications.application.primaryport.request.UpdateApplicationRequest;
-import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationEnvironment;
 import co.edu.uco.seguridad.pdp.applications.application.usecase.UpdateApplicationUseCase;
+import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationEnvironment;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.ProfileDeletionDependencyValidator;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.AdministrationRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.TenantAdministrationRequest;
@@ -151,7 +151,9 @@ final class CatalogMaintenanceController {
                 .flatMap(u -> administrator.execute(new AdministrationRequest(p.tenantId(), app, u, p.subject(), Set.of(), p.authenticationContext())));
     }
 
-    /** Alcance {@code APPLICATION} ⇒ gate de esa aplicación; {@code TENANT} (sin aplicación) ⇒ actor de inquilino. */
+    /**
+     * Alcance {@code APPLICATION} ⇒ gate de esa aplicación; {@code TENANT} (sin aplicación) ⇒ actor de inquilino.
+     */
     private Mono<Void> gateCatalog(PdpPrincipal p, Optional<ApplicationId> app) {
         return app.map(a -> gate(p, a)).orElseGet(() -> gateTenant(p));
     }
@@ -162,7 +164,9 @@ final class CatalogMaintenanceController {
                 .then();
     }
 
-    /** Fail-closed: sin {@code UserId} resoluble no hay gate que evaluar, así que se deniega con {@code unresolvable}. */
+    /**
+     * Fail-closed: sin {@code UserId} resoluble no hay gate que evaluar, así que se deniega con {@code unresolvable}.
+     */
     private Mono<UserId> user(PdpPrincipal p, Supplier<? extends Throwable> unresolvable) {
         return p.userId().map(Mono::just).orElseGet(() -> users.execute(p.subject()))
                 .switchIfEmpty(Mono.error(unresolvable));

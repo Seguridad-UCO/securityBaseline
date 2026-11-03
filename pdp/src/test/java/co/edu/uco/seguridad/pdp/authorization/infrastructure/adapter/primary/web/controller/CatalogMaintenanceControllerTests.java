@@ -6,12 +6,7 @@ import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.Princip
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.PrincipalMustBeApplicationAdministratorValidator;
 import co.edu.uco.seguridad.pdp.authorization.domain.exception.NotAuthorizedToAdministerException;
 import co.edu.uco.seguridad.pdp.authorization.domain.exception.NotAuthorizedToAdministerTenantCatalogException;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.ProfileId;
-import co.edu.uco.seguridad.pdp.commons.model.ResourceId;
-import co.edu.uco.seguridad.pdp.commons.model.RoleId;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
-import co.edu.uco.seguridad.pdp.commons.model.UserId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserIdLookupValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.primaryport.response.ProfileResponse;
 import co.edu.uco.seguridad.pdp.profiles.domain.exception.ProfileNotFoundException;
@@ -31,11 +26,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -68,7 +59,9 @@ class CatalogMaintenanceControllerTests {
 
     private final List<AdministrationRequest> applicationGateCalls = new ArrayList<>();
     private final List<TenantAdministrationRequest> tenantGateCalls = new ArrayList<>();
-    /** Lo que se llegó a suscribir de las escrituras (y de las comprobaciones de dependencias que las preceden). */
+    /**
+     * Lo que se llegó a suscribir de las escrituras (y de las comprobaciones de dependencias que las preceden).
+     */
     private final List<String> writes = new ArrayList<>();
 
     private Mono<UserId> userLookup = Mono.just(USER);
@@ -365,10 +358,10 @@ class CatalogMaintenanceControllerTests {
         String application = APPLICATION.value().toString();
 
         authenticated(controller.updateApplication(application, new CatalogMaintenanceController.ApplicationPatch(
-                        "App Uno", "descripcion", "https://app.example.com", null), exchange()))
+                "App Uno", "descripcion", "https://app.example.com", null), exchange()))
                 .expectError(NotAuthorizedToAdministerException.class).verify();
         authenticated(controller.updateResource(application, RESOURCE.value().toString(),
-                        new CatalogMaintenanceController.ResourcePatch("/api/orders", "GET"), exchange()))
+                new CatalogMaintenanceController.ResourcePatch("/api/orders", "GET"), exchange()))
                 .expectError(NotAuthorizedToAdministerException.class).verify();
         authenticated(controller.deleteResource(application, RESOURCE.value().toString(), exchange()))
                 .expectError(NotAuthorizedToAdministerException.class).verify();

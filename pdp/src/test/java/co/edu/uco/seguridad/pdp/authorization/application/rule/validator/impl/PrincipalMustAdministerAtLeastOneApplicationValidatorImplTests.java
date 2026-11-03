@@ -19,13 +19,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 import reactor.test.StepVerifier;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -55,7 +49,9 @@ class PrincipalMustAdministerAtLeastOneApplicationValidatorImplTests {
     private final List<ResolveUserApplicationsRequest> resolutions = new ArrayList<>();
     private final List<AdministrationRequest> gateCalls = new ArrayList<>();
 
-    /** El sujeto tiene asignaciones en {@code applications}, insertadas en el orden dado (el mapa no lo conserva). */
+    /**
+     * El sujeto tiene asignaciones en {@code applications}, insertadas en el orden dado (el mapa no lo conserva).
+     */
     private ResolveUserApplicationsUseCase assignedTo(ApplicationId... applications) {
         Map<ApplicationId, ApplicationAssignments> byApplication = new LinkedHashMap<>();
         for (ApplicationId application : applications) {

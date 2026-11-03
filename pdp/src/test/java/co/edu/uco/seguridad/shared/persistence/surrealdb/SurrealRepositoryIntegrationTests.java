@@ -21,6 +21,8 @@ import co.edu.uco.seguridad.pdp.authorization.domain.event.AccessEvent;
 import co.edu.uco.seguridad.pdp.authorization.domain.model.DecisionState;
 import co.edu.uco.seguridad.pdp.authorization.domain.model.ReasonCode;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.persistence.repository.SurrealAccessAuditRepository;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.persistence.repository.SurrealAdministrationAuditRepository;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.persistence.schema.SurrealAdministrationEventSchemaInitializer;
 import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.SecurityUserRepository;
 import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;
@@ -47,6 +49,10 @@ import co.edu.uco.seguridad.pdp.tenants.domain.Tenant;
 import co.edu.uco.seguridad.pdp.tenants.domain.model.TenantName;
 import co.edu.uco.seguridad.pdp.tenants.domain.model.TenantStatus;
 import co.edu.uco.seguridad.pdp.tenants.infrastructure.adapter.secondary.persistence.repository.SurrealTenantRepository;
+import co.edu.uco.seguridad.shared.audit.AdministrationAuditRepository;
+import co.edu.uco.seguridad.shared.audit.AdministrationEvent;
+import co.edu.uco.seguridad.shared.audit.AdministrationOperation;
+import co.edu.uco.seguridad.shared.audit.AdministrationOutcome;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -519,7 +525,7 @@ class SurrealRepositoryIntegrationTests extends AbstractSurrealDbIntegrationTest
 
         SecurityUserRepository repository = new SurrealSecurityUserRepository(client);
         TenantId tenant = new TenantId("surreal-it-alphabetical-" + UUID.randomUUID().toString().substring(0, 8));
-        for (String name : new String[] {"Zoe Ruiz", "ana gomez", "Álvaro Díaz", "Beatriz Mora", "adriana lopez"}) {
+        for (String name : new String[]{"Zoe Ruiz", "ana gomez", "Álvaro Díaz", "Beatriz Mora", "adriana lopez"}) {
             String mail = name.toLowerCase().replace(" ", ".").replace("á", "a").replace("í", "i") + "@uco.edu";
             StepVerifier.create(repository.save(SecurityUser.provision(new UserId(UUID.randomUUID()), tenant,
                     new Email(mail), name, Instant.now()))).expectNextCount(1).verifyComplete();
@@ -579,6 +585,38 @@ class SurrealRepositoryIntegrationTests extends AbstractSurrealDbIntegrationTest
         StepVerifier.create(repository.findByCorrelationId(correlationId).collectList())
                 .assertNext(found -> assertThat(found).extracting(AccessEvent::eventId)
                         .containsExactlyInAnyOrder(first.eventId(), second.eventId()))
+                .verifyComplete();
+    }
+
+    @Test
+    void administration_audit_repository_saves_events_and_finds_them_by_correlation_id() {
+        new SurrealAdministrationEventSchemaInitializer(client).run(null);
+
+        AdministrationAuditRepository repository = new SurrealAdministrationAuditRepository(client);
+        String correlationId = "surreal-it-admin-audit-" + UUID.randomUUID();
+        TenantId tenant = new TenantId("surreal-it-admin-audit-tenant");
+        ApplicationId application = new ApplicationId(UUID.randomUUID());
+        AdministrationEvent allowed = new AdministrationEvent(UUID.randomUUID(), correlationId, tenant, application,
+                "test-subject", AdministrationOperation.ROLE_DEFINED, AdministrationOutcome.ALLOWED,
+                Instant.parse("2026-11-01T10:15:30.123Z"));
+        AdministrationEvent denied = new AdministrationEvent(UUID.randomUUID(), correlationId, tenant, application,
+                "other-subject", AdministrationOperation.APPLICATION_REMOVED, AdministrationOutcome.DENIED,
+                Instant.parse("2026-11-01T10:16:00Z"));
+
+        StepVerifier.create(repository.save(allowed)).verifyComplete();
+        StepVerifier.create(repository.save(denied)).verifyComplete();
+
+        StepVerifier.create(repository.findByCorrelationId(correlationId).collectList())
+                .assertNext(found -> assertThat(found).containsExactlyInAnyOrder(allowed, denied))
+                .verifyComplete();
+    }
+
+    @Test
+    void administration_audit_repository_finds_nothing_for_an_unknown_correlation_id() {
+        new SurrealAdministrationEventSchemaInitializer(client).run(null);
+
+        StepVerifier.create(new SurrealAdministrationAuditRepository(client)
+                        .findByCorrelationId("surreal-it-admin-audit-unknown-" + UUID.randomUUID()))
                 .verifyComplete();
     }
 

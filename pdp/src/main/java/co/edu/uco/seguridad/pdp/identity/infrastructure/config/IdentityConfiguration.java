@@ -6,30 +6,12 @@ import co.edu.uco.seguridad.pdp.identity.application.rule.validator.UserMustExis
 import co.edu.uco.seguridad.pdp.identity.application.rule.validator.impl.SubjectUserIdLookupValidatorImpl;
 import co.edu.uco.seguridad.pdp.identity.application.rule.validator.impl.UserMustExistValidatorImpl;
 import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.SecurityUserRepository;
-import co.edu.uco.seguridad.pdp.identity.application.usecase.AssignTenantUseCase;
-import co.edu.uco.seguridad.pdp.identity.application.usecase.FindAuthenticatedUserBySubjectUseCase;
-import co.edu.uco.seguridad.pdp.identity.application.usecase.ListUsersUseCase;
-import co.edu.uco.seguridad.pdp.identity.application.usecase.FindUserByIdUseCase;
-import co.edu.uco.seguridad.pdp.identity.application.usecase.impl.FindUserByIdUseCaseImpl;
-import co.edu.uco.seguridad.pdp.identity.application.usecase.ProvisionIdentityUseCase;
-import co.edu.uco.seguridad.pdp.identity.application.usecase.ResolveExternalIdentityUseCase;
-import co.edu.uco.seguridad.pdp.identity.application.usecase.SearchUsersPageUseCase;
-import co.edu.uco.seguridad.pdp.identity.application.usecase.impl.AssignTenantUseCaseImpl;
-import co.edu.uco.seguridad.pdp.identity.application.usecase.impl.FindAuthenticatedUserBySubjectUseCaseImpl;
-import co.edu.uco.seguridad.pdp.identity.application.usecase.impl.ListUsersUseCaseImpl;
-import co.edu.uco.seguridad.pdp.identity.application.usecase.impl.ProvisionIdentityUseCaseImpl;
-import co.edu.uco.seguridad.pdp.identity.application.usecase.impl.ResolveExternalIdentityUseCaseImpl;
-import co.edu.uco.seguridad.pdp.identity.application.usecase.impl.SearchUsersPageUseCaseImpl;
-import co.edu.uco.seguridad.pdp.identity.application.usecase.ResolveBearerIdentityUseCase;
-import co.edu.uco.seguridad.pdp.identity.application.usecase.impl.ResolveBearerIdentityUseCaseImpl;
+import co.edu.uco.seguridad.pdp.identity.application.usecase.*;
+import co.edu.uco.seguridad.pdp.identity.application.usecase.impl.*;
 import co.edu.uco.seguridad.pdp.identity.domain.rule.UserEmailMustBeAvailableRule;
-import co.edu.uco.seguridad.pdp.identity.domain.rule.impl.UserEmailMustBeAvailableRuleImpl;
 import co.edu.uco.seguridad.pdp.identity.domain.rule.UserMustExistRule;
+import co.edu.uco.seguridad.pdp.identity.domain.rule.impl.UserEmailMustBeAvailableRuleImpl;
 import co.edu.uco.seguridad.pdp.identity.domain.rule.impl.UserMustExistRuleImpl;
-import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.interactor.AssignTenantInteractor;
-import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.interactor.ListUsersInteractor;
-import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.interactor.impl.AssignTenantInteractorImpl;
-import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.primary.web.interactor.impl.ListUsersInteractorImpl;
 import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.repository.SurrealSecurityUserRepository;
 import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.schema.SurrealIdentitySchemaInitializer;
 import co.edu.uco.seguridad.pdp.identity.infrastructure.properties.IdentityProvisioningProperties;
@@ -77,13 +59,13 @@ public class IdentityConfiguration {
     }
 
     @Bean
-    ListUsersUseCase listUsersUseCase(SecurityUserRepository repository) {
-        return new ListUsersUseCaseImpl(repository);
+    FindUserByIdUseCase findUserByIdUseCase(SecurityUserRepository repository) {
+        return new FindUserByIdUseCaseImpl(repository);
     }
 
     @Bean
-    FindUserByIdUseCase findUserByIdUseCase(SecurityUserRepository repository) {
-        return new FindUserByIdUseCaseImpl(repository);
+    ListUsersUseCase listUsersUseCase(SecurityUserRepository repository) {
+        return new ListUsersUseCaseImpl(repository);
     }
 
     @Bean
@@ -95,16 +77,6 @@ public class IdentityConfiguration {
     AssignTenantUseCase assignTenantUseCase(TenantMustBeActiveValidator tenantMustBeActive,
                                             SecurityUserRepository repository, UserMustExistRule userMustExist) {
         return new AssignTenantUseCaseImpl(tenantMustBeActive, userMustExist, repository);
-    }
-
-    @Bean
-    ListUsersInteractor listUsersInteractor(ListUsersUseCase useCase) {
-        return new ListUsersInteractorImpl(useCase);
-    }
-
-    @Bean
-    AssignTenantInteractor assignTenantInteractor(AssignTenantUseCase useCase) {
-        return new AssignTenantInteractorImpl(useCase);
     }
 
     @Bean

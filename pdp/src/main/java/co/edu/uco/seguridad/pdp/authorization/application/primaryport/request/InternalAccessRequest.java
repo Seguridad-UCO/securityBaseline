@@ -17,7 +17,8 @@ import java.util.Optional;
  */
 public record InternalAccessRequest(String subject, Optional<UserId> subjectUserId, ApplicationName applicationName,
                                     ResourcePath resourcePath,
-                                    HttpVerb action, String requestId, String correlationId, RequestFacts facts) {
+                                    HttpVerb action, String requestId, String correlationId, RequestFacts facts,
+                                    String subjectType) {
 
     public InternalAccessRequest {
         Objects.requireNonNull(subject, RequiredArgumentMessages.SUBJECT);
@@ -28,12 +29,19 @@ public record InternalAccessRequest(String subject, Optional<UserId> subjectUser
         Objects.requireNonNull(requestId, RequiredArgumentMessages.REQUEST_ID);
         Objects.requireNonNull(correlationId, RequiredArgumentMessages.CORRELATION_ID);
         Objects.requireNonNull(facts);
+        subjectType = subjectType == null || subjectType.isBlank() ? "USER" : subjectType;
     }
 
     public InternalAccessRequest(String subject, ApplicationName applicationName, ResourcePath resourcePath,
                                  HttpVerb action, String requestId, String correlationId) {
         this(subject, Optional.empty(), applicationName, resourcePath, action, requestId, correlationId,
-                new RequestFacts(Instant.EPOCH, "", action, "HTTP"));
+                new RequestFacts(Instant.EPOCH, "", action, "HTTP"), "USER");
+    }
+
+    public InternalAccessRequest(String subject, Optional<UserId> subjectUserId, ApplicationName applicationName,
+                                 ResourcePath resourcePath, HttpVerb action, String requestId, String correlationId,
+                                 RequestFacts facts) {
+        this(subject, subjectUserId, applicationName, resourcePath, action, requestId, correlationId, facts, "USER");
     }
 
     public record RequestFacts(Instant timestamp, String environment, HttpVerb method, String channel) {

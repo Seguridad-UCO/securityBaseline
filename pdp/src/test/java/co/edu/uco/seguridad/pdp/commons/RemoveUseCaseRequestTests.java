@@ -13,7 +13,9 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Las solicitudes de borrado transportan inquilino e identificador, y son iguales por valor. */
+/**
+ * Las solicitudes de borrado transportan inquilino e identificador, y son iguales por valor.
+ */
 class RemoveUseCaseRequestTests {
 
     private static final TenantId TENANT = new TenantId("tenant-a");

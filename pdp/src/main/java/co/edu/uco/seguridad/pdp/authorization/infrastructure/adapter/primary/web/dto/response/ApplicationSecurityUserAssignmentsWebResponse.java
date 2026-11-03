@@ -2,7 +2,10 @@ package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.we
 
 import co.edu.uco.seguridad.shared.web.PageResponse;
 
-/** Complete access detail for one already tenant-scoped user. */
+/**
+ * Complete access detail for one already tenant-scoped user.
+ */
 public record ApplicationSecurityUserAssignmentsWebResponse(ApplicationSecurityUserWebResponse user,
-        PageResponse<ApplicationSecurityRoleAssignmentWebResponse> roleAssignments,
-        PageResponse<ApplicationSecurityProfileAssignmentWebResponse> profileAssignments) {}
+                                                            PageResponse<ApplicationSecurityRoleAssignmentWebResponse> roleAssignments,
+                                                            PageResponse<ApplicationSecurityProfileAssignmentWebResponse> profileAssignments) {
+}

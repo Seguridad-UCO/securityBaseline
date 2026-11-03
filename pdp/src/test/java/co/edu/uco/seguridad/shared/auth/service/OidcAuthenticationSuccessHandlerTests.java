@@ -12,13 +12,13 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
-import org.springframework.security.oauth2.core.OAuth2AccessToken;
-import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.InMemoryReactiveClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.server.ServerOAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
+import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
@@ -251,7 +251,9 @@ class OidcAuthenticationSuccessHandlerTests {
         return new OAuth2RefreshToken("refresh-token", Instant.parse("2026-10-28T12:00:00Z"));
     }
 
-    /** Repositorio falso: solo lee. Cualquier escritura es un fallo del handler. */
+    /**
+     * Repositorio falso: solo lee. Cualquier escritura es un fallo del handler.
+     */
     private static ServerOAuth2AuthorizedClientRepository authorizedClients() {
         return authorizedClients(refreshTokenWithoutExpiration());
     }
@@ -266,7 +268,7 @@ class OidcAuthenticationSuccessHandlerTests {
             @Override
             @SuppressWarnings("unchecked")
             public <T extends OAuth2AuthorizedClient> Mono<T> loadAuthorizedClient(String clientRegistrationId,
-                    Authentication principal, ServerWebExchange exchange) {
+                                                                                   Authentication principal, ServerWebExchange exchange) {
                 return "keycloak".equals(clientRegistrationId) ? Mono.just((T) client) : Mono.empty();
             }
 

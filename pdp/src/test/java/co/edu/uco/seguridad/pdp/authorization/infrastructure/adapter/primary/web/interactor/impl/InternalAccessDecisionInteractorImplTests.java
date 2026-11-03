@@ -2,9 +2,13 @@ package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.we
 
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.request.InternalAccessRequest;
 import co.edu.uco.seguridad.pdp.authorization.application.primaryport.response.AccessDecision;
+import co.edu.uco.seguridad.pdp.authorization.application.serviceidentity.port.ServiceIdentityRepository;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.EvaluateInternalAccessUseCase;
 import co.edu.uco.seguridad.pdp.authorization.domain.model.DecisionState;
 import co.edu.uco.seguridad.pdp.authorization.domain.model.ReasonCode;
+import co.edu.uco.seguridad.pdp.authorization.domain.serviceidentity.ServiceIdentity;
+import co.edu.uco.seguridad.pdp.authorization.domain.serviceidentity.ServiceIdentityId;
+import co.edu.uco.seguridad.pdp.authorization.domain.serviceidentity.ServiceIdentityStatus;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.AccessDecisionRawRequest;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.AccessDecisionRawRequest.RawApplication;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.AccessDecisionRawRequest.RawContext;
@@ -14,6 +18,9 @@ import co.edu.uco.seguridad.pdp.identity.application.usecase.ResolveExternalIden
 import co.edu.uco.seguridad.shared.security.TestJwtSupport;
 import co.edu.uco.seguridad.shared.web.exception.ConflictingRequestParametersException;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import reactor.util.context.Context;
@@ -25,6 +32,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Barreras C2/C3 del plan: {@code requestId}/{@code correlationId} del header (contexto de Reactor,
@@ -105,5 +114,49 @@ class InternalAccessDecisionInteractorImplTests {
         assertThat(received).hasSize(1);
         assertThat(received.getFirst().subject()).isEqualTo(SUBJECT);
         assertThat(received.getFirst().subjectUserId()).contains(USER_ID);
+    }
+
+    @Test
+    void delegates_a_registered_service_identity_without_eagerly_constructing_an_invalid_jwt_exception() {
+        String clientId = "svc-notas-a-proyectos";
+        ServiceIdentityRepository identities = mock(ServiceIdentityRepository.class);
+        ServiceIdentity identity = new ServiceIdentity(ServiceIdentityId.of(UUID.randomUUID().toString()),
+                new co.edu.uco.seguridad.pdp.commons.model.TenantId(TENANT),
+                new co.edu.uco.seguridad.pdp.commons.model.ApplicationId(UUID.randomUUID()), "notas-a-proyectos",
+                clientId, ServiceIdentityStatus.ACTIVE, Instant.now());
+        when(identities.findActiveByClientId(clientId)).thenReturn(Mono.just(identity));
+        AccessDecision decision = new AccessDecision(UUID.randomUUID(), DecisionState.ALLOW,
+                ReasonCode.POLICY_ALLOWED, List.of(), "req-1", "corr-1", Instant.now());
+        List<InternalAccessRequest> received = new ArrayList<>();
+        InternalAccessDecisionInteractorImpl interactor = new InternalAccessDecisionInteractorImpl(request -> {
+            received.add(request);
+            return Mono.just(decision);
+        }, KNOWN_IDENTITY, identities);
+
+        StepVerifier.create(interactor.execute(rawWith("req-1", "corr-1"))
+                        .contextWrite(servicePrincipal(clientId))
+                        .contextWrite(Context.of("requestId", "req-1", "correlationId", "corr-1")))
+                .expectNextCount(1)
+                .verifyComplete();
+
+        assertThat(received).singleElement().satisfies(request -> {
+            assertThat(request.subject()).isEqualTo(clientId);
+            assertThat(request.subjectType()).isEqualTo("SERVICE");
+            assertThat(request.subjectUserId()).isEmpty();
+        });
+    }
+
+    private static Context servicePrincipal(String clientId) {
+        Instant now = Instant.now();
+        Jwt jwt = Jwt.withTokenValue("service-token")
+                .header("alg", "RS256")
+                .issuer(TestJwtSupport.ISSUER)
+                .subject("service-subject")
+                .audience(List.of(TestJwtSupport.AUDIENCE))
+                .claim("azp", clientId)
+                .issuedAt(now)
+                .expiresAt(now.plusSeconds(300))
+                .build();
+        return ReactiveSecurityContextHolder.withAuthentication(new JwtAuthenticationToken(jwt));
     }
 }

@@ -12,12 +12,17 @@ import co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationCredentialMu
 import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationCredentialMustBeValidRuleImpl;
 import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.shared.port.CredentialHasher;
+import co.edu.uco.seguridad.shared.security.Sha256CredentialHasher;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.util.UUID;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * La regla real (no un dummy): esta prueba también demuestra que la regla y el validador encajan,
@@ -85,12 +90,66 @@ class ValidateApplicationCredentialUseCaseImplTests {
                 .verify();
     }
 
+    @Test
+    void a_correct_secret_stored_as_bcrypt_is_rewritten_as_sha256_and_keeps_validating() {
+        Sha256CredentialHasher hasher = new Sha256CredentialHasher();
+        ApplicationCredentialHash legacy = new ApplicationCredentialHash(new BCryptPasswordEncoder().encode(CORRECT_SECRET));
+        AtomicReference<ApplicationCredentialHash> written = new AtomicReference<>();
+        ValidateApplicationCredentialUseCaseImpl useCase = new ValidateApplicationCredentialUseCaseImpl(
+                new ApplicationCredentialMustBeValidRuleImpl(),
+                repository(Mono.just(legacy), Mono.just(TENANT), java.util.EnumSet.allOf(ApplicationEnvironment.class), written),
+                hasher);
+
+        StepVerifier.create(useCase.execute(new ValidateApplicationCredentialRequest(APPLICATION_NAME, CORRECT_SECRET)))
+                .expectNext(TENANT)
+                .verifyComplete();
+
+        assertThat(written.get().value()).startsWith("sha256:");
+        assertThat(hasher.matches(CORRECT_SECRET, written.get().value())).isTrue();
+    }
+
+    @Test
+    void an_incorrect_secret_never_rewrites_a_legacy_hash() {
+        ApplicationCredentialHash legacy = new ApplicationCredentialHash(new BCryptPasswordEncoder().encode(CORRECT_SECRET));
+        AtomicReference<ApplicationCredentialHash> written = new AtomicReference<>();
+        ValidateApplicationCredentialUseCaseImpl useCase = new ValidateApplicationCredentialUseCaseImpl(
+                new ApplicationCredentialMustBeValidRuleImpl(),
+                repository(Mono.just(legacy), Mono.just(TENANT), java.util.EnumSet.allOf(ApplicationEnvironment.class), written),
+                new Sha256CredentialHasher());
+
+        StepVerifier.create(useCase.execute(new ValidateApplicationCredentialRequest(APPLICATION_NAME, "secreto-incorrecto")))
+                .expectError(InvalidApplicationCredentialException.class)
+                .verify();
+
+        assertThat(written.get()).isNull();
+    }
+
+    @Test
+    void a_hash_already_in_sha256_is_not_rewritten() {
+        Sha256CredentialHasher hasher = new Sha256CredentialHasher();
+        ValidateApplicationCredentialUseCaseImpl useCase = new ValidateApplicationCredentialUseCaseImpl(
+                new ApplicationCredentialMustBeValidRuleImpl(),
+                repository(Mono.just(new ApplicationCredentialHash(hasher.hash(CORRECT_SECRET))), Mono.just(TENANT)),
+                hasher);
+
+        StepVerifier.create(useCase.execute(new ValidateApplicationCredentialRequest(APPLICATION_NAME, CORRECT_SECRET)))
+                .expectNext(TENANT)
+                .verifyComplete();
+    }
+
     private static ApplicationRepository repository(Mono<ApplicationCredentialHash> hash, Mono<TenantId> tenantId) {
         return repository(hash, tenantId, java.util.EnumSet.allOf(ApplicationEnvironment.class));
     }
 
     private static ApplicationRepository repository(Mono<ApplicationCredentialHash> hash, Mono<TenantId> tenantId,
-                                                     Set<ApplicationEnvironment> environments) {
+                                                    Set<ApplicationEnvironment> environments) {
+        return repository(hash, tenantId, environments, null);
+    }
+
+    /** {@code written} recibe lo que el caso de uso reescriba; {@code null} = reescribir es un error de la prueba. */
+    private static ApplicationRepository repository(Mono<ApplicationCredentialHash> hash, Mono<TenantId> tenantId,
+                                                    Set<ApplicationEnvironment> environments,
+                                                    AtomicReference<ApplicationCredentialHash> written) {
         return new ApplicationRepository() {
             @Override
             public Mono<Boolean> existsByTenantAndName(TenantId tenantId, ApplicationName name) {
@@ -126,7 +185,10 @@ class ValidateApplicationCredentialUseCaseImplTests {
             @Override
             public Mono<Void> updateCredentialHash(ApplicationId applicationId,
                                                    ApplicationCredentialHash credentialHash) {
-                throw new UnsupportedOperationException();
+                if (written == null) {
+                    throw new UnsupportedOperationException();
+                }
+                return Mono.fromRunnable(() -> written.set(credentialHash));
             }
 
             @Override

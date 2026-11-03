@@ -58,7 +58,8 @@ public final class AdministerRoleDefinitionUseCaseImpl implements AdministerRole
     @Override
     public Mono<RoleResponse> execute(AdministerRoleDefinitionRequest input) {
         return switch (input.administration()) {
-            case CatalogAdministration.OfApplication application -> applicationScoped(application.administration(), input);
+            case CatalogAdministration.OfApplication application ->
+                    applicationScoped(application.administration(), input);
             case CatalogAdministration.OfTenant tenant -> tenantScoped(tenant.actor(), input);
         };
     }

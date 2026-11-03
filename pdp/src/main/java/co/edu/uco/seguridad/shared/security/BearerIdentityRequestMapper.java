@@ -47,7 +47,9 @@ public final class BearerIdentityRequestMapper {
         }
     }
 
-    /** Nombre para mostrar: {@code name}; si el cliente no lo emite, {@code preferred_username}; si no, vacío. */
+    /**
+     * Nombre para mostrar: {@code name}; si el cliente no lo emite, {@code preferred_username}; si no, vacío.
+     */
     private static String displayName(Jwt jwt) {
         String name = jwt.getClaimAsString(NAME_CLAIM);
         if (name != null && !name.isBlank()) {

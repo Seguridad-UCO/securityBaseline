@@ -34,13 +34,16 @@ public final class ReadCurrentUserApplicationsUseCaseImpl implements ReadCurrent
     private final ProfileRepository profiles;
 
     public ReadCurrentUserApplicationsUseCaseImpl(ResolveUserApplicationsUseCase assignments, FindTenantNameByCodeUseCase tenants,
-            ApplicationDetailsLookupValidator applications, RoleRepository roles, ProfileRepository profiles) {
-        this.assignments = Objects.requireNonNull(assignments); this.tenants = Objects.requireNonNull(tenants);
-        this.applications = Objects.requireNonNull(applications); this.roles = Objects.requireNonNull(roles);
+                                                  ApplicationDetailsLookupValidator applications, RoleRepository roles, ProfileRepository profiles) {
+        this.assignments = Objects.requireNonNull(assignments);
+        this.tenants = Objects.requireNonNull(tenants);
+        this.applications = Objects.requireNonNull(applications);
+        this.roles = Objects.requireNonNull(roles);
         this.profiles = Objects.requireNonNull(profiles);
     }
 
-    @Override public Mono<CurrentUserApplicationsResponse> execute(ReadCurrentUserApplicationsRequest input) {
+    @Override
+    public Mono<CurrentUserApplicationsResponse> execute(ReadCurrentUserApplicationsRequest input) {
         return tenants.execute(input.tenantId()).switchIfEmpty(denied())
                 .flatMap(tenant -> assignments.execute(new ResolveUserApplicationsRequest(input.userId(), input.tenantId()))
                         .flatMapMany(all -> Flux.fromIterable(all.assignmentsByApplication().entrySet()))
@@ -51,13 +54,13 @@ public final class ReadCurrentUserApplicationsUseCaseImpl implements ReadCurrent
     }
 
     private Mono<CurrentUserApplicationsResponse.Application> application(ApplicationId applicationId,
-            UserApplicationAssignmentsResponse.ApplicationAssignments assigned, ReadCurrentUserApplicationsRequest input) {
+                                                                          UserApplicationAssignmentsResponse.ApplicationAssignments assigned, ReadCurrentUserApplicationsRequest input) {
         return applications.execute(applicationId).onErrorResume(ApplicationNotFoundException.class, ignored -> denied())
                 .filter(application -> application.tenantId().equals(input.tenantId()))
                 .switchIfEmpty(denied()).flatMap(application -> Mono.zip(directRoles(assigned.directRoleIds(), applicationId, input),
                         profiles(assigned.profileIds(), applicationId, input)).map(parts -> new CurrentUserApplicationsResponse.Application(
-                                application.id(), application.name().value(), parts.getT1().tenantRoles(),
-                                parts.getT1().applicationRoles(), parts.getT2())));
+                        application.id(), application.name().value(), parts.getT1().tenantRoles(),
+                        parts.getT1().applicationRoles(), parts.getT2())));
     }
 
     private Mono<DirectRoles> directRoles(Set<RoleId> roleIds, ApplicationId applicationId, ReadCurrentUserApplicationsRequest input) {
@@ -67,7 +70,7 @@ public final class ReadCurrentUserApplicationsUseCaseImpl implements ReadCurrent
     }
 
     private Mono<List<CurrentUserApplicationsResponse.Profile>> profiles(Set<ProfileId> profileIds, ApplicationId applicationId,
-            ReadCurrentUserApplicationsRequest input) {
+                                                                         ReadCurrentUserApplicationsRequest input) {
         return Flux.fromIterable(profileIds).flatMap(profileId -> profiles.findByIdForTenant(profileId, input.tenantId())
                         .filter(profile -> belongsToApplication(profile, applicationId)).switchIfEmpty(denied())
                         .flatMap(profile -> visibleRoles(profile.roles(), applicationId, input).map(this::profileRole).collectList()
@@ -77,7 +80,7 @@ public final class ReadCurrentUserApplicationsUseCaseImpl implements ReadCurrent
 
     private Flux<Role> visibleRoles(Set<RoleId> roleIds, ApplicationId applicationId, ReadCurrentUserApplicationsRequest input) {
         return Flux.fromIterable(roleIds).flatMap(roleId -> roles.findById(roleId).switchIfEmpty(denied()).flatMap(role ->
-                role.scope().isGlobal() ? Mono.empty() : validForAssignment(role, applicationId, input) ? Mono.just(role) : denied()))
+                        role.scope().isGlobal() ? Mono.empty() : validForAssignment(role, applicationId, input) ? Mono.just(role) : denied()))
                 .sort(Comparator.comparing(role -> role.name().value()));
     }
 
@@ -98,6 +101,11 @@ public final class ReadCurrentUserApplicationsUseCaseImpl implements ReadCurrent
         return new CurrentUserApplicationsResponse.ProfileRole(role.name().value(), role.scope().level().name());
     }
 
-    private static <T> Mono<T> denied() { return Mono.error(new CurrentUserApplicationsAccessDeniedException()); }
-    private record DirectRoles(List<CurrentUserApplicationsResponse.NamedRole> tenantRoles, List<CurrentUserApplicationsResponse.NamedRole> applicationRoles) { }
+    private static <T> Mono<T> denied() {
+        return Mono.error(new CurrentUserApplicationsAccessDeniedException());
+    }
+
+    private record DirectRoles(List<CurrentUserApplicationsResponse.NamedRole> tenantRoles,
+                               List<CurrentUserApplicationsResponse.NamedRole> applicationRoles) {
+    }
 }

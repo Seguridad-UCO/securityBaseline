@@ -1,7 +1,7 @@
 package co.edu.uco.seguridad.pdp.profiles.application.usecase.impl;
 
-import co.edu.uco.seguridad.pdp.profiles.application.secondaryport.repository.ProfileRepository;
 import co.edu.uco.seguridad.pdp.profiles.application.primaryport.request.ApplicationProfileCountRequest;
+import co.edu.uco.seguridad.pdp.profiles.application.secondaryport.repository.ProfileRepository;
 import co.edu.uco.seguridad.pdp.profiles.application.usecase.CountApplicationProfilesUseCase;
 import reactor.core.publisher.Mono;
 

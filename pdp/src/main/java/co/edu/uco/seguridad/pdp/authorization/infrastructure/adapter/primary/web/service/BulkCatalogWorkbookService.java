@@ -45,7 +45,9 @@ public final class BulkCatalogWorkbookService {
     private static final String UNSUPPORTED_ROLES_OR_PROFILES_MODE_MESSAGE = "Modalidad de carga no soportada: use roles o profiles";
     private static final String UNSUPPORTED_TEMPLATE_MODE_MESSAGE = "Modalidad de carga no soportada: use roles, profiles o resources-roles";
 
-    /** Resultado de leer una hoja: las filas conservadas y los problemas encontrados al leerlas. */
+    /**
+     * Resultado de leer una hoja: las filas conservadas y los problemas encontrados al leerlas.
+     */
     public record Parsed<T>(List<T> rows, List<BulkResourceRowError> errors) {
     }
 
@@ -158,7 +160,9 @@ public final class BulkCatalogWorkbookService {
         return new BulkResourceRowError(row, field, "", code, description);
     }
 
-    /** Si el original no se puede abrir (vacío, corrupto, cifrado), el reporte es un libro solo con la hoja de errores. */
+    /**
+     * Si el original no se puede abrir (vacío, corrupto, cifrado), el reporte es un libro solo con la hoja de errores.
+     */
     public byte[] errorReport(byte[] bytes, List<BulkResourceRowError> errors) {
         try (Workbook book = openOrEmpty(bytes); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             Sheet sheet = book.createSheet(ERRORS_SHEET);

@@ -4,8 +4,8 @@ import co.edu.uco.seguridad.pdp.assignments.domain.Assignment;
 import co.edu.uco.seguridad.pdp.assignments.domain.AssignmentCriteria;
 import co.edu.uco.seguridad.pdp.assignments.domain.model.AssignmentId;
 import co.edu.uco.seguridad.pdp.commons.model.*;
-import reactor.core.publisher.Mono;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.util.Set;
@@ -34,24 +34,34 @@ public interface AssignmentRepository {
                                                                PageWindow window) {
         return Mono.error(new UnsupportedOperationException("La consulta paginada no está implementada"));
     }
-    default Mono<Long> countByApplication(TenantId tenantId, ApplicationId applicationId) { return Mono.error(new UnsupportedOperationException()); }
+
+    default Mono<Long> countByApplication(TenantId tenantId, ApplicationId applicationId) {
+        return Mono.error(new UnsupportedOperationException());
+    }
 
     default Mono<ResultPage<Assignment>> findActivePageByRoleAndApplication(RoleId roleId, TenantId tenantId,
-            ApplicationId applicationId, Instant now, PageWindow window) {
+                                                                            ApplicationId applicationId, Instant now, PageWindow window) {
         return Mono.error(new UnsupportedOperationException("La consulta paginada no está implementada"));
     }
+
     default Mono<Long> countActiveByRoleAndApplication(RoleId roleId, TenantId tenantId, ApplicationId applicationId,
-            Instant now) { return Mono.error(new UnsupportedOperationException()); }
+                                                       Instant now) {
+        return Mono.error(new UnsupportedOperationException());
+    }
 
     default Mono<ResultPage<Assignment>> findActivePageByUserAndApplication(UserId userId, TenantId tenantId,
-            ApplicationId applicationId, Instant now, PageWindow window) { return Mono.error(new UnsupportedOperationException()); }
+                                                                            ApplicationId applicationId, Instant now, PageWindow window) {
+        return Mono.error(new UnsupportedOperationException());
+    }
 
     /**
      * Los identificadores de rol con asignación activa para (usuario, aplicación) a la fecha {@code now}.
      */
     Mono<Set<RoleId>> findActiveRoleIdsFor(UserId userId, ApplicationId applicationId, Instant now);
 
-    /** Asignaciones de rol vigentes de un usuario, limitadas siempre al tenant indicado. */
+    /**
+     * Asignaciones de rol vigentes de un usuario, limitadas siempre al tenant indicado.
+     */
     default Flux<Assignment> findActiveByUserAndTenant(UserId userId, TenantId tenantId, Instant now) {
         return Flux.empty();
     }

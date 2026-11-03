@@ -6,6 +6,7 @@ import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;
 import co.edu.uco.seguridad.pdp.identity.domain.model.Email;
 import co.edu.uco.seguridad.pdp.identity.domain.model.ExternalIdentity;
 import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.repository.SurrealSecurityUserRepository;
+import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.schema.SurrealIdentitySchemaInitializer;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbProperties;
 import co.edu.uco.seguridad.shared.security.TestJwtSupport;
@@ -57,8 +58,11 @@ public abstract class AbstractSurrealDbIntegrationTest {
      * {@link TestJwtSupport}, que nunca trae {@code userId} ya resuelto (a diferencia de
      * {@code LocalUserPrincipal}, que solo construye un login real vía Keycloak). Sin Spring:
      * construye su propio {@link SurrealDbClient} contra el mismo contenedor, igual que
-     * {@code SurrealRepositoryIntegrationTests} — el esquema ya existe porque el contexto de Spring
-     * de la prueba que llama esto ya arrancó y lo definió. Idempotente por {@code (issuer, subject)}
+     * {@code SurrealRepositoryIntegrationTests}. Prepara el esquema de identidad por su cuenta (el
+     * inicializador real, idempotente): se llama desde {@code @BeforeAll}, antes de que exista el
+     * contexto de Spring de la clase, así que no puede suponer que otra clase ya lo definió — una
+     * clase ejecutada sola fallaba con "Couldn't write to a read only transaction" porque el
+     * namespace todavía no existía. Idempotente por {@code (issuer, subject)}
      * — hay un índice único sobre esa pareja, así que si ya existe una identidad la reutiliza en vez
      * de intentar crear otra (varias pruebas de la misma clase, o de clases distintas, llaman esto
      * con el mismo {@code subject} literal, p. ej. {@code "test-subject"}). Llamar con un
@@ -78,6 +82,7 @@ public abstract class AbstractSurrealDbIntegrationTest {
                 })
                 .build();
         SurrealDbClient client = new SurrealDbClient(webClient, new ObjectMapper(), properties);
+        new SurrealIdentitySchemaInitializer(client).run(null);
         SurrealSecurityUserRepository repository = new SurrealSecurityUserRepository(client);
         return repository.findIdentityBySubject(subject)
                 .map(ExternalIdentity::userId)

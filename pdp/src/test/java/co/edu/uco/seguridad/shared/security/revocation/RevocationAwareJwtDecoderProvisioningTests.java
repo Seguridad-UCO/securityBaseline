@@ -21,7 +21,9 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** HU-038: ruta {@code provisioning} del decoder Bearer (aprovisiona antes de consultar revocación). */
+/**
+ * HU-038: ruta {@code provisioning} del decoder Bearer (aprovisiona antes de consultar revocación).
+ */
 class RevocationAwareJwtDecoderProvisioningTests {
 
     private static final UserId RESOLVED = new UserId(UUID.fromString("11111111-1111-1111-1111-111111111111"));

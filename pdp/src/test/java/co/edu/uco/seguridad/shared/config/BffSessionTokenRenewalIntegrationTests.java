@@ -208,7 +208,9 @@ class BffSessionTokenRenewalIntegrationTests {
         }
     }
 
-    /** Keycloak simulado: token endpoint que cuenta canjes, rota el refresh token y puede fallar o retener respuestas. */
+    /**
+     * Keycloak simulado: token endpoint que cuenta canjes, rota el refresh token y puede fallar o retener respuestas.
+     */
     private static final class FakeKeycloak {
         final AtomicInteger exchanges = new AtomicInteger();
         final List<String> grantTypes = new CopyOnWriteArrayList<>();

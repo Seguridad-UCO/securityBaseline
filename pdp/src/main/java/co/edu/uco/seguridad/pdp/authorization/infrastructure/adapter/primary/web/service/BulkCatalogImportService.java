@@ -9,13 +9,7 @@ import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.Princip
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.PrincipalMustBeApplicationAdministratorValidator;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.BulkResourceValidationResponse;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.BulkResourceValidationResponse.BulkResourceRowError;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
-import co.edu.uco.seguridad.pdp.commons.model.ProfileId;
-import co.edu.uco.seguridad.pdp.commons.model.ResourceId;
-import co.edu.uco.seguridad.pdp.commons.model.RoleId;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
-import co.edu.uco.seguridad.pdp.commons.model.UserId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.pdp.profiles.application.secondaryport.repository.ProfileRepository;
 import co.edu.uco.seguridad.pdp.profiles.domain.Profile;
 import co.edu.uco.seguridad.pdp.profiles.domain.model.ProfileName;
@@ -34,14 +28,7 @@ import co.edu.uco.seguridad.shared.security.PdpPrincipal;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -208,7 +195,9 @@ public final class BulkCatalogImportService {
         return scope.flatMap(resolved -> unique(roleMode, row, normalizedName, resolved, batch));
     }
 
-    /** Aplicación del tenant del principal (si no existe ahí, es «no encontrada») y administrada por quien carga. */
+    /**
+     * Aplicación del tenant del principal (si no existe ahí, es «no encontrada») y administrada por quien carga.
+     */
     private Mono<RoleScope> authorizedApplicationScope(BulkCatalogWorkbookService.CatalogRow row, ApplicationName name, Batch batch) {
         TenantId tenant = batch.principal().tenantId();
         return Mono.defer(() -> applications.execute(new ApplicationNameForTenantQuery(tenant, name)))
@@ -229,7 +218,9 @@ public final class BulkCatalogImportService {
                 }));
     }
 
-    /** Alcance TENANT del principal, si administra al menos una aplicación del tenant (R1, HU-036). */
+    /**
+     * Alcance TENANT del principal, si administra al menos una aplicación del tenant (R1, HU-036).
+     */
     private Mono<RoleScope> authorizedTenantScope(BulkCatalogWorkbookService.CatalogRow row, Batch batch) {
         return batch.tenantDecision().flatMap(allowed -> {
             if (!allowed) {
@@ -252,7 +243,9 @@ public final class BulkCatalogImportService {
                 .cache();
     }
 
-    /** Consulta el gate una sola vez por aplicación y por llamada; cualquier fallo del gate es una denegación. */
+    /**
+     * Consulta el gate una sola vez por aplicación y por llamada; cualquier fallo del gate es una denegación.
+     */
     private Mono<Boolean> isAdministrator(ApplicationId application, Batch batch) {
         Boolean known = batch.decisions().get(application);
         if (known != null) return Mono.just(known);
@@ -392,11 +385,14 @@ public final class BulkCatalogImportService {
         }
     }
 
-    /** Alcance de una referencia de relación: no exige administrar la aplicación (solo apunta a lo ya aceptado o persistido). */
+    /**
+     * Alcance de una referencia de relación: no exige administrar la aplicación (solo apunta a lo ya aceptado o persistido).
+     */
     private Mono<RoleScope> relationScope(String scope, String application, TenantId tenant) {
         RoleScopeLevel level = RoleScopeLevel.parse(scope);
         if (level == RoleScopeLevel.TENANT) {
-            if (!application.isBlank()) throw new IllegalArgumentException(APPLICATION_ONLY_FOR_APPLICATION_SCOPE_MESSAGE);
+            if (!application.isBlank())
+                throw new IllegalArgumentException(APPLICATION_ONLY_FOR_APPLICATION_SCOPE_MESSAGE);
             return Mono.just(RoleScope.ofTenant(tenant));
         }
         if (level != RoleScopeLevel.APPLICATION || application.isBlank())
@@ -438,10 +434,13 @@ public final class BulkCatalogImportService {
         return new BulkResourceRowError(row, field, "", code, description == null ? code : description);
     }
 
-    /** Estado de una sola llamada a validar o confirmar: nada se comparte entre llamadas. */
+    /**
+     * Estado de una sola llamada a validar o confirmar: nada se comparte entre llamadas.
+     */
     private record Batch(PdpPrincipal principal, UserId userId, List<BulkResourceRowError> errors,
                          List<BulkResourceRowError> relationErrors, List<Entry> accepted, Set<String> seen,
-                         Map<ApplicationId, Boolean> decisions, Set<Integer> cellErrorRows, Mono<Boolean> tenantDecision) {
+                         Map<ApplicationId, Boolean> decisions, Set<Integer> cellErrorRows,
+                         Mono<Boolean> tenantDecision) {
     }
 
     private record Entry(BulkCatalogWorkbookService.CatalogRow row, RoleScope scope, String name,

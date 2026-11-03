@@ -4,8 +4,8 @@ import co.edu.uco.seguridad.pdp.assignments.application.primaryport.request.List
 import co.edu.uco.seguridad.pdp.assignments.application.primaryport.response.AssignmentResponse;
 import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository.AssignmentRepository;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.ListActiveRoleAssignmentsByUserPageUseCase;
-import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
+import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
 import reactor.core.publisher.Mono;
 
@@ -25,6 +25,6 @@ public final class ListActiveRoleAssignmentsByUserPageUseCaseImpl implements Lis
     public Mono<ResultPage<AssignmentResponse>> execute(ListActiveAssignmentsPageRequest<UserId> input) {
         return repository.findActivePageByUserAndApplication(input.key(), input.tenantId(), input.applicationId(), time.now(), input.window())
                 .map(page -> page.map(a -> new AssignmentResponse(a.id(), a.userId(), a.tenantId(), a.applicationId(), a.roleId(),
-                a.validity().validFrom(), a.validity().validUntil())));
+                        a.validity().validFrom(), a.validity().validUntil())));
     }
 }

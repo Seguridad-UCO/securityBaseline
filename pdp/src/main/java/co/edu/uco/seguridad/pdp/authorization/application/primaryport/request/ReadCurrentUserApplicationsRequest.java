@@ -6,5 +6,8 @@ import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import java.util.Objects;
 
 public record ReadCurrentUserApplicationsRequest(UserId userId, TenantId tenantId, String userName, String email) {
-    public ReadCurrentUserApplicationsRequest { Objects.requireNonNull(userId); Objects.requireNonNull(tenantId); }
+    public ReadCurrentUserApplicationsRequest {
+        Objects.requireNonNull(userId);
+        Objects.requireNonNull(tenantId);
+    }
 }

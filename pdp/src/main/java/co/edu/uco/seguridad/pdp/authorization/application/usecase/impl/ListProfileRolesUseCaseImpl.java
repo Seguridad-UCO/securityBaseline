@@ -12,9 +12,18 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public final class ListProfileRolesUseCaseImpl implements ListProfileRolesUseCase {
-    private final PrincipalMustBeApplicationAdministratorValidator gate; private final ProfileRepository profiles; private final RoleRepository roles;
-    public ListProfileRolesUseCaseImpl(PrincipalMustBeApplicationAdministratorValidator gate, ProfileRepository profiles, RoleRepository roles) { this.gate = gate; this.profiles = profiles; this.roles = roles; }
-    @Override public Mono<ResultPage<RoleResponse>> execute(ListProfileRolesRequest request) {
+    private final PrincipalMustBeApplicationAdministratorValidator gate;
+    private final ProfileRepository profiles;
+    private final RoleRepository roles;
+
+    public ListProfileRolesUseCaseImpl(PrincipalMustBeApplicationAdministratorValidator gate, ProfileRepository profiles, RoleRepository roles) {
+        this.gate = gate;
+        this.profiles = profiles;
+        this.roles = roles;
+    }
+
+    @Override
+    public Mono<ResultPage<RoleResponse>> execute(ListProfileRolesRequest request) {
         return gate.execute(request.administration()).then(profiles.findByIdForTenant(request.profileId(), request.administration().tenantId())
                 .switchIfEmpty(Mono.error(new ProfileNotFoundException(request.profileId())))
                 .filter(profile -> profile.scope().applicationId().filter(request.administration().applicationId()::equals).isPresent())

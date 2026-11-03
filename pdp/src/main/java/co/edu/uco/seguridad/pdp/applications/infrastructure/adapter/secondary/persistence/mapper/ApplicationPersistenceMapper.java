@@ -11,7 +11,6 @@ import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 
 import java.time.Instant;
 import java.util.UUID;
-import java.util.Set;
 
 /**
  * Traduce la fila de persistencia al agregado. Los value objects validan aquí: una fila corrupta se

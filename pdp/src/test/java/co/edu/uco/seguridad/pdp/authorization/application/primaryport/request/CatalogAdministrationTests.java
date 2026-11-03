@@ -27,10 +27,13 @@ class CatalogAdministrationTests {
     private static final TenantAdministrationRequest ACTOR =
             new TenantAdministrationRequest(TENANT, USER, "test-subject", AuthenticationContextEvidence.NONE);
 
-    /** Sin {@code default}: si el tipo sellado ganara o perdiera una variante, esto dejaría de compilar. */
+    /**
+     * Sin {@code default}: si el tipo sellado ganara o perdiera una variante, esto dejaría de compilar.
+     */
     private static String gateOf(CatalogAdministration administration) {
         return switch (administration) {
-            case CatalogAdministration.OfApplication application -> "application:" + application.administration().applicationId().value();
+            case CatalogAdministration.OfApplication application ->
+                    "application:" + application.administration().applicationId().value();
             case CatalogAdministration.OfTenant tenant -> "tenant:" + tenant.actor().tenantId().value();
         };
     }

@@ -332,6 +332,16 @@ public final class RequiredArgumentMessages {
     public static final String LIST_APPLICATION_ADMINISTRATORS_REQUEST = "se requiere la solicitud de listado de administradores de aplicación";
 
     // HU-021 — auditoría de operaciones administrativas.
+    // SU-01 — el catálogo de usuarios se administra desde authorization.
+    public static final String LIST_USERS_USE_CASE = "se requiere el caso de uso de listado de usuarios";
+    public static final String ASSIGN_TENANT_USE_CASE = "se requiere el caso de uso de asignación de inquilino";
+    public static final String FIND_USER_BY_ID_USE_CASE = "se requiere el caso de uso de búsqueda de usuario por id";
+    public static final String ADMINISTER_USER_LISTING_USE_CASE = "se requiere el caso de uso de listado administrado de usuarios";
+    public static final String ADMINISTER_USER_TENANT_ASSIGNMENT_USE_CASE =
+            "se requiere el caso de uso de reasignación administrada de inquilino";
+    public static final String USER_TENANT_ASSIGNMENT_RULE = "se requiere la regla de reasignación de inquilino";
+    public static final String USER_TENANT_ASSIGNMENT = "se requiere la reasignación de inquilino";
+
     public static final String ADMINISTRATION_AUDIT_REPOSITORY = "se requiere el repositorio de auditoría de operaciones administrativas";
     public static final String ADMINISTRATION_OPERATION = "se requiere la operación administrativa";
     public static final String ADMINISTRATION_OUTCOME = "se requiere el resultado de la operación administrativa";

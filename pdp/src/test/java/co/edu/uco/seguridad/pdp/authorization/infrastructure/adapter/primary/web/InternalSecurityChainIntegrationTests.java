@@ -31,6 +31,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -258,9 +259,17 @@ class InternalSecurityChainIntegrationTests extends AbstractSurrealDbIntegration
     }
 
     private static void generateSelfSignedCertificate(Path certOut, Path keyOut, String subject) throws Exception {
-        Process generation = new ProcessBuilder("openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes",
+        ProcessBuilder command = new ProcessBuilder("openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes",
                 "-keyout", keyOut.toString(), "-out", certOut.toString(), "-days", "1", "-subj", subject)
-                .redirectErrorStream(true).redirectOutput(ProcessBuilder.Redirect.DISCARD).start();
+                .redirectErrorStream(true).redirectOutput(ProcessBuilder.Redirect.DISCARD);
+        // Un OPENSSL_CONF que apunta a un archivo inexistente (p. ej. el de una instalación ya
+        // desinstalada de psqlODBC) hace fallar a openssl sin decir por qué; sin la variable usa su
+        // configuración por defecto, que es todo lo que esta prueba necesita.
+        String configuration = command.environment().get("OPENSSL_CONF");
+        if (configuration != null && !Files.isRegularFile(Path.of(configuration))) {
+            command.environment().remove("OPENSSL_CONF");
+        }
+        Process generation = command.start();
         boolean finished = generation.waitFor(20, TimeUnit.SECONDS);
         if (!finished || generation.exitValue() != 0) {
             throw new IllegalStateException("openssl no pudo generar el certificado de prueba para " + subject);

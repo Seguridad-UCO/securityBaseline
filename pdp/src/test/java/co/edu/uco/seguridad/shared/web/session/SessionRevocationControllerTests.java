@@ -25,12 +25,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -237,7 +232,9 @@ class SessionRevocationControllerTests {
         return new RevocationAwareJwtDecoder(token -> Mono.just(jwt), revocation, subject -> Mono.just(USER_ID));
     }
 
-    /** Registra cada escritura al suscribirse (como el adaptador real, que es frío); si {@code writeFailure} no es nulo, toda escritura falla con él. */
+    /**
+     * Registra cada escritura al suscribirse (como el adaptador real, que es frío); si {@code writeFailure} no es nulo, toda escritura falla con él.
+     */
     private static TokenRevocationPort revocation(List<String> calls, RuntimeException writeFailure) {
         return new TokenRevocationPort() {
             @Override
@@ -281,7 +278,9 @@ class SessionRevocationControllerTests {
         };
     }
 
-    /** Doble con estado que replica la semántica del puerto, para cerrar el ciclo logout -> decoder. */
+    /**
+     * Doble con estado que replica la semántica del puerto, para cerrar el ciclo logout -> decoder.
+     */
     private static final class StatefulRevocation implements TokenRevocationPort {
         private final Map<String, Instant> revokedTokens = new HashMap<>();
         private final Map<String, Instant> revokedClients = new HashMap<>();
@@ -322,7 +321,9 @@ class SessionRevocationControllerTests {
         }
     }
 
-    /** {@code azp} nulo omite el claim. El {@code sid} se incluye: el bearer no debe usarlo. */
+    /**
+     * {@code azp} nulo omite el claim. El {@code sid} se incluye: el bearer no debe usarlo.
+     */
     private static Jwt bearerToken(String tokenId, String authorizedParty) {
         Jwt.Builder builder = Jwt.withTokenValue("access-token")
                 .header("alg", "RS256")
