@@ -66,8 +66,9 @@ final class ApplicationSecurityController {
     Mono<ResponseEntity<ApiResponse<PageResponse<ApplicationSecurityResourceWebResponse>>>> resources(
             @PathVariable String applicationId, @RequestParam(required = false) String page,
             @RequestParam(required = false) String size, @RequestParam(required = false) String offset,
-            @RequestParam(required = false) String limit, ServerWebExchange exchange) {
-        return resources.execute(pageRequest(applicationId, page, size, offset, limit))
+            @RequestParam(required = false) String limit, @RequestParam(required = false) String query, @RequestParam(required = false) String method,
+            ServerWebExchange exchange) {
+        return resources.execute(new ListApplicationSecurityRawRequest(applicationId, page, size, offset, limit, query, method))
                 .map(data -> ok("APPLICATION_SECURITY_RESOURCES_LISTED", data, exchange));
     }
 
@@ -75,8 +76,9 @@ final class ApplicationSecurityController {
     Mono<ResponseEntity<ApiResponse<PageResponse<ApplicationSecurityRoleWebResponse>>>> roles(
             @PathVariable String applicationId, @RequestParam(required = false) String page,
             @RequestParam(required = false) String size, @RequestParam(required = false) String offset,
-            @RequestParam(required = false) String limit, ServerWebExchange exchange) {
-        return roles.execute(pageRequest(applicationId, page, size, offset, limit))
+            @RequestParam(required = false) String limit, @RequestParam(required = false) String query,
+            ServerWebExchange exchange) {
+        return roles.execute(pageRequest(applicationId, page, size, offset, limit, query))
                 .map(data -> ok("APPLICATION_SECURITY_ROLES_LISTED", data, exchange));
     }
 
@@ -84,8 +86,9 @@ final class ApplicationSecurityController {
     Mono<ResponseEntity<ApiResponse<PageResponse<ApplicationSecurityProfileWebResponse>>>> profiles(
             @PathVariable String applicationId, @RequestParam(required = false) String page,
             @RequestParam(required = false) String size, @RequestParam(required = false) String offset,
-            @RequestParam(required = false) String limit, ServerWebExchange exchange) {
-        return profiles.execute(pageRequest(applicationId, page, size, offset, limit))
+            @RequestParam(required = false) String limit, @RequestParam(required = false) String query,
+            ServerWebExchange exchange) {
+        return profiles.execute(pageRequest(applicationId, page, size, offset, limit, query))
                 .map(data -> ok("APPLICATION_SECURITY_PROFILES_LISTED", data, exchange));
     }
 
@@ -147,8 +150,9 @@ final class ApplicationSecurityController {
     Mono<ResponseEntity<ApiResponse<PageResponse<ApplicationSecurityResourceWebResponse>>>> roleResources(
             @PathVariable String applicationId, @PathVariable String roleId, @RequestParam(required = false) String page,
             @RequestParam(required = false) String size, @RequestParam(required = false) String offset,
-            @RequestParam(required = false) String limit, ServerWebExchange exchange) {
-        return roleResources.execute(new ListApplicationSecurityRelationRawRequest(applicationId, roleId, page, size, offset, limit))
+            @RequestParam(required = false) String limit, @RequestParam(required = false) String query,
+            ServerWebExchange exchange) {
+        return roleResources.execute(new ListApplicationSecurityRelationRawRequest(applicationId, roleId, page, size, offset, limit, query))
                 .map(data -> ok("APPLICATION_SECURITY_ROLE_RESOURCES_LISTED", data, exchange));
     }
 
@@ -156,8 +160,9 @@ final class ApplicationSecurityController {
     Mono<ResponseEntity<ApiResponse<PageResponse<ApplicationSecurityRoleWebResponse>>>> profileRoles(
             @PathVariable String applicationId, @PathVariable String profileId, @RequestParam(required = false) String page,
             @RequestParam(required = false) String size, @RequestParam(required = false) String offset,
-            @RequestParam(required = false) String limit, ServerWebExchange exchange) {
-        return profileRoles.execute(new ListApplicationSecurityRelationRawRequest(applicationId, profileId, page, size, offset, limit))
+            @RequestParam(required = false) String limit, @RequestParam(required = false) String query,
+            ServerWebExchange exchange) {
+        return profileRoles.execute(new ListApplicationSecurityRelationRawRequest(applicationId, profileId, page, size, offset, limit, query))
                 .map(data -> ok("APPLICATION_SECURITY_PROFILE_ROLES_LISTED", data, exchange));
     }
 
@@ -174,6 +179,11 @@ final class ApplicationSecurityController {
     private static ListApplicationSecurityRawRequest pageRequest(String applicationId, String page, String size,
                                                                  String offset, String limit) {
         return new ListApplicationSecurityRawRequest(applicationId, page, size, offset, limit);
+    }
+
+    private static ListApplicationSecurityRawRequest pageRequest(String applicationId, String page, String size,
+                                                                 String offset, String limit, String query) {
+        return new ListApplicationSecurityRawRequest(applicationId, page, size, offset, limit, query);
     }
 
     private static <T> ResponseEntity<ApiResponse<T>> ok(String code, T data, ServerWebExchange exchange) {

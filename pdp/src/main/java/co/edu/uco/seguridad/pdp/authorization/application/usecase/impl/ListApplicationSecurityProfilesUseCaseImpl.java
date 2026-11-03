@@ -23,6 +23,6 @@ public final class ListApplicationSecurityProfilesUseCaseImpl implements ListApp
     public Mono<ResultPage<ProfileResponse>> execute(ListApplicationSecurityProfilesRequest request) {
         var administration = request.administration();
         return gate.execute(administration).then(Mono.defer(() -> profiles.execute(
-                new ListApplicationProfilesPageRequest(administration.tenantId(), administration.applicationId(), request.window()))));
+                new ListApplicationProfilesPageRequest(administration.tenantId(), administration.applicationId(), request.window(), request.query()))));
     }
 }

@@ -23,6 +23,6 @@ public final class ListApplicationSecurityRolesUseCaseImpl implements ListApplic
     public Mono<ResultPage<RoleResponse>> execute(ListApplicationSecurityRolesRequest request) {
         var administration = request.administration();
         return gate.execute(administration).then(Mono.defer(() -> roles.execute(
-                new ListApplicationRolesPageRequest(administration.tenantId(), administration.applicationId(), request.window()))));
+                new ListApplicationRolesPageRequest(administration.tenantId(), administration.applicationId(), request.window(), request.query()))));
     }
 }

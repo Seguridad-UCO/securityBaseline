@@ -19,6 +19,6 @@ public final class ListApplicationSecurityResourcesUseCaseImpl implements ListAp
     }
 
     public Mono<ResultPage<RegisteredProtectedResourceResponse>> execute(ListApplicationSecurityResourcesRequest input) {
-        return administrator.execute(input.administration()).then(Mono.defer(() -> resources.execute(new ListProtectedResourcesPageRequest(input.administration().applicationId(), input.window()))));
+        return administrator.execute(input.administration()).then(Mono.defer(() -> resources.execute(new ListProtectedResourcesPageRequest(input.administration().applicationId(), input.window(), input.query()))));
     }
 }

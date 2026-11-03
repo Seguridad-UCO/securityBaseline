@@ -8,10 +8,14 @@ import java.util.Objects;
 /**
  * Application-scoped, authorized window of the resources granted to one role.
  */
-public record ListRoleResourcesRequest(AdministrationRequest administration, RoleId roleId, PageWindow window) {
+public record ListRoleResourcesRequest(AdministrationRequest administration, RoleId roleId, PageWindow window, String query) {
+    public ListRoleResourcesRequest(AdministrationRequest administration, RoleId roleId, PageWindow window) {
+        this(administration, roleId, window, "");
+    }
     public ListRoleResourcesRequest {
         Objects.requireNonNull(administration);
         Objects.requireNonNull(roleId);
         Objects.requireNonNull(window);
+        query = query == null ? "" : query.trim();
     }
 }

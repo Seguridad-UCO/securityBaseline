@@ -29,7 +29,7 @@ public final class ListRolesRequestMapper {
     }
 
     public static ListRolesRequest toRequest(ListRolesRawRequest raw, TenantId tenantId) {
-        return new ListRolesRequest(RoleCriteria.ofTenant(tenantId), window(raw));
+        return new ListRolesRequest(RoleCriteria.ofTenant(tenantId).withNameContaining(raw.query()), window(raw));
     }
 
     private static PageWindow window(ListRolesRawRequest raw) {

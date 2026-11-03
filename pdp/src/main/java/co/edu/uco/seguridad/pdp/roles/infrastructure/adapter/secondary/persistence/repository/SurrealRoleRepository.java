@@ -88,23 +88,30 @@ public final class SurrealRoleRepository implements RoleRepository {
 
     @Override
     public Mono<ResultPage<Role>> findBy(RoleCriteria criteria, PageWindow window) {
+        String nameFilter = criteria.nameContains()
+                .map(ignored -> " AND string::contains(string::lowercase(name), $query)")
+                .orElse("");
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("tenantId", criteria.tenantId().value());
+        criteria.nameContains().ifPresent(query -> parameters.put("query", query.toLowerCase(Locale.ROOT)));
         if (criteria.applicationId().isPresent()) {
             String applicationId = criteria.applicationId().orElseThrow().value().toString();
             String query = """
-                    SELECT * FROM %1$s WHERE tenantId = $tenantId AND applicationId = $applicationId \
-                    ORDER BY registeredAt DESC LIMIT %2$d START %3$d;
-                    SELECT count() FROM %1$s WHERE tenantId = $tenantId AND applicationId = $applicationId GROUP ALL;\
-                    """.formatted(RoleSchema.TABLE, window.limit(), window.offset());
-            return client.execute(query, Map.of("tenantId", criteria.tenantId().value(), "applicationId", applicationId))
+                    SELECT * FROM %1$s WHERE tenantId = $tenantId AND applicationId = $applicationId%2$s \
+                    ORDER BY registeredAt DESC LIMIT %3$d START %4$d;
+                    SELECT count() FROM %1$s WHERE tenantId = $tenantId AND applicationId = $applicationId%2$s GROUP ALL;\
+                    """.formatted(RoleSchema.TABLE, nameFilter, window.limit(), window.offset());
+            parameters.put("applicationId", applicationId);
+            return client.execute(query, parameters)
                     .map(results -> ResultPage.of(results.get(0).valueStream().map(SurrealRoleRepository::toDomain).toList(), totalOf(results.get(1)), window));
         }
         String query = """
-                SELECT * FROM %1$s WHERE tenantId = $tenantId OR level = 'GLOBAL' \
-                ORDER BY registeredAt DESC LIMIT %2$d START %3$d;
-                SELECT count() FROM %1$s WHERE tenantId = $tenantId OR level = 'GLOBAL' GROUP ALL;\
-                """.formatted(RoleSchema.TABLE, window.limit(), window.offset());
+                SELECT * FROM %1$s WHERE (tenantId = $tenantId OR level = 'GLOBAL')%2$s \
+                    ORDER BY registeredAt DESC LIMIT %3$d START %4$d;
+                SELECT count() FROM %1$s WHERE (tenantId = $tenantId OR level = 'GLOBAL')%2$s GROUP ALL;\
+                """.formatted(RoleSchema.TABLE, nameFilter, window.limit(), window.offset());
 
-        return client.execute(query, Map.of("tenantId", criteria.tenantId().value()))
+        return client.execute(query, parameters)
                 .map(results -> {
                     List<Role> content = results.get(0).valueStream().map(SurrealRoleRepository::toDomain).toList();
                     return ResultPage.of(content, totalOf(results.get(1)), window);

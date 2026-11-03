@@ -8,10 +8,14 @@ import java.util.Objects;
 /**
  * Application-scoped, authorized window of the roles included in one profile.
  */
-public record ListProfileRolesRequest(AdministrationRequest administration, ProfileId profileId, PageWindow window) {
+public record ListProfileRolesRequest(AdministrationRequest administration, ProfileId profileId, PageWindow window, String query) {
+    public ListProfileRolesRequest(AdministrationRequest administration, ProfileId profileId, PageWindow window) {
+        this(administration, profileId, window, "");
+    }
     public ListProfileRolesRequest {
         Objects.requireNonNull(administration);
         Objects.requireNonNull(profileId);
         Objects.requireNonNull(window);
+        query = query == null ? "" : query.trim();
     }
 }

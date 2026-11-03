@@ -42,10 +42,16 @@ final class RoleController {
             @RequestParam(required = false) String size,
             @RequestParam(required = false) String offset,
             @RequestParam(required = false) String limit,
+            @RequestParam(required = false) String query,
             ServerWebExchange exchange) {
         RequestContext context = CorrelationWebFilter.context(exchange);
-        return listInteractor.execute(new ListRolesRawRequest(page, size, offset, limit))
+        return listInteractor.execute(new ListRolesRawRequest(page, size, offset, limit, query))
                 .map(response -> ResponseEntity.ok(ApiResponse.success("ROLES_LISTED",
                         WebContractMessages.successRolesListed(), response, context)));
+    }
+
+    Mono<ResponseEntity<ApiResponse<PageResponse<RoleWebResponse>>>> list(String page, String size, String offset,
+                                                                            String limit, ServerWebExchange exchange) {
+        return list(page, size, offset, limit, null, exchange);
     }
 }

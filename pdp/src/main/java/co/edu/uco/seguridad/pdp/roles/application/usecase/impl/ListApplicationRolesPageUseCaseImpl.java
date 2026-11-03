@@ -17,7 +17,7 @@ public final class ListApplicationRolesPageUseCaseImpl implements ListApplicatio
 
     @Override
     public Mono<ResultPage<RoleResponse>> execute(ListApplicationRolesPageRequest request) {
-        return repository.findBy(RoleCriteria.ofApplication(request.tenantId(), request.applicationId()), request.window())
+        return repository.findBy(RoleCriteria.ofApplication(request.tenantId(), request.applicationId()).withNameContaining(request.query()), request.window())
                 .map(page -> page.map(role -> new RoleResponse(role.id(), role.name(), role.scope(), role.resources(), role.registeredAt())));
     }
 }

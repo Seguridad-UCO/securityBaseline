@@ -11,6 +11,8 @@ import co.edu.uco.seguridad.pdp.roles.application.secondaryport.repository.RoleR
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Locale;
+
 public final class ListProfileRolesUseCaseImpl implements ListProfileRolesUseCase {
     private final PrincipalMustBeApplicationAdministratorValidator gate;
     private final ProfileRepository profiles;
@@ -29,11 +31,13 @@ public final class ListProfileRolesUseCaseImpl implements ListProfileRolesUseCas
                 .filter(profile -> profile.scope().applicationId().filter(request.administration().applicationId()::equals).isPresent())
                 .switchIfEmpty(Mono.error(new ProfileNotFoundException(request.profileId())))
                 .flatMap(profile -> {
-                    var ids = profile.roles().stream().sorted((a, b) -> a.value().toString().compareTo(b.value().toString())).toList();
-                    var slice = ids.stream().skip(request.window().offset()).limit(request.window().limit()).toList();
-                    return Flux.fromIterable(slice).flatMap(id -> roles.findByIdForTenant(id, request.administration().tenantId()))
+                    String query = request.query().toLowerCase(Locale.ROOT);
+                    return Flux.fromIterable(profile.roles().stream().sorted((a, b) -> a.value().toString().compareTo(b.value().toString())).toList())
+                            .concatMap(id -> roles.findByIdForTenant(id, request.administration().tenantId()))
+                            .filter(role -> query.isEmpty() || role.name().value().toLowerCase(Locale.ROOT).contains(query))
                             .map(role -> new RoleResponse(role.id(), role.name(), role.scope(), role.resources(), role.registeredAt()))
-                            .collectList().map(content -> ResultPage.of(content, ids.size(), request.window()));
+                            .collectList().map(filtered -> ResultPage.of(filtered.stream().skip(request.window().offset())
+                                    .limit(request.window().limit()).toList(), filtered.size(), request.window()));
                 }));
     }
 }

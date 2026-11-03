@@ -17,7 +17,7 @@ public final class ListApplicationProfilesPageUseCaseImpl implements ListApplica
 
     @Override
     public Mono<ResultPage<ProfileResponse>> execute(ListApplicationProfilesPageRequest request) {
-        return repository.findBy(ProfileCriteria.ofApplication(request.tenantId(), request.applicationId()), request.window())
+        return repository.findBy(ProfileCriteria.ofApplication(request.tenantId(), request.applicationId()).withNameContaining(request.query()), request.window())
                 .map(page -> page.map(profile -> new ProfileResponse(profile.id(), profile.name(), profile.scope(), profile.roles(), profile.registeredAt())));
     }
 }
