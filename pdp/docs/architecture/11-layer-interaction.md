@@ -2,7 +2,6 @@
 
 [← Contratos](02-service-contracts.md) · [Siguiente: SOLID →](12-solid.md)
 
-
 ## Decisión arquitectónica
 
 Solo se permite el flujo adaptador de entrada → interactor → caso de uso → rules validator → rules →
@@ -36,11 +35,15 @@ orquesta; el rules validator compone reglas; cada regla decide una cosa. Ver
 
 ## Ubicación verificable
 
-- Entrada: [`ApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/infrastructure/adapter/primary/web/controller/ApplicationController.java)
-- Interactores: [`infrastructure/adapter/primary/web/interactor`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure/adapter/primary/web/interactor)
-- Orquestación: [`RegisterApplicationUseCaseImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/application/usecase/impl/RegisterApplicationUseCaseImpl.java)
+- Entrada: [
+  `ApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/infrastructure/adapter/primary/web/controller/ApplicationController.java)
+- Interactores: [
+  `infrastructure/adapter/primary/web/interactor`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure/adapter/primary/web/interactor)
+- Orquestación: [
+  `RegisterApplicationUseCaseImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/application/usecase/impl/RegisterApplicationUseCaseImpl.java)
 - Reglas: [`resources/domain/rule`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/domain/rule)
-- Salidas: [`resources/application/secondaryport`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/application/secondaryport)
+- Salidas: [
+  `resources/application/secondaryport`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/application/secondaryport)
 
 ## Evidencia y límite
 

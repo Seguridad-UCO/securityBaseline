@@ -35,6 +35,28 @@ public record ResourcePath(String value) {
         return true;
     }
 
+    /**
+     * Determines whether this registered resource path covers a concrete request path.
+     * A path variable is a complete segment in the form {@code {name}}; it matches exactly
+     * one non-empty path segment. It deliberately does not match a slash, query string or
+     * a partial segment, so a template cannot widen the resource it protects.
+     */
+    public boolean matches(ResourcePath requestPath) {
+        String[] templateSegments = value.substring(1).split("/", -1);
+        String[] requestSegments = requestPath.value.substring(1).split("/", -1);
+        if (templateSegments.length != requestSegments.length) return false;
+        for (int index = 0; index < templateSegments.length; index++) {
+            if (!isTemplateSegment(templateSegments[index]) && !templateSegments[index].equals(requestSegments[index])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean isTemplateSegment(String segment) {
+        return segment.matches("\\{[A-Za-z][A-Za-z0-9_-]*}");
+    }
+
     private static boolean isPathCharacter(char character) {
         return character >= 'A' && character <= 'Z' || character >= 'a' && character <= 'z'
                 || character >= '0' && character <= '9' || "._~{}-".indexOf(character) >= 0;

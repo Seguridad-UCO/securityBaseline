@@ -2,7 +2,6 @@
 
 [← Mensajes](05-message-handling.md) · [Siguiente: DTOs →](13-input-strategy-dtos.md)
 
-
 ## Decisión arquitectónica
 
 Body, query y headers tienen cada uno una estrategia explícita: DTO en dos niveles para el body,
@@ -25,23 +24,24 @@ parámetro no podría ver que llegó `offset` sin `limit`.
 
 Combinaciones y su resultado:
 
-| Query | Resultado |
-|---|---|
-| sin parámetros | ventana por defecto (offset 0, limit 20) |
-| `page=2&size=25` | `PageWindow.ofPage(2, 25)` |
-| `page=3` | tamaño por defecto |
-| `offset=10&limit=5` | `PageWindow.ofRange(10, 5)` |
-| `offset=10` | `CONFLICTING_REQUEST_PARAMETERS` |
-| `page=1&size=10&offset=0&limit=5` | `CONFLICTING_REQUEST_PARAMETERS` |
-| `size=500` | `MALFORMED_REQUEST_FIELD` |
-| `page=primera` | `MALFORMED_REQUEST_FIELD` |
+| Query                             | Resultado                                |
+|-----------------------------------|------------------------------------------|
+| sin parámetros                    | ventana por defecto (offset 0, limit 20) |
+| `page=2&size=25`                  | `PageWindow.ofPage(2, 25)`               |
+| `page=3`                          | tamaño por defecto                       |
+| `offset=10&limit=5`               | `PageWindow.ofRange(10, 5)`              |
+| `offset=10`                       | `CONFLICTING_REQUEST_PARAMETERS`         |
+| `page=1&size=10&offset=0&limit=5` | `CONFLICTING_REQUEST_PARAMETERS`         |
+| `size=500`                        | `MALFORMED_REQUEST_FIELD`                |
+| `page=primera`                    | `MALFORMED_REQUEST_FIELD`                |
 
 `CorrelationWebFilter` lee o genera `X-Request-Id` y `X-Correlation-Id`, los propaga por el Reactor
 Context y los devuelve en la respuesta, incluidas las de error.
 
 ## Ubicación verificable
 
-- [`ApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/infrastructure/adapter/primary/web/controller/ApplicationController.java)
+- [
+  `ApplicationController.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/infrastructure/adapter/primary/web/controller/ApplicationController.java)
 - `SearchProtectedApplicationsRequest.java`
 - [`CorrelationWebFilter.java`](../../src/main/java/co/edu/uco/seguridad/shared/web/CorrelationWebFilter.java)
 - Pruebas: `ListApplicationsRequestMapperTests`

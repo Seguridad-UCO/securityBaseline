@@ -1,27 +1,19 @@
 package co.edu.uco.seguridad.shared.config;
 
-import co.edu.uco.seguridad.shared.security.ApiAccessDeniedHandler;
-import co.edu.uco.seguridad.shared.security.ApiAuthenticationEntryPoint;
-import co.edu.uco.seguridad.shared.security.CorsProperties;
-import co.edu.uco.seguridad.shared.security.JwtSecurityProperties;
-import co.edu.uco.seguridad.shared.security.KeycloakSessionProperties;
+import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserIdLookupValidator;
+import co.edu.uco.seguridad.shared.security.*;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.Primary;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtClaimValidator;
-import org.springframework.security.oauth2.jwt.JwtIssuerValidator;
-import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
-import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
-import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
+import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.context.WebSessionServerSecurityContextRepository;
 import org.springframework.security.web.server.csrf.CookieServerCsrfTokenRepository;
@@ -29,22 +21,24 @@ import org.springframework.security.web.server.csrf.CsrfWebFilter;
 import org.springframework.security.web.server.csrf.ServerCsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.server.util.matcher.AndServerWebExchangeMatcher;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
-import org.springframework.web.server.session.CookieWebSessionIdResolver;
 import org.springframework.util.StringUtils;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
+import org.springframework.web.server.session.CookieWebSessionIdResolver;
 import tools.jackson.databind.ObjectMapper;
 
+import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import javax.crypto.spec.SecretKeySpec;
-import reactor.core.publisher.Mono;
 
 /**
- * Frontera PEP reactiva (ADR-018, ADR-020). Único lugar del proyecto donde se decide qué ruta
- * necesita un token y cómo se valida ese token; ningún módulo de negocio importa una clase de
- * Spring Security.
+ * Frontera del canal BFF, reactiva (ADR-018, ADR-020). Único lugar **para ese canal** donde se
+ * decide qué ruta necesita un token y cómo se valida; ningún módulo de negocio importa una clase de
+ * Spring Security. Desde HU-003 no es el único canal del proyecto: {@code /internal/v1/**} tiene su
+ * propia cadena en {@code InternalSecurityConfiguration}, con su propia confianza (mTLS + evidencia
+ * JWT) — los dos {@code securityMatcher} no se solapan, así que cada uno sigue siendo la única
+ * fuente de verdad dentro de su propio canal.
  */
 @Configuration
 @Profile("!keycloak")
@@ -54,8 +48,8 @@ class SecurityConfiguration {
 
     @Bean
     SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http, @Qualifier("jwtDecoder") ReactiveJwtDecoder jwtDecoder,
-            ApiAuthenticationEntryPoint entryPoint, ApiAccessDeniedHandler accessDeniedHandler,
-            CorsConfigurationSource corsConfigurationSource) {
+                                                  ApiAuthenticationEntryPoint entryPoint, ApiAccessDeniedHandler accessDeniedHandler,
+                                                  CorsConfigurationSource corsConfigurationSource) {
         CookieServerCsrfTokenRepository csrf = CookieServerCsrfTokenRepository.withHttpOnlyFalse();
         csrf.setCookiePath("/");
         return http
@@ -76,11 +70,15 @@ class SecurityConfiguration {
                 .exceptionHandling(exceptionHandling -> exceptionHandling
                         .authenticationEntryPoint(entryPoint)
                         .accessDeniedHandler(accessDeniedHandler))
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtDecoder(jwtDecoder)))
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .authenticationEntryPoint(entryPoint).accessDeniedHandler(accessDeniedHandler)
+                        .jwt(jwt -> jwt.jwtDecoder(jwtDecoder)))
                 .build();
     }
 
-    /** CSRF solo aplica a la autenticación BFF por cookie, no a Bearer tokens servidor-a-servidor. */
+    /**
+     * CSRF solo aplica a la autenticación BFF por cookie, no a Bearer tokens servidor-a-servidor.
+     */
     private static ServerWebExchangeMatcher bffSessionRequest() {
         return exchange -> exchange.getRequest().getCookies().containsKey("SECURITY_BASELINE_SESSION")
                 ? ServerWebExchangeMatcher.MatchResult.match()
@@ -99,7 +97,8 @@ class SecurityConfiguration {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(properties.allowedOrigins());
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-XSRF-TOKEN"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-XSRF-TOKEN", "X-Correlation-Id", "traceparent", "tracestate"));
+        configuration.setExposedHeaders(List.of("X-Request-Id", "X-Correlation-Id"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -127,7 +126,7 @@ class SecurityConfiguration {
      */
     @Bean
     @Primary
-    ReactiveJwtDecoder jwtDecoder(JwtSecurityProperties properties) {
+    ReactiveJwtDecoder jwtDecoder(JwtSecurityProperties properties, SubjectUserIdLookupValidator subjectUserIdLookup) {
         NimbusReactiveJwtDecoder decoder = properties.usesJwks()
                 ? NimbusReactiveJwtDecoder.withJwkSetUri(properties.jwkSetUri()).build()
                 : NimbusReactiveJwtDecoder.withSecretKey(hmacKey(properties.secret())).build();
@@ -141,7 +140,8 @@ class SecurityConfiguration {
                 new JwtClaimValidator<List<String>>("aud",
                         audiences -> audiences != null && audiences.contains(properties.audience()))));
         decoder.setJwtValidator(validator);
-        return decoder;
+        // HU-038: sellado suave del claim interno (sin aprovisionar), coherente con el canal Keycloak.
+        return new LocalIdentityStampingJwtDecoder(decoder, subjectUserIdLookup);
     }
 
     private static SecretKeySpec hmacKey(String secret) {

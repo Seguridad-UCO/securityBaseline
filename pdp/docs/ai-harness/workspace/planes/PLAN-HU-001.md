@@ -7,22 +7,23 @@
 - **Tipo:** Consulta
 - **Fecha:** 2026-08-31
 - **Rama sugerida:** `feature/HU-001-consulta-aplicaciones-paginada`
-- **Fuentes:** `docs/ai-harness/workspace/HU-001.md`; hallazgo de la revisión del 2026-08-31 en `docs/criteria-compliance-matrix.md`
+- **Fuentes:** `docs/ai-harness/workspace/HU-001.md`; hallazgo de la revisión del 2026-08-31 en
+  `docs/criteria-compliance-matrix.md`
 - **Criterios de la línea base que toca:** 1, 2, 5, 6, 9, 11, 12, 13, 14, **16, 17, 18, 19**, 20, 21, 22
 
 ## 0. Lo que ya existe — no se reescribe
 
 La FASE 2 encontró que buena parte de la historia ya está construida y solo hay que conectarla:
 
-| Pieza | Estado | Consecuencia |
-|---|---|---|
-| `PageWindow` | Completo: `ofPage`, `ofRange`, `defaultWindow`, `MAX_LIMIT=100`, `DEFAULT_LIMIT=20`, `page()` | **Se reutiliza tal cual.** Los criterios 18 y 19 viven aquí |
-| `ResultPage<T>` | Completo, con `map()` | Se reutiliza para pasar de dominio a DTO sin perder `total` ni `window` |
-| `PageResponse<T>` | Completo (`shared/web`) | Es el DTO plano de salida |
-| `ApplicationName.contains(String)` | Ya compara sin distinguir mayúsculas | **La specification lo usa; no se reimplementa el filtro** |
-| Tenant desde el principal | `SecurityContext.currentPrincipal()` en `ListApplicationsInteractorImpl` | El criterio 7 de la historia ya está cubierto estructuralmente |
-| `GET /api/v1/applications` | Ya existe | **La historia evoluciona un endpoint, no crea uno** |
-| `ConflictingRequestParametersException` | Existe en `shared/web/exception` | Es la excepción de la ventana ambigua. No se crea una nueva |
+| Pieza                                   | Estado                                                                                        | Consecuencia                                                            |
+|-----------------------------------------|-----------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
+| `PageWindow`                            | Completo: `ofPage`, `ofRange`, `defaultWindow`, `MAX_LIMIT=100`, `DEFAULT_LIMIT=20`, `page()` | **Se reutiliza tal cual.** Los criterios 18 y 19 viven aquí             |
+| `ResultPage<T>`                         | Completo, con `map()`                                                                         | Se reutiliza para pasar de dominio a DTO sin perder `total` ni `window` |
+| `PageResponse<T>`                       | Completo (`shared/web`)                                                                       | Es el DTO plano de salida                                               |
+| `ApplicationName.contains(String)`      | Ya compara sin distinguir mayúsculas                                                          | **La specification lo usa; no se reimplementa el filtro**               |
+| Tenant desde el principal               | `SecurityContext.currentPrincipal()` en `ListApplicationsInteractorImpl`                      | El criterio 7 de la historia ya está cubierto estructuralmente          |
+| `GET /api/v1/applications`              | Ya existe                                                                                     | **La historia evoluciona un endpoint, no crea uno**                     |
+| `ConflictingRequestParametersException` | Existe en `shared/web/exception`                                                              | Es la excepción de la ventana ambigua. No se crea una nueva             |
 
 ## 1. Resumen funcional
 
@@ -35,29 +36,29 @@ saga de compensación del criterio 10.
 
 ## 2. Criterios de aceptación
 
-| # | Criterio | Resultado esperado |
-|---|---|---|
-| 1 | Sin parámetros | Primera página (`offset=0`, `limit=20`) del inquilino del principal, orden estable por `registeredAt DESC` |
-| 2 | `?name=port` | Solo las aplicaciones cuyo nombre contiene "port", sin distinguir mayúsculas |
-| 3 | `?page=1&size=5` | Devuelve la ventana pedida y el `total` real del filtro, no el de la página |
-| 4 | `?offset=5&limit=5` | Mismo contenido que `?page=1&size=5` |
-| 5 | `?page=1&offset=5` | **400** `CONFLICTING_REQUEST_PARAMETERS` nombrando el campo |
-| 6 | `?size=101` o `?size=0` | **400** `MALFORMED_REQUEST_FIELD` con la razón del rango |
-| 7 | Principal de otro inquilino | Nunca ve aplicaciones ajenas, ni siquiera filtrando |
-| 8 | Filtro sin resultados | Página vacía, `total=0`, **200** — nunca 404 |
+| # | Criterio                    | Resultado esperado                                                                                         |
+|---|-----------------------------|------------------------------------------------------------------------------------------------------------|
+| 1 | Sin parámetros              | Primera página (`offset=0`, `limit=20`) del inquilino del principal, orden estable por `registeredAt DESC` |
+| 2 | `?name=port`                | Solo las aplicaciones cuyo nombre contiene "port", sin distinguir mayúsculas                               |
+| 3 | `?page=1&size=5`            | Devuelve la ventana pedida y el `total` real del filtro, no el de la página                                |
+| 4 | `?offset=5&limit=5`         | Mismo contenido que `?page=1&size=5`                                                                       |
+| 5 | `?page=1&offset=5`          | **400** `CONFLICTING_REQUEST_PARAMETERS` nombrando el campo                                                |
+| 6 | `?size=101` o `?size=0`     | **400** `MALFORMED_REQUEST_FIELD` con la razón del rango                                                   |
+| 7 | Principal de otro inquilino | Nunca ve aplicaciones ajenas, ni siquiera filtrando                                                        |
+| 8 | Filtro sin resultados       | Página vacía, `total=0`, **200** — nunca 404                                                               |
 
 ## 3. Reglas de negocio
 
 Esta historia **no añade ninguna `Rule`**: es una consulta, y una consulta no viola invariantes de
 negocio. Todo lo que puede fallar es contrato de entrada, y eso se rechaza en el borde.
 
-| # | Regla | Dónde vive | Excepción → HTTP |
-|---|---|---|---|
-| 1 | El `size`/`limit` está entre 1 y 100 | Constructor de `PageWindow` (ya existe) | `InvalidPageWindowException` → **400** |
-| 2 | El `offset`/`page` no es negativo | Constructor de `PageWindow` (ya existe) | `InvalidPageWindowException` → **400** |
-| 3 | No se mezclan `page`/`size` con `offset`/`limit` | `ListApplicationsRequestMapper` | `ConflictingRequestParametersException` → **400** |
-| 4 | Los parámetros numéricos son enteros | `RequestFieldParser.parseInt` (ya existe) | `MalformedRequestFieldException` → **400** |
-| 5 | Solo se ven aplicaciones del propio inquilino | `ApplicationCriteria.tenantId` es obligatorio y sale del principal | — (no hay caso de error: el filtro es estructural) |
+| # | Regla                                            | Dónde vive                                                         | Excepción → HTTP                                   |
+|---|--------------------------------------------------|--------------------------------------------------------------------|----------------------------------------------------|
+| 1 | El `size`/`limit` está entre 1 y 100             | Constructor de `PageWindow` (ya existe)                            | `InvalidPageWindowException` → **400**             |
+| 2 | El `offset`/`page` no es negativo                | Constructor de `PageWindow` (ya existe)                            | `InvalidPageWindowException` → **400**             |
+| 3 | No se mezclan `page`/`size` con `offset`/`limit` | `ListApplicationsRequestMapper`                                    | `ConflictingRequestParametersException` → **400**  |
+| 4 | Los parámetros numéricos son enteros             | `RequestFieldParser.parseInt` (ya existe)                          | `MalformedRequestFieldException` → **400**         |
+| 5 | Solo se ven aplicaciones del propio inquilino    | `ApplicationCriteria.tenantId` es obligatorio y sale del principal | — (no hay caso de error: el filtro es estructural) |
 
 > El aislamiento entre inquilinos **no es una regla que lance**: es un criterio obligatorio del
 > objeto de consulta. `ApplicationCriteria` no se puede construir sin `TenantId`, así que una
@@ -104,9 +105,9 @@ Ninguno nuevo. `PageWindow`, `ApplicationName` y `TenantId` ya existen y cubren 
 
 ## 6. Endpoint
 
-| Verbo | Ruta | Éxito | Entrada | Salida |
-|---|---|---|---|---|
-| GET | `/api/v1/applications` | **200** `APPLICATIONS_LISTED` | Query: `name`, `page`, `size`, `offset`, `limit` — **todos opcionales y todos `String`** | `ApiResponse<PageResponse<ApplicationWebResponse>>` |
+| Verbo | Ruta                   | Éxito                         | Entrada                                                                                  | Salida                                              |
+|-------|------------------------|-------------------------------|------------------------------------------------------------------------------------------|-----------------------------------------------------|
+| GET   | `/api/v1/applications` | **200** `APPLICATIONS_LISTED` | Query: `name`, `page`, `size`, `offset`, `limit` — **todos opcionales y todos `String`** | `ApiResponse<PageResponse<ApplicationWebResponse>>` |
 
 - **Autorización:** requiere token. El inquilino sale del principal, **nunca de la query**.
 - **Cambio de contrato:** `data` deja de ser un array y pasa a ser `PageResponse`. Acompaña el
@@ -114,12 +115,12 @@ Ninguno nuevo. `PageWindow`, `ApplicationName` y `TenantId` ya existen y cubren 
 
 ### Resolución de la ventana (criterio 19)
 
-| Parámetros presentes | Resultado |
-|---|---|
-| ninguno | `PageWindow.defaultWindow()` → `offset=0`, `limit=20` |
-| `page` y/o `size` | `PageWindow.ofPage(page, size ?: 20)`, con `page` por defecto 0 |
-| `offset` y/o `limit` | `PageWindow.ofRange(offset ?: 0, limit ?: 20)` |
-| uno de cada grupo | `ConflictingRequestParametersException` |
+| Parámetros presentes | Resultado                                                       |
+|----------------------|-----------------------------------------------------------------|
+| ninguno              | `PageWindow.defaultWindow()` → `offset=0`, `limit=20`           |
+| `page` y/o `size`    | `PageWindow.ofPage(page, size ?: 20)`, con `page` por defecto 0 |
+| `offset` y/o `limit` | `PageWindow.ofRange(offset ?: 0, limit ?: 20)`                  |
+| uno de cada grupo    | `ConflictingRequestParametersException`                         |
 
 ## 7. SPEC — el contrato
 
@@ -250,23 +251,23 @@ Las firmas de los beans existentes se mantienen.
 
 ### 8b. Frontend (`securityBaseline-fr`)
 
-| Archivo | Cambio |
-|---|---|
-| `src/api.js` | `listApplications` acepta parámetros opcionales y los serializa como query |
-| `src/App.jsx` | `appResult.data` pasa a `appResult.data.content` |
+| Archivo       | Cambio                                                                     |
+|---------------|----------------------------------------------------------------------------|
+| `src/api.js`  | `listApplications` acepta parámetros opcionales y los serializa como query |
+| `src/App.jsx` | `appResult.data` pasa a `appResult.data.content`                           |
 
 Es el mínimo para que la consola siga funcionando. Paginación en la interfaz: fuera de alcance.
 
 ## 9. Casos de prueba esperados
 
-| Capa | Clase | Casos |
-|---|---|---|
-| `domain` | `ApplicationCriteriaTests` **[N]** | Sin filtro acepta cualquiera del inquilino · con filtro acepta por fragmento sin distinguir mayúsculas · rechaza otro inquilino · rechaza nombre que no contiene · `tenantId` nulo lanza |
-| `application` | `ListApplicationsUseCaseImplTests` **[M]** | Devuelve la página con `total` del filtro · página vacía con `total=0` · propaga la ventana al puerto sin alterarla |
-| `infrastructure` | `ListApplicationsRequestMapperTests` **[N]** | Sin parámetros → ventana por defecto · `page`+`size` · `offset`+`limit` · `size` fuera de rango lanza · mezcla de grupos lanza `ConflictingRequestParametersException` · `page` no numérico lanza · `name` en blanco se trata como ausente |
-| `infrastructure` | `ApplicationControllerTests` **[M]** | `list` ensambla el raw con los cinco parámetros y responde 200 con la página |
-| integración | `SurrealApplicationRepositoryTests` o ampliar `SurrealRepositoryIntegrationTests` **[M]** | `findBy` filtra, ordena, recorta y devuelve el `total` completo |
-| e2e | `ApplicationHttpTests` **[N]** | Flujo autenticado: sin filtro · con filtro · segunda página · ventana ambigua da 400 · **un inquilino no ve las aplicaciones de otro** |
+| Capa             | Clase                                                                                     | Casos                                                                                                                                                                                                                                      |
+|------------------|-------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `domain`         | `ApplicationCriteriaTests` **[N]**                                                        | Sin filtro acepta cualquiera del inquilino · con filtro acepta por fragmento sin distinguir mayúsculas · rechaza otro inquilino · rechaza nombre que no contiene · `tenantId` nulo lanza                                                   |
+| `application`    | `ListApplicationsUseCaseImplTests` **[M]**                                                | Devuelve la página con `total` del filtro · página vacía con `total=0` · propaga la ventana al puerto sin alterarla                                                                                                                        |
+| `infrastructure` | `ListApplicationsRequestMapperTests` **[N]**                                              | Sin parámetros → ventana por defecto · `page`+`size` · `offset`+`limit` · `size` fuera de rango lanza · mezcla de grupos lanza `ConflictingRequestParametersException` · `page` no numérico lanza · `name` en blanco se trata como ausente |
+| `infrastructure` | `ApplicationControllerTests` **[M]**                                                      | `list` ensambla el raw con los cinco parámetros y responde 200 con la página                                                                                                                                                               |
+| integración      | `SurrealApplicationRepositoryTests` o ampliar `SurrealRepositoryIntegrationTests` **[M]** | `findBy` filtra, ordena, recorta y devuelve el `total` completo                                                                                                                                                                            |
+| e2e              | `ApplicationHttpTests` **[N]**                                                            | Flujo autenticado: sin filtro · con filtro · segunda página · ventana ambigua da 400 · **un inquilino no ve las aplicaciones de otro**                                                                                                     |
 
 Convenciones en `sb-testing`: **nada de Mockito**, fakes anónimos y lambdas, `StepVerifier` para lo
 reactivo, `{Clase}Tests` y métodos en snake_case inglés.
@@ -278,23 +279,23 @@ Presupuesto: **22-26 pruebas**.
 
 ## 10. Trazabilidad
 
-| Fase | Estado | Fecha |
-|---|---|---|
-| Plan | ✅ Generado | 2026-08-31 |
-| Contrato aprobado (gate 1) | ✅ Aprobado | 2026-08-31 |
-| Pruebas en rojo | ✅ 22 pruebas fallando por `UnsupportedOperationException` | 2026-08-31 |
-| Implementación en verde | ✅ 225 pruebas; 98-100 % de cobertura en lo nuevo | 2026-08-31 |
-| Validación | ⏳ Pendiente | |
-| Entrega (gate 2) | ⏳ Pendiente | |
+| Fase                       | Estado                                                    | Fecha      |
+|----------------------------|-----------------------------------------------------------|------------|
+| Plan                       | ✅ Generado                                                | 2026-08-31 |
+| Contrato aprobado (gate 1) | ✅ Aprobado                                                | 2026-08-31 |
+| Pruebas en rojo            | ✅ 22 pruebas fallando por `UnsupportedOperationException` | 2026-08-31 |
+| Implementación en verde    | ✅ 225 pruebas; 98-100 % de cobertura en lo nuevo          | 2026-08-31 |
+| Validación                 | ⏳ Pendiente                                               |            |
+| Entrega (gate 2)           | ⏳ Pendiente                                               |            |
 
 ### Desviaciones respecto al plan
 
-| Desviación | Por qué |
-|---|---|
-| `RequiredArgumentMessages` gana tres constantes | El plan no las declaró, pero la convención exige que `requireNonNull` no lleve literales |
+| Desviación                                                                | Por qué                                                                                                                                                                                               |
+|---------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `RequiredArgumentMessages` gana tres constantes                           | El plan no las declaró, pero la convención exige que `requireNonNull` no lleve literales                                                                                                              |
 | `LIMIT`/`START` se interpolan en la consulta en vez de ir como parámetros | `SurrealDbClient.execute` solo acepta `Map<String,String>` y SurrealQL exige números ahí. Son dos `int` que `PageWindow` ya validó, no texto de usuario; el filtro de nombre, que sí lo es, va ligado |
-| El mapper comprueba los rangos además del value object | El borde HTTP debe decir **qué campo** viene mal (criterio 6). No duplica ni el umbral (`PageWindow.MAX_LIMIT`) ni el texto (catálogo) |
-| Se actualizaron cuatro clases de prueba existentes | Sus fakes del puerto implementaban `findAllByTenant`. Consecuencia directa de una firma `[M]` |
+| El mapper comprueba los rangos además del value object                    | El borde HTTP debe decir **qué campo** viene mal (criterio 6). No duplica ni el umbral (`PageWindow.MAX_LIMIT`) ni el texto (catálogo)                                                                |
+| Se actualizaron cuatro clases de prueba existentes                        | Sus fakes del puerto implementaban `findAllByTenant`. Consecuencia directa de una firma `[M]`                                                                                                         |
 
 ## 11. Al cerrar la historia
 

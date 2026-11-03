@@ -1,16 +1,17 @@
 package co.edu.uco.seguridad.pdp.resources.application.usecase.impl;
 
-import co.edu.uco.seguridad.pdp.applications.domain.exception.ApplicationNotFoundException;
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
+import co.edu.uco.seguridad.pdp.applications.domain.exception.ApplicationNotFoundException;
 import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
+import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
 import co.edu.uco.seguridad.pdp.commons.model.ResourceId;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.resources.application.primaryport.request.RegisterProtectedResourceRequest;
 import co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository.ProtectedResourceRepository;
-import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.ProtectedResource;
+import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
 import co.edu.uco.seguridad.shared.event.DomainEvent;
 import co.edu.uco.seguridad.shared.event.DomainEventPublisher;
@@ -50,12 +51,13 @@ class RegisterProtectedResourceUseCaseImplTests {
     @Test
     void registers_the_resource_and_publishes_the_registration_event() {
         Application application = Application.register(new ApplicationId(UUID.randomUUID()), TENANT,
-                new ApplicationName("gestion-academica"), "", new ApplicationBaseUrl("https://example.com"), NOW);
+                new ApplicationName("gestion-academica"), "", new ApplicationBaseUrl("https://example.com"),
+                new ApplicationCredentialHash("hash"), NOW);
         List<ProtectedResource> saved = new ArrayList<>();
         ProtectedResourceRepository resources = new ProtectedResourceRepository() {
             @Override
             public Mono<Boolean> existsByApplicationPathAndMethod(ApplicationId applicationId, ResourcePath path,
-                    HttpVerb method) {
+                                                                  HttpVerb method) {
                 throw new UnsupportedOperationException();
             }
 
@@ -74,14 +76,24 @@ class RegisterProtectedResourceUseCaseImplTests {
             public Mono<Void> deleteById(ResourceId resourceId) {
                 throw new UnsupportedOperationException();
             }
+
+            @Override
+            public Mono<ApplicationId> findApplicationIdById(ResourceId resourceId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<ResourceId> findIdByApplicationPathAndMethod(ApplicationId applicationId, ResourcePath path, HttpVerb method) {
+                throw new UnsupportedOperationException();
+            }
         };
         List<DomainEvent> published = new ArrayList<>();
         UUID fixedId = UUID.randomUUID();
         RegisterProtectedResourceUseCaseImpl useCase = new RegisterProtectedResourceUseCaseImpl(
                 query -> Mono.empty(), dto -> Mono.empty(), resources, event -> {
-                    published.add(event);
-                    return Mono.empty();
-                }, () -> fixedId, () -> NOW);
+            published.add(event);
+            return Mono.empty();
+        }, () -> fixedId, () -> NOW);
 
         RegisterProtectedResourceRequest request = new RegisterProtectedResourceRequest(
                 TENANT, application.id(), new ResourcePath("/estudiantes"), HttpVerb.GET);
@@ -104,7 +116,7 @@ class RegisterProtectedResourceUseCaseImplTests {
         return new ProtectedResourceRepository() {
             @Override
             public Mono<Boolean> existsByApplicationPathAndMethod(ApplicationId applicationId, ResourcePath path,
-                    HttpVerb method) {
+                                                                  HttpVerb method) {
                 throw new AssertionError("must not be reached when the application lookup fails");
             }
 
@@ -120,6 +132,16 @@ class RegisterProtectedResourceUseCaseImplTests {
 
             @Override
             public Mono<Void> deleteById(ResourceId resourceId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<ApplicationId> findApplicationIdById(ResourceId resourceId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<ResourceId> findIdByApplicationPathAndMethod(ApplicationId applicationId, ResourcePath path, HttpVerb method) {
                 throw new UnsupportedOperationException();
             }
         };

@@ -1,0 +1,40 @@
+#!/usr/bin/env python3
+"""Compila definiciones declarativas: el único origen de data.policies."""
+import json, sys
+from pathlib import Path
+from jsonschema import Draft202012Validator
+
+root = Path(__file__).resolve().parent.parent
+schema = json.loads((root / "contracts/policy-definition.schema.json").read_text())
+validator = Draft202012Validator(schema)
+allowed_roots = {"subject", "tenant", "application", "resource", "context", "security", "relationships"}
+operators = {"EQ", "NEQ", "CONTAINS", "IN", "EXISTS", "GT", "GTE", "LT", "LTE"}
+
+def condition(node, depth=0):
+    if depth > 3: raise ValueError("condition AST exceeds evaluator depth 3")
+    if "predicate" in node:
+        p=node["predicate"]
+        if p["operator"] not in operators: raise ValueError("unsupported operator")
+        for operand in (p["left"], p["right"]):
+            if "ref" in operand and (len(operand["ref"]) > 4 or operand["ref"][0] not in allowed_roots): raise ValueError("unsupported fact path")
+        return
+    key = next(iter(node)); children=node[key] if key != "not" else [node[key]]
+    if key == "not" and "predicate" not in node[key]: raise ValueError("NOT only supports a predicate, matching condition_evaluator.rego")
+    for child in children: condition(child, depth + 1)
+
+policies=[]; ids=set()
+for path in sorted((root / "policy-definitions").glob("**/*.json")):
+    value=json.loads(path.read_text())
+    errors=list(validator.iter_errors(value))
+    if errors: raise SystemExit(f"{path}: {errors[0].message}")
+    if value["id"] in ids: raise SystemExit(f"duplicate policy id: {value['id']}")
+    ids.add(value["id"]); condition(value["condition"])
+    scope=value["scope"]; target=value["target"]
+    if scope["level"] == "APPLICATION" and not target.get("applicationIds"): raise SystemExit(f"{path}: APPLICATION requires applicationIds")
+    if scope["level"] == "TENANT" and not scope.get("ownerTenantId"): raise SystemExit(f"{path}: TENANT requires ownerTenantId")
+    if scope["level"] == "RESOURCE" and not (target.get("resourceTypes") or target.get("resourceIds")): raise SystemExit(f"{path}: RESOURCE requires resource target")
+    if scope["level"] == "GLOBAL" and scope.get("ownerTenantId"): raise SystemExit(f"{path}: GLOBAL cannot own a tenant")
+    policies.append(value)
+out=root / "build/data"; out.mkdir(parents=True, exist_ok=True)
+(out / "policies.json").write_text(json.dumps({"policies": sorted(policies, key=lambda p:p["id"])}, indent=2) + "\n")
+print(f"compiled {len(policies)} policy definitions")

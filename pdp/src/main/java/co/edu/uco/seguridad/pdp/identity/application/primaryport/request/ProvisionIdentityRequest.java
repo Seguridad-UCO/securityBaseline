@@ -5,7 +5,9 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
 
-/** DTO de entrada del puerto primario: intención tipada de provisionar (o reconocer) un usuario. */
+/**
+ * DTO de entrada del puerto primario: intención tipada de provisionar (o reconocer) un usuario.
+ */
 public record ProvisionIdentityRequest(String issuer, String subject, Email email, String name, String provider) {
 
     public ProvisionIdentityRequest {

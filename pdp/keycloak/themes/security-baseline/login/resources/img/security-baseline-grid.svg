@@ -1,23 +1,23 @@
 <svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="1600" height="900" fill="#F8FAF8"/>
-  <g opacity="0.22" stroke="#018B51" stroke-width="1">
-    <path d="M0 112H1600"/>
-    <path d="M0 224H1600"/>
-    <path d="M0 336H1600"/>
-    <path d="M0 448H1600"/>
-    <path d="M0 560H1600"/>
-    <path d="M0 672H1600"/>
-    <path d="M0 784H1600"/>
-    <path d="M160 0V900"/>
-    <path d="M320 0V900"/>
-    <path d="M480 0V900"/>
-    <path d="M640 0V900"/>
-    <path d="M800 0V900"/>
-    <path d="M960 0V900"/>
-    <path d="M1120 0V900"/>
-    <path d="M1280 0V900"/>
-    <path d="M1440 0V900"/>
-  </g>
-  <circle cx="1320" cy="180" r="144" fill="#018B51" fill-opacity="0.06"/>
-  <circle cx="260" cy="720" r="196" fill="#111312" fill-opacity="0.04"/>
+    <rect width="1600" height="900" fill="#F8FAF8"/>
+    <g opacity="0.22" stroke="#018B51" stroke-width="1">
+        <path d="M0 112H1600"/>
+        <path d="M0 224H1600"/>
+        <path d="M0 336H1600"/>
+        <path d="M0 448H1600"/>
+        <path d="M0 560H1600"/>
+        <path d="M0 672H1600"/>
+        <path d="M0 784H1600"/>
+        <path d="M160 0V900"/>
+        <path d="M320 0V900"/>
+        <path d="M480 0V900"/>
+        <path d="M640 0V900"/>
+        <path d="M800 0V900"/>
+        <path d="M960 0V900"/>
+        <path d="M1120 0V900"/>
+        <path d="M1280 0V900"/>
+        <path d="M1440 0V900"/>
+    </g>
+    <circle cx="1320" cy="180" r="144" fill="#018B51" fill-opacity="0.06"/>
+    <circle cx="260" cy="720" r="196" fill="#111312" fill-opacity="0.04"/>
 </svg>

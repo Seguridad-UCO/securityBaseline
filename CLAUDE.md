@@ -139,10 +139,12 @@ parece raro:
 
 ## Estado de la línea base
 
-**22 de los 23 criterios se cumplen.** HU-001 cerró los criterios 16 a 19 (consulta por
-specification, puerto dinámico y ventana de paginación). Queda abierto **solo el criterio 10**:
-`RemoveApplicationUseCase` existe como compensación y ningún caso de uso la invoca — no hay saga
-cableada. Ver [`pdp/docs/criteria-compliance-matrix.md`](pdp/docs/criteria-compliance-matrix.md).
+**Los 23 criterios se cumplen.** HU-001 cerró los criterios 16 a 19 (consulta por specification,
+puerto dinámico y ventana de paginación). HU-010 cerró el último, el criterio 10: `POST
+/api/v1/applications/with-initial-resource` registra la aplicación y su recurso inicial en una
+sola operación, y `RegisterApplicationWithInitialResourceUseCaseImpl` invoca `RemoveApplicationUseCase`
+como compensación explícita si el segundo paso falla — sin puerto de transacción genérico. Ver
+[`pdp/docs/criteria-compliance-matrix.md`](pdp/docs/criteria-compliance-matrix.md).
 
 No des por cumplido un criterio porque una tabla lo diga: `drift.ps1` verifica que la
 documentación no afirme lo que el código no sostiene — y desde ahora también vigila este archivo.

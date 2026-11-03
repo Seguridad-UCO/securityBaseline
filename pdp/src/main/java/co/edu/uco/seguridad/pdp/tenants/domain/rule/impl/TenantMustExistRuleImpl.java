@@ -1,8 +1,8 @@
 package co.edu.uco.seguridad.pdp.tenants.domain.rule.impl;
 
-import co.edu.uco.seguridad.pdp.tenants.domain.rule.model.TenantExistence;
 import co.edu.uco.seguridad.pdp.tenants.domain.exception.TenantNotFoundException;
 import co.edu.uco.seguridad.pdp.tenants.domain.rule.TenantMustExistRule;
+import co.edu.uco.seguridad.pdp.tenants.domain.rule.model.TenantExistence;
 
 public final class TenantMustExistRuleImpl implements TenantMustExistRule {
 

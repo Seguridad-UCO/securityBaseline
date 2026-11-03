@@ -2,12 +2,18 @@ package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.we
 
 import co.edu.uco.seguridad.AbstractSurrealDbIntegrationTest;
 import co.edu.uco.seguridad.pdp.PdpApplication;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.secondary.policy.OpaFixtureServer;
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.shared.security.TestJwtSupport;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -15,9 +21,18 @@ import tools.jackson.databind.ObjectMapper;
 import java.util.UUID;
 
 /**
- * Flujo HTTP completo sobre Netty, autenticado y contra una SurrealDB real. Con el adaptador que
- * deniega por defecto (ADR-012), el unico DecisionState observable de punta a punta es DENY — ALLOW
- * e INDETERMINATE-por-fallo-tecnico se prueban en AuthorizeUseCaseImplTests, que no dependen de OPA.
+ * Flujo HTTP completo sobre Netty, autenticado y contra una SurrealDB real. {@code pdp.opa.base-url}
+ * apunta a un {@link OpaFixtureServer} embebido (HU-006) que responde DENY/NO_APPLICABLE_POLICY por
+ * defecto — el mismo resultado que daba el adaptador que denegaba por defecto (ADR-012), ahora
+ * viniendo de una respuesta HTTP real de "OPA" en vez de un valor fijo en el PDP. ALLOW e
+ * INDETERMINATE-por-fallo-tecnico se prueban en AuthorizeUseCaseImplTests y en
+ * OpaPolicyDecisionAdapterTests, que no dependen de este flujo HTTP completo.
+ *
+ * <p>HU-017: {@code registerResource} (usado en el {@code @BeforeEach}) ahora pasa por el gate de
+ * administración, que también consulta a OPA — pero por una ruta distinta
+ * ({@code pdp.opa.administration-decision-path}). El fixture fija esa ruta en ALLOW explícitamente
+ * (ver {@code startOpaFixture}) sin tocar el default DENY que las pruebas de esta clase siguen
+ * necesitando para la ruta de autorización de negocio.</p>
  */
 @SpringBootTest(classes = PdpApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class AuthorizationHttpTests extends AbstractSurrealDbIntegrationTest {
@@ -26,15 +41,47 @@ class AuthorizationHttpTests extends AbstractSurrealDbIntegrationTest {
     private static final String OTRO = "tenant-a";
     private static final ObjectMapper JSON = new ObjectMapper();
 
+    private static OpaFixtureServer opa;
+
     @LocalServerPort
     int port;
 
     private String prefix;
     private String applicationId;
 
+    private static final String ADMINISTRATION_DECISION_PATH = "/v1/data/security/administration/decision";
+    private static final String ADMINISTRATION_ALLOW_BODY =
+            "{\"result\":{\"effect\":\"ALLOW\",\"reasonCode\":\"POLICY_ALLOWED\",\"policyReferences\":[],\"obligations\":[]}}";
+
+    @BeforeAll
+    static void startOpaFixture() throws Exception {
+        opa = OpaFixtureServer.start();
+        opa.respondWithForPath(ADMINISTRATION_DECISION_PATH, 200, ADMINISTRATION_ALLOW_BODY);
+    }
+
+    @AfterAll
+    static void stopOpaFixture() {
+        opa.stop();
+    }
+
+    @DynamicPropertySource
+    static void opaConnectionProperties(DynamicPropertyRegistry registry) {
+        registry.add("pdp.opa.base-url", () -> opa.baseUrl());
+    }
+
+    // HU-024: registerResource (fixture del @BeforeEach) pasa por MfaAwareApplicationAdministratorValidator.
+    @DynamicPropertySource
+    static void mfaEvidenceProperties(DynamicPropertyRegistry registry) {
+        registry.add("pdp.security.mfa.claim", () -> "acr");
+        registry.add("pdp.security.mfa.accepted-values", () -> TestJwtSupport.MFA_ACCEPTED_ACR);
+    }
+
     @BeforeEach
     void registerApplicationAndResource() {
         prefix = "hu002-" + UUID.randomUUID().toString().substring(0, 8);
+        // HU-015: SubjectUserIdLookupValidator necesita una identidad vinculada para el subject del
+        // JWT de prueba — registerApplication() pasa por el registro gateado.
+        linkTestIdentity(new TenantId(UCO), "test-subject");
         applicationId = registerApplication(UCO, prefix + "-gestion-academica");
         registerResource(UCO, applicationId, "/estudiantes", "GET");
     }
@@ -130,7 +177,7 @@ class AuthorizationHttpTests extends AbstractSurrealDbIntegrationTest {
 
     private void registerResource(String tenant, String appId, String path, String method) {
         client().post().uri("/api/v1/applications/" + appId + "/resources")
-                .header("Authorization", "Bearer " + TestJwtSupport.signedToken(tenant, "test-subject"))
+                .header("Authorization", "Bearer " + TestJwtSupport.signedTokenWithMfaEvidence(tenant, "test-subject"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("""
                         {"path":"%s","method":"%s"}""".formatted(path, method))

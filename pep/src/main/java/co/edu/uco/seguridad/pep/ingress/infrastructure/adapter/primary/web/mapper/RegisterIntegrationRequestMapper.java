@@ -3,7 +3,9 @@ package co.edu.uco.seguridad.pep.ingress.infrastructure.adapter.primary.web.mapp
 import co.edu.uco.seguridad.pep.ingress.application.port.primary.dto.request.RegisterIntegrationRequest;
 import co.edu.uco.seguridad.pep.ingress.infrastructure.adapter.primary.web.dto.request.raw.RegisterIntegrationRawRequest;
 
-/** Traduce el contrato HTTP sin propagar sus anotaciones o tipos hacia aplicación. */
+/**
+ * Traduce el contrato HTTP sin propagar sus anotaciones o tipos hacia aplicación.
+ */
 public final class RegisterIntegrationRequestMapper {
     private RegisterIntegrationRequestMapper() {
     }

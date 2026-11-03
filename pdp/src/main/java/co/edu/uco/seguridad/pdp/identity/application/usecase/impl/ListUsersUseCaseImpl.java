@@ -1,9 +1,11 @@
 package co.edu.uco.seguridad.pdp.identity.application.usecase.impl;
 
+import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.identity.application.primaryport.response.UserResponse;
 import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.SecurityUserRepository;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.ListUsersUseCase;
 import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;
+import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -18,8 +20,10 @@ public final class ListUsersUseCaseImpl implements ListUsersUseCase {
     }
 
     @Override
-    public Mono<List<UserResponse>> execute() {
+    public Mono<List<UserResponse>> execute(TenantId tenantId) {
+        Objects.requireNonNull(tenantId, RequiredArgumentMessages.TENANT_ID);
         return repository.findAll()
+                .filter(user -> user.tenantId().equals(tenantId))
                 .concatMap(user -> repository.providerFor(user.id()).map(provider -> toResponse(user, provider)))
                 .collectList();
     }

@@ -1,23 +1,21 @@
 package co.edu.uco.seguridad.pdp.resources.infrastructure.config;
 
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationMustExistForTenantValidator;
+import co.edu.uco.seguridad.pdp.applications.application.usecase.RegisterApplicationUseCase;
+import co.edu.uco.seguridad.pdp.applications.application.usecase.RemoveApplicationUseCase;
+import co.edu.uco.seguridad.pdp.resources.application.rule.validator.*;
+import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.*;
 import co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository.ProtectedResourceRepository;
+import co.edu.uco.seguridad.pdp.resources.application.usecase.*;
+import co.edu.uco.seguridad.pdp.resources.application.usecase.impl.*;
 import co.edu.uco.seguridad.pdp.resources.domain.rule.ProtectedResourceMustBeUniqueRule;
 import co.edu.uco.seguridad.pdp.resources.domain.rule.ProtectedResourceMustExistRule;
 import co.edu.uco.seguridad.pdp.resources.domain.rule.impl.ProtectedResourceMustBeUniqueRuleImpl;
 import co.edu.uco.seguridad.pdp.resources.domain.rule.impl.ProtectedResourceMustExistRuleImpl;
-import co.edu.uco.seguridad.pdp.resources.application.rule.validator.ProtectedResourceMustExistValidator;
-import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.ProtectedResourceMustExistValidatorImpl;
-import co.edu.uco.seguridad.pdp.resources.application.rule.validator.RegisterProtectedResourceRulesValidator;
-import co.edu.uco.seguridad.pdp.resources.application.rule.validator.impl.RegisterProtectedResourceRulesValidatorImpl;
-import co.edu.uco.seguridad.pdp.resources.application.usecase.ListProtectedResourcesUseCase;
-import co.edu.uco.seguridad.pdp.resources.application.usecase.RegisterProtectedResourceUseCase;
-import co.edu.uco.seguridad.pdp.resources.application.usecase.impl.ListProtectedResourcesUseCaseImpl;
-import co.edu.uco.seguridad.pdp.resources.application.usecase.impl.RegisterProtectedResourceUseCaseImpl;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.interactor.ListProtectedResourcesInteractor;
-import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.interactor.RegisterProtectedResourceInteractor;
+import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.interactor.RegisterApplicationWithInitialResourceInteractor;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.interactor.impl.ListProtectedResourcesInteractorImpl;
-import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.interactor.impl.RegisterProtectedResourceInteractorImpl;
+import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.primary.web.interactor.impl.RegisterApplicationWithInitialResourceInteractorImpl;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.audit.InMemoryAuditAdapter;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.persistence.repository.SurrealProtectedResourceRepository;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.persistence.schema.SurrealProtectedResourceSchemaInitializer;
@@ -42,6 +40,12 @@ public class ResourcesConfiguration {
     }
 
     @Bean
+    ApplicationDeletionDependencyValidator resourceApplicationDeletionDependencyValidator(
+            ProtectedResourceRepository repository) {
+        return new ApplicationDeletionDependencyValidatorImpl(repository);
+    }
+
+    @Bean
     ApplicationRunner protectedResourceSchemaInitializer(SurrealDbClient client) {
         return new SurrealProtectedResourceSchemaInitializer(client);
     }
@@ -63,8 +67,19 @@ public class ResourcesConfiguration {
 
     @Bean
     ProtectedResourceMustExistValidator protectedResourceMustExistValidator(ProtectedResourceRepository repository,
-            ProtectedResourceMustExistRule mustExist) {
+                                                                            ProtectedResourceMustExistRule mustExist) {
         return new ProtectedResourceMustExistValidatorImpl(repository, mustExist);
+    }
+
+    // HU-004 — catálogo de roles: resuelve la aplicación dueña a partir solo del ResourceId.
+    @Bean
+    ProtectedResourceOwnerLookupValidator protectedResourceOwnerLookupValidator(ProtectedResourceRepository repository) {
+        return new ProtectedResourceOwnerLookupValidatorImpl(repository);
+    }
+
+    @Bean
+    ProtectedResourceIdLookupValidator protectedResourceIdLookupValidator(ProtectedResourceRepository repository) {
+        return new ProtectedResourceIdLookupValidatorImpl(repository);
     }
 
     @Bean
@@ -75,9 +90,15 @@ public class ResourcesConfiguration {
 
     @Bean
     RegisterProtectedResourceUseCase registerProtectedResourceUseCase(ApplicationMustExistForTenantValidator applicationMustExist,
-            RegisterProtectedResourceRulesValidator rules, ProtectedResourceRepository resources,
-            DomainEventPublisher events, IdentifierGenerator identifiers, TimeProvider time) {
+                                                                      RegisterProtectedResourceRulesValidator rules, ProtectedResourceRepository resources,
+                                                                      DomainEventPublisher events, IdentifierGenerator identifiers, TimeProvider time) {
         return new RegisterProtectedResourceUseCaseImpl(applicationMustExist, rules, resources, events, identifiers, time);
+    }
+
+    @Bean
+    RegisterProtectedResourcesInBulkUseCase registerProtectedResourcesInBulkUseCase(
+            ProtectedResourceRepository resources, DomainEventPublisher events) {
+        return new RegisterProtectedResourcesInBulkUseCaseImpl(resources, events);
     }
 
     @Bean
@@ -86,12 +107,47 @@ public class ResourcesConfiguration {
     }
 
     @Bean
-    RegisterProtectedResourceInteractor registerProtectedResourceInteractor(RegisterProtectedResourceUseCase useCase) {
-        return new RegisterProtectedResourceInteractorImpl(useCase);
+    ListProtectedResourcesPageUseCase listProtectedResourcesPageUseCase(ProtectedResourceRepository resources) {
+        return new ListProtectedResourcesPageUseCaseImpl(resources);
     }
 
     @Bean
+    CountApplicationProtectedResourcesUseCase countApplicationProtectedResourcesUseCase(ProtectedResourceRepository resources) {
+        return new CountApplicationProtectedResourcesUseCaseImpl(resources);
+    }
+
+    @Bean
+    UpdateProtectedResourceUseCase updateProtectedResourceUseCase(ProtectedResourceRepository repository) {
+        return new UpdateProtectedResourceUseCaseImpl(repository);
+    }
+
+    @Bean
+    RemoveProtectedResourceUseCase removeProtectedResourceUseCase(ProtectedResourceRepository repository) {
+        return new RemoveProtectedResourceUseCaseImpl(repository);
+    }
+
+    // HU-017 — registerProtectedResourceInteractor se retiró de aquí: la escritura se expone ahora
+    // desde ResourceAdministrationController (authorization), que gatea contra el mecanismo de
+    // administración por aplicación. RegisterProtectedResourceUseCase sigue aquí, sin cambios:
+    // authorization lo consume vía "resources :: usecase", y la saga de HU-010 lo sigue invocando
+    // directo (sin gate, mismo precedente que RegisterApplicationUseCase en HU-015).
+    @Bean
     ListProtectedResourcesInteractor listProtectedResourcesInteractor(ListProtectedResourcesUseCase useCase) {
         return new ListProtectedResourcesInteractorImpl(useCase);
+    }
+
+    // HU-010 — saga de registro de aplicación con recurso inicial, con compensación explícita.
+    @Bean
+    RegisterApplicationWithInitialResourceUseCase registerApplicationWithInitialResourceUseCase(
+            RegisterApplicationUseCase registerApplication, RegisterProtectedResourceUseCase registerResource,
+            RemoveApplicationUseCase removeApplication) {
+        return new RegisterApplicationWithInitialResourceUseCaseImpl(registerApplication, registerResource,
+                removeApplication);
+    }
+
+    @Bean
+    RegisterApplicationWithInitialResourceInteractor registerApplicationWithInitialResourceInteractor(
+            RegisterApplicationWithInitialResourceUseCase useCase) {
+        return new RegisterApplicationWithInitialResourceInteractorImpl(useCase);
     }
 }

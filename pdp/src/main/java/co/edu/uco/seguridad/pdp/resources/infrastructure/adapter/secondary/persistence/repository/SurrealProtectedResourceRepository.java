@@ -1,10 +1,9 @@
 package co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.persistence.repository;
 
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.ResourceId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository.ProtectedResourceRepository;
-import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.ProtectedResource;
+import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.persistence.entity.ProtectedResourceEntity;
 import co.edu.uco.seguridad.pdp.resources.infrastructure.adapter.secondary.persistence.mapper.ProtectedResourcePersistenceMapper;
@@ -17,6 +16,8 @@ import reactor.core.publisher.Mono;
 import tools.jackson.databind.JsonNode;
 
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -33,12 +34,17 @@ public final class SurrealProtectedResourceRepository implements ProtectedResour
 
     @Override
     public Mono<Boolean> existsByApplicationPathAndMethod(ApplicationId applicationId, ResourcePath path,
-            HttpVerb method) {
-        return client.execute(
-                        "SELECT id FROM %s WHERE applicationId = $applicationId AND path = $path AND method = $method LIMIT 1;"
+                                                          HttpVerb method) {
+        // Existence and id resolution must use the same matching rule. Otherwise a template can
+        // be resolved later but is rejected here before the authorization context reaches OPA.
+        return findByApplicationPathAndMethod(applicationId, path, method).hasElement();
+    }
+
+    @Override
+    public Mono<Boolean> existsByApplicationId(ApplicationId applicationId) {
+        return client.execute("SELECT id FROM %s WHERE applicationId = $applicationId LIMIT 1;"
                                 .formatted(ProtectedResourceSchema.TABLE),
-                        Map.of("applicationId", applicationId.value().toString(), "path", path.value(),
-                                "method", method.name()))
+                        Map.of("applicationId", applicationId.value().toString()))
                 .map(results -> !results.get(0).isEmpty());
     }
 
@@ -53,13 +59,37 @@ public final class SurrealProtectedResourceRepository implements ProtectedResour
     }
 
     @Override
+    public Mono<ResultPage<ProtectedResource>> findPageByApplication(ApplicationId applicationId, PageWindow window) {
+        return findPageByApplication(applicationId, window, "");
+    }
+
+    @Override
+    public Mono<ResultPage<ProtectedResource>> findPageByApplication(ApplicationId applicationId, PageWindow window, String rawQuery) {
+        String normalizedQuery = rawQuery == null ? "" : rawQuery.trim().toLowerCase(java.util.Locale.ROOT);
+        String filter = normalizedQuery.isEmpty() ? "" : " AND (string::contains(string::lowercase(path), $query) OR string::contains(string::lowercase(method), $query))";
+        String query = """
+                SELECT * FROM %1$s WHERE applicationId = $applicationId%2$s ORDER BY registeredAt DESC LIMIT %3$d START %4$d;
+                SELECT count() FROM %1$s WHERE applicationId = $applicationId%2$s GROUP ALL;
+                """.formatted(ProtectedResourceSchema.TABLE, filter, window.limit(), window.offset());
+        return client.execute(query, Map.of("applicationId", applicationId.value().toString(), "query", normalizedQuery))
+                .map(results -> ResultPage.of(results.get(0).valueStream().map(SurrealProtectedResourceRepository::toDomain).toList(),
+                        results.get(1).isEmpty() ? 0L : results.get(1).get(0).path("count").asLong(0L), window));
+    }
+
+    @Override
+    public Mono<Long> countByApplication(ApplicationId applicationId) {
+        return client.execute("SELECT count() FROM %s WHERE applicationId = $applicationId GROUP ALL;".formatted(ProtectedResourceSchema.TABLE), Map.of("applicationId", applicationId.value().toString()))
+                .map(r -> r.get(0).isEmpty() ? 0L : r.get(0).get(0).path("count").asLong(0));
+    }
+
+    @Override
     public Mono<ProtectedResource> save(ProtectedResource resource) {
         return client.execute(
                         """
-                        CREATE type::record('%s', $id) SET \
-                        applicationId = $applicationId, tenantId = $tenantId, path = $path, method = $method, \
-                        registeredAt = <datetime>$registeredAt;\
-                        """.formatted(ProtectedResourceSchema.TABLE),
+                                CREATE type::record('%s', $id) SET \
+                                applicationId = $applicationId, tenantId = $tenantId, path = $path, method = $method, \
+                                registeredAt = <datetime>$registeredAt;\
+                                """.formatted(ProtectedResourceSchema.TABLE),
                         Map.of(
                                 "id", resource.id().value().toString(),
                                 "applicationId", resource.applicationId().value().toString(),
@@ -71,11 +101,78 @@ public final class SurrealProtectedResourceRepository implements ProtectedResour
     }
 
     @Override
+    public Mono<Void> saveAllAtomically(List<ProtectedResource> resources) {
+        if (resources.isEmpty()) return Mono.empty();
+        StringBuilder query = new StringBuilder("BEGIN TRANSACTION; ");
+        Map<String, String> parameters = new HashMap<>();
+        for (int index = 0; index < resources.size(); index++) {
+            ProtectedResource resource = resources.get(index);
+            String suffix = String.valueOf(index);
+            query.append("CREATE type::record('").append(ProtectedResourceSchema.TABLE).append("', $id").append(suffix)
+                    .append(") SET applicationId=$applicationId").append(suffix).append(", tenantId=$tenantId").append(suffix)
+                    .append(", path=$path").append(suffix).append(", method=$method").append(suffix)
+                    .append(", registeredAt=<datetime>$registeredAt").append(suffix).append("; ");
+            parameters.put("id" + suffix, resource.id().value().toString());
+            parameters.put("applicationId" + suffix, resource.applicationId().value().toString());
+            parameters.put("tenantId" + suffix, resource.tenantId().value());
+            parameters.put("path" + suffix, resource.path().value());
+            parameters.put("method" + suffix, resource.method().name());
+            parameters.put("registeredAt" + suffix, resource.registeredAt().toString());
+        }
+        query.append("COMMIT TRANSACTION;");
+        return client.execute(query.toString(), parameters).then();
+    }
+
+    @Override
     public Mono<Void> deleteById(ResourceId resourceId) {
         return client.execute(
                         "DELETE type::record('%s', $id);".formatted(ProtectedResourceSchema.TABLE),
                         Map.of("id", resourceId.value().toString()))
                 .then();
+    }
+
+    @Override
+    public Mono<ProtectedResource> findByIdForTenant(ResourceId resourceId, TenantId tenantId) {
+        return client.execute("SELECT * FROM type::record('%s', $id) WHERE tenantId = $tenantId;"
+                                .formatted(ProtectedResourceSchema.TABLE),
+                        Map.of("id", resourceId.value().toString(), "tenantId", tenantId.value()))
+                .flatMap(results -> results.get(0).isEmpty() ? Mono.empty() : Mono.just(toDomain(results.get(0).get(0))));
+    }
+
+    @Override
+    public Mono<ProtectedResource> update(ProtectedResource resource) {
+        return client.execute("UPDATE type::record('%s', $id) SET path = $path, method = $method;"
+                                .formatted(ProtectedResourceSchema.TABLE),
+                        Map.of("id", resource.id().value().toString(), "path", resource.path().value(),
+                                "method", resource.method().name()))
+                .thenReturn(resource);
+    }
+
+    @Override
+    public Mono<ApplicationId> findApplicationIdById(ResourceId resourceId) {
+        return client.execute(
+                        "SELECT applicationId FROM type::record('%s', $id);".formatted(ProtectedResourceSchema.TABLE),
+                        Map.of("id", resourceId.value().toString()))
+                .flatMap(results -> {
+                    JsonNode rows = results.get(0);
+                    return rows.isEmpty() ? Mono.empty()
+                            : Mono.just(ApplicationId.of(rows.get(0).path("applicationId").asString()));
+                });
+    }
+
+    @Override
+    public Mono<ProtectedResource> findByApplicationPathAndMethod(ApplicationId applicationId, ResourcePath path, HttpVerb method) {
+        return findAllByApplication(applicationId)
+                .filter(resource -> resource.method() == method)
+                .filter(resource -> resource.path().matches(path))
+                .collectList()
+                .flatMap(resources -> resources.stream()
+                        // A literal resource is always more specific than a template such as /employees/{id}.
+                        .filter(resource -> resource.path().equals(path))
+                        .findFirst()
+                        .or(() -> resources.stream().findFirst())
+                        .map(Mono::just)
+                        .orElseGet(Mono::empty));
     }
 
     private static ProtectedResource toDomain(JsonNode row) {

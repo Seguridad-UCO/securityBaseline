@@ -38,7 +38,8 @@ diagnosticar y no arrastra datos del negocio al log.
 
 - [`CorrelationWebFilter.java`](../../src/main/java/co/edu/uco/seguridad/shared/web/CorrelationWebFilter.java)
 - [`ReactiveLogContext.java`](../../src/main/java/co/edu/uco/seguridad/shared/observability/ReactiveLogContext.java)
-- Uso: [`RegisterApplicationUseCaseImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/application/usecase/impl/RegisterApplicationUseCaseImpl.java)
+- Uso: [
+  `RegisterApplicationUseCaseImpl.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/application/usecase/impl/RegisterApplicationUseCaseImpl.java)
 - [`pom.xml`](../../pom.xml) y [`application.properties`](../../src/main/resources/application.properties)
 
 ## Evidencia y límite

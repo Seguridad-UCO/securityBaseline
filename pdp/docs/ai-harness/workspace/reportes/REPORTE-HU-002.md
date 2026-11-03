@@ -20,15 +20,15 @@ JDK: Java 25 en C:\Users\Sebastian\.jdks\temurin-25.0.4
 PRUEBAS: Tests run: 277, Failures: 0, Errors: 0, Skipped: 0
 ```
 
-| Comprobación | Resultado |
-|---|---|
-| Compilación | ✅ |
-| Pruebas | ✅ 277 pruebas, 0 fallos |
-| Cobertura (≥ 50 % por paquete, `jacoco-check`) | ✅ — corrida con `clean` |
-| `LayeredArchitectureTests` | ✅ |
-| `ModulithStructureTests` | ✅ |
-| `consistencia.ps1` | ✅ CONSISTENTE — 6 slices |
-| `drift.ps1` | ✅ SIN DERIVA — 12 excepciones preexistentes, ninguna nueva |
+| Comprobación                                   | Resultado                                                  |
+|------------------------------------------------|------------------------------------------------------------|
+| Compilación                                    | ✅                                                          |
+| Pruebas                                        | ✅ 277 pruebas, 0 fallos                                    |
+| Cobertura (≥ 50 % por paquete, `jacoco-check`) | ✅ — corrida con `clean`                                    |
+| `LayeredArchitectureTests`                     | ✅                                                          |
+| `ModulithStructureTests`                       | ✅                                                          |
+| `consistencia.ps1`                             | ✅ CONSISTENTE — 6 slices                                   |
+| `drift.ps1`                                    | ✅ SIN DERIVA — 12 excepciones preexistentes, ninguna nueva |
 
 ## Estado final
 
@@ -58,32 +58,32 @@ de `authorization` y de la extensión en `resources`: no quedó ninguno sin cubr
 
 ## Los cuatro juicios
 
-| # | Juicio | Resultado | Evidencia |
-|---|---|---|---|
-| 1 | ¿Cumple los criterios de aceptación del plan? | ✅ | Sin cambios respecto a la primera pasada — la corrección no tocó ningún camino funcional, solo añadió validación. Los 9 criterios de la sección 2 siguen con su prueba concreta (ver detalle en el historial de este reporte / commit de la primera pasada) |
-| 2 | ¿Convención de idioma? | ✅ | Los tres mensajes de esta historia en español, verificados byte a byte contra la prueba que los fija. Identificadores en inglés, Javadoc en español, sin cambios respecto a la primera pasada |
-| 3 | ¿Introdujo deriva doc↔código? | ✅ | `drift.ps1` en verde, 0 hallazgos nuevos |
-| 4 | ¿La lógica quedó en la capa correcta? | ✅ | La corrección es puramente validación en constructores compactos — no movió lógica de capa, no añadió `if` en ningún use case, no tocó el flujo reactivo. Los DTOs crudos/web mantienen correctamente **cero** validación (es responsabilidad del mapper), confirmado contra el precedente (`CreateTenantRawRequest`, `TenantWebResponse`) |
+| # | Juicio                                        | Resultado | Evidencia                                                                                                                                                                                                                                                                                                                                  |
+|---|-----------------------------------------------|-----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1 | ¿Cumple los criterios de aceptación del plan? | ✅         | Sin cambios respecto a la primera pasada — la corrección no tocó ningún camino funcional, solo añadió validación. Los 9 criterios de la sección 2 siguen con su prueba concreta (ver detalle en el historial de este reporte / commit de la primera pasada)                                                                                |
+| 2 | ¿Convención de idioma?                        | ✅         | Los tres mensajes de esta historia en español, verificados byte a byte contra la prueba que los fija. Identificadores en inglés, Javadoc en español, sin cambios respecto a la primera pasada                                                                                                                                              |
+| 3 | ¿Introdujo deriva doc↔código?                 | ✅         | `drift.ps1` en verde, 0 hallazgos nuevos                                                                                                                                                                                                                                                                                                   |
+| 4 | ¿La lógica quedó en la capa correcta?         | ✅         | La corrección es puramente validación en constructores compactos — no movió lógica de capa, no añadió `if` en ningún use case, no tocó el flujo reactivo. Los DTOs crudos/web mantienen correctamente **cero** validación (es responsabilidad del mapper), confirmado contra el precedente (`CreateTenantRawRequest`, `TenantWebResponse`) |
 
 ## Criterios de la línea base
 
-| # | Criterio | Resultado | Punto de control comprobado |
-|---|---|---|---|
-| 1 | Clean Architecture | 🤖 ✅ | `LayeredArchitectureTests` + `ModulithStructureTests` verdes |
-| 2 | Contratos de servicios | ✅ | Sin cambios — ver primera pasada |
-| 3 | Reglas e integridad | ✅ | Sin cambios |
-| 4 | Capacidades transversales | ✅ | Sin cambios |
-| 5 | Manejo de mensajes | ✅ | Sin cambios |
-| 6 | Manejo de parámetros | ✅ | Sin cambios |
-| 7 | Adaptadores de persistencia | N/A | Sin adaptador propio en esta historia |
-| 9 | Excepciones | ✅ | Sin cambios |
-| 11 | Interacción entre capas | ✅ | Sin cambios |
-| 12 | SOLID | ✅ | Sin cambios |
-| 13 | DTOs | ✅ | Sin cambios |
-| 14 | DTOs seguros | ✅ | **Corregido.** Las tres barreras están completas ahora: campo presente (`RequestFieldParser` en el mapper), VO válido (`ApplicationId::of`/`ResourcePath::new`/`HttpVerb::parse`), y `requireNonNull` en el record — verificado abriendo los cinco archivos, no releyendo el reporte anterior |
-| 20 | Adaptadores limpios | ✅ | Sin cambios |
-| 21 | Modelo refinado | ✅ | Sin cambios |
-| 22 | Arquitectura reactiva | ✅ | Sin cambios |
+| #  | Criterio                    | Resultado | Punto de control comprobado                                                                                                                                                                                                                                                                   |
+|----|-----------------------------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1  | Clean Architecture          | 🤖 ✅      | `LayeredArchitectureTests` + `ModulithStructureTests` verdes                                                                                                                                                                                                                                  |
+| 2  | Contratos de servicios      | ✅         | Sin cambios — ver primera pasada                                                                                                                                                                                                                                                              |
+| 3  | Reglas e integridad         | ✅         | Sin cambios                                                                                                                                                                                                                                                                                   |
+| 4  | Capacidades transversales   | ✅         | Sin cambios                                                                                                                                                                                                                                                                                   |
+| 5  | Manejo de mensajes          | ✅         | Sin cambios                                                                                                                                                                                                                                                                                   |
+| 6  | Manejo de parámetros        | ✅         | Sin cambios                                                                                                                                                                                                                                                                                   |
+| 7  | Adaptadores de persistencia | N/A       | Sin adaptador propio en esta historia                                                                                                                                                                                                                                                         |
+| 9  | Excepciones                 | ✅         | Sin cambios                                                                                                                                                                                                                                                                                   |
+| 11 | Interacción entre capas     | ✅         | Sin cambios                                                                                                                                                                                                                                                                                   |
+| 12 | SOLID                       | ✅         | Sin cambios                                                                                                                                                                                                                                                                                   |
+| 13 | DTOs                        | ✅         | Sin cambios                                                                                                                                                                                                                                                                                   |
+| 14 | DTOs seguros                | ✅         | **Corregido.** Las tres barreras están completas ahora: campo presente (`RequestFieldParser` en el mapper), VO válido (`ApplicationId::of`/`ResourcePath::new`/`HttpVerb::parse`), y `requireNonNull` en el record — verificado abriendo los cinco archivos, no releyendo el reporte anterior |
+| 20 | Adaptadores limpios         | ✅         | Sin cambios                                                                                                                                                                                                                                                                                   |
+| 21 | Modelo refinado             | ✅         | Sin cambios                                                                                                                                                                                                                                                                                   |
+| 22 | Arquitectura reactiva       | ✅         | Sin cambios                                                                                                                                                                                                                                                                                   |
 
 ## Desviaciones respecto al plan
 
@@ -92,10 +92,10 @@ de `AuthorizeUseCaseImpl` y de `DenyByDefaultPolicyDecisionAdapter` ampliados co
 `IdentifierGenerator`/`TimeProvider`, y las dos interfaces nombradas de Modulith descubiertas al
 compilar) — todas ya aprobadas y sin cambios en esta pasada.
 
-| Archivo | Plan decía | Código hace | ¿Justificado? |
-|---|---|---|---|
-| `AccessRequest`, `AccessDecision`, `PolicyReference` | Constructor compacto vacío (correcto para un esqueleto del planificador) | El implementador añadió `Objects.requireNonNull` en la fase de corrección | ✅ Sí — es exactamente lo que el esqueleto esperaba que pasara; el bloqueante era que no había pasado todavía |
-| `ProtectedResourceExistence`, `ProtectedResourceLookup` | No declarados como pendientes de corrección (el reporte anterior solo señaló los dos de `authorization`) | También corregidos, por consistencia con el mismo patrón | ✅ Sí — mismo criterio 14, mismo hueco, no señalarlo habría sido inconsistente con el propio hallazgo |
+| Archivo                                                 | Plan decía                                                                                               | Código hace                                                               | ¿Justificado?                                                                                                |
+|---------------------------------------------------------|----------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------|
+| `AccessRequest`, `AccessDecision`, `PolicyReference`    | Constructor compacto vacío (correcto para un esqueleto del planificador)                                 | El implementador añadió `Objects.requireNonNull` en la fase de corrección | ✅ Sí — es exactamente lo que el esqueleto esperaba que pasara; el bloqueante era que no había pasado todavía |
+| `ProtectedResourceExistence`, `ProtectedResourceLookup` | No declarados como pendientes de corrección (el reporte anterior solo señaló los dos de `authorization`) | También corregidos, por consistencia con el mismo patrón                  | ✅ Sí — mismo criterio 14, mismo hueco, no señalarlo habría sido inconsistente con el propio hallazgo         |
 
 ## Datos para la entrega
 

@@ -1,5 +1,6 @@
 package co.edu.uco.seguridad.pdp.identity.domain.model;
 
+import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;

@@ -9,7 +9,9 @@ import reactor.core.publisher.Mono;
 import java.util.Map;
 import java.util.Objects;
 
-/** Define las tablas {@code security_user}/{@code external_identity} y sus índices únicos (ADR-0004). */
+/**
+ * Define las tablas {@code security_user}/{@code external_identity} y sus índices únicos (ADR-0004).
+ */
 public final class SurrealIdentitySchemaInitializer extends SurrealSchemaInitializer {
 
     private final SurrealDbClient client;

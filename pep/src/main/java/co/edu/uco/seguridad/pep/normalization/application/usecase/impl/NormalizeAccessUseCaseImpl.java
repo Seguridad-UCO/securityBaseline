@@ -16,7 +16,7 @@ public final class NormalizeAccessUseCaseImpl implements NormalizeAccessUseCase 
     @Override
     public Mono<AccessRequest> execute(NormalizeAccessRequest input) {
         return rules.execute(input).then(Mono.fromSupplier(() -> new AccessRequest("1", input.requestId(), input.correlationId(),
-                input.timestamp(), new AccessRequest.Application(input.applicationId(), input.environment()),
+                input.timestamp(), new AccessRequest.Application(input.applicationName(), input.environment()),
                 new AccessRequest.Resource(input.path(), input.method()),
                 new AccessRequest.Context(input.method(), "HTTP"))));
     }

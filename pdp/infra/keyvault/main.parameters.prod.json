@@ -2,10 +2,20 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "environment": { "value": "prod" },
-    "applicationPrincipalId": { "value": "6f586933-6845-4b2d-af6e-238a0524adfb" },
-    "pipelinePrincipalId": { "value": "980975f5-95a5-4b6f-ade8-c4755eaf2bb1" },
-    "logAnalyticsWorkspaceId": { "value": "" },
-    "nameSuffix": { "value": "-mx" }
+    "environment": {
+      "value": "prod"
+    },
+    "applicationPrincipalId": {
+      "value": "6f586933-6845-4b2d-af6e-238a0524adfb"
+    },
+    "pipelinePrincipalId": {
+      "value": "980975f5-95a5-4b6f-ade8-c4755eaf2bb1"
+    },
+    "logAnalyticsWorkspaceId": {
+      "value": ""
+    },
+    "nameSuffix": {
+      "value": "-mx"
+    }
   }
 }
