@@ -1,6 +1,7 @@
 package co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.controller;
 
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.AddRoleToProfileRawRequest;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.BatchProfileRolesRawRequest;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.request.raw.DefineProfileRawRequest;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.ProfileAdministrationWebResponse;
 import co.edu.uco.seguridad.shared.web.CorrelationWebFilter;
@@ -54,6 +55,23 @@ class ProfileAdministrationControllerTests {
         assertThat(received).hasSize(1);
         assertThat(received.getFirst().profileId()).isEqualTo("profile-from-route");
         assertThat(received.getFirst().roleId()).isEqualTo("role-1");
+    }
+
+    @Test
+    void add_roles_batch_delegates_each_distinct_role_to_the_existing_interactor() {
+        List<AddRoleToProfileRawRequest> received = new ArrayList<>();
+        ProfileAdministrationController controller = new ProfileAdministrationController(raw -> Mono.empty(), raw -> {
+            received.add(raw);
+            return Mono.just(EXPECTED);
+        });
+        MockServerWebExchange exchange = exchange(MockServerHttpRequest.post("/api/v1/profiles/profile-1/roles/batch"));
+
+        var response = controller.addRoles("profile-1", new BatchProfileRolesRawRequest(List.of("role-1", "role-2", "role-1")), exchange).block();
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().data()).isEqualTo(EXPECTED);
+        assertThat(received).extracting(AddRoleToProfileRawRequest::profileId).containsOnly("profile-1");
+        assertThat(received).extracting(AddRoleToProfileRawRequest::roleId).containsExactlyInAnyOrder("role-1", "role-2");
     }
 
     private static MockServerWebExchange exchange(MockServerHttpRequest.BaseBuilder<?> request) {
