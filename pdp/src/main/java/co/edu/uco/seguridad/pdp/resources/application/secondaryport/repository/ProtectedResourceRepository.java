@@ -32,6 +32,10 @@ public interface ProtectedResourceRepository {
         return Mono.error(new UnsupportedOperationException("La consulta paginada no está implementada"));
     }
 
+    default Mono<ResultPage<ProtectedResource>> findPageByApplication(ApplicationId applicationId, PageWindow window, String query) {
+        return findPageByApplication(applicationId, window);
+    }
+
     default Mono<Long> countByApplication(ApplicationId applicationId) {
         return Mono.error(new UnsupportedOperationException());
     }

@@ -11,6 +11,8 @@ import co.edu.uco.seguridad.pdp.roles.domain.exception.RoleNotFoundException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Locale;
+
 /**
  * Does pagination before materialising resources; the browser never receives a role-wide catalog.
  */
@@ -32,11 +34,14 @@ public final class ListRoleResourcesUseCaseImpl implements ListRoleResourcesUseC
                 .filter(role -> role.scope().applicationId().filter(request.administration().applicationId()::equals).isPresent())
                 .switchIfEmpty(Mono.error(new RoleNotFoundException(request.roleId())))
                 .flatMap(role -> {
-                    var ids = role.resources().stream().sorted((a, b) -> a.value().toString().compareTo(b.value().toString())).toList();
-                    var slice = ids.stream().skip(request.window().offset()).limit(request.window().limit()).toList();
-                    return Flux.fromIterable(slice).flatMap(id -> resources.findByIdForTenant(id, request.administration().tenantId()))
+                    String query = request.query().toLowerCase(Locale.ROOT);
+                    return Flux.fromIterable(role.resources().stream().sorted((a, b) -> a.value().toString().compareTo(b.value().toString())).toList())
+                            .concatMap(id -> resources.findByIdForTenant(id, request.administration().tenantId()))
+                            .filter(resource -> query.isEmpty() || resource.path().value().toLowerCase(Locale.ROOT).contains(query)
+                                    || resource.method().name().toLowerCase(Locale.ROOT).contains(query))
                             .map(resource -> new RegisteredProtectedResourceResponse(resource.id(), resource.applicationId(), resource.tenantId(), resource.path(), resource.method(), resource.registeredAt()))
-                            .collectList().map(content -> ResultPage.of(content, ids.size(), request.window()));
+                            .collectList().map(filtered -> ResultPage.of(filtered.stream().skip(request.window().offset())
+                                    .limit(request.window().limit()).toList(), filtered.size(), request.window()));
                 }));
     }
 }

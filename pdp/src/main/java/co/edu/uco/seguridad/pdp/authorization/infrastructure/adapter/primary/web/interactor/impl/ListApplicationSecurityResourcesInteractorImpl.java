@@ -35,7 +35,7 @@ public final class ListApplicationSecurityResourcesInteractorImpl implements Lis
     public Mono<PageResponse<ApplicationSecurityResourceWebResponse>> execute(ListApplicationSecurityRawRequest raw) {
         ApplicationId app = RequestFieldParser.parse("applicationId", raw.applicationId(), ApplicationId::of);
         PageWindow w = ApplicationSecurityPageRequestMapper.toWindow(new ApplicationSecurityPageRawRequest(raw.page(), raw.size(), raw.offset(), raw.limit()));
-        return SecurityContext.currentPrincipal().flatMap(p -> user(p).flatMap(u -> owner.execute(app).map(t -> new AdministrationRequest(t, app, u, p.subject(), Set.of(), p.authenticationContext())))).flatMap(a -> useCase.execute(new ListApplicationSecurityResourcesRequest(a, w))).map(p -> new PageResponse<>(p.content().stream().map(r -> new ApplicationSecurityResourceWebResponse(r.id().value().toString(), r.path().value(), r.method().name(), r.registeredAt().toString())).toList(), p.total(), p.window().page(), p.window().offset(), p.window().limit()));
+        return SecurityContext.currentPrincipal().flatMap(p -> user(p).flatMap(u -> owner.execute(app).map(t -> new AdministrationRequest(t, app, u, p.subject(), Set.of(), p.authenticationContext())))).flatMap(a -> useCase.execute(new ListApplicationSecurityResourcesRequest(a, w, raw.query()))).map(p -> new PageResponse<>(p.content().stream().map(r -> new ApplicationSecurityResourceWebResponse(r.id().value().toString(), r.path().value(), r.method().name(), r.registeredAt().toString())).toList(), p.total(), p.window().page(), p.window().offset(), p.window().limit()));
     }
 
     private Mono<UserId> user(PdpPrincipal p) {

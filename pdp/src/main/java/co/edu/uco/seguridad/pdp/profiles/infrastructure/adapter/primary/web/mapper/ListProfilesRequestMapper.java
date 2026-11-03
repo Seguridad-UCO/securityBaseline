@@ -27,7 +27,7 @@ public final class ListProfilesRequestMapper {
     }
 
     public static ListProfilesRequest toRequest(ListProfilesRawRequest raw, TenantId tenantId) {
-        return new ListProfilesRequest(ProfileCriteria.ofTenant(tenantId), window(raw));
+        return new ListProfilesRequest(ProfileCriteria.ofTenant(tenantId).withNameContaining(raw.query()), window(raw));
     }
 
     private static PageWindow window(ListProfilesRawRequest raw) {

@@ -37,7 +37,7 @@ public final class ListRoleResourcesInteractorImpl implements ListRoleResourcesI
         ApplicationId app = RequestFieldParser.parse("applicationId", r.applicationId(), ApplicationId::of);
         RoleId role = RequestFieldParser.parse("roleId", r.entityId(), RoleId::of);
         PageWindow w = ApplicationSecurityPageRequestMapper.toWindow(new ApplicationSecurityPageRawRequest(r.page(), r.size(), r.offset(), r.limit()));
-        return SecurityContext.currentPrincipal().flatMap(p -> user(p).flatMap(u -> owner.execute(app).map(t -> new AdministrationRequest(t, app, u, p.subject(), Set.of(), p.authenticationContext())))).flatMap(a -> useCase.execute(new ListRoleResourcesRequest(a, role, w))).map(p -> new PageResponse<>(p.content().stream().map(x -> new ApplicationSecurityResourceWebResponse(x.id().value().toString(), x.path().value(), x.method().name(), x.registeredAt().toString())).toList(), p.total(), p.window().page(), p.window().offset(), p.window().limit()));
+        return SecurityContext.currentPrincipal().flatMap(p -> user(p).flatMap(u -> owner.execute(app).map(t -> new AdministrationRequest(t, app, u, p.subject(), Set.of(), p.authenticationContext())))).flatMap(a -> useCase.execute(new ListRoleResourcesRequest(a, role, w, r.query()))).map(p -> new PageResponse<>(p.content().stream().map(x -> new ApplicationSecurityResourceWebResponse(x.id().value().toString(), x.path().value(), x.method().name(), x.registeredAt().toString())).toList(), p.total(), p.window().page(), p.window().offset(), p.window().limit()));
     }
 
     private Mono<UserId> user(PdpPrincipal p) {

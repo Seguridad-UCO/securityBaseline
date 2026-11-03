@@ -10,15 +10,22 @@ import java.util.Objects;
  * Specification de consulta del catálogo visible para un inquilino: sus roles más los globales.
  * El inquilino es obligatorio a propósito: el aislamiento es una precondición, no una opción.
  */
-public record RoleCriteria(TenantId tenantId, java.util.Optional<ApplicationId> applicationId) {
+public record RoleCriteria(TenantId tenantId, java.util.Optional<ApplicationId> applicationId,
+                           java.util.Optional<String> nameContains) {
 
     public RoleCriteria(TenantId tenantId) {
-        this(tenantId, java.util.Optional.empty());
+        this(tenantId, java.util.Optional.empty(), java.util.Optional.empty());
+    }
+
+    public RoleCriteria(TenantId tenantId, java.util.Optional<ApplicationId> applicationId) {
+        this(tenantId, applicationId, java.util.Optional.empty());
     }
 
     public RoleCriteria {
         Objects.requireNonNull(tenantId, RequiredArgumentMessages.TENANT_ID);
         Objects.requireNonNull(applicationId, RequiredArgumentMessages.APPLICATION_ID);
+        Objects.requireNonNull(nameContains, "nameContains");
+        nameContains = nameContains.map(String::trim).filter(value -> !value.isEmpty());
     }
 
     public static RoleCriteria ofTenant(TenantId tenantId) {
@@ -30,6 +37,10 @@ public record RoleCriteria(TenantId tenantId, java.util.Optional<ApplicationId> 
      */
     public static RoleCriteria ofApplication(TenantId tenantId, ApplicationId applicationId) {
         return new RoleCriteria(tenantId, java.util.Optional.of(applicationId));
+    }
+
+    public RoleCriteria withNameContaining(String query) {
+        return new RoleCriteria(tenantId, applicationId, java.util.Optional.ofNullable(query));
     }
 
     public boolean matches(Role role) {

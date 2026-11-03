@@ -60,11 +60,18 @@ public final class SurrealProtectedResourceRepository implements ProtectedResour
 
     @Override
     public Mono<ResultPage<ProtectedResource>> findPageByApplication(ApplicationId applicationId, PageWindow window) {
+        return findPageByApplication(applicationId, window, "");
+    }
+
+    @Override
+    public Mono<ResultPage<ProtectedResource>> findPageByApplication(ApplicationId applicationId, PageWindow window, String rawQuery) {
+        String normalizedQuery = rawQuery == null ? "" : rawQuery.trim().toLowerCase(java.util.Locale.ROOT);
+        String filter = normalizedQuery.isEmpty() ? "" : " AND (string::contains(string::lowercase(path), $query) OR string::contains(string::lowercase(method), $query))";
         String query = """
-                SELECT * FROM %1$s WHERE applicationId = $applicationId ORDER BY registeredAt DESC LIMIT %2$d START %3$d;
-                SELECT count() FROM %1$s WHERE applicationId = $applicationId GROUP ALL;
-                """.formatted(ProtectedResourceSchema.TABLE, window.limit(), window.offset());
-        return client.execute(query, Map.of("applicationId", applicationId.value().toString()))
+                SELECT * FROM %1$s WHERE applicationId = $applicationId%2$s ORDER BY registeredAt DESC LIMIT %3$d START %4$d;
+                SELECT count() FROM %1$s WHERE applicationId = $applicationId%2$s GROUP ALL;
+                """.formatted(ProtectedResourceSchema.TABLE, filter, window.limit(), window.offset());
+        return client.execute(query, Map.of("applicationId", applicationId.value().toString(), "query", normalizedQuery))
                 .map(results -> ResultPage.of(results.get(0).valueStream().map(SurrealProtectedResourceRepository::toDomain).toList(),
                         results.get(1).isEmpty() ? 0L : results.get(1).get(0).path("count").asLong(0L), window));
     }

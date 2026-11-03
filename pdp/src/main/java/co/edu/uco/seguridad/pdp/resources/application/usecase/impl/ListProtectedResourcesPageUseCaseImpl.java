@@ -15,6 +15,6 @@ public final class ListProtectedResourcesPageUseCaseImpl implements ListProtecte
     }
 
     public Mono<ResultPage<RegisteredProtectedResourceResponse>> execute(ListProtectedResourcesPageRequest input) {
-        return repository.findPageByApplication(input.applicationId(), input.window()).map(p -> p.map(r -> new RegisteredProtectedResourceResponse(r.id(), r.applicationId(), r.tenantId(), r.path(), r.method(), r.registeredAt())));
+        return repository.findPageByApplication(input.applicationId(), input.window(), input.query()).map(p -> p.map(r -> new RegisteredProtectedResourceResponse(r.id(), r.applicationId(), r.tenantId(), r.path(), r.method(), r.registeredAt())));
     }
 }
