@@ -54,6 +54,9 @@ services:
       PDP_REDIS_HOST: redis
       PDP_OPA_BASE_URL: http://opa:8181
       PDP_INTERNAL_MTLS_ENABLED: "false"
+      # El PDP provisiona clientes M2M mediante el Admin API: dentro de Docker debe usar
+      # el nombre del servicio, no el puerto de Keycloak expuesto al host.
+      PDP_KEYCLOAK_ADMIN_URL: http://keycloak:8080
       PDP_KEYCLOAK_ISSUER: http://keycloak.localhost:${KEYCLOAK_PORT:-19090}/realms/security-baseline
       PDP_KEYCLOAK_CLIENT_ID: security-baseline-bff
       PDP_KEYCLOAK_CLIENT_SECRET: TPoYOEY5rzn11VxWtCq5m0cv9mIbSeEM1Tf0CuOezPK6UXr1xT9mWhTiW1u84fJ9l8fU9iUT3GqPTT4wzwXkVW
