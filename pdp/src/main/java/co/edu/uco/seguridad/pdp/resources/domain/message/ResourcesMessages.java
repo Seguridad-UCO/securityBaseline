@@ -16,6 +16,10 @@ public final class ResourcesMessages {
         return "No existe el recurso " + method + " " + path + " en la aplicación " + applicationId;
     }
 
+    public static String protectedResourceNotFoundById(String resourceId) {
+        return "No existe el recurso protegido " + resourceId;
+    }
+
     private ResourcesMessages() {
     }
 }

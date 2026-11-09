@@ -45,6 +45,7 @@ public final class CorrelationWebFilter implements WebFilter {
     }
 
     private static String valueOrRandom(String value) {
-        return value == null || value.isBlank() ? UUID.randomUUID().toString() : value.trim();
+        return value == null || !value.trim().matches("[A-Za-z0-9_.:-]{1,128}")
+                ? UUID.randomUUID().toString() : value.trim();
     }
 }

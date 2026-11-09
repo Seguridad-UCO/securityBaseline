@@ -1,0 +1,8 @@
+# Toolchain reproducible para validar, probar y empaquetar OPA. No es el runtime.
+FROM openpolicyagent/opa:1.10.0-static AS opa
+
+FROM python:3.14-alpine
+COPY --from=opa /opa /usr/local/bin/opa
+RUN pip install --no-cache-dir 'jsonschema>=4.0,<5.0'
+WORKDIR /workspace/security-policy-engine
+ENTRYPOINT ["/bin/sh"]

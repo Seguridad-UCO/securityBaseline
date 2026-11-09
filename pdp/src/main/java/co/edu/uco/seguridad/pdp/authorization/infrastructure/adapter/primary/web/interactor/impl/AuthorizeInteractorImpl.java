@@ -33,7 +33,7 @@ public final class AuthorizeInteractorImpl implements AuthorizeInteractor {
         return Mono.deferContextual(context -> SecurityContext.currentPrincipal()
                         .map(principal -> AuthorizeRequestMapper.toRequest(input, principal.tenantId(),
                                 principal.subject(), context.getOrDefault("requestId", ""),
-                                context.getOrDefault("correlationId", ""))))
+                                context.getOrDefault("correlationId", ""), principal.userId())))
                 .flatMap(useCase::execute)
                 .map(AccessDecisionResponseMapper::toResponse);
     }

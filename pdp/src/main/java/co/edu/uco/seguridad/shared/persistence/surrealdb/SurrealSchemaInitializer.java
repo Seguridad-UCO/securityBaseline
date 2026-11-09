@@ -23,15 +23,21 @@ import java.time.Duration;
  */
 public abstract class SurrealSchemaInitializer implements ApplicationRunner {
 
-    /** Suficiente para una base sana y corto para no dejar el arranque colgado si no lo está. */
+    /**
+     * Suficiente para una base sana y corto para no dejar el arranque colgado si no lo está.
+     */
     private static final Duration STARTUP_TIMEOUT = Duration.ofSeconds(15);
 
     private static final Logger LOG = LoggerFactory.getLogger(SurrealSchemaInitializer.class);
 
-    /** Las sentencias que definen y siembran el esquema del módulo. */
+    /**
+     * Las sentencias que definen y siembran el esquema del módulo.
+     */
     protected abstract Mono<Void> defineSchema();
 
-    /** El módulo al que pertenece este inicializador, para que el log diga cuál falló. */
+    /**
+     * El módulo al que pertenece este inicializador, para que el log diga cuál falló.
+     */
     protected abstract String module();
 
     @Override

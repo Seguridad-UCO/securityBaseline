@@ -1,14 +1,13 @@
 .PHONY: validate test bundle run
 
 validate:
-	./scripts/validate
+	docker compose run --rm opa-tools ./scripts/validate
 
 test:
-	./scripts/test
+	docker compose run --rm opa-tools ./scripts/test
 
 bundle:
-	./scripts/bundle
+	docker compose run --rm opa-tools ./scripts/bundle
 
-run:
+run: bundle
 	docker compose up --build
-

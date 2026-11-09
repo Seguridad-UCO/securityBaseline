@@ -6,9 +6,11 @@
 > [`../security-policy-engine/README.md`](../security-policy-engine/README.md) para OPA— pero
 > ninguno de los tres, por sí solo, explica cómo encajan. Este sí.
 >
-> **Estado: 2026-09-11.** Marca explícitamente qué corre hoy y qué es plan, porque confundir las dos
-> cosas fue el fallo histórico de este proyecto (ver `pdp/docs/criteria-compliance-matrix.md`, hallazgo
-> transversal). Cuando algo cambie de estado, este documento se actualiza en el mismo commit.
+> **Estado: 2026-09-13 (noche), verificado contra `develop`.** Marca explícitamente qué corre hoy y
+> qué es plan, porque confundir las dos cosas fue el fallo histórico de este proyecto (ver
+> `pdp/docs/criteria-compliance-matrix.md`, hallazgo transversal). Cuando algo cambie de estado, este
+> documento se actualiza en el mismo commit. Detalle completo, historia por historia y con evidencia
+> por ítem: [`MAPA-PLATAFORMA-SEGURIDAD.md`](../pdp/docs/ai-harness/workspace/MAPA-PLATAFORMA-SEGURIDAD.md).
 
 ---
 
@@ -16,15 +18,24 @@
 
 | Componente | Qué es | Dónde vive | Quién lo lleva | Estado |
 |---|---|---|---|---|
-| **PDP** — Policy Decision Point | El servicio que decide: dado un sujeto, una aplicación, un recurso y una acción, ¿se permite? | [`pdp/`](../pdp/) | Sebastián | 🟢 En producción de desarrollo. Decide con **denegación por defecto** — todavía no consulta una política real |
-| **PEP** — Policy Enforcement Point | El proxy que se pone delante de cada aplicación protegida: valida el JWT del usuario, pregunta al PDP y solo deja pasar la petición si la respuesta es `ALLOW` | [`pep/`](../pep/) | David | 🟡 Implementado y probado contra un PDP **simulado** (fixtures). Su cliente real apunta a un endpoint del PDP que **todavía no existe** (HU-003) |
-| **OPA** — Open Policy Agent / motor de políticas | El que de verdad evalúa la política: recibe hechos del PDP y devuelve una decisión lógica en Rego | [`security-policy-engine/`](../security-policy-engine/) | Laura | 🟡 El motor y sus políticas core están implementados y probados. **Nada lo llama todavía** — el PDP no tiene un adaptador que lo consuma (HU-005) |
+| **PDP** — Policy Decision Point | El servicio que decide: dado un sujeto, una aplicación, un recurso y una acción, ¿se permite? | [`pdp/`](../pdp/) | Sebastián | 🟢 En producción de desarrollo. Ya emite, valida y rota su propia credencial de aplicación (HU-012/013/014), gatea la administración del catálogo (HU-015) y llama a OPA de verdad (HU-006) — la respuesta sigue siendo `DENY` porque falta la **política**, no la conexión |
+| **PEP** — Policy Enforcement Point | El proxy que se pone delante de cada aplicación protegida: valida el JWT del usuario, pregunta al PDP y solo deja pasar la petición si la respuesta es `ALLOW` | [`pep/`](../pep/) | David | 🟢 Habla con el PDP real por el canal interno mTLS (HU-003), no con un simulador. Pendiente: migrar su alta técnica para consumir la credencial de aplicación que el PDP ya emite, en vez de su token manual |
+| **OPA** — Open Policy Agent / motor de políticas | El que de verdad evalúa la política: recibe hechos del PDP y devuelve una decisión lógica en Rego | [`security-policy-engine/`](../security-policy-engine/) | Laura | 🟡 El motor y sus políticas core están implementados y probados, y el PDP ya le hace una llamada HTTP real por cada decisión (HU-006). **Sigue sin existir una política de aplicación publicada** — por eso responde `DENY`/`NO_APPLICABLE_POLICY` a todo |
 
 Los tres viven en **un solo repositorio** (`securityBaseline`), cada uno en su propio árbol de
 primer nivel, con su propio build (`pdp/pom.xml` y `pep/pom.xml` son independientes entre sí — el
 `mvnw` de la raíz se invoca con `-f` hacia cada uno; OPA no usa Maven en absoluto). No se pisan y
 no comparten código — se pisan solo en los **contratos**, que viven en
 [`contracts/`](../contracts/README.md) desde la unificación del 2026-09-10.
+
+### Edge/WAF (capa transversal opcional)
+
+El overlay experimental de [`edge/`](../edge/) sitúa Caddy + Coraza/OWASP CRS delante del PDP o del
+PEP en sus topologías Compose. No sustituye sus endpoints ni implica que el tráfico de los entornos
+desplegados ya pase por el WAF. El modo local predeterminado sigue siendo `detection`; solo se
+promoverá a `blocking` después de ejecutar la suite de flujos y ataques y revisar sus evidencias.
+La telemetría del edge se entrega al Collector por la red interna dedicada `security-edge-metrics`;
+el admin API de Caddy queda enlazado a loopback y el endpoint de métricas no se publica en el host.
 
 ---
 
@@ -42,19 +53,19 @@ flowchart TB
         AUTH["AuthorizationController<br/>POST /api/v1/authorize"]
         USECASE["AuthorizeUseCase"]
         PORT["PolicyDecisionPort"]
-        DENY["DenyByDefaultPolicyDecisionAdapter<br/>(único adaptador hoy)"]
-        CATALOGO["applications / resources / tenants<br/>(SurrealDB)"]
+        POLICY["OpaPolicyDecisionAdapter<br/>(HU-006, llamada HTTP real)"]
+        CATALOGO["applications / resources / tenants / roles / assignments<br/>(SurrealDB)"]
     end
 
-    subgraph PEP_BOX["PEP · puerto 8081 — NO conectado al PDP real"]
+    subgraph PEP_BOX["PEP · puerto 8081"]
         ING["Ingress<br/>valida JWT, rate-limit"]
         NORM["Normalización<br/>arma SolicitudAcceso"]
         CLIENT["Cliente HTTP hacia<br/>/internal/v1/access-decisions"]
     end
 
-    subgraph OPA_BOX["OPA · puerto 8181 — NO conectado al PDP"]
+    subgraph OPA_BOX["OPA · puerto 8181"]
         ENTRY["POST /v1/data/security/authorization/decision"]
-        POLICIES["policies/ (Rego)<br/>composition + tenant guard"]
+        POLICIES["policies/ (Rego)<br/>composition + tenant guard<br/>SIN políticas de aplicación publicadas"]
     end
 
     KC["Keycloak · puerto 9090<br/>IdP, sesiones OIDC"]
@@ -62,28 +73,26 @@ flowchart TB
 
     SPA -- "login OIDC" --> KC
     SPA -- "cookie de sesión" --> AUTH
-    AUTH --> USECASE --> PORT --> DENY
+    AUTH --> USECASE --> PORT --> POLICY
     USECASE --> CATALOGO
     CATALOGO --> DB
     KC -.autentica.-> AUTH
 
-    USER -.->|"Bearer JWT<br/>(hoy no llega a ningún lado real)"| ING
-    APP -.->|"proxied si ALLOW<br/>(hoy nunca ocurre)"| ING
+    USER -.->|"Bearer JWT<br/>(depende del despliegue del PEP)"| ING
+    APP -.->|"proxied si ALLOW<br/>(hoy nunca ocurre: sin políticas de aplicación)"| ING
     ING --> NORM --> CLIENT
-    CLIENT -.->|"HU-003: no existe"| AUTH
+    CLIENT -->|"HU-003"| AUTH
 
-    DENY -.->|"HU-005: no existe"| ENTRY
+    POLICY -->|"HU-006"| ENTRY
     ENTRY --> POLICIES
-
-    style CLIENT stroke-dasharray: 5 5
-    style DENY stroke-dasharray: 5 5
-    style ENTRY stroke-dasharray: 5 5
 ```
 
-**Lectura del diagrama:** las líneas punteadas son las que **no existen todavía**. Hoy el PDP y el
-PEP son dos islas que comparten un contrato escrito pero ningún tráfico real; lo mismo entre el PDP
-y OPA. Lo único que corre de punta a punta hoy es la columna izquierda: SPA → Keycloak → PDP →
-SurrealDB.
+**Lectura del diagrama:** el código de los tres saltos (SPA→PDP, PEP→PDP, PDP→OPA) ya existe y está
+probado — HU-002, HU-003 y HU-006, en ese orden. Lo que **no** existe todavía es una
+PolicyDefinition publicada en el bundle: por eso OPA sigue respondiendo
+`DENY`/`NO_APPLICABLE_POLICY` a cualquier petición, y el PEP nunca llega a dejar pasar el tráfico
+real hacia una aplicación protegida. La columna que corre de punta a punta con una respuesta
+distinta de `DENY` sigue siendo solo SPA → Keycloak → PDP → SurrealDB.
 
 ---
 
@@ -118,8 +127,10 @@ curl -i -b cookies.txt -X POST http://localhost:8080/api/v1/authorize \
 ```
 
 La última llamada **siempre responde `DENY / NO_APPLICABLE_POLICY`** hoy — es correcto, no un bug:
-`DenyByDefaultPolicyDecisionAdapter` es el único adaptador de `PolicyDecisionPort` que existe
-(`pdp/src/main/java/co/edu/uco/seguridad/pdp/authorization/infrastructure/adapter/secondary/policy/DenyByDefaultPolicyDecisionAdapter.java`).
+`OpaPolicyDecisionAdapter` (HU-006) hace una llamada HTTP real a OPA a través de `PolicyDecisionPort`
+(`pdp/src/main/java/co/edu/uco/seguridad/pdp/authorization/infrastructure/adapter/secondary/policy/OpaPolicyDecisionAdapter.java`),
+y OPA responde `DENY`/`NO_APPLICABLE_POLICY` porque `security-policy-engine/data/policies.json`
+todavía no contiene PolicyDefinitions publicadas.
 Ver [`pdp/docs/ai-harness/workspace/ROADMAP-PDP.md`](../pdp/docs/ai-harness/workspace/ROADMAP-PDP.md#por-qué-hu-002-deniega-a-propósito).
 
 ### PEP (puerto 8081)
@@ -171,7 +182,7 @@ curl -X POST http://localhost:8181/v1/data/security/authorization/decision \
   -H 'content-type: application/json' --data-binary @-
 ```
 
-Sin ninguna política de aplicación registrada bajo `policies/applications/`, la respuesta siempre es:
+Sin ninguna PolicyDefinition publicada en `data/policies.json`, la respuesta siempre es:
 
 ```json
 {"result":{"effect":"DENY","reasonCode":"NO_APPLICABLE_POLICY",
@@ -198,6 +209,7 @@ sequenceDiagram
     participant KC as Keycloak
     participant PDP as PDP :8080
     participant DB as SurrealDB
+    participant OPA as OPA :8181
 
     U->>KC: login OIDC
     KC-->>U: redirige con sesión establecida
@@ -209,7 +221,8 @@ sequenceDiagram
     DB-->>PDP: sí
     PDP->>DB: ¿existe el recurso protegido?
     DB-->>PDP: sí
-    PDP->>PDP: PolicyDecisionPort.execute()<br/>(DenyByDefaultPolicyDecisionAdapter)
+    PDP->>OPA: POST /v1/data/security/authorization/decision<br/>(OpaPolicyDecisionAdapter, HU-006)
+    OPA-->>PDP: {"result": {"effect": "DENY",<br/>"reasonCode": "NO_APPLICABLE_POLICY"}}<br/>(sin política de aplicación publicada)
     PDP-->>U: 200 { "state": "DENY",<br/>"reasonCode": "NO_APPLICABLE_POLICY" }
 ```
 
@@ -219,7 +232,7 @@ placeholder (ver §3, PDP).
 
 ---
 
-## 5. Flujo de una petición — OBJETIVO (lo que HU-003 + HU-005 desbloquean)
+## 5. Flujo de una petición — OBJETIVO (lo que HU-003 + HU-006 desbloquean)
 
 ```mermaid
 sequenceDiagram
@@ -257,9 +270,11 @@ verificada** en [`contracts/`](../contracts/README.md); lo que falta es el códi
 | # | Qué | Por qué va antes que las demás | Sin esto, no se puede… |
 |---|---|---|---|
 | **1** | **HU-003** — endpoint interno `POST /internal/v1/access-decisions` con mTLS + Bearer, según `contracts/pep-pdp/v1/` | Es el **único** de los pendientes que desbloquea a otra persona del equipo. El PEP de David está terminado y probado; solo le falta un PDP real contra el cual hablar | Probar el PEP con tráfico real. Todo lo que hace el PEP hoy es contra un simulador |
-| **2** | **HU-004** — roles y asignaciones vigentes por tenant (BC-04 + BC-08) | Sin atributos que evaluar, conectar OPA no cambiaría nada: seguiría respondiendo `NO_APPLICABLE_POLICY` porque no hay hechos de negocio que darle. Es el trabajo más grande y 100 % del PDP | Que una política Rego tenga algo real que decidir |
-| **3** | **HU-005** — adaptador `OpaPolicyDecisionAdapter` sobre `PolicyDecisionPort` | Sustituye `DenyByDefaultPolicyDecisionAdapter` por una llamada real a OPA. Con esto se cierra el camino `ALLOW`, que hoy es matemáticamente imposible | Que el PDP alguna vez responda `ALLOW` |
-| **4** | **HU-006** — `EventoAcceso` correlacionado hacia auditoría | Sin evidencia durable no hay cumplimiento (INV-AUD-01) — pero no bloquea a nadie del equipo, a diferencia de 1-3 | Demostrar qué se decidió y por qué, después del hecho |
+| **2** | **HU-004** — catálogo de roles (BC-04): alcance tenant/aplicación/global y recursos que autoriza | Primera mitad del valor propio del PDP. Partida de la historia original de roles+asignaciones el 2026-09-11 porque, con esas decisiones, cada mitad es del tamaño de HU-003 | Que exista vocabulario de roles que asignar |
+| **3** | **HU-005** — asignaciones vigentes (BC-08): `UsuarioAplicacionRol` + `Vigencia` + `findActiveRolesFor` | Sin atributos que evaluar, conectar OPA no cambiaría nada: seguiría respondiendo `NO_APPLICABLE_POLICY` porque no hay hechos de negocio que darle | Que una política Rego tenga algo real que decidir |
+| **4** | ~~HU-006~~ — adaptador `OpaPolicyDecisionAdapter` sobre `PolicyDecisionPort` — **hecho** | Sustituyó al adaptador que denegaba por defecto por una llamada real a OPA. El camino `ALLOW` ya es posible en código; sigue sin ocurrir en la práctica porque no hay política de aplicación publicada (ver §2) | Que el PDP alguna vez responda `ALLOW` — ya puede, falta la política |
+| **5** | **HU-007** — `EventoAcceso` correlacionado hacia auditoría | Sin evidencia durable no hay cumplimiento (INV-AUD-01) — pero no bloquea a nadie del equipo, a diferencia de 1-4 | Demostrar qué se decidió y por qué, después del hecho |
+| **6** | **HU-009** — administración de seguridad por aplicación (quién administra el catálogo) | Diferida desde HU-004/HU-005 a propósito. Desbloquea los roles globales por HTTP y es el modelo que el microfrontend necesita. Necesita ADR antes | El microfrontend de seguridad |
 | — | `pep-pdp/v1.1` — obligaciones como objetos, no strings | Es de David; el contrato en `contracts/obligations.md` ya dice qué tiene que hacer | Que un `ALLOW` con obligación `AUDIT` no se sirva sin auditar (hoy degrada a `INDETERMINATE`, correcto pero conservador) |
 | — | Registrar `ci/pep-pipeline.yml` en Azure | El módulo `pep/` no tiene CI propio corriendo todavía | Que un cambio en `pep/` se verifique solo, sin depender de que alguien corra `mvnw -f pep/pom.xml verify` a mano |
 
@@ -269,11 +284,14 @@ a ser atributos de entrada que evalúa OPA.
 
 ### Lo que NO hay que hacer todavía
 
-- Diseño de auditoría durable (Etapa 4 del plan del PEP) — después de HU-005.
+- Diseño de auditoría durable (Etapa 4 del plan del PEP) — después de HU-006.
 - Despliegue en red / TLS por ambiente / `X-ARR-ClientCert` de App Service — es un problema de
   infraestructura, no del PDP (ver `HANDOFF-INTEGRACION-PEP-OPA.md`, trampa T3).
-- Validación de issuer/audiencia **por aplicación** — aplazada a HU-004 a propósito (decisión D5 del
-  handoff); hoy se valida contra un conjunto de confianza configurado, y es deuda consciente.
+- Validación de issuer/audiencia **por aplicación** — aplazada a propósito (decisión D5 del
+  handoff); hoy se valida contra un conjunto de confianza configurado, y es deuda consciente. Al
+  partir roles/asignaciones el 2026-09-11 quedó **sin historia numerada**: es «credenciales por
+  aplicación», emparentada con HU-009 y con la librería v1 (los dos registros de aplicaciones que
+  no se hablan). Necesita su propia historia cuando se decida dónde vive la credencial.
 
 ---
 
@@ -291,7 +309,7 @@ correctas; las enlaza:
 **No existe hoy un `docker compose up` único que levante los cinco contenedores juntos**, porque
 levantarlos juntos no demostraría nada todavía: el PEP hablaría con su simulador (no con el PDP) y
 OPA no recibiría tráfico de nadie. Ese compose unificado tiene sentido **después** de HU-003 y
-HU-005 — antes, sería un compose unico que aparenta una integración que no existe, que es
+HU-006 — antes, sería un compose unico que aparenta una integración que no existe, que es
 justo el tipo de deriva que este proyecto existe para evitar (ver hallazgo transversal en
 `pdp/docs/criteria-compliance-matrix.md`).
 

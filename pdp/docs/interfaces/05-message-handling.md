@@ -2,7 +2,6 @@
 
 [← Interfaces](README.md) · [Siguiente: parámetros →](06-parameter-handling.md)
 
-
 ## Decisión arquitectónica
 
 Los éxitos usan un envelope común con código estable; los fallos usan RFC 9457 `ProblemDetail` con
@@ -22,18 +21,18 @@ las dos jerarquías base y usa el `code()` que cada excepción ya trae. Añadir 
 requiere tocar el handler — si tuviera un `switch` por tipo, cada regla nueva sería una edición aquí
 y tarde o temprano una omisión.
 
-| Situación | HTTP | Código |
-|---|---|---|
-| Campo obligatorio ausente | 400 | `MISSING_REQUEST_FIELD` |
-| Campo con formato o tipo inválido | 400 | `MALFORMED_REQUEST_FIELD` |
-| Parámetros incompatibles entre sí | 400 | `CONFLICTING_REQUEST_PARAMETERS` |
-| Value object rechazado fuera de HTTP | 400 | `INVALID_*` |
-| Tenant inexistente / suspendido | 400 | `TENANT_NOT_FOUND` / `TENANT_NOT_ACTIVE` |
-| Nombre reservado | 400 | `RESERVED_APPLICATION_NAME` |
-| Recurso de otro tenant | 400 | `RESOURCE_TENANT_MISMATCH` |
-| Aplicación o concesión ya registrada | 409 | `APPLICATION_ALREADY_EXISTS` / `PROTECTED_RESOURCE_ALREADY_EXISTS` |
-| Cuerpo ilegible | 400 | `MALFORMED_REQUEST` |
-| Fallo no previsto | 500 | `INTERNAL_ERROR` |
+| Situación                            | HTTP | Código                                                             |
+|--------------------------------------|------|--------------------------------------------------------------------|
+| Campo obligatorio ausente            | 400  | `MISSING_REQUEST_FIELD`                                            |
+| Campo con formato o tipo inválido    | 400  | `MALFORMED_REQUEST_FIELD`                                          |
+| Parámetros incompatibles entre sí    | 400  | `CONFLICTING_REQUEST_PARAMETERS`                                   |
+| Value object rechazado fuera de HTTP | 400  | `INVALID_*`                                                        |
+| Tenant inexistente / suspendido      | 400  | `TENANT_NOT_FOUND` / `TENANT_NOT_ACTIVE`                           |
+| Nombre reservado                     | 400  | `RESERVED_APPLICATION_NAME`                                        |
+| Recurso de otro tenant               | 400  | `RESOURCE_TENANT_MISMATCH`                                         |
+| Aplicación o concesión ya registrada | 409  | `APPLICATION_ALREADY_EXISTS` / `PROTECTED_RESOURCE_ALREADY_EXISTS` |
+| Cuerpo ilegible                      | 400  | `MALFORMED_REQUEST`                                                |
+| Fallo no previsto                    | 500  | `INTERNAL_ERROR`                                                   |
 
 El 500 devuelve un detalle genérico; la causa real va al log. Nunca se envía una traza al cliente.
 

@@ -29,6 +29,16 @@ services:
       - ./keycloak/themes:/opt/keycloak/themes
       - ./keycloak/import:/opt/keycloak/data/import
 
+  # HU-022/ADR-026: revocación de tokens. Sin volumen a propósito — es un dato descartable por
+  # diseño (TTL corto, se reconstruye solo con el próximo evento de revocación); no hay nada que
+  # conservar entre reinicios.
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
 volumes:
   keycloak_data:
   surrealdb_data:

@@ -13,7 +13,9 @@ import reactor.core.publisher.Mono;
 import static co.edu.uco.seguridad.pep.commons.EnforcementFailure.Kind.UNAUTHENTICATED;
 import static co.edu.uco.seguridad.pep.commons.EnforcementFailure.Kind.UNAVAILABLE;
 
-/** Adaptador secundario: traduce el puerto de decisión a la API HTTP v1 del PDP. */
+/**
+ * Adaptador secundario: traduce el puerto de decisión a la API HTTP v1 del PDP.
+ */
 public final class WebClientDecisionAdapter implements DecisionPort {
     private final WebClient client;
     private final PdpClientProperties properties;

@@ -1,0 +1,199 @@
+package co.edu.uco.seguridad.pdp.profiles.infrastructure.adapter.secondary.persistence.repository;
+
+import co.edu.uco.seguridad.pdp.commons.model.*;
+import co.edu.uco.seguridad.pdp.profiles.application.secondaryport.repository.ProfileRepository;
+import co.edu.uco.seguridad.pdp.profiles.domain.Profile;
+import co.edu.uco.seguridad.pdp.profiles.domain.ProfileCriteria;
+import co.edu.uco.seguridad.pdp.profiles.domain.model.ProfileName;
+import co.edu.uco.seguridad.pdp.profiles.infrastructure.adapter.secondary.persistence.entity.ProfileEntity;
+import co.edu.uco.seguridad.pdp.profiles.infrastructure.adapter.secondary.persistence.mapper.ProfilePersistenceMapper;
+import co.edu.uco.seguridad.pdp.profiles.infrastructure.adapter.secondary.persistence.schema.ProfileSchema;
+import co.edu.uco.seguridad.pdp.roles.domain.model.RoleScope;
+import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
+import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
+import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealRecordId;
+import reactor.core.publisher.Mono;
+import tools.jackson.databind.JsonNode;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+/**
+ * Adaptador real sobre SurrealDB. Lee la fila en ProfileEntity y delega en ProfilePersistenceMapper. Espejo de SurrealRoleRepository.
+ */
+public final class SurrealProfileRepository implements ProfileRepository {
+
+    private final SurrealDbClient client;
+
+    public SurrealProfileRepository(SurrealDbClient client) {
+        this.client = Objects.requireNonNull(client, RequiredArgumentMessages.SURREALDB_CLIENT);
+    }
+
+    @Override
+    public Mono<Boolean> existsByNameInScope(ProfileName name, RoleScope scope) {
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("name", name.value());
+        parameters.put("level", scope.level().name());
+        String tenantIdExpr = bind(parameters, "tenantId", scope.tenantId().map(TenantId::value));
+        String applicationIdExpr = bind(parameters, "applicationId",
+                scope.applicationId().map(applicationId -> applicationId.value().toString()));
+
+        return client.execute(
+                        "SELECT id FROM %s WHERE name = $name AND level = $level AND tenantId = %s AND applicationId = %s LIMIT 1;"
+                                .formatted(ProfileSchema.TABLE, tenantIdExpr, applicationIdExpr),
+                        parameters)
+                .map(results -> !results.get(0).isEmpty());
+    }
+
+    @Override
+    public Mono<Profile> findByIdForTenant(ProfileId profileId, TenantId tenantId) {
+        return client.execute(
+                        "SELECT * FROM type::record('%s', $id) WHERE tenantId = $tenantId;".formatted(ProfileSchema.TABLE),
+                        Map.of("id", profileId.value().toString(), "tenantId", tenantId.value()))
+                .flatMap(results -> {
+                    JsonNode rows = results.get(0);
+                    return rows.isEmpty() ? Mono.empty() : Mono.just(toDomain(rows.get(0)));
+                });
+    }
+
+    @Override
+    public Mono<Profile> findById(ProfileId profileId) {
+        return client.execute("SELECT * FROM type::record('%s', $id);".formatted(ProfileSchema.TABLE),
+                        Map.of("id", profileId.value().toString()))
+                .flatMap(results -> results.get(0).isEmpty() ? Mono.empty() : Mono.just(toDomain(results.get(0).get(0))));
+    }
+
+    @Override
+    public Mono<ResultPage<Profile>> findBy(ProfileCriteria criteria, PageWindow window) {
+        String nameFilter = criteria.nameContains()
+                .map(ignored -> " AND string::contains(string::lowercase(name), $query)")
+                .orElse("");
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("tenantId", criteria.tenantId().value());
+        criteria.nameContains().ifPresent(query -> parameters.put("query", query.toLowerCase(Locale.ROOT)));
+        if (criteria.applicationId().isPresent()) {
+            String applicationId = criteria.applicationId().orElseThrow().value().toString();
+            String query = """
+                    SELECT * FROM %1$s WHERE tenantId = $tenantId AND applicationId = $applicationId%2$s \
+                    ORDER BY registeredAt DESC LIMIT %3$d START %4$d;
+                    SELECT count() FROM %1$s WHERE tenantId = $tenantId AND applicationId = $applicationId%2$s GROUP ALL;\
+                    """.formatted(ProfileSchema.TABLE, nameFilter, window.limit(), window.offset());
+            parameters.put("applicationId", applicationId);
+            return client.execute(query, parameters)
+                    .map(results -> ResultPage.of(results.get(0).valueStream().map(SurrealProfileRepository::toDomain).toList(), totalOf(results.get(1)), window));
+        }
+        String query = """
+                SELECT * FROM %1$s WHERE (tenantId = $tenantId OR level = 'GLOBAL')%2$s \
+                ORDER BY registeredAt DESC LIMIT %3$d START %4$d;
+                SELECT count() FROM %1$s WHERE (tenantId = $tenantId OR level = 'GLOBAL')%2$s GROUP ALL;\
+                """.formatted(ProfileSchema.TABLE, nameFilter, window.limit(), window.offset());
+
+        return client.execute(query, parameters)
+                .map(results -> {
+                    List<Profile> content = results.get(0).valueStream().map(SurrealProfileRepository::toDomain).toList();
+                    return ResultPage.of(content, totalOf(results.get(1)), window);
+                });
+    }
+
+    @Override
+    public Mono<Long> countByApplication(TenantId tenantId, ApplicationId applicationId) {
+        return client.execute("SELECT count() FROM %s WHERE tenantId = $tenantId AND applicationId = $applicationId GROUP ALL;".formatted(ProfileSchema.TABLE), Map.of("tenantId", tenantId.value(), "applicationId", applicationId.value().toString()))
+                .map(r -> totalOf(r.get(0)));
+    }
+
+    private static long totalOf(JsonNode countResult) {
+        if (countResult.isEmpty()) {
+            return 0L;
+        }
+        return countResult.get(0).path("count").asLong(0L);
+    }
+
+    @Override
+    public Mono<Profile> save(Profile profile) {
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("id", profile.id().value().toString());
+        parameters.put("level", profile.scope().level().name());
+        parameters.put("name", profile.name().value());
+        parameters.put("registeredAt", profile.registeredAt().toString());
+        String tenantIdExpr = bind(parameters, "tenantId", profile.scope().tenantId().map(TenantId::value));
+        String applicationIdExpr = bind(parameters, "applicationId",
+                profile.scope().applicationId().map(applicationId -> applicationId.value().toString()));
+        String rolesLiteral = profile.roles().stream()
+                .map(roleId -> "'" + roleId.value() + "'")
+                .collect(Collectors.joining(",", "[", "]"));
+
+        String query = """
+                UPSERT type::record('%s', $id) SET \
+                level = $level, name = $name, tenantId = %s, applicationId = %s, \
+                roles = %s, registeredAt = <datetime>$registeredAt;\
+                """.formatted(ProfileSchema.TABLE, tenantIdExpr, applicationIdExpr, rolesLiteral);
+
+        return client.execute(query, parameters).thenReturn(profile);
+    }
+
+    @Override
+    public Mono<Void> saveAllAtomically(List<Profile> profiles) {
+        if (profiles.isEmpty()) return Mono.empty();
+        StringBuilder query = new StringBuilder("BEGIN TRANSACTION; ");
+        Map<String, String> p = new HashMap<>();
+        for (int i = 0; i < profiles.size(); i++) {
+            Profile profile = profiles.get(i);
+            String n = "" + i;
+            String roles = profile.roles().stream().map(id -> "'" + id.value() + "'").collect(Collectors.joining(",", "[", "]"));
+            query.append("CREATE type::record('").append(ProfileSchema.TABLE).append("',$id").append(n).append(") SET level=$level").append(n).append(", name=$name").append(n).append(", tenantId=$tenant").append(n).append(", applicationId=$application").append(n).append(", roles=").append(roles).append(", registeredAt=<datetime>$at").append(n).append("; ");
+            p.put("id" + n, profile.id().value().toString());
+            p.put("level" + n, profile.scope().level().name());
+            p.put("name" + n, profile.name().value());
+            p.put("tenant" + n, profile.scope().tenantId().orElseThrow().value());
+            p.put("application" + n, profile.scope().applicationId().map(a -> a.value().toString()).orElse(""));
+            p.put("at" + n, profile.registeredAt().toString());
+        }
+        return client.execute(query.append("COMMIT TRANSACTION;").toString(), p).then();
+    }
+
+    @Override
+    public Mono<Void> deleteById(ProfileId profileId) {
+        return client.execute("DELETE type::record('%s', $id);".formatted(ProfileSchema.TABLE),
+                        Map.of("id", profileId.value().toString()))
+                .then();
+    }
+
+    @Override
+    public Mono<Boolean> existsByRoleId(co.edu.uco.seguridad.pdp.commons.model.RoleId roleId) {
+        return client.execute("SELECT id FROM %s WHERE $roleId INSIDE roles LIMIT 1;".formatted(ProfileSchema.TABLE),
+                        Map.of("roleId", roleId.value().toString()))
+                .map(results -> !results.get(0).isEmpty());
+    }
+
+    @Override
+    public Mono<Boolean> existsByApplicationId(ApplicationId applicationId) {
+        return client.execute("SELECT id FROM %s WHERE applicationId = $applicationId LIMIT 1;".formatted(ProfileSchema.TABLE),
+                        Map.of("applicationId", applicationId.value().toString()))
+                .map(results -> !results.get(0).isEmpty());
+    }
+
+    /**
+     * Une un componente opcional del alcance como parámetro ligado, con cadena vacía como centinela
+     * de ausencia. {@code NONE} no sirve: el índice único {@code profile_scope_name} no indexa ni
+     * compara correctamente un campo ausente contra {@code NONE} (confirmado contra SurrealDB:
+     * {@code WHERE applicationId = NONE} no encuentra la fila que acaba de insertarse con
+     * {@code applicationId = NONE}, y el índice UNIQUE no rechaza un segundo registro idéntico). Una
+     * cadena vacía es un valor real que el índice sí puede indexar y comparar.
+     */
+    private static String bind(Map<String, String> parameters, String field, Optional<String> value) {
+        parameters.put(field, value.orElse(""));
+        return "$" + field;
+    }
+
+    private static Profile toDomain(JsonNode row) {
+        ProfileEntity entity = new ProfileEntity(
+                SurrealRecordId.idPart(row.path("id").asString()),
+                row.path("name").asString(),
+                row.path("level").asString(),
+                row.path("tenantId").asString(null),
+                row.path("applicationId").asString(null),
+                row.path("roles").valueStream().map(JsonNode::asString).toList(),
+                row.path("registeredAt").asString());
+        return ProfilePersistenceMapper.toDomain(entity);
+    }
+}

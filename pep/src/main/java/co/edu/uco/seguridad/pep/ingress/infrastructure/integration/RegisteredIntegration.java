@@ -5,5 +5,6 @@ import java.net.URI;
 /**
  * Persisted technical route. Policy data deliberately remains in the PDP.
  */
-public record RegisteredIntegration(String applicationId, String environment, String prefix, URI backendUrl, String audience) {
+public record RegisteredIntegration(String applicationId, String environment, String prefix, URI backendUrl,
+                                    String audience) {
 }

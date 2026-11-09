@@ -10,11 +10,7 @@ import co.edu.uco.seguridad.shared.web.RequestContext;
 import co.edu.uco.seguridad.shared.web.message.WebContractMessages;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -39,7 +35,7 @@ final class TenantController {
 
     @PostMapping
     Mono<ResponseEntity<ApiResponse<TenantWebResponse>>> create(@RequestBody CreateTenantRawRequest body,
-            ServerWebExchange exchange) {
+                                                                ServerWebExchange exchange) {
         RequestContext context = CorrelationWebFilter.context(exchange);
         return createInteractor.execute(body)
                 .map(response -> ResponseEntity.status(HttpStatus.CREATED)

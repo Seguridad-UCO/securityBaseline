@@ -33,10 +33,10 @@ public final class SurrealApplicationSchemaInitializer extends SurrealSchemaInit
         return client.ensureNamespaceAndDatabase()
                 .then(client.execute(
                         """
-                        DEFINE TABLE IF NOT EXISTS %1$s SCHEMALESS;
-                        DEFINE INDEX IF NOT EXISTS %2$s ON %1$s \
-                        COLUMNS tenantId, name UNIQUE;\
-                        """.formatted(ApplicationSchema.TABLE, ApplicationSchema.INDEX_TENANT_NAME),
+                                DEFINE TABLE IF NOT EXISTS %1$s SCHEMALESS;
+                                DEFINE INDEX IF NOT EXISTS %2$s ON %1$s \
+                                COLUMNS tenantId, name UNIQUE;\
+                                """.formatted(ApplicationSchema.TABLE, ApplicationSchema.INDEX_TENANT_NAME),
                         Map.of()))
                 .then();
     }

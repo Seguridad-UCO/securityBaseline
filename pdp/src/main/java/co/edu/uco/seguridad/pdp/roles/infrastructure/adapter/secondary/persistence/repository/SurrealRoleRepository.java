@@ -1,0 +1,222 @@
+package co.edu.uco.seguridad.pdp.roles.infrastructure.adapter.secondary.persistence.repository;
+
+import co.edu.uco.seguridad.pdp.commons.model.*;
+import co.edu.uco.seguridad.pdp.roles.application.secondaryport.repository.RoleRepository;
+import co.edu.uco.seguridad.pdp.roles.domain.Role;
+import co.edu.uco.seguridad.pdp.roles.domain.RoleCriteria;
+import co.edu.uco.seguridad.pdp.roles.domain.model.RoleName;
+import co.edu.uco.seguridad.pdp.roles.domain.model.RoleScope;
+import co.edu.uco.seguridad.pdp.roles.infrastructure.adapter.secondary.persistence.entity.RoleEntity;
+import co.edu.uco.seguridad.pdp.roles.infrastructure.adapter.secondary.persistence.mapper.RolePersistenceMapper;
+import co.edu.uco.seguridad.pdp.roles.infrastructure.adapter.secondary.persistence.schema.RoleSchema;
+import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
+import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
+import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealRecordId;
+import reactor.core.publisher.Mono;
+import tools.jackson.databind.JsonNode;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+/**
+ * Adaptador real sobre SurrealDB. Lee la fila en RoleEntity y delega en RolePersistenceMapper.
+ */
+public final class SurrealRoleRepository implements RoleRepository {
+
+    private final SurrealDbClient client;
+
+    public SurrealRoleRepository(SurrealDbClient client) {
+        this.client = Objects.requireNonNull(client, RequiredArgumentMessages.SURREALDB_CLIENT);
+    }
+
+    @Override
+    public Mono<Boolean> existsByNameInScope(RoleName name, RoleScope scope) {
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("name", name.value());
+        parameters.put("level", scope.level().name());
+        String tenantIdExpr = bind(parameters, "tenantId", scope.tenantId().map(TenantId::value));
+        String applicationIdExpr = bind(parameters, "applicationId",
+                scope.applicationId().map(applicationId -> applicationId.value().toString()));
+
+        return client.execute(
+                        "SELECT id FROM %s WHERE name = $name AND level = $level AND tenantId = %s AND applicationId = %s LIMIT 1;"
+                                .formatted(RoleSchema.TABLE, tenantIdExpr, applicationIdExpr),
+                        parameters)
+                .map(results -> !results.get(0).isEmpty());
+    }
+
+    @Override
+    public Mono<Role> findByNameInScope(RoleName name, RoleScope scope) {
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("name", name.value());
+        parameters.put("level", scope.level().name());
+        String tenantIdExpr = bind(parameters, "tenantId", scope.tenantId().map(TenantId::value));
+        String applicationIdExpr = bind(parameters, "applicationId",
+                scope.applicationId().map(applicationId -> applicationId.value().toString()));
+
+        return client.execute(
+                        "SELECT * FROM %s WHERE name = $name AND level = $level AND tenantId = %s AND applicationId = %s LIMIT 1;"
+                                .formatted(RoleSchema.TABLE, tenantIdExpr, applicationIdExpr),
+                        parameters)
+                .flatMap(results -> {
+                    JsonNode rows = results.get(0);
+                    return rows.isEmpty() ? Mono.empty() : Mono.just(toDomain(rows.get(0)));
+                });
+    }
+
+    @Override
+    public Mono<Role> findByIdForTenant(RoleId roleId, TenantId tenantId) {
+        return client.execute(
+                        "SELECT * FROM type::record('%s', $id) WHERE tenantId = $tenantId;".formatted(RoleSchema.TABLE),
+                        Map.of("id", roleId.value().toString(), "tenantId", tenantId.value()))
+                .flatMap(results -> {
+                    JsonNode rows = results.get(0);
+                    return rows.isEmpty() ? Mono.empty() : Mono.just(toDomain(rows.get(0)));
+                });
+    }
+
+    @Override
+    public Mono<Role> findById(RoleId roleId) {
+        return client.execute(
+                        "SELECT * FROM type::record('%s', $id);".formatted(RoleSchema.TABLE),
+                        Map.of("id", roleId.value().toString()))
+                .flatMap(results -> {
+                    JsonNode rows = results.get(0);
+                    return rows.isEmpty() ? Mono.empty() : Mono.just(toDomain(rows.get(0)));
+                });
+    }
+
+    @Override
+    public Mono<ResultPage<Role>> findBy(RoleCriteria criteria, PageWindow window) {
+        String nameFilter = criteria.nameContains()
+                .map(ignored -> " AND string::contains(string::lowercase(name), $query)")
+                .orElse("");
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("tenantId", criteria.tenantId().value());
+        criteria.nameContains().ifPresent(query -> parameters.put("query", query.toLowerCase(Locale.ROOT)));
+        if (criteria.applicationId().isPresent()) {
+            String applicationId = criteria.applicationId().orElseThrow().value().toString();
+            String query = """
+                    SELECT * FROM %1$s WHERE tenantId = $tenantId AND applicationId = $applicationId%2$s \
+                    ORDER BY registeredAt DESC LIMIT %3$d START %4$d;
+                    SELECT count() FROM %1$s WHERE tenantId = $tenantId AND applicationId = $applicationId%2$s GROUP ALL;\
+                    """.formatted(RoleSchema.TABLE, nameFilter, window.limit(), window.offset());
+            parameters.put("applicationId", applicationId);
+            return client.execute(query, parameters)
+                    .map(results -> ResultPage.of(results.get(0).valueStream().map(SurrealRoleRepository::toDomain).toList(), totalOf(results.get(1)), window));
+        }
+        String query = """
+                SELECT * FROM %1$s WHERE (tenantId = $tenantId OR level = 'GLOBAL')%2$s \
+                    ORDER BY registeredAt DESC LIMIT %3$d START %4$d;
+                SELECT count() FROM %1$s WHERE (tenantId = $tenantId OR level = 'GLOBAL')%2$s GROUP ALL;\
+                """.formatted(RoleSchema.TABLE, nameFilter, window.limit(), window.offset());
+
+        return client.execute(query, parameters)
+                .map(results -> {
+                    List<Role> content = results.get(0).valueStream().map(SurrealRoleRepository::toDomain).toList();
+                    return ResultPage.of(content, totalOf(results.get(1)), window);
+                });
+    }
+
+    @Override
+    public Mono<Long> countByApplication(TenantId tenantId, ApplicationId applicationId) {
+        return client.execute("SELECT count() FROM %s WHERE tenantId = $tenantId AND applicationId = $applicationId GROUP ALL;".formatted(RoleSchema.TABLE), Map.of("tenantId", tenantId.value(), "applicationId", applicationId.value().toString()))
+                .map(r -> totalOf(r.get(0)));
+    }
+
+    private static long totalOf(JsonNode countResult) {
+        if (countResult.isEmpty()) {
+            return 0L;
+        }
+        return countResult.get(0).path("count").asLong(0L);
+    }
+
+    @Override
+    public Mono<Role> save(Role role) {
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("id", role.id().value().toString());
+        parameters.put("level", role.scope().level().name());
+        parameters.put("name", role.name().value());
+        parameters.put("registeredAt", role.registeredAt().toString());
+        String tenantIdExpr = bind(parameters, "tenantId", role.scope().tenantId().map(TenantId::value));
+        String applicationIdExpr = bind(parameters, "applicationId",
+                role.scope().applicationId().map(applicationId -> applicationId.value().toString()));
+        String resourcesLiteral = role.resources().stream()
+                .map(resourceId -> "'" + resourceId.value() + "'")
+                .collect(Collectors.joining(",", "[", "]"));
+
+        String query = """
+                UPSERT type::record('%s', $id) SET \
+                level = $level, name = $name, tenantId = %s, applicationId = %s, \
+                resources = %s, registeredAt = <datetime>$registeredAt;\
+                """.formatted(RoleSchema.TABLE, tenantIdExpr, applicationIdExpr, resourcesLiteral);
+
+        return client.execute(query, parameters).thenReturn(role);
+    }
+
+    @Override
+    public Mono<Void> saveAllAtomically(List<Role> roles) {
+        if (roles.isEmpty()) return Mono.empty();
+        StringBuilder query = new StringBuilder("BEGIN TRANSACTION; ");
+        Map<String, String> p = new HashMap<>();
+        for (int i = 0; i < roles.size(); i++) {
+            Role role = roles.get(i);
+            String n = "" + i;
+            String resources = role.resources().stream().map(id -> "'" + id.value() + "'").collect(Collectors.joining(",", "[", "]"));
+            query.append("CREATE type::record('").append(RoleSchema.TABLE).append("',$id").append(n).append(") SET level=$level").append(n).append(", name=$name").append(n).append(", tenantId=$tenant").append(n).append(", applicationId=$application").append(n).append(", resources=").append(resources).append(", registeredAt=<datetime>$at").append(n).append("; ");
+            p.put("id" + n, role.id().value().toString());
+            p.put("level" + n, role.scope().level().name());
+            p.put("name" + n, role.name().value());
+            p.put("tenant" + n, role.scope().tenantId().orElseThrow().value());
+            p.put("application" + n, role.scope().applicationId().map(a -> a.value().toString()).orElse(""));
+            p.put("at" + n, role.registeredAt().toString());
+        }
+        return client.execute(query.append("COMMIT TRANSACTION;").toString(), p).then();
+    }
+
+    @Override
+    public Mono<Void> deleteById(RoleId roleId) {
+        return client.execute("DELETE type::record('%s', $id);".formatted(RoleSchema.TABLE),
+                        Map.of("id", roleId.value().toString()))
+                .then();
+    }
+
+    @Override
+    public Mono<Boolean> existsByResourceId(co.edu.uco.seguridad.pdp.commons.model.ResourceId resourceId) {
+        return client.execute("SELECT id FROM %s WHERE $resourceId INSIDE resources LIMIT 1;".formatted(RoleSchema.TABLE),
+                        Map.of("resourceId", resourceId.value().toString()))
+                .map(results -> !results.get(0).isEmpty());
+    }
+
+    @Override
+    public Mono<Boolean> existsByApplicationId(co.edu.uco.seguridad.pdp.commons.model.ApplicationId applicationId) {
+        return client.execute("SELECT id FROM %s WHERE applicationId = $applicationId LIMIT 1;".formatted(RoleSchema.TABLE),
+                        Map.of("applicationId", applicationId.value().toString()))
+                .map(results -> !results.get(0).isEmpty());
+    }
+
+    /**
+     * Une un componente opcional del alcance como parámetro ligado, con cadena vacía como centinela
+     * de ausencia. {@code NONE} no sirve: el índice único {@code role_scope_name} no indexa ni
+     * compara correctamente un campo ausente contra {@code NONE} (confirmado contra SurrealDB:
+     * {@code WHERE applicationId = NONE} no encuentra la fila que acaba de insertarse con
+     * {@code applicationId = NONE}, y el índice UNIQUE no rechaza un segundo registro idéntico). Una
+     * cadena vacía es un valor real que el índice sí puede indexar y comparar.
+     */
+    private static String bind(Map<String, String> parameters, String field, Optional<String> value) {
+        parameters.put(field, value.orElse(""));
+        return "$" + field;
+    }
+
+    private static Role toDomain(JsonNode row) {
+        RoleEntity entity = new RoleEntity(
+                SurrealRecordId.idPart(row.path("id").asString()),
+                row.path("name").asString(),
+                row.path("level").asString(),
+                row.path("tenantId").asString(null),
+                row.path("applicationId").asString(null),
+                row.path("resources").valueStream().map(JsonNode::asString).toList(),
+                row.path("registeredAt").asString());
+        return RolePersistenceMapper.toDomain(entity);
+    }
+}

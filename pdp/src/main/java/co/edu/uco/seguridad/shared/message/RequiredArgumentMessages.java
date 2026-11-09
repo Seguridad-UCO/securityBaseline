@@ -35,6 +35,8 @@ public final class RequiredArgumentMessages {
     public static final String PAGE_WINDOW = "se requiere la ventana de paginación";
     public static final String TENANT_STATUS = "se requiere estado del inquilino";
     public static final String SUBJECT = "se requiere sujeto";
+    public static final String PRINCIPAL_USER_ID = "se requiere el identificador interno del principal (puede estar ausente)";
+    public static final String SUBJECT_ROLES = "se requieren los roles del sujeto (puede ser vacío)";
     public static final String SEARCH_CRITERIA = "se requieren criterios de búsqueda";
     public static final String RESULT_WINDOW = "se requiere ventana de resultado";
     public static final String DTO = "se requiere dto";
@@ -64,6 +66,71 @@ public final class RequiredArgumentMessages {
     public static final String PROTECTED_RESOURCE_EXISTS_VALIDATOR = "se requiere el validador de existencia de recurso protegido";
     public static final String POLICY_DECISION_PORT = "se requiere el puerto de decisión de políticas";
     public static final String AUTHORIZE_USE_CASE = "se requiere el caso de uso de autorización";
+    // HU-003 — canal interno para el PEP.
+    public static final String APPLICATION_OWNER_LOOKUP_VALIDATOR = "se requiere el validador de dueño de aplicación";
+    public static final String EVALUATE_INTERNAL_ACCESS_USE_CASE = "se requiere el caso de uso de acceso interno";
+    public static final String INTERNAL_ACCESS_DECISION_INTERACTOR = "se requiere el interactor de decisión interna";
+    public static final String AUTHORIZE_INTERACTOR = "se requiere el interactor de autorización";
+    // HU-004 — catálogo de roles.
+    public static final String ROLE_ID = "se requiere id de rol";
+    public static final String ROLE_NAME = "se requiere nombre de rol";
+    public static final String ROLE_SCOPE = "se requiere el alcance del rol";
+    public static final String ROLE_SCOPE_LEVEL = "se requiere el nivel de alcance del rol";
+    public static final String ROLE_SCOPE_TENANT = "se requiere el inquilino del alcance";
+    public static final String ROLE_SCOPE_APPLICATION = "se requiere la aplicación del alcance";
+    public static final String ROLE_RESOURCES = "se requiere el conjunto de recursos del rol";
+    public static final String ROLE = "se requiere el rol";
+    public static final String ROLE_CRITERIA = "se requiere el criterio de consulta de roles";
+    public static final String ROLE_REPOSITORY = "se requiere el repositorio de roles";
+    public static final String ROLE_NAME_UNIQUE_RULE = "se requiere la regla de nombre de rol único";
+    public static final String ROLE_EXISTS_RULE = "se requiere la regla de existencia de rol";
+    public static final String ROLE_SCOPE_COVERS_RULE = "se requiere la regla de cobertura del alcance";
+    public static final String DEFINE_ROLE_RULES_VALIDATOR = "se requiere el validador de definición de rol";
+    public static final String GRANT_RESOURCE_RULES_VALIDATOR = "se requiere el validador de concesión de recurso";
+    public static final String ROLE_APPLICATION_LOOKUP_VALIDATOR = "se requiere el validador de aplicación del rol";
+    public static final String PROTECTED_RESOURCE_OWNER_LOOKUP_VALIDATOR = "se requiere el validador de dueño de recurso";
+    public static final String DEFINE_ROLE_USE_CASE = "se requiere el caso de uso de definición de rol";
+    public static final String GRANT_RESOURCE_TO_ROLE_USE_CASE = "se requiere el caso de uso de concesión de recurso";
+    public static final String LIST_ROLES_USE_CASE = "se requiere el caso de uso de consulta de roles";
+    public static final String DEFINE_ROLE_INTERACTOR = "se requiere el interactor de definición de rol";
+    public static final String GRANT_RESOURCE_TO_ROLE_INTERACTOR = "se requiere el interactor de concesión de recurso";
+    public static final String LIST_ROLES_INTERACTOR = "se requiere el interactor de consulta de roles";
+    // HU-005 — asignaciones vigentes.
+    public static final String ROLE_SCOPE_COVERS_APPLICATION_RULE = "se requiere la regla de cobertura de aplicación del alcance";
+    public static final String ASSIGNMENT_ID = "se requiere id de asignación";
+    public static final String ASSIGNMENT = "se requiere la asignación";
+    public static final String ASSIGNMENT_CRITERIA = "se requiere el criterio de consulta de asignaciones";
+    public static final String ASSIGNMENT_REPOSITORY = "se requiere el repositorio de asignaciones";
+    public static final String ASSIGNMENT_NOT_DUPLICATE_RULE = "se requiere la regla de no duplicidad de asignación activa";
+    public static final String ASSIGNMENT_EXISTS_RULE = "se requiere la regla de existencia de asignación";
+    public static final String ASSIGNMENT_APPLICATION_LOOKUP_VALIDATOR = "se requiere el validador de aplicación de la asignación";
+    public static final String ADMINISTER_ASSIGNMENT_CREATION_USE_CASE = "se requiere el caso de uso de administración de creación de asignación";
+    public static final String ADMINISTER_ASSIGNMENT_REVOCATION_USE_CASE = "se requiere el caso de uso de administración de revocación de asignación";
+    public static final String VALIDITY = "se requiere la vigencia";
+    public static final String VALID_FROM = "se requiere el inicio de vigencia";
+    public static final String VALID_UNTIL = "se requiere el fin de vigencia";
+    public static final String ACTIVE_ROLE_IDS = "se requiere el conjunto de roles activos";
+    public static final String USER_MUST_EXIST_VALIDATOR = "se requiere el validador de existencia de usuario";
+    public static final String SUBJECT_USER_ID_LOOKUP_VALIDATOR = "se requiere el validador de búsqueda de usuario por subject";
+    public static final String ROLE_SCOPE_COVERS_APPLICATION_VALIDATOR = "se requiere el validador de cobertura de aplicación del alcance de rol";
+    public static final String ASSIGN_ROLE_RULES_VALIDATOR = "se requiere el validador de asignación de rol";
+    public static final String REVOKE_ASSIGNMENT_RULES_VALIDATOR = "se requiere el validador de revocación de asignación";
+    public static final String ASSIGN_ROLE_USE_CASE = "se requiere el caso de uso de asignación de rol";
+    public static final String REVOKE_ASSIGNMENT_USE_CASE = "se requiere el caso de uso de revocación de asignación";
+    public static final String LIST_ASSIGNMENTS_USE_CASE = "se requiere el caso de uso de consulta de asignaciones";
+    public static final String RESOLVE_ACTIVE_ROLES_USE_CASE = "se requiere el caso de uso de resolución de roles activos";
+    public static final String ROLE_NAMES_LOOKUP_VALIDATOR = "se requiere el validador de nombres de rol";
+    public static final String ROLE_LOOKUP_BY_NAME_IN_SCOPE_VALIDATOR = "se requiere el validador de búsqueda de rol por nombre y alcance";
+    public static final String ACTIVE_ROLE_NAMES_LOOKUP_VALIDATOR = "se requiere el validador de nombres de roles activos";
+    public static final String ASSIGN_ROLE_INTERACTOR = "se requiere el interactor de asignación de rol";
+    public static final String REVOKE_ASSIGNMENT_INTERACTOR = "se requiere el interactor de revocación de asignación";
+    public static final String LIST_ASSIGNMENTS_INTERACTOR = "se requiere el interactor de consulta de asignaciones";
+    public static final String INTERNAL_MTLS_PROPERTIES = "se requiere la configuración mTLS del canal interno";
+    public static final String INTERNAL_MTLS_TRUST_CERTIFICATE = "se requiere la ruta al certificado de confianza mTLS";
+    public static final String INTERNAL_MTLS_ALLOWED_SUBJECTS = "se requiere la lista de sujetos admitidos por mTLS";
+    public static final String INTERNAL_EVIDENCE_JWK_SET_URI = "se requiere la URL JWKS de la evidencia del canal interno";
+    public static final String INTERNAL_EVIDENCE_ISSUER = "se requiere el emisor esperado de la evidencia del canal interno";
+    public static final String INTERNAL_EVIDENCE_AUDIENCE = "se requiere la audiencia esperada de la evidencia del canal interno";
 
     // Componentes de AccessRequest / AccessDecision (autorizacion).
     public static final String REQUEST_ID = "se requiere el identificador de la solicitud";
@@ -92,6 +159,78 @@ public final class RequiredArgumentMessages {
     public static final String SURREALDB_URL = "se requiere la URL de SurrealDB (pdp.persistence.surrealdb.url)";
     public static final String OBJECT_MAPPER = "se requiere ObjectMapper";
 
+    // Cliente y configuración de OPA (HU-006).
+    public static final String OPA_WEB_CLIENT = "se requiere el WebClient de OPA";
+    public static final String OPA_PROPERTIES = "se requieren las propiedades de OPA";
+    public static final String OPA_BASE_URL = "se requiere la URL de OPA (pdp.opa.base-url)";
+    public static final String OPA_DECISION_PATH = "se requiere la ruta de decisión de OPA (pdp.opa.decision-path)";
+    public static final String OPA_TIMEOUT = "se requiere el timeout de OPA (pdp.opa.timeout)";
+    public static final String OPA_ADMINISTRATION_DECISION_PATH =
+            "se requiere la ruta de decisión de administración de OPA (pdp.opa.administration-decision-path)";
+
+    // Revocación de tokens (HU-022, ADR-026).
+    public static final String REACTIVE_REDIS_TEMPLATE = "se requiere el ReactiveRedisTemplate de revocación";
+    public static final String TOKEN_REVOCATION_PORT = "se requiere el puerto de revocación de tokens";
+    public static final String REVOCATION_RETENTION_PROPERTIES = "se requieren las propiedades de retención de revocación";
+    public static final String REVOCATION_RETENTION = "se requiere la retención de revocación (pdp.security.revocation.retention)";
+    public static final String REACTIVE_JWT_DECODER_DELEGATE = "se requiere el ReactiveJwtDecoder delegado";
+
+    // Caché distribuida de roles activos (HU-023, ADR-026).
+    public static final String DISTRIBUTED_CACHE_PORT = "se requiere el puerto de caché distribuida de roles activos";
+    public static final String ACTIVE_ROLES_CACHE_RETENTION_PROPERTIES =
+            "se requieren las propiedades de retención de la caché de roles activos";
+    public static final String ACTIVE_ROLES_CACHE_RETENTION =
+            "se requiere la retención de la caché de roles activos (pdp.cache.active-roles.retention)";
+    public static final String DISTRIBUTED_CACHE_PORT_DELEGATE = "se requiere el DistributedCachePort delegado";
+    public static final String METER_REGISTRY = "se requiere el MeterRegistry";
+
+    // MFA como step-up para operaciones administrativas (HU-024, ADR-027).
+    public static final String MFA_AWARE_VALIDATOR_DELEGATE =
+            "se requiere el validador de administrador de aplicación delegado";
+    public static final String MFA_EVIDENCE_PROPERTIES = "se requieren las propiedades de evidencia de MFA";
+    public static final String AUTHENTICATION_CONTEXT_EVIDENCE = "se requiere la evidencia de contexto de autenticación (puede estar vacía)";
+
+    // Mecanismo de administración por aplicación (HU-009).
+    public static final String ADMINISTRATION_DECISION_PORT = "se requiere el puerto de decisión de administración";
+    public static final String AUTHORIZE_ADMINISTRATION_USE_CASE =
+            "se requiere el caso de uso de autorización de administración";
+    public static final String PRINCIPAL_MUST_BE_APPLICATION_ADMINISTRATOR_VALIDATOR =
+            "se requiere el validador de administrador de aplicación";
+
+    // Gate de administración cableado en roles (HU-016).
+    public static final String ADMINISTER_ROLE_DEFINITION_USE_CASE =
+            "se requiere el caso de uso de administración de definición de rol";
+    public static final String ADMINISTER_RESOURCE_GRANT_USE_CASE =
+            "se requiere el caso de uso de administración de concesión de recurso";
+    public static final String ADMINISTRATION = "se requiere la solicitud de administración (puede estar vacía)";
+    public static final String DEFINE_ROLE_REQUEST = "se requiere la solicitud de definición de rol";
+    public static final String GRANT_RESOURCE_REQUEST = "se requiere la solicitud de concesión de recurso";
+
+    // Gate de administración cableado en resources (HU-017).
+    public static final String ADMINISTER_RESOURCE_REGISTRATION_USE_CASE =
+            "se requiere el caso de uso de administración de registro de recurso";
+    public static final String REGISTER_PROTECTED_RESOURCE_REQUEST =
+            "se requiere la solicitud de registro de recurso protegido";
+    public static final String ADMINISTRATION_REQUEST = "se requiere la solicitud de administración";
+    public static final String ASSIGN_ROLE_REQUEST = "se requiere la solicitud de asignación de rol";
+    public static final String REVOKE_ASSIGNMENT_REQUEST = "se requiere la solicitud de revocación de asignación";
+    public static final String DEFINE_PROFILE_REQUEST = "se requiere la solicitud de definición de perfil";
+    public static final String ADD_ROLE_TO_PROFILE_REQUEST = "se requiere la solicitud de adición de rol a perfil";
+    public static final String ASSIGN_PROFILE_REQUEST = "se requiere la solicitud de asignación de perfil";
+    public static final String REVOKE_PROFILE_ASSIGNMENT_REQUEST = "se requiere la solicitud de revocación de asignación de perfil";
+
+    // Saga de registro de aplicación con recurso inicial (HU-010).
+    public static final String REGISTER_APPLICATION_USE_CASE = "se requiere el caso de uso de registro de aplicación";
+    public static final String REGISTER_PROTECTED_RESOURCE_USE_CASE =
+            "se requiere el caso de uso de registro de recurso protegido";
+    public static final String REMOVE_APPLICATION_USE_CASE = "se requiere el caso de uso de eliminación de aplicación";
+    public static final String REGISTER_APPLICATION_WITH_INITIAL_RESOURCE_USE_CASE =
+            "se requiere el caso de uso de registro de aplicación con recurso inicial";
+    public static final String REGISTER_APPLICATION_WITH_INITIAL_RESOURCE_INTERACTOR =
+            "se requiere el interactor de registro de aplicación con recurso inicial";
+    public static final String REGISTERED_PROTECTED_RESOURCE_RESPONSE =
+            "se requiere la respuesta de recurso protegido registrado";
+
     // Seguridad JWT.
     public static final String JWT_ISSUER = "se requiere el emisor esperado (pdp.security.jwt.issuer)";
     public static final String JWT_EXACTLY_ONE_MODE =
@@ -106,6 +245,118 @@ public final class RequiredArgumentMessages {
     public static final String AGGREGATE_ENTITY = "se requiere la entidad del agregado";
     public static final String DOMAIN_EXCEPTION_MESSAGE = "se requiere mensaje de excepción de dominio";
     public static final String DOMAIN_EXCEPTION_CODE = "se requiere código de excepción de dominio";
+
+    // HU-007 — evidencia de auditoría (AccessEvent).
+    public static final String EVENT_ID = "se requiere el identificador del evento";
+    public static final String ACCESS_AUDIT_REPOSITORY = "se requiere el repositorio de evidencia de auditoría";
+
+    // HU-011 — catálogo de perfiles (profiles).
+    public static final String PROFILE_ID = "se requiere id de perfil";
+    public static final String PROFILE_NAME = "se requiere nombre de perfil";
+    public static final String PROFILE_SCOPE = "se requiere el alcance del perfil";
+    public static final String PROFILE_ROLES = "se requiere el conjunto de roles del perfil";
+    public static final String PROFILE = "se requiere el perfil";
+    public static final String PROFILE_CRITERIA = "se requiere el criterio de consulta de perfiles";
+    public static final String PROFILE_REPOSITORY = "se requiere el repositorio de perfiles";
+    public static final String PROFILE_NAME_UNIQUE_RULE = "se requiere la regla de nombre de perfil único";
+    public static final String PROFILE_EXISTS_RULE = "se requiere la regla de existencia de perfil";
+    public static final String PROFILE_APPLICATION_LOOKUP_VALIDATOR = "se requiere el validador de aplicación del perfil";
+    public static final String ADMINISTER_PROFILE_DEFINITION_USE_CASE = "se requiere el caso de uso de administración de definición de perfil";
+    public static final String ADMINISTER_PROFILE_ROLE_ADDITION_USE_CASE = "se requiere el caso de uso de administración de adición de rol a perfil";
+    public static final String DEFINE_PROFILE_RULES_VALIDATOR = "se requiere el validador de definición de perfil";
+    public static final String ADD_ROLE_TO_PROFILE_RULES_VALIDATOR = "se requiere el validador de agregar rol a perfil";
+    public static final String PROFILE_ROLES_LOOKUP_VALIDATOR = "se requiere el validador de roles de perfil";
+    public static final String DEFINE_PROFILE_USE_CASE = "se requiere el caso de uso de definición de perfil";
+    public static final String ADD_ROLE_TO_PROFILE_USE_CASE = "se requiere el caso de uso de agregar rol a perfil";
+    public static final String LIST_PROFILES_USE_CASE = "se requiere el caso de uso de consulta de perfiles";
+    public static final String DEFINE_PROFILE_INTERACTOR = "se requiere el interactor de definición de perfil";
+    public static final String ADD_ROLE_TO_PROFILE_INTERACTOR = "se requiere el interactor de agregar rol a perfil";
+    public static final String LIST_PROFILES_INTERACTOR = "se requiere el interactor de consulta de perfiles";
+    public static final String ROLE_MUST_EXIST_FOR_TENANT_VALIDATOR = "se requiere el validador de existencia de rol";
+
+    // HU-011 — asignación de perfiles (assignments).
+    public static final String PROFILE_ASSIGNMENT_ID = "se requiere id de asignación de perfil";
+    public static final String PROFILE_ASSIGNMENT = "se requiere la asignación de perfil";
+    public static final String PROFILE_ASSIGNMENT_REPOSITORY = "se requiere el repositorio de asignaciones de perfil";
+    public static final String GENERATED_ASSIGNMENT_IDS = "se requiere el conjunto de asignaciones generadas";
+    public static final String PROFILE_ASSIGNMENT_NOT_DUPLICATE_RULE =
+            "se requiere la regla de no duplicidad de asignación de perfil activa";
+    public static final String PROFILE_ASSIGNMENT_EXISTS_RULE = "se requiere la regla de existencia de asignación de perfil";
+    public static final String PROFILE_ASSIGNMENT_APPLICATION_LOOKUP_VALIDATOR = "se requiere el validador de aplicación de la asignación de perfil";
+    public static final String PROFILE_ASSIGNMENT_CRITERIA = "se requiere el criterio de consulta de asignaciones de perfil";
+    public static final String LIST_PROFILE_ASSIGNMENTS_USE_CASE = "se requiere el caso de uso de consulta de asignaciones de perfil";
+    public static final String LIST_PROFILE_ASSIGNMENTS_INTERACTOR = "se requiere el interactor de consulta de asignaciones de perfil";
+    public static final String ADMINISTER_PROFILE_ASSIGNMENT_CREATION_USE_CASE = "se requiere el caso de uso de administración de asignación de perfil";
+    public static final String ADMINISTER_PROFILE_ASSIGNMENT_REVOCATION_USE_CASE = "se requiere el caso de uso de administración de revocación de asignación de perfil";
+    public static final String ASSIGN_PROFILE_RULES_VALIDATOR = "se requiere el validador de asignación de perfil";
+    public static final String REVOKE_PROFILE_ASSIGNMENT_RULES_VALIDATOR =
+            "se requiere el validador de revocación de asignación de perfil";
+    public static final String ASSIGN_PROFILE_USE_CASE = "se requiere el caso de uso de asignación de perfil";
+    public static final String REVOKE_PROFILE_ASSIGNMENT_USE_CASE =
+            "se requiere el caso de uso de revocación de asignación de perfil";
+    public static final String ASSIGN_PROFILE_INTERACTOR = "se requiere el interactor de asignación de perfil";
+    public static final String REVOKE_PROFILE_ASSIGNMENT_INTERACTOR =
+            "se requiere el interactor de revocación de asignación de perfil";
+
+    // HU-012 — credencial de aplicación.
+    public static final String SECRET_GENERATOR = "se requiere el generador de secretos";
+    public static final String CREDENTIAL_HASHER = "se requiere el hasher de credenciales";
+    public static final String APPLICATION_CREDENTIAL_HASH = "se requiere el hash de la credencial de la aplicación";
+    public static final String REGISTERED_APPLICATION_RESPONSE = "se requiere la respuesta de aplicación registrada";
+    public static final String APPLICATION_CREDENTIAL = "se requiere la credencial de la aplicación";
+
+    // HU-013 — validación de credencial de aplicación.
+    public static final String APPLICATION_CREDENTIAL_MUST_BE_VALID_RULE =
+            "se requiere la regla de validez de credencial de aplicación";
+    public static final String VALIDATE_APPLICATION_CREDENTIAL_USE_CASE =
+            "se requiere el caso de uso de validación de credencial de aplicación";
+    public static final String VALIDATE_APPLICATION_CREDENTIAL_INTERACTOR =
+            "se requiere el interactor de validación de credencial de aplicación";
+
+    // HU-014 — rotación de credencial de aplicación.
+    public static final String ROTATE_APPLICATION_CREDENTIAL_USE_CASE =
+            "se requiere el caso de uso de rotación de credencial de aplicación";
+    public static final String ROTATE_APPLICATION_CREDENTIAL_INTERACTOR =
+            "se requiere el interactor de rotación de credencial de aplicación";
+
+    // HU-020 — autoservicio de administradores.
+    public static final String LAST_ADMINISTRATOR_MUST_NOT_BE_REVOKED_RULE = "se requiere la regla de último administrador";
+    public static final String REMOVE_APPLICATION_ADMINISTRATOR_USE_CASE = "se requiere el caso de uso de remoción de administrador de aplicación";
+    public static final String LIST_APPLICATION_ADMINISTRATORS_USE_CASE = "se requiere el caso de uso de listado de administradores de aplicación";
+    public static final String ADMINISTER_APPLICATION_ADMINISTRATOR_ASSIGNMENT_USE_CASE = "se requiere el caso de uso de administración de alta de administrador";
+    public static final String ADMINISTER_APPLICATION_ADMINISTRATOR_REMOVAL_USE_CASE = "se requiere el caso de uso de administración de remoción de administrador";
+    public static final String ADMINISTER_APPLICATION_ADMINISTRATOR_LIST_USE_CASE = "se requiere el caso de uso de administración de listado de administradores";
+    public static final String ASSIGN_APPLICATION_ADMINISTRATOR_USE_CASE = "se requiere el caso de uso de asignación de administrador de aplicación";
+    public static final String ASSIGN_APPLICATION_ADMINISTRATOR_REQUEST = "se requiere la solicitud de asignación de administrador de aplicación";
+    public static final String REMOVE_APPLICATION_ADMINISTRATOR_REQUEST = "se requiere la solicitud de remoción de administrador de aplicación";
+    public static final String LIST_APPLICATION_ADMINISTRATORS_REQUEST = "se requiere la solicitud de listado de administradores de aplicación";
+
+    // HU-021 — auditoría de operaciones administrativas.
+    // SU-01 — el catálogo de usuarios se administra desde authorization.
+    public static final String LIST_USERS_USE_CASE = "se requiere el caso de uso de listado de usuarios";
+    public static final String ASSIGN_TENANT_USE_CASE = "se requiere el caso de uso de asignación de inquilino";
+    public static final String FIND_USER_BY_ID_USE_CASE = "se requiere el caso de uso de búsqueda de usuario por id";
+    public static final String ADMINISTER_USER_LISTING_USE_CASE = "se requiere el caso de uso de listado administrado de usuarios";
+    public static final String ADMINISTER_USER_TENANT_ASSIGNMENT_USE_CASE =
+            "se requiere el caso de uso de reasignación administrada de inquilino";
+    public static final String USER_TENANT_ASSIGNMENT_RULE = "se requiere la regla de reasignación de inquilino";
+    public static final String USER_TENANT_ASSIGNMENT = "se requiere la reasignación de inquilino";
+
+    public static final String ADMINISTRATION_AUDIT_REPOSITORY = "se requiere el repositorio de auditoría de operaciones administrativas";
+    public static final String ADMINISTRATION_OPERATION = "se requiere la operación administrativa";
+    public static final String ADMINISTRATION_OUTCOME = "se requiere el resultado de la operación administrativa";
+
+    // HU-036 — gate de las escrituras de catálogo de alcance TENANT.
+    public static final String PRINCIPAL_MUST_ADMINISTER_AT_LEAST_ONE_APPLICATION_VALIDATOR =
+            "se requiere el validador de administrador de al menos una aplicación del inquilino";
+    public static final String RESOLVE_USER_APPLICATIONS_USE_CASE =
+            "se requiere el caso de uso de resolución de aplicaciones del usuario";
+    public static final String TENANT_ADMINISTRATION_REQUEST =
+            "se requiere la solicitud de administración de alcance inquilino";
+    public static final String CATALOG_ADMINISTRATION = "se requiere el gate de administración del catálogo";
+    // HU-038 — identidad del usuario Bearer.
+    public static final String USER_EMAIL_AVAILABLE_RULE = "se requiere la regla de correo de usuario disponible";
+    public static final String RESOLVE_BEARER_IDENTITY_USE_CASE = "se requiere el caso de uso de identidad Bearer";
 
     private RequiredArgumentMessages() {
     }

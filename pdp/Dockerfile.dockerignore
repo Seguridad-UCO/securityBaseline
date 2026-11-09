@@ -1,0 +1,11 @@
+# Contexto de build de pdp/Dockerfile (BuildKit usa este archivo en lugar de la .dockerignore de la raíz).
+# Lista blanca: solo entra lo que el Dockerfile copia. Todo lo demás (docs, e2e, edge, observability, pep,
+# .git, pruebas, binarios compilados) ni se envía al daemon ni puede invalidar la caché de una capa.
+*
+!mvnw
+!.mvn
+!docker/java-entrypoint.sh
+!pdp/pom.xml
+# Solo el código de producción: el jar se empaqueta con -DskipTests, las pruebas no hacen falta en la imagen.
+!pdp/src/main
+**/target

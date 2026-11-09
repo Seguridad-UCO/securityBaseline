@@ -19,7 +19,11 @@ $ErrorActionPreference = 'Stop'
 $repo    = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $docsDir      = Join-Path $repo 'pdp/docs'
 $plataformaDir = Join-Path $repo 'docs'
-$srcDir       = Join-Path $repo 'pdp/src'
+$srcDirs      = @(
+    Join-Path $repo 'pdp/src'
+    Join-Path $repo 'pep/src'
+    Join-Path $repo 'pep/starter/src'
+)
 
 if (-not (Test-Path $docsDir)) { Write-Error 'No se encontro pdp/docs/.' }
 
@@ -47,10 +51,14 @@ function Test-DocIgnorado([string]$doc) {
 }
 
 # --- Indice de nombres de archivo en src ------------------------------------
+# El repo aloja PDP (pdp/src), PEP (pep/src, pep/starter/src) y OPA: una doc puede citar una
+# clase de cualquiera de los tres componentes, asi que el indice cubre los tres.
 $srcNames = @{}
-if (Test-Path $srcDir) {
-    foreach ($f in (Get-ChildItem -Path $srcDir -Recurse -Filter *.java)) {
-        $srcNames[$f.BaseName] = $true
+foreach ($srcDir in $srcDirs) {
+    if (Test-Path $srcDir) {
+        foreach ($f in (Get-ChildItem -Path $srcDir -Recurse -Filter *.java)) {
+            $srcNames[$f.BaseName] = $true
+        }
     }
 }
 

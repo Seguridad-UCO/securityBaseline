@@ -13,6 +13,8 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class OidcAuthorizationFlowServiceTests {
@@ -22,7 +24,7 @@ class OidcAuthorizationFlowServiceTests {
         MockServerWebExchange exchange = MockServerWebExchange.from(
                 MockServerHttpRequest.get("/oauth2/authorization/keycloak").build());
         OidcAuthorizationFlowService service = new OidcAuthorizationFlowService(clientRegistrations(),
-                authorizationRequestRepository(), new OidcFlowStateService());
+                authorizationRequestRepository(), new OidcFlowStateService(), returnTargetPolicy());
 
         service.beginLogin(exchange).block();
 
@@ -42,7 +44,7 @@ class OidcAuthorizationFlowServiceTests {
         MockServerWebExchange exchange = MockServerWebExchange.from(
                 MockServerHttpRequest.get("/oauth2/authorization/keycloak/register").build());
         OidcAuthorizationFlowService service = new OidcAuthorizationFlowService(clientRegistrations(),
-                authorizationRequestRepository(), new OidcFlowStateService());
+                authorizationRequestRepository(), new OidcFlowStateService(), returnTargetPolicy());
 
         service.beginRegistration(exchange).block();
 
@@ -61,11 +63,28 @@ class OidcAuthorizationFlowServiceTests {
         MockServerWebExchange exchange = MockServerWebExchange.from(
                 MockServerHttpRequest.get("/oauth2/authorization/keycloak").queryParam("prompt", "login").build());
         OidcAuthorizationFlowService service = new OidcAuthorizationFlowService(clientRegistrations(),
-                authorizationRequestRepository(), new OidcFlowStateService());
+                authorizationRequestRepository(), new OidcFlowStateService(), returnTargetPolicy());
 
         service.beginLogin(exchange).block();
 
         assertThat(exchange.getResponse().getHeaders().getLocation().toString()).contains("prompt=login");
+    }
+
+    @Test
+    void login_remembers_an_allowed_return_target() {
+        MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest
+                .get("/oauth2/authorization/keycloak").queryParam("return_to", "http://localhost:5174/grades?tab=all").build());
+        OidcAuthorizationFlowService service = new OidcAuthorizationFlowService(clientRegistrations(),
+                authorizationRequestRepository(), new OidcFlowStateService(), returnTargetPolicy());
+
+        service.beginLogin(exchange).block();
+
+        String target = exchange.getSession().block().getAttribute(OidcFlowStateService.RETURN_TARGET_ATTRIBUTE);
+        assertThat(target).isEqualTo("http://localhost:5174/grades?tab=all");
+    }
+
+    private static OidcReturnTargetPolicy returnTargetPolicy() {
+        return new OidcReturnTargetPolicy(List.of("http://localhost:5174"));
     }
 
     private static ReactiveClientRegistrationRepository clientRegistrations() {

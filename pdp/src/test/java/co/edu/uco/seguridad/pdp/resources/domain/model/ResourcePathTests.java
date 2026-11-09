@@ -19,6 +19,24 @@ class ResourcePathTests {
     }
 
     @Test
+    void matches_a_concrete_path_against_a_template_segment() {
+        assertThat(new ResourcePath("/api/v1/empleado/{id}")
+                .matches(new ResourcePath("/api/v1/empleado/42"))).isTrue();
+    }
+
+    @Test
+    void matches_multiple_template_segments_in_a_path() {
+        assertThat(new ResourcePath("/api/v1/empleados/{id}/tipo/{tipo}")
+                .matches(new ResourcePath("/api/v1/empleados/42/tipo/contratista"))).isTrue();
+    }
+
+    @Test
+    void does_not_match_different_path_shapes() {
+        assertThat(new ResourcePath("/api/v1/empleado/{id}")
+                .matches(new ResourcePath("/api/v1/empleado/42/tipo/planta"))).isFalse();
+    }
+
+    @Test
     void rejects_a_null_value() {
         assertThatThrownBy(() -> new ResourcePath(null)).isInstanceOf(InvalidResourcePathException.class);
     }

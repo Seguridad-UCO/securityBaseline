@@ -18,7 +18,7 @@ public record AccessRequest(String version, String requestId, String correlation
         Objects.requireNonNull(context);
     }
 
-    public record Application(String id, String environment) {
+    public record Application(String name, String environment) {
     }
 
     public record Resource(String path, String action) {
@@ -27,4 +27,3 @@ public record AccessRequest(String version, String requestId, String correlation
     public record Context(String method, String channel) {
     }
 }
-

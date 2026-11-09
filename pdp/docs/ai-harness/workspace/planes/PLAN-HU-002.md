@@ -17,13 +17,13 @@
 
 ## Decisiones tomadas en el gate 1 (con el usuario)
 
-| # | Decisión | Elegida |
-|---|---|---|
-| 1 | Idioma de los campos JSON | **Inglés** (`subject`, `resource`, `action`, `decision`, `reasonCode`) |
-| 2 | Identidad del recurso en la solicitud | **`applicationId` + `resourcePath` + `httpMethod`** (clave natural de `ProtectedResource`) |
-| 3 | Qué es `action` | **El verbo HTTP** — se reutiliza `HttpVerb` de `resources` tal cual |
-| 4 | Publicar validador de existencia en `resources` | **Sí** — `ProtectedResourceMustExistValidator`, mismo patrón que `applications` |
-| 5 | Prioridad entre aplicación y recurso desconocidos | **`TENANT_MISMATCH` primero** — si la aplicación falla, no se mira el recurso |
+| # | Decisión                                          | Elegida                                                                                    |
+|---|---------------------------------------------------|--------------------------------------------------------------------------------------------|
+| 1 | Idioma de los campos JSON                         | **Inglés** (`subject`, `resource`, `action`, `decision`, `reasonCode`)                     |
+| 2 | Identidad del recurso en la solicitud             | **`applicationId` + `resourcePath` + `httpMethod`** (clave natural de `ProtectedResource`) |
+| 3 | Qué es `action`                                   | **El verbo HTTP** — se reutiliza `HttpVerb` de `resources` tal cual                        |
+| 4 | Publicar validador de existencia en `resources`   | **Sí** — `ProtectedResourceMustExistValidator`, mismo patrón que `applications`            |
+| 5 | Prioridad entre aplicación y recurso desconocidos | **`TENANT_MISMATCH` primero** — si la aplicación falla, no se mira el recurso              |
 
 **Nombres de clase en inglés.** El vocabulario aceptado nombra los conceptos en español
 (`SolicitudAcceso`, `DecisionAcceso`) porque así se escribió el *ubiquitous language*, pero
@@ -49,26 +49,26 @@ sustituirá por el cliente real de OPA sin tocar el contrato HTTP. No resuelve r
 
 ## 2. Criterios de aceptación
 
-| # | Criterio | Resultado esperado |
-|---|---|---|
-| 1 | Solicitud válida sin política aplicable | `200` con `AccessDecision` = `DENY`, `reasonCode` = `NO_APPLICABLE_POLICY`, `decisionId` y `correlationId` presentes |
-| 2 | Decisión estructurada | Nunca un booleano: `state`, `reasonCode`, `decisionId`, `correlationId`, `policyReferences` (vacía) — INV-POL-04 |
-| 3 | Tri-estado en el contrato | `DecisionState` admite `ALLOW`, `DENY`, `INDETERMINATE` desde el día uno |
-| 4 | El sujeto sale del token | `subject`/`tenant` del principal autenticado; enviarlos en el cuerpo no los cambia |
-| 5 | Aplicación desconocida o de otro inquilino | `200` `DENY` con `reasonCode` = `TENANT_MISMATCH` |
-| 6 | Recurso desconocido | `200` `DENY` con `reasonCode` = `NO_APPLICABLE_POLICY` |
-| 7 | Campos obligatorios ausentes | `400` nombrando el campo (`applicationId`, `resourcePath` o `action`) |
-| 8 | Fallo del contexto (el catálogo no responde) | `INDETERMINATE`, nunca `ALLOW` |
-| 9 | Correlación | `X-Correlation-Id` entrante se propaga; si no viene, se genera |
+| # | Criterio                                     | Resultado esperado                                                                                                   |
+|---|----------------------------------------------|----------------------------------------------------------------------------------------------------------------------|
+| 1 | Solicitud válida sin política aplicable      | `200` con `AccessDecision` = `DENY`, `reasonCode` = `NO_APPLICABLE_POLICY`, `decisionId` y `correlationId` presentes |
+| 2 | Decisión estructurada                        | Nunca un booleano: `state`, `reasonCode`, `decisionId`, `correlationId`, `policyReferences` (vacía) — INV-POL-04     |
+| 3 | Tri-estado en el contrato                    | `DecisionState` admite `ALLOW`, `DENY`, `INDETERMINATE` desde el día uno                                             |
+| 4 | El sujeto sale del token                     | `subject`/`tenant` del principal autenticado; enviarlos en el cuerpo no los cambia                                   |
+| 5 | Aplicación desconocida o de otro inquilino   | `200` `DENY` con `reasonCode` = `TENANT_MISMATCH`                                                                    |
+| 6 | Recurso desconocido                          | `200` `DENY` con `reasonCode` = `NO_APPLICABLE_POLICY`                                                               |
+| 7 | Campos obligatorios ausentes                 | `400` nombrando el campo (`applicationId`, `resourcePath` o `action`)                                                |
+| 8 | Fallo del contexto (el catálogo no responde) | `INDETERMINATE`, nunca `ALLOW`                                                                                       |
+| 9 | Correlación                                  | `X-Correlation-Id` entrante se propaga; si no viene, se genera                                                       |
 
 ## 3. Reglas de negocio
 
 No hay reglas nuevas propias del slice. Se **reutilizan** dos reglas ya publicadas por sus dueños:
 
-| # | Regla (publicada por su dueño) | Cómo la consume `authorization` | Excepción que traduce | `ReasonCode` resultante |
-|---|---|---|---|---|
-| 1 | `ApplicationMustExistForTenantValidator` (`applications :: rule`) | `.execute(new ApplicationOwnershipQuery(tenantId, applicationId))` | `ApplicationNotFoundException` | `TENANT_MISMATCH` |
-| 2 | `ProtectedResourceMustExistValidator` (`resources :: rule`, **nueva**, [N]) | `.execute(new ProtectedResourceLookup(applicationId, resourcePath, action))` | `ProtectedResourceNotFoundException` (**nueva**, [N]) | `NO_APPLICABLE_POLICY` |
+| # | Regla (publicada por su dueño)                                              | Cómo la consume `authorization`                                              | Excepción que traduce                                 | `ReasonCode` resultante |
+|---|-----------------------------------------------------------------------------|------------------------------------------------------------------------------|-------------------------------------------------------|-------------------------|
+| 1 | `ApplicationMustExistForTenantValidator` (`applications :: rule`)           | `.execute(new ApplicationOwnershipQuery(tenantId, applicationId))`           | `ApplicationNotFoundException`                        | `TENANT_MISMATCH`       |
+| 2 | `ProtectedResourceMustExistValidator` (`resources :: rule`, **nueva**, [N]) | `.execute(new ProtectedResourceLookup(applicationId, resourcePath, action))` | `ProtectedResourceNotFoundException` (**nueva**, [N]) | `NO_APPLICABLE_POLICY`  |
 
 La regla 2 es trabajo nuevo en `resources` (ver sección 8), siguiendo exactamente el patrón de
 `ApplicationMustExistForTenantRule` + `ApplicationExistence`: un `record` con el hecho ya resuelto
@@ -90,11 +90,11 @@ en la raíz de `domain/authorization/`.
 
 ### Value objects y enums (todos nuevos, en `domain/authorization/model/`)
 
-| Tipo | Nuevo/existente | Forma | Comportamiento |
-|---|---|---|---|
-| `DecisionState` | Nuevo | enum `ALLOW, DENY, INDETERMINATE` | `isAllow()` |
-| `ReasonCode` | Nuevo | enum `NO_APPLICABLE_POLICY, POLICY_DENY, TENANT_MISMATCH, TOKEN_INVALID, CONTEXT_UNAVAILABLE` | — (catálogo cerrado, sin comportamiento propio) |
-| `PolicyReference` | Nuevo | `record(String policyId, String version)` | corresponde a `ReferenciaPolitica` (§12 del modelo de dominio: "Id + versión evaluada") |
+| Tipo              | Nuevo/existente | Forma                                                                                         | Comportamiento                                                                          |
+|-------------------|-----------------|-----------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------|
+| `DecisionState`   | Nuevo           | enum `ALLOW, DENY, INDETERMINATE`                                                             | `isAllow()`                                                                             |
+| `ReasonCode`      | Nuevo           | enum `NO_APPLICABLE_POLICY, POLICY_DENY, TENANT_MISMATCH, TOKEN_INVALID, CONTEXT_UNAVAILABLE` | — (catálogo cerrado, sin comportamiento propio)                                         |
+| `PolicyReference` | Nuevo           | `record(String policyId, String version)`                                                     | corresponde a `ReferenciaPolitica` (§12 del modelo de dominio: "Id + versión evaluada") |
 
 `TenantId`, `ApplicationId` (de `commons/model`) y `ResourcePath`, `HttpVerb` (de `resources/domain/model`)
 se **reutilizan tal cual** — cero VOs nuevos para identidad o recurso.
@@ -107,9 +107,9 @@ consultando sus repositorios ni sus tablas directamente.
 
 ## 6. Endpoint
 
-| Verbo | Ruta | Código de éxito | Cuerpo de entrada | Cuerpo de salida |
-|---|---|---|---|---|
-| `POST` | `/api/v1/authorize` | `200` | `AuthorizeRawRequest` | `ApiResponse<AccessDecisionWebResponse>` |
+| Verbo  | Ruta                | Código de éxito | Cuerpo de entrada     | Cuerpo de salida                         |
+|--------|---------------------|-----------------|-----------------------|------------------------------------------|
+| `POST` | `/api/v1/authorize` | `200`           | `AuthorizeRawRequest` | `ApiResponse<AccessDecisionWebResponse>` |
 
 - **Autorización:** requiere token. El `tenantId` y el `subject` salen del principal
   (`SecurityContext.currentPrincipal()`), nunca del cuerpo.
@@ -282,30 +282,30 @@ demás es [N] puro. Por eso el implementador no necesita renegociar nada — sol
 
 ## 9. Casos de prueba esperados
 
-| Capa | Clase de prueba | Casos |
-|---|---|---|
-| `domain` (`authorization`) | `DecisionStateTests` | `isAllow()` verdadero solo para `ALLOW` |
-| `domain` (`resources`) | `ProtectedResourceMustExistRuleTests` | registrado → no lanza; no registrado → `ProtectedResourceNotFoundException` |
-| `application` (`resources`) | `ProtectedResourceMustExistValidatorTests` | existe / no existe (repositorio falso) |
-| `application` (`authorization`) | `AuthorizeUseCaseImplTests` | aplicación no existe → `TENANT_MISMATCH`; **consulta de propiedad con el tenant e id del propio solicitante, y deniega igual si la aplicación es de otro inquilino** (propuesto por `@2-tester-spec` al cerrar, aprobado); recurso no existe → `NO_APPLICABLE_POLICY`; ambos existen → delega en el puerto y devuelve su decisión; el puerto falla → `INDETERMINATE`; el chequeo de aplicación falla por motivo técnico → `INDETERMINATE` |
-| `infrastructure` | `AuthorizeRequestMapperTests` | cada campo ausente → excepción con su nombre; `action` inválido → `MalformedRequestFieldException` |
-| `infrastructure` | `AccessDecisionResponseMapperTests` | estado y `reasonCode` se aplanan a `String`; `policyReferences` vacía se aplana a lista vacía |
-| `infrastructure` | `AuthorizationControllerTests` | delega al interactor, responde `200` |
-| **E2E (Netty)** | `AuthorizationHttpTests` | los 9 criterios de aceptación, sobre el flujo autenticado completo — sigue el patrón de `ApplicationHttpTests` |
+| Capa                            | Clase de prueba                            | Casos                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+|---------------------------------|--------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `domain` (`authorization`)      | `DecisionStateTests`                       | `isAllow()` verdadero solo para `ALLOW`                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `domain` (`resources`)          | `ProtectedResourceMustExistRuleTests`      | registrado → no lanza; no registrado → `ProtectedResourceNotFoundException`                                                                                                                                                                                                                                                                                                                                                               |
+| `application` (`resources`)     | `ProtectedResourceMustExistValidatorTests` | existe / no existe (repositorio falso)                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `application` (`authorization`) | `AuthorizeUseCaseImplTests`                | aplicación no existe → `TENANT_MISMATCH`; **consulta de propiedad con el tenant e id del propio solicitante, y deniega igual si la aplicación es de otro inquilino** (propuesto por `@2-tester-spec` al cerrar, aprobado); recurso no existe → `NO_APPLICABLE_POLICY`; ambos existen → delega en el puerto y devuelve su decisión; el puerto falla → `INDETERMINATE`; el chequeo de aplicación falla por motivo técnico → `INDETERMINATE` |
+| `infrastructure`                | `AuthorizeRequestMapperTests`              | cada campo ausente → excepción con su nombre; `action` inválido → `MalformedRequestFieldException`                                                                                                                                                                                                                                                                                                                                        |
+| `infrastructure`                | `AccessDecisionResponseMapperTests`        | estado y `reasonCode` se aplanan a `String`; `policyReferences` vacía se aplana a lista vacía                                                                                                                                                                                                                                                                                                                                             |
+| `infrastructure`                | `AuthorizationControllerTests`             | delega al interactor, responde `200`                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **E2E (Netty)**                 | `AuthorizationHttpTests`                   | los 9 criterios de aceptación, sobre el flujo autenticado completo — sigue el patrón de `ApplicationHttpTests`                                                                                                                                                                                                                                                                                                                            |
 
 Presupuesto: **14-16 pruebas**, coherente con el rango orientativo de `sb-testing` para un endpoint
 con dos reglas reutilizadas.
 
 ## 10. Trazabilidad
 
-| Fase | Estado | Fecha |
-|---|---|---|
-| Plan | ✅ Generado | 2026-09-06 |
-| Contrato aprobado (gate 1) | ⏳ Pendiente | |
-| Pruebas en rojo | ⏳ Pendiente | |
-| Implementación en verde | ⏳ Pendiente | |
-| Validación | ✅ APROBADO — ver [REPORTE-HU-002.md](../reportes/REPORTE-HU-002.md) | 2026-09-06 |
-| Entrega (gate 2) | ⏳ Pendiente | |
+| Fase                       | Estado                                                              | Fecha      |
+|----------------------------|---------------------------------------------------------------------|------------|
+| Plan                       | ✅ Generado                                                          | 2026-09-06 |
+| Contrato aprobado (gate 1) | ⏳ Pendiente                                                         |            |
+| Pruebas en rojo            | ⏳ Pendiente                                                         |            |
+| Implementación en verde    | ⏳ Pendiente                                                         |            |
+| Validación                 | ✅ APROBADO — ver [REPORTE-HU-002.md](../reportes/REPORTE-HU-002.md) | 2026-09-06 |
+| Entrega (gate 2)           | ⏳ Pendiente                                                         |            |
 
 ## 11. Ambigüedades pendientes
 

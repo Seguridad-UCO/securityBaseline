@@ -6,5 +6,5 @@ import java.time.Instant;
  * Representación de persistencia de una fila de catálogo: plana, tipada primitivamente e inmutable.
  */
 public record ProtectedResourceEntity(String id, String applicationId, String tenantId, String path, String method,
-        Instant registeredAt) {
+                                      Instant registeredAt) {
 }

@@ -4,17 +4,15 @@ import co.edu.uco.seguridad.pdp.applications.application.primaryport.request.Reg
 import co.edu.uco.seguridad.pdp.applications.application.rule.validator.impl.RegisterApplicationRulesValidatorImpl;
 import co.edu.uco.seguridad.pdp.applications.application.secondaryport.repository.ApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
-import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
 import co.edu.uco.seguridad.pdp.applications.domain.ApplicationCriteria;
+import co.edu.uco.seguridad.pdp.applications.domain.exception.ApplicationWithoutEnabledEnvironmentException;
 import co.edu.uco.seguridad.pdp.applications.domain.exception.DuplicateApplicationException;
 import co.edu.uco.seguridad.pdp.applications.domain.exception.ReservedApplicationNameException;
+import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
+import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationMustHaveAtLeastOneEnabledEnvironmentRuleImpl;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationNameMustBeUniqueForTenantRuleImpl;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationNameMustNotBeReservedRuleImpl;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
-import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -48,9 +46,20 @@ class RegisterApplicationRulesValidatorTests {
                 .verify();
     }
 
+    @Test
+    void rejects_an_application_without_an_enabled_environment_before_touching_the_repository() {
+        RegisterApplicationRequest request = new RegisterApplicationRequest(TENANT, new ApplicationName("gestion-academica"), "",
+                new ApplicationBaseUrl("https://gestion-academica.example.com"), Set.of());
+
+        StepVerifier.create(validator(true).execute(request))
+                .expectError(ApplicationWithoutEnabledEnvironmentException.class)
+                .verify();
+    }
+
     private static RegisterApplicationRulesValidator validator(boolean nameTaken) {
         return new RegisterApplicationRulesValidatorImpl(
                 new ApplicationNameMustNotBeReservedRuleImpl(Set.of("admin")),
+                new ApplicationMustHaveAtLeastOneEnabledEnvironmentRuleImpl(),
                 tenantId -> Mono.empty(),
                 new ApplicationNameMustBeUniqueForTenantRuleImpl(),
                 repositoryReporting(nameTaken));
@@ -70,6 +79,28 @@ class RegisterApplicationRulesValidatorTests {
 
             @Override
             public Mono<Boolean> existsByTenantAndId(TenantId tenantId, ApplicationId applicationId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<TenantId> findTenantIdById(ApplicationId applicationId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash> findCredentialHashById(
+                    ApplicationId applicationId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Application> findByIdForTenant(TenantId tenantId, ApplicationId applicationId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Void> updateCredentialHash(ApplicationId applicationId,
+                                                   co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash credentialHash) {
                 throw new UnsupportedOperationException();
             }
 

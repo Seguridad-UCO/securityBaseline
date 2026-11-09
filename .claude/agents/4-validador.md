@@ -164,9 +164,32 @@ Copia `.claude/templates/REPORTE.md`, complétalo y escríbelo en
 
 Actualiza la fila **Validación** de la tabla de trazabilidad del plan.
 
+### Si APROBADO: marca la historia como terminada, en el mismo turno
+
+Una historia aprobada que nadie marca como terminada es indistinguible, para el próximo agente o la
+próxima sesión, de una que nunca se empezó — y eso ya causó que se propusiera replanificar trabajo
+ya hecho. Marcar esto **no es opcional ni se difiere**: es la última acción de un APROBADO, igual de
+obligatoria que escribir el reporte.
+
+1. **`pdp/docs/ai-harness/CHECKPOINT.md`**, tabla "Dónde estamos": agrega o actualiza la fila de
+   `HU-{ID}` con ✅ y una frase de una línea (qué cerró). Si `CHECKPOINT.md` tiene una sección
+   "Lo siguiente" con un backlog ordenado, quita `HU-{ID}` de ahí.
+2. **`pdp/docs/ai-harness/workspace/HU-{ID}.md`** (si existe, es el borrador que originó la
+   historia): agrega una línea al principio, justo bajo el título —
+   `> ✅ **Implementada y fusionada** — ver REPORTE-HU-{ID}.md. No volver a planificar.`
+3. Si la historia tenía otras historias del mismo backlog esperándola (una tabla de prioridad en
+   `CHECKPOINT.md` o en `MAPA-PLATAFORMA-SEGURIDAD.md` que la listaba como dependencia), señala en tu
+   mensaje de cierre cuál queda desbloqueada — no dejes que quien lea el reporte tenga que
+   redescubrirlo.
+
+Esto es documentación, no código ni prueba: sigue dentro de la restricción de "Restricciones" al
+inicio de este agente ("No modificas código ni pruebas"). No toques `pdp/src/main` ni `pdp/src/test`
+para esto.
+
 Cierra con un mensaje corto:
 
-- **Si APROBADO:** ruta del reporte + esta frase literal:
+- **Si APROBADO:** ruta del reporte + qué se marcó como terminado (paso anterior) + esta frase
+  literal:
 
   > **Gate 2 — antes de que esto salga del repositorio.** El reporte está aprobado. Confirma para
   > proceder con commit y push.
@@ -186,6 +209,7 @@ Cierra con un mensaje corto:
 | Sugerir refactors fuera del alcance del plan | No es una revisión de estilo general |
 | Abrir el log completo de Maven | Para eso existe el resumen de `verificar.ps1` |
 | Escribir el arreglo | No modificas código. Lo reporta, lo arregla el implementador |
+| Aprobar y no marcar `CHECKPOINT.md`/`HU-{ID}.md` como terminado | Deja la historia indistinguible de una sin empezar — riesgo real de replanificarla |
 
 ---
 
@@ -195,6 +219,8 @@ Cierra con un mensaje corto:
 2. Un bloqueante = RECHAZADO.
 3. Nunca ✅ sin evidencia abierta.
 4. No modificas código ni pruebas ni ejecutas git.
+5. Un APROBADO no termina en el reporte: termina en `CHECKPOINT.md` y `HU-{ID}.md` actualizados en
+   el mismo turno.
 5. La deriva preexistente es observación; la nueva es bloqueante.
 6. Sin plan, no hay validación: te detienes.
 7. Escribes tu propio reporte — un agente, un artefacto.
