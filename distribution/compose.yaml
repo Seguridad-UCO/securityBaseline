@@ -7,6 +7,8 @@ services:
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      # La migración crea el cliente técnico con el mismo secreto que usará el PDP.
+      SECURITY_BASELINE_PROVISIONER_CLIENT_SECRET: ${PDP_KEYCLOAK_PROVISIONER_CLIENT_SECRET:-change-me-in-production}
       KC_HOSTNAME: http://keycloak.localhost:${KEYCLOAK_PORT:-19090}
       KC_HOSTNAME_STRICT: "true"
     ports: ["${KEYCLOAK_PORT:-19090}:8080"]
@@ -14,7 +16,8 @@ services:
     # Se persiste únicamente H2 para no ocultar el realm incluido en la imagen.
     volumes: ["keycloak-data:/opt/keycloak/data/h2"]
     healthcheck:
-      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8080'"]
+      # No inicia consumidores hasta que la imagen haya migrado el realm persistido.
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8080 && test -f /tmp/security-baseline-keycloak-migration-complete'"]
       interval: 5s
       timeout: 3s
       retries: 24
@@ -60,6 +63,7 @@ services:
       PDP_KEYCLOAK_ISSUER: http://keycloak.localhost:${KEYCLOAK_PORT:-19090}/realms/security-baseline
       PDP_KEYCLOAK_CLIENT_ID: security-baseline-bff
       PDP_KEYCLOAK_CLIENT_SECRET: TPoYOEY5rzn11VxWtCq5m0cv9mIbSeEM1Tf0CuOezPK6UXr1xT9mWhTiW1u84fJ9l8fU9iUT3GqPTT4wzwXkVW
+      PDP_KEYCLOAK_PROVISIONER_CLIENT_SECRET: ${PDP_KEYCLOAK_PROVISIONER_CLIENT_SECRET:-change-me-in-production}
       PDP_KEYCLOAK_BEARER_AUDIENCE: security-baseline-pdp
       PDP_SECURITY_SESSION_SECURE_COOKIES: "false"
       PDP_SECURITY_MFA_ENABLED: ${PDP_SECURITY_MFA_ENABLED:-false}

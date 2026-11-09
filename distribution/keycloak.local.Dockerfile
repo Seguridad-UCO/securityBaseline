@@ -6,3 +6,6 @@ FROM quay.io/keycloak/keycloak:26.7.2
 RUN mkdir -p /opt/keycloak/data/h2
 
 COPY pdp/keycloak/import/security-baseline-realm.json /opt/keycloak/data/import/security-baseline-realm.json
+COPY --chmod=755 distribution/keycloak-entrypoint.sh /opt/keycloak/bin/security-baseline-entrypoint.sh
+
+ENTRYPOINT ["/opt/keycloak/bin/security-baseline-entrypoint.sh"]
