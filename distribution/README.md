@@ -27,5 +27,9 @@ curl -fsS http://localhost:18081/actuator/health
 docker compose pull && docker compose up -d
 ~~~
 
+La imagen de Keycloak migra de forma idempotente el realm ya persistido antes de declararse saludable.
+Por eso la actualización conserva usuarios y configuración, e incorpora los clientes técnicos que
+necesite una versión nueva del PDP; no use `down -v` como parte de una actualización normal.
+
 Use una versión publicada concreta, no `latest`. Para borrar el laboratorio: `docker compose down -v`.
 Lea [MANUAL.md](MANUAL.md) antes de integrar una aplicación.
