@@ -7,6 +7,8 @@ import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.*;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.impl.*;
 import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository.AssignmentRepository;
 import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository.ProfileAssignmentRepository;
+import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.event.AssignmentOutbox;
+import co.edu.uco.seguridad.pdp.assignments.application.event.AssignmentEventFactory;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.*;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.impl.*;
 import co.edu.uco.seguridad.pdp.assignments.domain.rule.*;
@@ -21,8 +23,13 @@ import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.i
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.primary.web.interactor.impl.RegisterApplicationWithFirstAdministratorInteractorImpl;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.repository.SurrealAssignmentRepository;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.repository.SurrealProfileAssignmentRepository;
+import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.repository.SurrealAssignmentOutbox;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.schema.SurrealAssignmentSchemaInitializer;
 import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.schema.SurrealProfileAssignmentSchemaInitializer;
+import co.edu.uco.seguridad.pdp.assignments.infrastructure.adapter.secondary.persistence.schema.SurrealAssignmentOutboxSchemaInitializer;
+import co.edu.uco.seguridad.pdp.assignments.infrastructure.events.AssignmentEventsProperties;
+import co.edu.uco.seguridad.pdp.assignments.infrastructure.events.AssignmentOutboxDispatcher;
+import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationDetailsLookupValidator;
 import co.edu.uco.seguridad.pdp.identity.application.rule.validator.SubjectUserIdLookupValidator;
 import co.edu.uco.seguridad.pdp.identity.application.rule.validator.UserMustExistValidator;
 import co.edu.uco.seguridad.pdp.profiles.application.rule.validator.ProfileNamesLookupValidator;
@@ -40,12 +47,28 @@ import co.edu.uco.seguridad.shared.security.revocation.TokenRevocationPort;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * La única clase consciente de Spring del módulo.
  */
 @Configuration
+@EnableScheduling
+@EnableConfigurationProperties(AssignmentEventsProperties.class)
 public class AssignmentsConfiguration {
+
+    @Bean
+    AssignmentOutbox assignmentOutbox(SurrealDbClient client, ObjectMapper mapper) { return new SurrealAssignmentOutbox(client, mapper); }
+    @Bean
+    ApplicationRunner assignmentOutboxSchemaInitializer(SurrealDbClient client) { return new SurrealAssignmentOutboxSchemaInitializer(client); }
+    @Bean
+    AssignmentEventFactory assignmentEventFactory(ApplicationDetailsLookupValidator applications, RoleNamesLookupValidator roles,
+                                                  ProfileNamesLookupValidator profiles, IdentifierGenerator identifiers) { return new AssignmentEventFactory(applications, roles, profiles, identifiers); }
+    @Bean
+    AssignmentOutboxDispatcher assignmentOutboxDispatcher(AssignmentOutbox outbox, RabbitTemplate rabbit, AssignmentEventsProperties properties, TimeProvider time) { return new AssignmentOutboxDispatcher(outbox, rabbit, properties, time); }
 
     @Bean
     AssignmentRepository assignmentRepository(SurrealDbClient client) {
@@ -103,14 +126,14 @@ public class AssignmentsConfiguration {
 
     @Bean
     AssignRoleUseCase assignRoleUseCase(AssignRoleRulesValidator rules, AssignmentRepository repository,
-                                        IdentifierGenerator identifiers, TimeProvider time, DistributedCachePort cache) {
-        return new AssignRoleUseCaseImpl(rules, repository, identifiers, time, cache);
+                                        IdentifierGenerator identifiers, TimeProvider time, DistributedCachePort cache, AssignmentOutbox outbox, AssignmentEventFactory events) {
+        return new AssignRoleUseCaseImpl(rules, repository, identifiers, time, cache, outbox, events);
     }
 
     @Bean
     RevokeAssignmentUseCase revokeAssignmentUseCase(RevokeAssignmentRulesValidator rules, AssignmentRepository repository,
-                                                    TimeProvider time, DistributedCachePort cache) {
-        return new RevokeAssignmentUseCaseImpl(rules, repository, time, cache);
+                                                    TimeProvider time, DistributedCachePort cache, AssignmentOutbox outbox, AssignmentEventFactory events) {
+        return new RevokeAssignmentUseCaseImpl(rules, repository, time, cache, outbox, events);
     }
 
     @Bean
@@ -235,14 +258,14 @@ public class AssignmentsConfiguration {
 
     @Bean
     AssignProfileUseCase assignProfileUseCase(AssignProfileRulesValidator rules, AssignRoleUseCase assignRoleUseCase,
-                                              ProfileAssignmentRepository repository, IdentifierGenerator identifiers, TimeProvider time) {
-        return new AssignProfileUseCaseImpl(rules, assignRoleUseCase, repository, identifiers, time);
+                                              ProfileAssignmentRepository repository, IdentifierGenerator identifiers, TimeProvider time, AssignmentOutbox outbox, AssignmentEventFactory events) {
+        return new AssignProfileUseCaseImpl(rules, assignRoleUseCase, repository, identifiers, time, outbox, events);
     }
 
     @Bean
     RevokeProfileAssignmentUseCase revokeProfileAssignmentUseCase(RevokeProfileAssignmentRulesValidator rules,
-                                                                  RevokeAssignmentUseCase revokeAssignmentUseCase, ProfileAssignmentRepository repository, TimeProvider time) {
-        return new RevokeProfileAssignmentUseCaseImpl(rules, revokeAssignmentUseCase, repository, time);
+                                                                  RevokeAssignmentUseCase revokeAssignmentUseCase, ProfileAssignmentRepository repository, TimeProvider time, AssignmentRepository assignments, AssignmentOutbox outbox, AssignmentEventFactory events) {
+        return new RevokeProfileAssignmentUseCaseImpl(rules, revokeAssignmentUseCase, repository, time, assignments, outbox, events);
     }
 
     // Consulta de asignaciones de perfil: no existía ningún GET (el frontend las guardaba solo en

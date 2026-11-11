@@ -4,6 +4,9 @@ import co.edu.uco.seguridad.pdp.assignments.application.primaryport.request.Assi
 import co.edu.uco.seguridad.pdp.assignments.application.primaryport.response.AssignmentResponse;
 import co.edu.uco.seguridad.pdp.assignments.application.rule.validator.AssignRoleRulesValidator;
 import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.repository.AssignmentRepository;
+import co.edu.uco.seguridad.pdp.assignments.application.secondaryport.event.AssignmentOutbox;
+import co.edu.uco.seguridad.pdp.assignments.application.event.AssignmentEventFactory;
+import co.edu.uco.seguridad.pdp.assignments.application.event.AssignmentEventContext;
 import co.edu.uco.seguridad.pdp.assignments.application.usecase.AssignRoleUseCase;
 import co.edu.uco.seguridad.pdp.assignments.domain.Assignment;
 import co.edu.uco.seguridad.pdp.assignments.domain.model.AssignmentId;
@@ -30,6 +33,8 @@ public final class AssignRoleUseCaseImpl implements AssignRoleUseCase {
     private final IdentifierGenerator identifiers;
     private final TimeProvider time;
     private final DistributedCachePort cache;
+    private final AssignmentOutbox outbox;
+    private final AssignmentEventFactory events;
 
     public AssignRoleUseCaseImpl(AssignRoleRulesValidator rules, AssignmentRepository repository,
                                  IdentifierGenerator identifiers, TimeProvider time, DistributedCachePort cache) {
@@ -38,6 +43,14 @@ public final class AssignRoleUseCaseImpl implements AssignRoleUseCase {
         this.identifiers = Objects.requireNonNull(identifiers, RequiredArgumentMessages.IDENTIFIER_GENERATOR);
         this.time = Objects.requireNonNull(time, RequiredArgumentMessages.TIME_PROVIDER);
         this.cache = Objects.requireNonNull(cache, RequiredArgumentMessages.DISTRIBUTED_CACHE_PORT);
+        this.outbox = null; this.events = null;
+    }
+
+    public AssignRoleUseCaseImpl(AssignRoleRulesValidator rules, AssignmentRepository repository, IdentifierGenerator identifiers,
+                                 TimeProvider time, DistributedCachePort cache, AssignmentOutbox outbox, AssignmentEventFactory events) {
+        this.rules = Objects.requireNonNull(rules, RequiredArgumentMessages.ASSIGN_ROLE_RULES_VALIDATOR); this.repository = Objects.requireNonNull(repository, RequiredArgumentMessages.ASSIGNMENT_REPOSITORY);
+        this.identifiers = Objects.requireNonNull(identifiers, RequiredArgumentMessages.IDENTIFIER_GENERATOR); this.time = Objects.requireNonNull(time, RequiredArgumentMessages.TIME_PROVIDER); this.cache = Objects.requireNonNull(cache, RequiredArgumentMessages.DISTRIBUTED_CACHE_PORT);
+        this.outbox = Objects.requireNonNull(outbox); this.events = Objects.requireNonNull(events);
     }
 
     @Override
@@ -45,6 +58,8 @@ public final class AssignRoleUseCaseImpl implements AssignRoleUseCase {
         return rules.execute(input)
                 .then(Mono.defer(() -> repository.save(Assignment.assign(new AssignmentId(identifiers.next()),
                         input.userId(), input.tenantId(), input.applicationId(), input.roleId(), time.now()))))
+                .flatMap(assignment -> Mono.deferContextual(context -> context.hasKey(AssignmentEventContext.SUPPRESS_DIRECT_EVENT) || outbox == null
+                        ? Mono.just(assignment) : events.role("ROLE_ASSIGNED", assignment, time.now()).flatMap(outbox::enqueue).thenReturn(assignment)))
                 .flatMap(assignment -> cache.evict(assignment.userId(), assignment.applicationId()).thenReturn(assignment))
                 .map(assignment -> new AssignmentResponse(assignment.id(), assignment.userId(), assignment.tenantId(),
                         assignment.applicationId(), assignment.roleId(), assignment.validity().validFrom(),
