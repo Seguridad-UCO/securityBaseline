@@ -13,8 +13,9 @@ public final class AssignmentOutboxDispatcher {
     public AssignmentOutboxDispatcher(AssignmentOutbox outbox, RabbitTemplate rabbit, AssignmentEventsProperties properties, TimeProvider time) { this.outbox = outbox; this.rabbit = rabbit; this.properties = properties; this.time = time; }
     @Scheduled(fixedDelayString = "${pdp.assignment-events.dispatch-delay:PT5S}")
     public Mono<Void> dispatch() {
-        return outbox.pending(time.now()).concatMap(this::publishOrRetry)
-                .then();
+        // Los métodos @Scheduled reactivos reutilizan el Publisher devuelto. Defer garantiza que
+        // cada suscripción consulta pendientes con la hora del ciclo, no con la del arranque.
+        return Mono.defer(() -> outbox.pending(time.now()).concatMap(this::publishOrRetry).then());
     }
 
     private Mono<Void> publishOrRetry(AssignmentOutbox.PendingAssignmentEvent item) {

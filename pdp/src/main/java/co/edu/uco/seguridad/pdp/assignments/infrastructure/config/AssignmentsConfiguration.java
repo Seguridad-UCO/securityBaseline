@@ -50,6 +50,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
+import org.springframework.amqp.support.converter.MessageConverter;
 import tools.jackson.databind.ObjectMapper;
 
 /**
@@ -59,6 +61,10 @@ import tools.jackson.databind.ObjectMapper;
 @EnableScheduling
 @EnableConfigurationProperties(AssignmentEventsProperties.class)
 public class AssignmentsConfiguration {
+
+    /** El contrato externo de asignaciones se transporta como JSON, no como serialización Java. */
+    @Bean
+    MessageConverter messageConverter() { return new JacksonJsonMessageConverter(); }
 
     @Bean
     AssignmentOutbox assignmentOutbox(SurrealDbClient client, ObjectMapper mapper) { return new SurrealAssignmentOutbox(client, mapper); }
