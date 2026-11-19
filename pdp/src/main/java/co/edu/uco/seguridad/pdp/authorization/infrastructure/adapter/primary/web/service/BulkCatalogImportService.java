@@ -109,7 +109,18 @@ public final class BulkCatalogImportService {
         }
         Objects.requireNonNull(userId, RequiredArgumentMessages.USER_ID);
         boolean roleMode = ROLES_MODE.equals(mode);
-        return Mono.defer(() -> run(roleMode, bytes, principal, userId));
+        return Mono.defer(() -> run(roleMode, bytes, principal, userId, Map.of()));
+    }
+
+    /**
+     * Valida la hoja Roles y RolesxRecurso admitiendo como destino, además de los recursos persistidos, los
+     * recursos {@code pending} que el mismo archivo va a crear (modalidad combinada recursos y roles). Aplica los
+     * mismos gates que la modalidad {@code roles}; no persiste nada.
+     */
+    public Mono<Result> validateRoles(byte[] bytes, PdpPrincipal principal, UserId userId, Map<PendingResource, ResourceId> pending) {
+        Objects.requireNonNull(userId, RequiredArgumentMessages.USER_ID);
+        Map<PendingResource, ResourceId> known = Map.copyOf(Objects.requireNonNull(pending));
+        return Mono.defer(() -> run(true, bytes, principal, userId, known));
     }
 
     public Mono<Result> commit(String mode, byte[] bytes, PdpPrincipal principal, UserId userId) {
@@ -119,12 +130,12 @@ public final class BulkCatalogImportService {
         });
     }
 
-    private Mono<Result> run(boolean roleMode, byte[] bytes, PdpPrincipal principal, UserId userId) {
+    private Mono<Result> run(boolean roleMode, byte[] bytes, PdpPrincipal principal, UserId userId, Map<PendingResource, ResourceId> pending) {
         BulkCatalogWorkbookService.Parsed<BulkCatalogWorkbookService.CatalogRow> parsed = books.parse(roleMode ? ROLES_MODE : PROFILES_MODE, bytes);
         if (parsed.rows().isEmpty()) {
             return Mono.just(new Result(response(0, parsed.errors(), List.of()), List.of(), List.of()));
         }
-        Batch batch = new Batch(principal, userId, new ArrayList<>(parsed.errors()), new ArrayList<>(), new ArrayList<>(), new HashSet<>(), new HashMap<>(), rowsOf(parsed.errors()), tenantDecision(principal, userId));
+        Batch batch = new Batch(principal, userId, new ArrayList<>(parsed.errors()), new ArrayList<>(), new ArrayList<>(), new HashSet<>(), new HashMap<>(), rowsOf(parsed.errors()), tenantDecision(principal, userId), pending);
         return Flux.fromIterable(parsed.rows())
                 .concatMap(row -> resolve(roleMode, row, batch))
                 .doOnNext(batch.accepted()::add)
@@ -318,7 +329,12 @@ public final class BulkCatalogImportService {
                             errors.add(error(row.row(), ROLE_NAME_FIELD, "ROLE_NOT_FOUND", ROLE_NOT_IN_SHEET_MESSAGE));
                             return Mono.<Void>empty();
                         }
-                        return resources.findIdByApplicationPathAndMethod(app.id(), new ResourcePath(row.path()), HttpVerb.parse(row.method()))
+                        ResourcePath path = new ResourcePath(row.path());
+                        HttpVerb method = HttpVerb.parse(row.method());
+                        ResourceId pending = batch.pendingResources().get(new PendingResource(app.id(), path, method));
+                        Mono<ResourceId> target = pending != null ? Mono.just(pending)
+                                : resources.findIdByApplicationPathAndMethod(app.id(), path, method);
+                        return target
                                 .switchIfEmpty(Mono.error(new IllegalArgumentException(RESOURCE_NOT_FOUND_MESSAGE)))
                                 .doOnNext(entry.resources()::add)
                                 .then();
@@ -440,7 +456,13 @@ public final class BulkCatalogImportService {
     private record Batch(PdpPrincipal principal, UserId userId, List<BulkResourceRowError> errors,
                          List<BulkResourceRowError> relationErrors, List<Entry> accepted, Set<String> seen,
                          Map<ApplicationId, Boolean> decisions, Set<Integer> cellErrorRows,
-                         Mono<Boolean> tenantDecision) {
+                         Mono<Boolean> tenantDecision, Map<PendingResource, ResourceId> pendingResources) {
+    }
+
+    /**
+     * Recurso que el mismo archivo va a crear: clave aplicación + ruta + método, igual que la unicidad persistida.
+     */
+    public record PendingResource(ApplicationId applicationId, ResourcePath path, HttpVerb method) {
     }
 
     private record Entry(BulkCatalogWorkbookService.CatalogRow row, RoleScope scope, String name,

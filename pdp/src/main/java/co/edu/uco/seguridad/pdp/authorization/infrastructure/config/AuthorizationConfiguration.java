@@ -39,7 +39,10 @@ import co.edu.uco.seguridad.pdp.authorization.application.usecase.*;
 import co.edu.uco.seguridad.pdp.authorization.application.usecase.impl.*;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.*;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.interactor.impl.*;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkCatalogImport;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkCatalogImportService;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkCatalogImports;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkResourceRoleImportService;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkCatalogWorkbookService;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkResourceImportService;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkResourceWorkbookService;
@@ -91,6 +94,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.client.WebClient;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 /**
  * La unica clase consciente de Spring del modulo.
  */
@@ -132,6 +138,20 @@ public class AuthorizationConfiguration {
                                                         PrincipalMustBeApplicationAdministratorValidator administrators, ProtectedResourceRepository resources,
                                                         IdentifierGenerator identifiers, TimeProvider time, RegisterProtectedResourcesInBulkUseCase bulkRegistration) {
         return new BulkResourceImportService(workbooks, applications, administrators, resources, identifiers, time, bulkRegistration);
+    }
+
+    /**
+     * Modalidades de la carga masiva del catálogo: una modalidad nueva se registra aquí, sin tocar el controlador.
+     */
+    @Bean
+    BulkCatalogImports bulkCatalogImports(BulkCatalogImportService catalog, BulkResourceImportService resourceImports,
+                                          RegisterProtectedResourcesInBulkUseCase bulkRegistration,
+                                          ProtectedResourceRepository resources, RoleRepository roles) {
+        Map<String, BulkCatalogImport> modes = new LinkedHashMap<>();
+        modes.put("roles", BulkCatalogImport.of(catalog, "roles"));
+        modes.put("profiles", BulkCatalogImport.of(catalog, "profiles"));
+        modes.put("resources-roles", new BulkResourceRoleImportService(resourceImports, catalog, bulkRegistration, resources, roles));
+        return new BulkCatalogImports(modes);
     }
 
     // HU-006 (D9 del handoff PDP-PEP-OPA): reemplaza a DenyByDefaultPolicyDecisionAdapter, que se
