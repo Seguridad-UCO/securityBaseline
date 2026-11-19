@@ -5,7 +5,9 @@ import co.edu.uco.seguridad.pdp.authorization.domain.model.PolicyReference;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.AccessDecisionWebResponse;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.dto.response.PolicyReferenceWebResponse;
 
-/** AccessDecision (dominio) -> AccessDecisionWebResponse (plana): ningun enum ni value object cruza al cliente. */
+/**
+ * AccessDecision (dominio) -> AccessDecisionWebResponse (plana): ningun enum ni value object cruza al cliente.
+ */
 public final class AccessDecisionResponseMapper {
 
     private AccessDecisionResponseMapper() {

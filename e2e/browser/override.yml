@@ -1,0 +1,9 @@
+# Solo para probar el microfrontend en un navegador contra el stack de PRUEBA del edge (nunca el realm real):
+# publica el Keycloak de prueba en 127.0.0.1:9091 y deja que el PDP acepte CORS desde el host de prueba.
+services:
+  keycloak:
+    ports:
+      - "127.0.0.1:9091:8080"
+  pdp:
+    environment:
+      PDP_CORS_ALLOWED_ORIGINS: http://edge:8088,http://localhost:5190

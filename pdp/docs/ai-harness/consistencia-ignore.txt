@@ -1,0 +1,16 @@
+# Excepciones declaradas del detector de consistencia (.claude/tools/consistencia.ps1).
+#
+# Formato:  <slice>::<regla>   (admite comodines)
+#
+# Solo se declara una divergencia legitima, con su razon. Nunca para silenciar un hallazgo real.
+
+# Los casos de uso Update*/Remove* de estos slices cargan la entidad con
+# repository.findByIdForTenant(...) porque necesitan el agregado (para actualizarlo o decidir si es
+# un rol protegido); la ausencia se traduce en su excepcion de dominio en el mismo flatMap. Los
+# validadores *MustExist* publicados devuelven Mono<Void> y obligarian a una segunda lectura.
+# Pendiente de decision de equipo: extraer un *LookupValidator que devuelva la entidad.
+# Alcance: es por slice, asi que tambien silencia un caso nuevo con el mismo patron; revisarlo a mano.
+applications::regla-en-usecase
+profiles::regla-en-usecase
+resources::regla-en-usecase
+roles::regla-en-usecase

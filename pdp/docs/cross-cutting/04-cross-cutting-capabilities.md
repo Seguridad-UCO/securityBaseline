@@ -14,16 +14,16 @@ infraestructura transversal en el dominio o en el controlador.
 
 ## Implementación
 
-| Paquete | Contiene | Por qué ahí |
-|---|---|---|
-| `shared/web` | envelope, paginación HTTP, correlación, excepciones de contrato | Frontera HTTP, común a todo adaptador web |
-| `shared/observability` | puente Reactor Context → MDC | Aplica a cualquier flujo reactivo |
-| `shared/rule` | los tres contratos de regla | Vocabulario común de reglas, Java puro |
-| `shared/port` | `TimeProvider`, `IdentifierGenerator` | Capacidades que todo caso de uso puede necesitar |
-| `shared/event` | `DomainEvent`, `DomainEventPublisher` (+ `SpringDomainEventPublisher`) | Publicar un hecho de negocio sin que quien lo produce conozca a quien escucha (ADR-0002) |
-| `shared/security` | `PdpPrincipal`, `SecurityContext`, handlers 401/403 | Frontera PEP: quién hace la petición, sin que el dominio conozca JWT (ADR-0003) |
-| `shared/config` | implementaciones por defecto de esos puertos + `SecurityConfiguration` | Único lugar donde se decide el reloj real y la cadena de seguridad |
-| `pdp/commons` | value objects y excepciones base del PDP | Lenguaje del dominio compartido entre módulos |
+| Paquete                | Contiene                                                               | Por qué ahí                                                                              |
+|------------------------|------------------------------------------------------------------------|------------------------------------------------------------------------------------------|
+| `shared/web`           | envelope, paginación HTTP, correlación, excepciones de contrato        | Frontera HTTP, común a todo adaptador web                                                |
+| `shared/observability` | puente Reactor Context → MDC                                           | Aplica a cualquier flujo reactivo                                                        |
+| `shared/rule`          | los tres contratos de regla                                            | Vocabulario común de reglas, Java puro                                                   |
+| `shared/port`          | `TimeProvider`, `IdentifierGenerator`                                  | Capacidades que todo caso de uso puede necesitar                                         |
+| `shared/event`         | `DomainEvent`, `DomainEventPublisher` (+ `SpringDomainEventPublisher`) | Publicar un hecho de negocio sin que quien lo produce conozca a quien escucha (ADR-0002) |
+| `shared/security`      | `PdpPrincipal`, `SecurityContext`, handlers 401/403                    | Frontera PEP: quién hace la petición, sin que el dominio conozca JWT (ADR-0003)          |
+| `shared/config`        | implementaciones por defecto de esos puertos + `SecurityConfiguration` | Único lugar donde se decide el reloj real y la cadena de seguridad                       |
+| `pdp/commons`          | value objects y excepciones base del PDP                               | Lenguaje del dominio compartido entre módulos                                            |
 
 La separación entre `shared` y `pdp/commons` no es cosmética: `pdp/commons` es vocabulario del
 negocio (`TenantId`, `ApplicationName`), `shared` es capacidad técnica. Mantener `pdp/commons` libre
@@ -40,7 +40,8 @@ explícitamente (ADR-0002): quién audita qué es una decisión de infraestructu
 
 - [`shared`](../../src/main/java/co/edu/uco/seguridad/shared)
 - [`pdp/commons`](../../src/main/java/co/edu/uco/seguridad/pdp/commons)
-- [`SharedPortsConfiguration.java`](../../src/main/java/co/edu/uco/seguridad/shared/config/SharedPortsConfiguration.java)
+- [
+  `SharedPortsConfiguration.java`](../../src/main/java/co/edu/uco/seguridad/shared/config/SharedPortsConfiguration.java)
 - [`application.properties`](../../src/main/resources/application.properties) y perfiles `dev`, `qa`, `prod`
 
 ## Evidencia y límite

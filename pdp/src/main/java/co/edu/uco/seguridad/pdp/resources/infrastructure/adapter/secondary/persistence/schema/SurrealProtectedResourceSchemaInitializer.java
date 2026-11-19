@@ -32,10 +32,10 @@ public final class SurrealProtectedResourceSchemaInitializer extends SurrealSche
         return client.ensureNamespaceAndDatabase()
                 .then(client.execute(
                         """
-                        DEFINE TABLE IF NOT EXISTS %1$s SCHEMALESS;
-                        DEFINE INDEX IF NOT EXISTS %2$s ON %1$s \
-                        COLUMNS applicationId, path, method UNIQUE;\
-                        """.formatted(ProtectedResourceSchema.TABLE, ProtectedResourceSchema.INDEX_GRANT),
+                                DEFINE TABLE IF NOT EXISTS %1$s SCHEMALESS;
+                                DEFINE INDEX IF NOT EXISTS %2$s ON %1$s \
+                                COLUMNS applicationId, path, method UNIQUE;\
+                                """.formatted(ProtectedResourceSchema.TABLE, ProtectedResourceSchema.INDEX_GRANT),
                         Map.of()))
                 .then();
     }

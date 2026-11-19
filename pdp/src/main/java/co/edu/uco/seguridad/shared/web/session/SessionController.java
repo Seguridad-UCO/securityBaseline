@@ -1,18 +1,20 @@
 package co.edu.uco.seguridad.shared.web.session;
 
-import co.edu.uco.seguridad.shared.security.SecurityContext;
 import co.edu.uco.seguridad.shared.security.LocalUserPrincipal;
+import co.edu.uco.seguridad.shared.security.SecurityContext;
 import co.edu.uco.seguridad.shared.web.ApiResponse;
 import co.edu.uco.seguridad.shared.web.CorrelationWebFilter;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.web.server.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
-import org.springframework.security.web.server.csrf.CsrfToken;
-import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import reactor.core.publisher.Mono;
 
-/** Punto de lectura de la sesión BFF. La identidad y el tenant salen de la sesión local, no de Keycloak. */
+/**
+ * Punto de lectura de la sesión BFF. La identidad y el tenant salen de la sesión local, no de Keycloak.
+ */
 @RestController
 @RequestMapping("/api/v1/session")
 final class SessionController {

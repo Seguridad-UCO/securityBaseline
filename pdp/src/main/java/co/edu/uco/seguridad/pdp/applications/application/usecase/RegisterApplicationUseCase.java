@@ -1,7 +1,7 @@
 package co.edu.uco.seguridad.pdp.applications.application.usecase;
 
 import co.edu.uco.seguridad.pdp.applications.application.primaryport.request.RegisterApplicationRequest;
-import co.edu.uco.seguridad.pdp.applications.application.primaryport.response.RegisteredApplicationResponse;
+import co.edu.uco.seguridad.pdp.applications.application.primaryport.response.ApplicationRegistrationResponse;
 import co.edu.uco.seguridad.shared.contract.ReactiveOperation;
 
 /**
@@ -11,5 +11,5 @@ import co.edu.uco.seguridad.shared.contract.ReactiveOperation;
  * La implementación vive en {@code application/usecase/impl} y es invisible para el llamador.</p>
  */
 public interface RegisterApplicationUseCase
-        extends ReactiveOperation<RegisterApplicationRequest, RegisteredApplicationResponse> {
+        extends ReactiveOperation<RegisterApplicationRequest, ApplicationRegistrationResponse> {
 }

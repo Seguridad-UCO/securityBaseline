@@ -6,7 +6,9 @@ package co.edu.uco.seguridad.pdp.commons.message;
  */
 public final class ValueObjectMessages {
 
-    /** Razón genérica cuando el campo llega nulo o vacío. Usada por todos los objetos de valor. */
+    /**
+     * Razón genérica cuando el campo llega nulo o vacío. Usada por todos los objetos de valor.
+     */
     public static final String VALUE_REQUIRED = "se requiere un valor";
 
     public static final class ApplicationName {
@@ -42,6 +44,29 @@ public final class ValueObjectMessages {
         public static final String UNSUPPORTED = "debe ser uno de GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS";
 
         private HttpMethod() {
+        }
+    }
+
+    public static final class RoleName {
+        public static final String LENGTH = "debe contener de 3 a 60 caracteres";
+
+        private RoleName() {
+        }
+    }
+
+    public static final class RoleScope {
+        public static final String UNSUPPORTED_LEVEL = "debe ser uno de GLOBAL, TENANT, APPLICATION";
+        public static final String INCOHERENT =
+                "el alcance debe llevar exactamente los identificadores que su nivel exige";
+
+        private RoleScope() {
+        }
+    }
+
+    public static final class ProfileName {
+        public static final String LENGTH = "debe contener de 3 a 60 caracteres";
+
+        private ProfileName() {
         }
     }
 
@@ -93,6 +118,13 @@ public final class ValueObjectMessages {
         }
     }
 
+    public static final class Validity {
+        public static final String INVALID_RANGE = "el fin de la vigencia debe ser posterior a su inicio";
+
+        private Validity() {
+        }
+    }
+
     public static String invalidTenantId(String reason) {
         return "El id del inquilino es inválido: " + reason;
     }
@@ -132,6 +164,11 @@ public final class ValueObjectMessages {
 
     public static String unsupportedHttpMethod(String reason) {
         return "El método HTTP es inválido: " + reason;
+    }
+
+    // HU-012 — credencial de aplicación.
+    public static String invalidApplicationCredentialHash(String reason) {
+        return "El hash de la credencial de la aplicación es inválido: " + reason;
     }
 
     private ValueObjectMessages() {

@@ -1,0 +1,94 @@
+{
+  "realm": "security-baseline",
+  "displayName": "security-baseline (CI del edge — HU-027)",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "bruteForceProtected": true,
+  "accessTokenLifespan": 300,
+  "clients": [
+    {
+      "clientId": "security-baseline-bff",
+      "name": "BFF del PDP — solo para el Compose de pruebas del edge",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "jbLdoOlbPEUuCcALqjUAF8ZmIze84clQ8CWQGCLg4XG1awjSa6oR7yKnbNSECCgSy4z48BXjlDOPZszYs9iHoF",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://edge:8088/login/oauth2/code/keycloak",
+        "http://localhost:8088/login/oauth2/code/keycloak"
+      ],
+      "webOrigins": ["+"],
+      "attributes": {
+        "post.logout.redirect.uris": "+",
+        "pkce.code.challenge.method": "S256"
+      },
+      "protocolMappers": [
+        {
+          "name": "self-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.custom.audience": "security-baseline-bff",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "pdp-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.custom.audience": "security-baseline-pdp",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "security-pep-internal",
+      "name": "Identidad tecnica del PEP (canal /internal/v1) — solo para el Compose de pruebas del edge (HU-030)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "edge-ci-pep-internal-secret-2026",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocolMappers": [
+        {
+          "name": "bff-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.custom.audience": "security-baseline-bff",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "edge-tester",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "edge-tester@ci.invalid",
+      "firstName": "Edge",
+      "lastName": "Tester",
+      "credentials": [
+        { "type": "password", "value": "EdgeTester#2026", "temporary": false }
+      ]
+    }
+  ]
+}

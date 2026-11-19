@@ -7,9 +7,11 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
 
-/** Entrada ya resuelta de {@code ProtectedResourceMustExistRule}: el dato que la consulta devolvio. */
+/**
+ * Entrada ya resuelta de {@code ProtectedResourceMustExistRule}: el dato que la consulta devolvio.
+ */
 public record ProtectedResourceExistence(ApplicationId applicationId, ResourcePath path, HttpVerb method,
-        boolean registered) {
+                                         boolean registered) {
 
     public ProtectedResourceExistence {
         Objects.requireNonNull(applicationId, RequiredArgumentMessages.APPLICATION_ID);

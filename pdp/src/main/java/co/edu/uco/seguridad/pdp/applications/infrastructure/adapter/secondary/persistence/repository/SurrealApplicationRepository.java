@@ -3,25 +3,19 @@ package co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.p
 import co.edu.uco.seguridad.pdp.applications.application.secondaryport.repository.ApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
 import co.edu.uco.seguridad.pdp.applications.domain.ApplicationCriteria;
-import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
+import co.edu.uco.seguridad.pdp.applications.domain.exception.AmbiguousApplicationNameException;
+import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.entity.ApplicationEntity;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.mapper.ApplicationPersistenceMapper;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.schema.ApplicationSchema;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealRecordId;
 import reactor.core.publisher.Mono;
 import tools.jackson.databind.JsonNode;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Locale;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Adaptador real sobre SurrealDB (ADR-019). {@code existsByTenantAndName} es la puerta principal
@@ -54,6 +48,51 @@ public final class SurrealApplicationRepository implements ApplicationRepository
                 .map(results -> !results.get(0).isEmpty());
     }
 
+    @Override
+    public Mono<TenantId> findTenantIdById(ApplicationId applicationId) {
+        return client.execute(
+                        "SELECT tenantId FROM type::record('%s', $id);".formatted(ApplicationSchema.TABLE),
+                        Map.of("id", applicationId.value().toString()))
+                .flatMap(results -> {
+                    JsonNode rows = results.get(0);
+                    return rows.isEmpty() ? Mono.empty() : Mono.just(new TenantId(rows.get(0).path("tenantId").asString()));
+                });
+    }
+
+    @Override
+    public Mono<Application> findUniqueByName(ApplicationName name) {
+        return client.execute(
+                        "SELECT * FROM %s WHERE string::lowercase(name) = string::lowercase($name) LIMIT 2;"
+                                .formatted(ApplicationSchema.TABLE),
+                        Map.of("name", name.value()))
+                .flatMap(results -> {
+                    JsonNode rows = results.get(0);
+                    if (rows.isEmpty()) return Mono.empty();
+                    if (rows.size() > 1) return Mono.error(new AmbiguousApplicationNameException(name));
+                    return Mono.just(toDomain(rows.get(0)));
+                });
+    }
+
+    @Override
+    public Mono<Application> findByTenantAndName(TenantId tenantId, ApplicationName name) {
+        return client.execute("SELECT * FROM %s WHERE tenantId = $tenantId AND string::lowercase(name) = string::lowercase($name) LIMIT 1;"
+                        .formatted(ApplicationSchema.TABLE), Map.of("tenantId", tenantId.value(), "name", name.value()))
+                .flatMap(results -> results.get(0).isEmpty() ? Mono.empty() : Mono.just(toDomain(results.get(0).get(0))));
+    }
+
+    @Override
+    public Mono<ApplicationCredentialHash> findCredentialHashById(ApplicationId applicationId) {
+        return client.execute(
+                        "SELECT credentialHash FROM type::record('%s', $id);".formatted(ApplicationSchema.TABLE),
+                        Map.of("id", applicationId.value().toString()))
+                .flatMap(results -> {
+                    JsonNode rows = results.get(0);
+                    return rows.isEmpty()
+                            ? Mono.empty()
+                            : Mono.just(new ApplicationCredentialHash(rows.get(0).path("credentialHash").asString()));
+                });
+    }
+
     /**
      * Traduce la specification a una consulta: el filtro opcional se añade al {@code WHERE} solo si
      * el criterio lo trae, y el recorte va en la propia consulta, no en memoria — si el puerto
@@ -79,7 +118,7 @@ public final class SurrealApplicationRepository implements ApplicationRepository
         String query = """
                 SELECT * FROM %s WHERE tenantId = $tenantId%s                 ORDER BY registeredAt DESC LIMIT %d START %d;
                 SELECT count() FROM %s WHERE tenantId = $tenantId%s GROUP ALL;                """.formatted(ApplicationSchema.TABLE, filter, window.limit(), window.offset(),
-                        ApplicationSchema.TABLE, filter);
+                ApplicationSchema.TABLE, filter);
 
         return client.execute(query, parameters)
                 .map(results -> {
@@ -99,20 +138,59 @@ public final class SurrealApplicationRepository implements ApplicationRepository
 
     @Override
     public Mono<Application> save(Application application) {
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("id", application.id().value().toString());
+        parameters.put("tenantId", application.tenantId().value());
+        parameters.put("name", application.name().value());
+        parameters.put("description", application.description());
+        parameters.put("baseUrl", application.baseUrl().value());
+        parameters.put("credentialHash", application.credentialHash().value());
+        parameters.put("enabledEnvironments", application.enabledEnvironments().stream().map(environment -> environment.value()).sorted().collect(java.util.stream.Collectors.joining(",")));
+        parameters.put("registeredAt", application.registeredAt().toString());
         return client.execute(
                         """
-                        CREATE type::record('%s', $id) SET \
-                        tenantId = $tenantId, name = $name, description = $description, baseUrl = $baseUrl, \
-                        registeredAt = <datetime>$registeredAt;\
-                        """.formatted(ApplicationSchema.TABLE),
-                        Map.of(
-                                "id", application.id().value().toString(),
-                                "tenantId", application.tenantId().value(),
-                                "name", application.name().value(),
-                                "description", application.description(),
-                                "baseUrl", application.baseUrl().value(),
-                                "registeredAt", application.registeredAt().toString()))
+                                CREATE type::record('%s', $id) SET \
+                                tenantId = $tenantId, name = $name, description = $description, baseUrl = $baseUrl, \
+                                credentialHash = $credentialHash, enabledEnvironments = $enabledEnvironments, registeredAt = <datetime>$registeredAt;\
+                                """.formatted(ApplicationSchema.TABLE),
+                        parameters)
                 .thenReturn(application);
+    }
+
+    @Override
+    public Mono<Application> findByIdForTenant(TenantId tenantId, ApplicationId applicationId) {
+        return client.execute(
+                        "SELECT * FROM type::record('%s', $id) WHERE tenantId = $tenantId;"
+                                .formatted(ApplicationSchema.TABLE),
+                        Map.of("id", applicationId.value().toString(), "tenantId", tenantId.value()))
+                .flatMap(results -> {
+                    JsonNode rows = results.get(0);
+                    return rows.isEmpty() ? Mono.empty() : Mono.just(toDomain(rows.get(0)));
+                });
+    }
+
+    @Override
+    public Mono<Application> update(Application application) {
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("id", application.id().value().toString());
+        parameters.put("name", application.name().value());
+        parameters.put("description", application.description());
+        parameters.put("baseUrl", application.baseUrl().value());
+        parameters.put("enabledEnvironments", application.enabledEnvironments().stream().map(environment -> environment.value()).sorted().collect(java.util.stream.Collectors.joining(",")));
+        return client.execute(
+                        "UPDATE type::record('%s', $id) SET name = $name, description = $description, baseUrl = $baseUrl, enabledEnvironments = $enabledEnvironments;"
+                                .formatted(ApplicationSchema.TABLE),
+                        parameters)
+                .thenReturn(application);
+    }
+
+    @Override
+    public Mono<Void> updateCredentialHash(ApplicationId applicationId, ApplicationCredentialHash credentialHash) {
+        return client.execute(
+                        "UPDATE type::record('%s', $id) SET credentialHash = $credentialHash;"
+                                .formatted(ApplicationSchema.TABLE),
+                        Map.of("id", applicationId.value().toString(), "credentialHash", credentialHash.value()))
+                .then();
     }
 
     @Override
@@ -130,7 +208,10 @@ public final class SurrealApplicationRepository implements ApplicationRepository
                 row.path("name").asString(),
                 row.path("description").asString(""),
                 row.path("baseUrl").asString(),
-                row.path("registeredAt").asString());
+                row.path("credentialHash").asString(),
+                row.path("registeredAt").asString(),
+                java.util.Arrays.stream(row.path("enabledEnvironments").asString("").split(","))
+                        .filter(value -> !value.isBlank()).toList());
         return ApplicationPersistenceMapper.toDomain(entity);
     }
 }

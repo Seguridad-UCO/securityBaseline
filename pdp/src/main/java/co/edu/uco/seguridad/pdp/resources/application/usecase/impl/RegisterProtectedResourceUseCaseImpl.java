@@ -5,8 +5,8 @@ import co.edu.uco.seguridad.pdp.applications.application.rule.validator.Applicat
 import co.edu.uco.seguridad.pdp.commons.model.ResourceId;
 import co.edu.uco.seguridad.pdp.resources.application.primaryport.request.RegisterProtectedResourceRequest;
 import co.edu.uco.seguridad.pdp.resources.application.primaryport.response.RegisteredProtectedResourceResponse;
-import co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository.ProtectedResourceRepository;
 import co.edu.uco.seguridad.pdp.resources.application.rule.validator.RegisterProtectedResourceRulesValidator;
+import co.edu.uco.seguridad.pdp.resources.application.secondaryport.repository.ProtectedResourceRepository;
 import co.edu.uco.seguridad.pdp.resources.application.usecase.RegisterProtectedResourceUseCase;
 import co.edu.uco.seguridad.pdp.resources.domain.ProtectedResource;
 import co.edu.uco.seguridad.pdp.resources.domain.event.ProtectedResourceRegistered;
@@ -41,8 +41,8 @@ public final class RegisterProtectedResourceUseCaseImpl implements RegisterProte
     private final TimeProvider time;
 
     public RegisterProtectedResourceUseCaseImpl(ApplicationMustExistForTenantValidator applicationMustExist,
-            RegisterProtectedResourceRulesValidator rules, ProtectedResourceRepository resources,
-            DomainEventPublisher events, IdentifierGenerator identifiers, TimeProvider time) {
+                                                RegisterProtectedResourceRulesValidator rules, ProtectedResourceRepository resources,
+                                                DomainEventPublisher events, IdentifierGenerator identifiers, TimeProvider time) {
         this.applicationMustExist = Objects.requireNonNull(applicationMustExist, RequiredArgumentMessages.APPLICATION_EXISTS_VALIDATOR);
         this.rules = Objects.requireNonNull(rules, RequiredArgumentMessages.RULES_VALIDATOR);
         this.resources = Objects.requireNonNull(resources, RequiredArgumentMessages.PROTECTED_RESOURCE_REPOSITORY);

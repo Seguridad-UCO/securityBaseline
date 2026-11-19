@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>Host de prueba E2E</title>
+<style>body{font-family:system-ui;margin:24px}#bar{margin-bottom:16px}pre{background:#f4f4f4;padding:8px}</style></head>
+<body>
+<div id="bar">
+  <label>Usuario <input id="u" value="edge-tester"></label>
+  <label>Clave <input id="p" type="password" value="EdgeTester#2026"></label>
+  <label>applicationId <input id="a" size="38" placeholder="uuid de la aplicacion"></label>
+  <button id="go">Entrar y montar</button>
+</div>
+<pre id="log">Sin sesion. Solo laboratorio: el password grant NO es para produccion.</pre>
+<div id="security"></div>
+<script type="module">
+// Host de ejemplo: es dueño de la sesion (ADR-031). Obtiene el token con SU cliente OIDC (e2e-host) y se lo entrega al
+// componente por getAccessToken(); el componente nunca lo guarda. Servir con: node e2e/serve.mjs  (http://localhost:5190)
+const KC = "http://localhost:9090/realms/security-baseline/protocol/openid-connect/token"; // Keycloak publicado del host
+const PDP = "http://localhost:8080";                                                       // PDP del stack local (CORS: PDP_CORS_ALLOWED_ORIGINS=http://localhost:5190)
+let token = null, exp = 0;
+const log = (m) => (document.getElementById("log").textContent = m);
+async function login() {
+  const body = new URLSearchParams({ grant_type: "password", client_id: "e2e-host",
+    username: u.value, password: p.value });
+  const r = await fetch(KC, { method: "POST", body });
+  if (!r.ok) throw new Error("login " + r.status);
+  const j = await r.json(); token = j.access_token; exp = Date.now() + (j.expires_in - 30) * 1000;
+}
+go.onclick = async () => {
+  try {
+    await login();
+    const { mount } = await import("/security-administration.js");
+    mount(document.getElementById("security"), {
+      applicationId: a.value, apiBaseUrl: PDP,
+      getAccessToken: async () => { if (Date.now() > exp) await login(); return token; },
+      onError: (e) => log("onError del host: " + JSON.stringify(e)),
+    });
+    log("Montado con Bearer.");
+  } catch (e) { log(String(e)); }
+};
+</script></body></html>

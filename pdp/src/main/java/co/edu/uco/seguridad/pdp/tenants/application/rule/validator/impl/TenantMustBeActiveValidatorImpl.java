@@ -3,10 +3,10 @@ package co.edu.uco.seguridad.pdp.tenants.application.rule.validator.impl;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
 import co.edu.uco.seguridad.pdp.tenants.application.rule.validator.TenantMustBeActiveValidator;
 import co.edu.uco.seguridad.pdp.tenants.application.secondaryport.repository.TenantRepository;
-import co.edu.uco.seguridad.pdp.tenants.domain.rule.model.TenantActivation;
-import co.edu.uco.seguridad.pdp.tenants.domain.rule.model.TenantExistence;
 import co.edu.uco.seguridad.pdp.tenants.domain.rule.TenantMustExistRule;
 import co.edu.uco.seguridad.pdp.tenants.domain.rule.TenantStatusMustBeActiveRule;
+import co.edu.uco.seguridad.pdp.tenants.domain.rule.model.TenantActivation;
+import co.edu.uco.seguridad.pdp.tenants.domain.rule.model.TenantExistence;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import reactor.core.publisher.Mono;
 

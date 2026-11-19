@@ -21,6 +21,6 @@ public final class RegisterIntegrationRulesValidatorImpl implements RegisterInte
     @Override
     public Mono<Void> execute(RegisterIntegrationRequest input) {
         return Mono.fromRunnable(() -> registrationMustBeEnabled.execute(input))
-                .then(Mono.fromRunnable(() -> credentialMustMatch.execute(input)));
+                .then(credentialMustMatch.execute(input));
     }
 }

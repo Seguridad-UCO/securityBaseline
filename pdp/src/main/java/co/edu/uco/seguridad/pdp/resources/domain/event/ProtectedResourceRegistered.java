@@ -3,8 +3,8 @@ package co.edu.uco.seguridad.pdp.resources.domain.event;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.ResourceId;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
-import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.ProtectedResource;
+import co.edu.uco.seguridad.pdp.resources.domain.model.HttpVerb;
 import co.edu.uco.seguridad.pdp.resources.domain.model.ResourcePath;
 import co.edu.uco.seguridad.shared.event.DomainEvent;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
@@ -18,7 +18,8 @@ import java.util.Objects;
  * evento en vez de que el caso de uso conozca a cada interesado (ver ADR-0002).
  */
 public record ProtectedResourceRegistered(ResourceId resourceId, ApplicationId applicationId, TenantId tenantId,
-        ResourcePath path, HttpVerb method, Instant occurredOn) implements DomainEvent {
+                                          ResourcePath path, HttpVerb method,
+                                          Instant occurredOn) implements DomainEvent {
 
     public ProtectedResourceRegistered {
         Objects.requireNonNull(resourceId, RequiredArgumentMessages.RESOURCE_ID);

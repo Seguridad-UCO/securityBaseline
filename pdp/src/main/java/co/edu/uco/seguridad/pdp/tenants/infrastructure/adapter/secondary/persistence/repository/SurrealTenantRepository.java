@@ -50,6 +50,14 @@ public final class SurrealTenantRepository implements TenantRepository {
     }
 
     @Override
+    public Mono<Tenant> findById(TenantId tenantId) {
+        return client.execute("SELECT * FROM type::record('%s', $id);".formatted(TenantSchema.TABLE),
+                        Map.of("id", tenantId.value()))
+                .map(results -> results.get(0))
+                .flatMap(rows -> rows.isEmpty() ? Mono.empty() : Mono.just(toDomain(rows.get(0))));
+    }
+
+    @Override
     public Mono<Tenant> save(Tenant tenant) {
         return client.execute(
                         "CREATE type::record('%s', $id) SET name = $name, status = $status;".formatted(TenantSchema.TABLE),

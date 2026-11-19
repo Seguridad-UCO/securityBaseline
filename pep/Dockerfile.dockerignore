@@ -1,0 +1,10 @@
+# Contexto de build de pep/Dockerfile (BuildKit usa este archivo en lugar de la .dockerignore de la raíz).
+# Lista blanca: solo entra lo que el Dockerfile copia. Se conservan las pruebas de pep/ porque la imagen
+# `fixtures` empaqueta test-classes.
+*
+!mvnw
+!.mvn
+!docker/java-entrypoint.sh
+!pep/pom.xml
+!pep/src
+**/target

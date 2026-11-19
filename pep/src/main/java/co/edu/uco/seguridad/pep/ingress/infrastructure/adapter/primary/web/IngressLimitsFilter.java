@@ -52,7 +52,7 @@ final class IngressLimitsFilter implements WebFilter {
         long start = System.nanoTime();
         return Mono.defer(() -> {
                     if (HttpMethod.GET.equals(exchange.getRequest().getMethod())
-                            && Set.of("/actuator/health", "/actuator/health/liveness", "/actuator/health/readiness")
+                            && Set.of("/actuator/health", "/actuator/health/liveness", "/actuator/health/readiness", "/actuator/prometheus")
                             .contains(exchange.getRequest().getPath().value())) return chain.filter(exchange);
                     validateRequest(exchange);
                     String ip = exchange.getRequest().getRemoteAddress() == null ? "unknown"
@@ -64,16 +64,20 @@ final class IngressLimitsFilter implements WebFilter {
                 .onErrorResume(org.springframework.security.authentication.AuthenticationServiceException.class,
                         error -> problems.write(exchange, new EnforcementFailure(UNAVAILABLE, "IDENTITY_UNAVAILABLE")))
                 .onErrorResume(error -> {
-                    LOG.error("requestId={} failureType={} location={}", requestId, error.getClass().getName(),
-                            error.getStackTrace().length == 0 ? "unknown" : error.getStackTrace()[0]);
+                    LOG.atError().addKeyValue("event.name", "http.request.failed")
+                            .addKeyValue("requestId", requestId)
+                            .addKeyValue("error.type", error.getClass().getSimpleName()).log("Petición fallida");
                     return problems.write(exchange, new EnforcementFailure(UNAVAILABLE, "REQUEST_FAILED"));
                 })
                 .doFinally(signal -> {
                     int status = exchange.getResponse().getStatusCode() == null ? 200 : exchange.getResponse().getStatusCode().value();
                     metrics.timer("pep.http.duration", "status", Integer.toString(status))
                             .record(System.nanoTime() - start, java.util.concurrent.TimeUnit.NANOSECONDS);
-                    LOG.info("requestId={} correlationId={} decisionId={} status={} outcome={}", requestId,
-                            exchange.getAttribute("pep.correlationId"), exchange.getAttribute("pep.decisionId"), status, signal);
+                    LOG.atInfo().addKeyValue("event.name", "pep.enforcement.completed")
+                            .addKeyValue("requestId", requestId)
+                            .addKeyValue("correlationId", exchange.<String>getAttribute("pep.correlationId"))
+                            .addKeyValue("decisionId", exchange.<String>getAttribute("pep.decisionId"))
+                            .addKeyValue("http.response.status_code", status).log("Enforcement finalizado");
                 });
     }
 

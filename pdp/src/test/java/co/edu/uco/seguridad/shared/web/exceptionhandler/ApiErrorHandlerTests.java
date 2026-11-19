@@ -2,9 +2,15 @@ package co.edu.uco.seguridad.shared.web.exceptionhandler;
 
 import co.edu.uco.seguridad.pdp.applications.domain.exception.DuplicateApplicationException;
 import co.edu.uco.seguridad.pdp.applications.domain.exception.ReservedApplicationNameException;
+import co.edu.uco.seguridad.pdp.authorization.domain.exception.DuplicateServiceAccessGrantException;
+import co.edu.uco.seguridad.pdp.authorization.domain.exception.MfaEvidenceRequiredException;
+import co.edu.uco.seguridad.pdp.authorization.domain.exception.NotAuthorizedToAdministerException;
+import co.edu.uco.seguridad.pdp.authorization.domain.exception.NotAuthorizedToAdministerTenantCatalogException;
+import co.edu.uco.seguridad.pdp.authorization.domain.message.AuthorizationMessages;
+import co.edu.uco.seguridad.pdp.commons.exception.InvalidApplicationNameException;
+import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
-import co.edu.uco.seguridad.pdp.commons.exception.InvalidApplicationNameException;
 import co.edu.uco.seguridad.shared.web.exception.MissingRequestFieldException;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -13,6 +19,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.web.server.ServerWebInputException;
+
+import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -23,6 +32,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * punta por {@code ProtectedApplicationHttpTests}; acá se cubre el manejador en sí mismo.
  */
 class ApiErrorHandlerTests {
+
+    private static final UUID APPLICATION_UUID = UUID.fromString("8f0a6d52-3c1e-4b7a-9d2f-5a1c4e7b9f10");
 
     private final ApiErrorHandler handler = new ApiErrorHandler();
 
@@ -59,11 +70,73 @@ class ApiErrorHandlerTests {
     }
 
     @Test
+    void a_duplicate_service_access_grant_becomes_a_409() {
+        ResponseEntity<ProblemDetail> response = handler.businessRule(
+                new DuplicateServiceAccessGrantException("el recurso solicitado"), exchange());
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(response.getBody().getProperties()).containsEntry("code", "SERVICE_ACCESS_GRANT_ALREADY_EXISTS");
+    }
+
+    @Test
     void a_non_conflicting_business_rule_becomes_a_400() {
         ResponseEntity<ProblemDetail> response = handler.businessRule(
                 new ReservedApplicationNameException(new ApplicationName("admin")), exchange());
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void missing_mfa_evidence_becomes_a_403_with_the_mfa_required_code_in_the_problem_detail_envelope() {
+        ResponseEntity<ProblemDetail> response = handler.businessRule(
+                new MfaEvidenceRequiredException(new TenantId("universidad-uco"),
+                        new ApplicationId(APPLICATION_UUID)),
+                exchange());
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        ProblemDetail body = response.getBody();
+        assertThat(body).isNotNull();
+        assertThat(body.getStatus()).isEqualTo(403);
+        assertThat(body.getTitle()).isEqualTo("MFA_REQUIRED");
+        assertThat(body.getType()).hasToString("urn:security-baseline:error:mfa_required");
+        assertThat(body.getProperties()).containsEntry("code", "MFA_REQUIRED");
+    }
+
+    @Test
+    void not_being_authorized_to_administer_stays_a_403() {
+        ResponseEntity<ProblemDetail> response = handler.businessRule(
+                new NotAuthorizedToAdministerException(new TenantId("universidad-uco"),
+                        new ApplicationId(APPLICATION_UUID)),
+                exchange());
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(response.getBody().getProperties()).containsEntry("code", "NOT_AUTHORIZED_TO_ADMINISTER");
+    }
+
+    @Test
+    void not_being_authorized_to_administer_the_tenant_catalog_becomes_a_403_with_its_own_code() {
+        ResponseEntity<ProblemDetail> response = handler.businessRule(
+                new NotAuthorizedToAdministerTenantCatalogException(new TenantId("universidad-uco"),
+                        Optional.of(new ApplicationId(APPLICATION_UUID))),
+                exchange());
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        ProblemDetail body = response.getBody();
+        assertThat(body).isNotNull();
+        assertThat(body.getStatus()).isEqualTo(403);
+        assertThat(body.getTitle()).isEqualTo("NOT_AUTHORIZED_TO_ADMINISTER_TENANT_CATALOG");
+        assertThat(body.getType()).hasToString("urn:security-baseline:error:not_authorized_to_administer_tenant_catalog");
+        assertThat(body.getProperties()).containsEntry("code", "NOT_AUTHORIZED_TO_ADMINISTER_TENANT_CATALOG");
+        assertThat(body.getDetail()).isEqualTo(AuthorizationMessages.notAuthorizedToAdministerTenantCatalog());
+    }
+
+    @Test
+    void the_tenant_catalog_denial_without_an_evaluated_application_is_also_a_403() {
+        ResponseEntity<ProblemDetail> response = handler.businessRule(
+                new NotAuthorizedToAdministerTenantCatalogException(new TenantId("universidad-uco"), Optional.empty()),
+                exchange());
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
 
     @Test

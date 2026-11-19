@@ -23,10 +23,12 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $repo = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-$mvnw = Join-Path $repo 'mvnw.cmd'
+$esWindows = $IsWindows
+$wrapperMaven = if ($esWindows) { 'mvnw.cmd' } else { 'mvnw' }
+$mvnw = Join-Path $repo $wrapperMaven
 
 if (-not (Test-Path $mvnw)) {
-    Write-Output 'ERROR DE ENTORNO: no se encontro mvnw.cmd en la raiz del repositorio.'
+    Write-Output ('ERROR DE ENTORNO: no se encontro {0} en la raiz del repositorio.' -f (Split-Path -Leaf $mvnw))
     exit 2
 }
 
@@ -53,12 +55,22 @@ if ($requerida -ne '') {
     if ($env:JAVA_HOME -and (Get-JdkVersion $env:JAVA_HOME) -eq $requerida) {
         $jdkUsado = $env:JAVA_HOME
     } else {
+        if (-not $esWindows -and (Test-Path '/usr/libexec/java_home')) {
+            $jdkMac = (& /usr/libexec/java_home -v $requerida 2>$null | Select-Object -First 1).Trim()
+            if ($jdkMac -and (Get-JdkVersion $jdkMac) -eq $requerida) {
+                $jdkUsado = $jdkMac
+            }
+        }
+        $perfilUsuario = [Environment]::GetFolderPath([Environment+SpecialFolder]::UserProfile)
         $raices = @(
-            (Join-Path $env:USERPROFILE '.jdks'),
             'C:\Program Files\Eclipse Adoptium',
             'C:\Program Files\Java',
             'C:\Program Files\Microsoft'
         )
+        if ($perfilUsuario) {
+            $raices += Join-Path $perfilUsuario '.jdks'
+            $raices += Join-Path $perfilUsuario 'Library/Java/JavaVirtualMachines'
+        }
         foreach ($raiz in $raices) {
             if ($jdkUsado -ne '') { break }
             if (-not (Test-Path $raiz)) { continue }
@@ -90,8 +102,8 @@ else             { $goal = 'verify' }
 # `-Compilar` no corren jacoco-check, asi que no necesitan pagar el costo de una recompilacion total.
 $mvnGoal = if ($goal -eq 'verify') { 'clean verify' } else { $goal }
 
-$args = "-B -f pdp/pom.xml $mvnGoal"
-if ($Prueba -ne '') { $args = "$args -Dtest=$Prueba -DfailIfNoTests=false" }
+$args = @('-B', '-f', 'pdp/pom.xml') + ($mvnGoal -split ' ')
+if ($Prueba -ne '') { $args += "-Dtest=$Prueba", '-DfailIfNoTests=false' }
 
 $logDir = Join-Path $repo 'pdp/target'
 $logFile = Join-Path $logDir 'verificar-ultimo.log'
@@ -105,7 +117,11 @@ $logTemp = Join-Path ([System.IO.Path]::GetTempPath()) ('verificar-' + [guid]::N
 $started = Get-Date
 Push-Location $repo
 try {
-    & cmd /c "`"$mvnw`" $args > `"$logTemp`" 2>&1"
+    if ($esWindows) {
+        & cmd /c "`"$mvnw`" $($args -join ' ') > `"$logTemp`" 2>&1"
+    } else {
+        & $mvnw @args *> $logTemp
+    }
     $exit = $LASTEXITCODE
 } finally {
     Pop-Location

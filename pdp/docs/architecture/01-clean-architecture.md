@@ -46,9 +46,12 @@ web → interactor → use case → rules validator → rules → domain
 Mensajes de error compartidos viven en el módulo OPEN `co.edu.uco.seguridad.crosscutting`.
 
 Tres decisiones registradas como ADR amplían esta estructura sin romper la regla de dependencias:
-eventos de dominio publicados por los agregados ([ADR-017](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-017-domain-events-application-event-publisher.md)),
-un adaptador primario de seguridad delante del interactor ([ADR-018](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-018-jwt-reactive-security-implementation.md))
-y adaptadores secundarios reales sobre SurrealDB ([ADR-019](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-019-surrealdb-implementation.md)).
+eventos de dominio publicados por los
+agregados ([ADR-017](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-017-domain-events-application-event-publisher.md)),
+un adaptador primario de seguridad delante del
+interactor ([ADR-018](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-018-jwt-reactive-security-implementation.md))
+y adaptadores secundarios reales sobre
+SurrealDB ([ADR-019](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-019-surrealdb-implementation.md)).
 Las tres ya están implementadas; la estructura descrita arriba refleja el estado actual del código,
 no un objetivo pendiente.
 
@@ -56,10 +59,13 @@ no un objetivo pendiente.
 
 - Dominio puro: [`resources/domain`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/domain) y
   [`commons`](../../src/main/java/co/edu/uco/seguridad/pdp/commons).
-- Casos de uso: [`RegisterApplicationUseCase.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/application/usecase/RegisterApplicationUseCase.java).
-- Puertos secundarios: [`resources/application/secondaryport`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/application/secondaryport).
+- Casos de uso: [
+  `RegisterApplicationUseCase.java`](../../src/main/java/co/edu/uco/seguridad/pdp/applications/application/usecase/RegisterApplicationUseCase.java).
+- Puertos secundarios: [
+  `resources/application/secondaryport`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/application/secondaryport).
 - Adaptadores: [`resources/infrastructure`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure).
-- Prueba de estructura: [`ModulithStructureTests.java`](../../src/test/java/co/edu/uco/seguridad/ModulithStructureTests.java).
+- Prueba de estructura: [
+  `ModulithStructureTests.java`](../../src/test/java/co/edu/uco/seguridad/ModulithStructureTests.java).
 
 ## Evidencia y límite
 

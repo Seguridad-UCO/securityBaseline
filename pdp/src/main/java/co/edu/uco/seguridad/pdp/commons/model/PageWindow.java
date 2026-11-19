@@ -21,7 +21,9 @@ public record PageWindow(int offset, int limit) {
         }
     }
 
-    /** Páginas numeradas, basadas en cero, expuestas por {@code ?page=&size=}. */
+    /**
+     * Páginas numeradas, basadas en cero, expuestas por {@code ?page=&size=}.
+     */
     public static PageWindow ofPage(int page, int size) {
         if (page < 0) {
             throw new InvalidPageWindowException(ValueObjectMessages.PageWindow.NEGATIVE_PAGE);
@@ -32,7 +34,9 @@ public record PageWindow(int offset, int limit) {
         return new PageWindow(Math.multiplyExact(page, size), size);
     }
 
-    /** Intervalo explícito, expuesto por {@code ?offset=&limit=}. */
+    /**
+     * Intervalo explícito, expuesto por {@code ?offset=&limit=}.
+     */
     public static PageWindow ofRange(int offset, int limit) {
         return new PageWindow(offset, limit);
     }

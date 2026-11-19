@@ -142,30 +142,30 @@ existe un JWT.
 
 ## Qué se mantiene / incorpora / retira
 
-| Acción | Elemento |
-|---|---|
-| Mantener | Clean+Hexagonal por módulo Modulith; DI manual en `@Configuration` |
-| Mantener | VOs auto-validados; Specification; motor de reglas |
-| Mantener | Entrada String→VO sin `starter-validation`; `ApiErrorHandler` RFC7807 |
-| Mantener | Capa interactor ([ADR-016](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-016-interactor-layer.md)) |
-| Incorporar | `AggregateRoot` + eventos ([ADR-017](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-017-domain-events-application-event-publisher.md)) — hecho |
-| Incorporar | Spring Security reactivo + JWT ([ADR-018](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-018-jwt-reactive-security-implementation.md)) — hecho |
-| Incorporar | Persistencia SurrealDB ([ADR-019](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-019-surrealdb-implementation.md)) — hecho |
-| Retirado | Fachadas multi-método (`*ModuleApi` / `*Service`); DTO de registro duplicado; `tenantId` en el cuerpo/query (ahora viene del token); `ReactiveTransactionPort`/`SnapshotCapable` (ahora saga con compensación explícita, ADR-0004) |
+| Acción     | Elemento                                                                                                                                                                                                                           |
+|------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Mantener   | Clean+Hexagonal por módulo Modulith; DI manual en `@Configuration`                                                                                                                                                                 |
+| Mantener   | VOs auto-validados; Specification; motor de reglas                                                                                                                                                                                 |
+| Mantener   | Entrada String→VO sin `starter-validation`; `ApiErrorHandler` RFC7807                                                                                                                                                              |
+| Mantener   | Capa interactor ([ADR-016](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-016-interactor-layer.md))                                                                          |
+| Incorporar | `AggregateRoot` + eventos ([ADR-017](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-017-domain-events-application-event-publisher.md)) — hecho                               |
+| Incorporar | Spring Security reactivo + JWT ([ADR-018](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-018-jwt-reactive-security-implementation.md)) — hecho                               |
+| Incorporar | Persistencia SurrealDB ([ADR-019](https://github.com/Seguridad-UCO/security-platform-architecture/blob/main/docs/01-governance/adr/ADR-019-surrealdb-implementation.md)) — hecho                                                   |
+| Retirado   | Fachadas multi-método (`*ModuleApi` / `*Service`); DTO de registro duplicado; `tenantId` en el cuerpo/query (ahora viene del token); `ReactiveTransactionPort`/`SnapshotCapable` (ahora saga con compensación explícita, ADR-0004) |
 
 ## Etapas
 
 Cada etapa deja `./mvnw verify` en verde (compilación, fronteras Modulith, tests, cobertura).
 
-| Etapa | Contenido | Estado |
-|---|---|---|
-| 0 | ADRs, C4, convención de idioma | Completada |
-| 1 | Colapso DTO duplicado; puerto `SnapshotCapable` | Completada |
-| 2 | Eventos de dominio + auditoría por listener | Completada |
-| — | Interactores por operación; mapeo en interactor; reglas de tenant separadas | Completada |
-| 3 | Seguridad real (PEP JWT); tenant retirado del cuerpo/query | Completada |
-| 4 | Persistencia SurrealDB (HTTP + WebClient, sin driver Java); saga con compensación explícita; Testcontainers | Completada |
-| 5 | Sincronización final de documentación y evidencia | Completada |
+| Etapa | Contenido                                                                                                   | Estado     |
+|-------|-------------------------------------------------------------------------------------------------------------|------------|
+| 0     | ADRs, C4, convención de idioma                                                                              | Completada |
+| 1     | Colapso DTO duplicado; puerto `SnapshotCapable`                                                             | Completada |
+| 2     | Eventos de dominio + auditoría por listener                                                                 | Completada |
+| —     | Interactores por operación; mapeo en interactor; reglas de tenant separadas                                 | Completada |
+| 3     | Seguridad real (PEP JWT); tenant retirado del cuerpo/query                                                  | Completada |
+| 4     | Persistencia SurrealDB (HTTP + WebClient, sin driver Java); saga con compensación explícita; Testcontainers | Completada |
+| 5     | Sincronización final de documentación y evidencia                                                           | Completada |
 
 ## Verificación
 

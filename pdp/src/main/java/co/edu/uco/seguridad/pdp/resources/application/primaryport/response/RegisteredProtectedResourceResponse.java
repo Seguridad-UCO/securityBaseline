@@ -10,9 +10,11 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import java.time.Instant;
 import java.util.Objects;
 
-/** DTO de salida del puerto primario: proyección de un endpoint protegido registrado. */
+/**
+ * DTO de salida del puerto primario: proyección de un endpoint protegido registrado.
+ */
 public record RegisteredProtectedResourceResponse(ResourceId id, ApplicationId applicationId, TenantId tenantId,
-        ResourcePath path, HttpVerb method, Instant registeredAt) {
+                                                  ResourcePath path, HttpVerb method, Instant registeredAt) {
 
     public RegisteredProtectedResourceResponse {
         Objects.requireNonNull(id, RequiredArgumentMessages.RESOURCE_ID);

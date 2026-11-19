@@ -23,20 +23,21 @@ class ApplicationPersistenceMapperTests {
         assertThat(application.tenantId().value()).isEqualTo("universidad-uco");
         assertThat(application.name().value()).isEqualTo("gestion-academica");
         assertThat(application.baseUrl().value()).isEqualTo("https://example.com");
+        assertThat(application.credentialHash().value()).isEqualTo("hash-de-prueba");
         assertThat(application.registeredAt()).isEqualTo(Instant.parse("2026-01-01T00:00:00Z"));
     }
 
     @Test
     void rejects_a_row_whose_tenant_is_malformed() {
         ApplicationEntity corrupted = new ApplicationEntity(ID, "tenant con espacios", "gestion-academica", "",
-                "https://example.com", "2026-01-01T00:00:00Z");
+                "https://example.com", "hash-de-prueba", "2026-01-01T00:00:00Z");
 
         assertThatThrownBy(() -> ApplicationPersistenceMapper.toDomain(corrupted))
                 .isInstanceOf(InvalidTenantIdException.class);
     }
 
     private static ApplicationEntity entity(String name) {
-        return new ApplicationEntity(ID, "universidad-uco", name, "", "https://example.com",
+        return new ApplicationEntity(ID, "universidad-uco", name, "", "https://example.com", "hash-de-prueba",
                 "2026-01-01T00:00:00Z");
     }
 }

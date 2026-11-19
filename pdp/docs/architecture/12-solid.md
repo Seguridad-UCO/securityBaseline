@@ -2,7 +2,6 @@
 
 [← Interacción](11-layer-interaction.md) · [Siguiente: adaptadores →](20-clean-adapters.md)
 
-
 ## Decisión arquitectónica
 
 SOLID se aplica mediante tipos y dependencias concretas, no como una declaración general.
@@ -31,14 +30,17 @@ infraestructura.
 
 ## Ubicación verificable
 
-- [`shared/rule`](../../src/main/java/co/edu/uco/seguridad/shared/contract) y [`shared/port`](../../src/main/java/co/edu/uco/seguridad/shared/port)
+- [`shared/rule`](../../src/main/java/co/edu/uco/seguridad/shared/contract) y [
+  `shared/port`](../../src/main/java/co/edu/uco/seguridad/shared/port)
 - [`resources/domain/rule`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/domain/rule)
 - `ApplicationCriteria.java`
-- [`ResourcesConfiguration.java`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure/config/ResourcesConfiguration.java)
+- [
+  `ResourcesConfiguration.java`](../../src/main/java/co/edu/uco/seguridad/pdp/resources/infrastructure/config/ResourcesConfiguration.java)
 
 ## Evidencia y límite
 
-[`ProtectedResourceMustBeUniqueRuleTests`](../../src/test/java/co/edu/uco/seguridad/pdp/resources/domain/rule/ProtectedResourceMustBeUniqueRuleTests.java)
+[
+`ProtectedResourceMustBeUniqueRuleTests`](../../src/test/java/co/edu/uco/seguridad/pdp/resources/domain/rule/ProtectedResourceMustBeUniqueRuleTests.java)
 prueba cada regla por separado, con un stub distinto por escenario: eso solo es posible porque cada
 contrato es pequeño. SOLID no se “certifica” con una prueba; se preserva con límites, tests y
 revisión.

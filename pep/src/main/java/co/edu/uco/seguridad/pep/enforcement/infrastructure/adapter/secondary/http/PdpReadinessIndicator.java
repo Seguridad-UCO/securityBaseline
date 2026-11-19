@@ -7,7 +7,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-/** La disponibilidad del PDP afecta readiness, nunca liveness del PEP. */
+/**
+ * La disponibilidad del PDP afecta readiness, nunca liveness del PEP.
+ */
 @Component("pdp")
 final class PdpReadinessIndicator implements ReactiveHealthIndicator {
     private final WebClient client;

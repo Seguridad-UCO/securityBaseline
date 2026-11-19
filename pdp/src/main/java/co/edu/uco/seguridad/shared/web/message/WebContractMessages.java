@@ -49,8 +49,68 @@ public final class WebContractMessages {
         return "Solicitud de acceso evaluada";
     }
 
+    public static String successRoleDefined() {
+        return "Rol definido";
+    }
+
+    public static String successRoleResourceGranted() {
+        return "Recurso concedido al rol";
+    }
+
+    public static String successRolesListed() {
+        return "Catálogo de roles consultado";
+    }
+
+    public static String successAssignmentCreated() {
+        return "Rol asignado";
+    }
+
+    public static String successAssignmentRevoked() {
+        return "Asignación revocada";
+    }
+
+    public static String successAssignmentsListed() {
+        return "Asignaciones del rol consultadas";
+    }
+
+    public static String successProfileDefined() {
+        return "Perfil definido";
+    }
+
+    public static String successProfileRoleAdded() {
+        return "Rol agregado al perfil";
+    }
+
+    public static String successProfilesListed() {
+        return "Catálogo de perfiles consultado";
+    }
+
+    public static String successProfileAssigned() {
+        return "Perfil asignado";
+    }
+
+    public static String successProfileAssignmentRevoked() {
+        return "Asignación de perfil revocada";
+    }
+
+    public static String successProfileAssignmentsListed() {
+        return "Asignaciones del perfil consultadas";
+    }
+
     public static String mustBeInteger() {
         return "debe ser un número entero";
+    }
+
+    public static String mustBeVersion1() {
+        return "debe ser \"1\"";
+    }
+
+    public static String mustBeIso8601() {
+        return "debe ser una fecha en formato ISO 8601";
+    }
+
+    public static String headerBodyMismatch(String field) {
+        return "El valor de '" + field + "' en la cabecera no coincide con el del cuerpo";
     }
 
     public static String requireErrorCode() {
@@ -59,6 +119,34 @@ public final class WebContractMessages {
 
     public static String requireOffendingField() {
         return "se requiere campo ofensor";
+    }
+
+    // HU-014 — rotación de credencial de aplicación.
+    public static String successApplicationCredentialRotated() {
+        return "La credencial de la aplicación se rotó correctamente";
+    }
+
+    // HU-010 — registro de aplicación con recurso inicial, con compensación explícita.
+    public static String successApplicationRegisteredWithInitialResource() {
+        return "Aplicación y recurso inicial registrados correctamente";
+    }
+
+    // HU-015 — administración del catálogo de aplicaciones.
+    public static String successApplicationRemoved() {
+        return "La aplicación se eliminó correctamente";
+    }
+
+    public static String successApplicationAdministratorAssigned() {
+        return "El administrador de la aplicación se asignó correctamente";
+    }
+
+    // HU-020 — autoservicio de administradores.
+    public static String successApplicationAdministratorRemoved() {
+        return "El administrador de la aplicación se quitó correctamente";
+    }
+
+    public static String successApplicationAdministratorsListed() {
+        return "Los administradores de la aplicación se listaron correctamente";
     }
 
     private WebContractMessages() {

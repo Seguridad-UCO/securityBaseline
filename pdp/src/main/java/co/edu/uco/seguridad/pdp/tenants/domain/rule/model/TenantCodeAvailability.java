@@ -5,7 +5,9 @@ import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 
 import java.util.Objects;
 
-/** Entrada ya resuelta de {@code TenantCodeMustBeUniqueRule}: si el id ya estaba tomado. */
+/**
+ * Entrada ya resuelta de {@code TenantCodeMustBeUniqueRule}: si el id ya estaba tomado.
+ */
 public record TenantCodeAvailability(TenantId tenantId, boolean alreadyRegistered) {
 
     public TenantCodeAvailability {

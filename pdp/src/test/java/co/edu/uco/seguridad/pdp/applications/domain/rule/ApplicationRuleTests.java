@@ -1,13 +1,13 @@
 package co.edu.uco.seguridad.pdp.applications.domain.rule;
 
-import co.edu.uco.seguridad.pdp.applications.domain.rule.model.ApplicationExistence;
-import co.edu.uco.seguridad.pdp.applications.domain.rule.model.ApplicationNameAvailability;
 import co.edu.uco.seguridad.pdp.applications.domain.exception.ApplicationNotFoundException;
 import co.edu.uco.seguridad.pdp.applications.domain.exception.DuplicateApplicationException;
 import co.edu.uco.seguridad.pdp.applications.domain.exception.ReservedApplicationNameException;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationMustExistForTenantRuleImpl;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationNameMustBeUniqueForTenantRuleImpl;
 import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationNameMustNotBeReservedRuleImpl;
+import co.edu.uco.seguridad.pdp.applications.domain.rule.model.ApplicationExistence;
+import co.edu.uco.seguridad.pdp.applications.domain.rule.model.ApplicationNameAvailability;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
 import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
@@ -19,7 +19,9 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/** Las tres reglas del módulo, puras: reciben el dato ya resuelto y solo deciden. */
+/**
+ * Las tres reglas del módulo, puras: reciben el dato ya resuelto y solo deciden.
+ */
 class ApplicationRuleTests {
 
     private static final TenantId TENANT = new TenantId("universidad-uco");

@@ -8,7 +8,9 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import tools.jackson.databind.ObjectMapper;
 
+import java.net.URI;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -67,5 +69,29 @@ class SurrealDbClientTests {
                         .extracting(node -> node.asInt())
                         .containsExactly(1, 2))
                 .verifyComplete();
+    }
+
+    @Test
+    void encodes_template_braces_in_query_parameters_without_treating_them_as_uri_variables() {
+        AtomicReference<URI> requestedUri = new AtomicReference<>();
+        WebClient webClient = WebClient.builder()
+                .baseUrl("http://surreal.test")
+                .exchangeFunction(request -> {
+                    requestedUri.set(request.url());
+                    return Mono.just(ClientResponse.create(HttpStatus.OK)
+                            .header("Content-Type", "application/json")
+                            .body("[{\"status\":\"OK\",\"result\":[]}]")
+                            .build());
+                })
+                .build();
+        SurrealDbClient client = new SurrealDbClient(webClient, new ObjectMapper(),
+                new SurrealDbProperties("http://surreal.test", "pdp", "pdp", "root", "root"));
+
+        StepVerifier.create(client.execute("SELECT id FROM protected_resource WHERE path = $path;",
+                        Map.of("path", "/api/v1/empleado/{id}")))
+                .expectNextCount(1)
+                .verifyComplete();
+
+        assertThat(requestedUri.get().getRawQuery()).contains("%7Bid%7D");
     }
 }

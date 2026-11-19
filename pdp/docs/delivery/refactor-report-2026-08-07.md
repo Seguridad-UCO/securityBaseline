@@ -174,13 +174,13 @@ co.edu.uco.seguridad
 
 ### Rules creadas (5) y sus validators (3)
 
-| Rule | Repositorio | Validator que la compone |
-|---|---|---|
-| `ApplicationNameMustNotBeReservedRule` | no | `RegisterApplicationRulesValidator` |
-| `TenantMustBeActiveRule` | sí | `RegisterApplicationRulesValidator`, `SearchProtectedApplicationsRulesValidator` |
-| `ApplicationNameMustBeUniqueForTenantRule` | sí | `RegisterApplicationRulesValidator` |
-| `ProtectedResourceMustBelongToApplicationTenantRule` | no | `RegisterProtectedApplicationRulesValidator` |
-| `ProtectedResourceMustBeUniqueRule` | sí | `RegisterProtectedApplicationRulesValidator` |
+| Rule                                                 | Repositorio | Validator que la compone                                                         |
+|------------------------------------------------------|-------------|----------------------------------------------------------------------------------|
+| `ApplicationNameMustNotBeReservedRule`               | no          | `RegisterApplicationRulesValidator`                                              |
+| `TenantMustBeActiveRule`                             | sí          | `RegisterApplicationRulesValidator`, `SearchProtectedApplicationsRulesValidator` |
+| `ApplicationNameMustBeUniqueForTenantRule`           | sí          | `RegisterApplicationRulesValidator`                                              |
+| `ProtectedResourceMustBelongToApplicationTenantRule` | no          | `RegisterProtectedApplicationRulesValidator`                                     |
+| `ProtectedResourceMustBeUniqueRule`                  | sí          | `RegisterProtectedApplicationRulesValidator`                                     |
 
 Cada una con interfaz e implementación `Default…`, registrada como bean para poder sustituirse.
 
@@ -219,12 +219,12 @@ valida todo de una vez y no deja un lugar con nombre por campo.
 
 ### DTOs y mappers
 
-| Antes | Después |
-|---|---|
-| `RegisterProtectedApplicationRequest` con Jakarta | `RegisterProtectedApplicationRawRequest` (record, `String`) + `RegisterProtectedApplicationRequest` (setters validadores) |
-| — | `SearchProtectedApplicationsRawQuery` + `SearchProtectedApplicationsRequest` |
-| Se devolvía `ProtectedApplicationCatalogEntry` | `ProtectedApplicationResponse` + `PageResponse<T>` |
-| — | `RegisterProtectedApplicationRequestMapper`, `SearchProtectedApplicationsRequestMapper`, `ProtectedApplicationResponseMapper`, `ProtectedResourceCatalogMapper`, 3 mappers de persistencia |
+| Antes                                             | Después                                                                                                                                                                                    |
+|---------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `RegisterProtectedApplicationRequest` con Jakarta | `RegisterProtectedApplicationRawRequest` (record, `String`) + `RegisterProtectedApplicationRequest` (setters validadores)                                                                  |
+| —                                                 | `SearchProtectedApplicationsRawQuery` + `SearchProtectedApplicationsRequest`                                                                                                               |
+| Se devolvía `ProtectedApplicationCatalogEntry`    | `ProtectedApplicationResponse` + `PageResponse<T>`                                                                                                                                         |
+| —                                                 | `RegisterProtectedApplicationRequestMapper`, `SearchProtectedApplicationsRequestMapper`, `ProtectedApplicationResponseMapper`, `ProtectedResourceCatalogMapper`, 3 mappers de persistencia |
 
 ### Clases eliminadas
 
@@ -244,13 +244,13 @@ valida todo de una vez y no deja un lugar con nombre por campo.
 
 ## E. Pipelines
 
-| Rama | Build · Test · Sonar | Despliegue |
-|---|---|---|
-| `feature/*` | sí | ninguno |
-| `develop` | sí | **DEV** |
-| `qa` | sí | **QA** |
-| `main` | sí | **PRODUCCIÓN** |
-| PR a `develop`/`qa`/`main` | sí | ninguno |
+| Rama                       | Build · Test · Sonar | Despliegue     |
+|----------------------------|----------------------|----------------|
+| `feature/*`                | sí                   | ninguno        |
+| `develop`                  | sí                   | **DEV**        |
+| `qa`                       | sí                   | **QA**         |
+| `main`                     | sí                   | **PRODUCCIÓN** |
+| PR a `develop`/`qa`/`main` | sí                   | ninguno        |
 
 Antes: trigger únicamente en `main`, dos stages, sin análisis, sin empaquetado, sin despliegue.
 
@@ -373,12 +373,12 @@ Use Case → Rules Validator → Rules → Domain
 
 **Dónde se ejecuta cada validación y por qué ahí:**
 
-| Validación | Dónde | Motivo |
-|---|---|---|
-| Presencia del campo | setter del DTO validado | Es lo único que sabe qué nombre de campo reportar |
-| Formato y longitud | constructor del value object | Debe aplicar también cuando el caso de uso no viene de HTTP |
-| Combinación de parámetros | `setResultWindow` | La validez es de la combinación, no de un valor suelto |
-| Política de negocio | rules, vía rules validator | Puede requerir repositorio y puede cambiar sin tocar el tipo |
+| Validación                | Dónde                        | Motivo                                                       |
+|---------------------------|------------------------------|--------------------------------------------------------------|
+| Presencia del campo       | setter del DTO validado      | Es lo único que sabe qué nombre de campo reportar            |
+| Formato y longitud        | constructor del value object | Debe aplicar también cuando el caso de uso no viene de HTTP  |
+| Combinación de parámetros | `setResultWindow`            | La validez es de la combinación, no de un valor suelto       |
+| Política de negocio       | rules, vía rules validator   | Puede requerir repositorio y puede cambiar sin tocar el tipo |
 
 El punto clave del diseño: `RequestFieldParser.parse` **delega el formato al value object** y solo
 añade qué campo lo traía. Si repitiera aquí la expresión regular, la frontera tendría una segunda
@@ -426,22 +426,22 @@ cada excepción la lanza exactamente una regla.
 
 ## K. Validación final
 
-| Comprobación | Resultado |
-|---|---|
-| Compilación | **BUILD SUCCESS** (`clean verify`) |
-| Pruebas | **109 ejecutadas, 0 fallos, 0 errores, 0 omitidas** |
-| Cobertura de instrucciones | **92,7 %** (3051 / 3291) |
-| Cobertura de líneas | **91,5 %** (635 / 694) |
-| Cobertura de ramas | **89,5 %** (111 / 124) |
-| Clases con cobertura | 90 de 90 |
-| Verificación Modulith | Pasa |
-| Imports sin usar | 0 |
-| Imports con comodín | 0 |
-| Lombok | 0 usos |
-| Jakarta Validation | 0 usos, dependencia retirada |
-| Secretos hardcodeados | 0 |
-| Enlaces rotos en `docs/` | 0 |
-| YAML de pipeline | 8 archivos, sin tabulaciones, estructura válida |
+| Comprobación               | Resultado                                           |
+|----------------------------|-----------------------------------------------------|
+| Compilación                | **BUILD SUCCESS** (`clean verify`)                  |
+| Pruebas                    | **109 ejecutadas, 0 fallos, 0 errores, 0 omitidas** |
+| Cobertura de instrucciones | **92,7 %** (3051 / 3291)                            |
+| Cobertura de líneas        | **91,5 %** (635 / 694)                              |
+| Cobertura de ramas         | **89,5 %** (111 / 124)                              |
+| Clases con cobertura       | 90 de 90                                            |
+| Verificación Modulith      | Pasa                                                |
+| Imports sin usar           | 0                                                   |
+| Imports con comodín        | 0                                                   |
+| Lombok                     | 0 usos                                              |
+| Jakarta Validation         | 0 usos, dependencia retirada                        |
+| Secretos hardcodeados      | 0                                                   |
+| Enlaces rotos en `docs/`   | 0                                                   |
+| YAML de pipeline           | 8 archivos, sin tabulaciones, estructura válida     |
 
 Comando de verificación (el POM y CI usan Java 25):
 

@@ -10,9 +10,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-/** Decision estructurada (corresponde a {@code DecisionAcceso} del dominio aceptado). */
+/**
+ * Decision estructurada (corresponde a {@code DecisionAcceso} del dominio aceptado).
+ */
 public record AccessDecision(UUID decisionId, DecisionState state, ReasonCode reasonCode,
-        List<PolicyReference> policyReferences, String requestId, String correlationId, Instant decidedAt) {
+                             List<PolicyReference> policyReferences, String requestId, String correlationId,
+                             Instant decidedAt) {
 
     public AccessDecision {
         Objects.requireNonNull(decisionId, RequiredArgumentMessages.DECISION_ID);

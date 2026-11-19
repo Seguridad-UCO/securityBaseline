@@ -1,12 +1,12 @@
 package co.edu.uco.seguridad.pep.enforcement.infrastructure.config;
 
 import co.edu.uco.seguridad.pep.enforcement.application.port.secondary.DecisionPort;
-import co.edu.uco.seguridad.pep.enforcement.application.usecase.EnforceAccessUseCase;
-import co.edu.uco.seguridad.pep.enforcement.application.usecase.impl.EnforceAccessUseCaseImpl;
 import co.edu.uco.seguridad.pep.enforcement.application.rule.EnforceAccessRequestMustBeCompleteRule;
 import co.edu.uco.seguridad.pep.enforcement.application.rule.impl.EnforceAccessRequestMustBeCompleteRuleImpl;
 import co.edu.uco.seguridad.pep.enforcement.application.rulesvalidator.EnforceAccessRulesValidator;
 import co.edu.uco.seguridad.pep.enforcement.application.rulesvalidator.impl.EnforceAccessRulesValidatorImpl;
+import co.edu.uco.seguridad.pep.enforcement.application.usecase.EnforceAccessUseCase;
+import co.edu.uco.seguridad.pep.enforcement.application.usecase.impl.EnforceAccessUseCaseImpl;
 import co.edu.uco.seguridad.pep.enforcement.infrastructure.adapter.secondary.http.WebClientDecisionAdapter;
 import co.edu.uco.seguridad.pep.enforcement.infrastructure.properties.PdpClientProperties;
 import co.edu.uco.seguridad.pep.enforcement.infrastructure.properties.ProxyProperties;
@@ -24,7 +24,7 @@ import reactor.netty.http.client.HttpClient;
 class EnforcementConfiguration {
 
     @Bean
-    WebClient pdpWebClient(PdpClientProperties properties) throws javax.net.ssl.SSLException {
+    WebClient pdpWebClient(PdpClientProperties properties, WebClient.Builder builder) throws javax.net.ssl.SSLException {
         HttpClient transport = HttpClient.create().followRedirect(false)
                 .option(io.netty.channel.ChannelOption.CONNECT_TIMEOUT_MILLIS, Math.toIntExact(properties.connectTimeout().toMillis()))
                 .responseTimeout(properties.timeout());
@@ -36,7 +36,7 @@ class EnforcementConfiguration {
             var context = tls.build();
             transport = transport.secure(spec -> spec.sslContext(context));
         }
-        return WebClient.builder().baseUrl(properties.baseUrl().toString())
+        return builder.clone().baseUrl(properties.baseUrl().toString())
                 .clientConnector(new ReactorClientHttpConnector(transport))
                 .codecs(codecs -> {
                     codecs.defaultCodecs().maxInMemorySize(properties.maxResponseBytes());

@@ -1,32 +1,24 @@
 package co.edu.uco.seguridad.pdp.applications.infrastructure.config;
 
+import co.edu.uco.seguridad.pdp.applications.application.rule.validator.*;
+import co.edu.uco.seguridad.pdp.applications.application.rule.validator.impl.*;
 import co.edu.uco.seguridad.pdp.applications.application.secondaryport.repository.ApplicationRepository;
-import co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationMustExistForTenantRule;
-import co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationNameMustBeUniqueForTenantRule;
-import co.edu.uco.seguridad.pdp.applications.domain.rule.ApplicationNameMustNotBeReservedRule;
-import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationMustExistForTenantRuleImpl;
-import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationNameMustBeUniqueForTenantRuleImpl;
-import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.ApplicationNameMustNotBeReservedRuleImpl;
-import co.edu.uco.seguridad.pdp.applications.application.rule.validator.ApplicationMustExistForTenantValidator;
-import co.edu.uco.seguridad.pdp.applications.application.rule.validator.impl.ApplicationMustExistForTenantValidatorImpl;
-import co.edu.uco.seguridad.pdp.applications.application.rule.validator.RegisterApplicationRulesValidator;
-import co.edu.uco.seguridad.pdp.applications.application.rule.validator.impl.RegisterApplicationRulesValidatorImpl;
-import co.edu.uco.seguridad.pdp.applications.application.usecase.ListApplicationsUseCase;
-import co.edu.uco.seguridad.pdp.applications.application.usecase.RegisterApplicationUseCase;
-import co.edu.uco.seguridad.pdp.applications.application.usecase.RemoveApplicationUseCase;
-import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.ListApplicationsUseCaseImpl;
-import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.RegisterApplicationUseCaseImpl;
-import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.RemoveApplicationUseCaseImpl;
+import co.edu.uco.seguridad.pdp.applications.application.usecase.*;
+import co.edu.uco.seguridad.pdp.applications.application.usecase.impl.*;
+import co.edu.uco.seguridad.pdp.applications.domain.rule.*;
+import co.edu.uco.seguridad.pdp.applications.domain.rule.impl.*;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.ListApplicationsInteractor;
-import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.RegisterApplicationInteractor;
+import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.ValidateApplicationCredentialInteractor;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.impl.ListApplicationsInteractorImpl;
-import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.impl.RegisterApplicationInteractorImpl;
+import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.primary.web.interactor.impl.ValidateApplicationCredentialInteractorImpl;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.repository.SurrealApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.adapter.secondary.persistence.schema.SurrealApplicationSchemaInitializer;
 import co.edu.uco.seguridad.pdp.applications.infrastructure.properties.ApplicationCatalogProperties;
 import co.edu.uco.seguridad.pdp.tenants.application.rule.validator.TenantMustBeActiveValidator;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
+import co.edu.uco.seguridad.shared.port.CredentialHasher;
 import co.edu.uco.seguridad.shared.port.IdentifierGenerator;
+import co.edu.uco.seguridad.shared.port.SecretGenerator;
 import co.edu.uco.seguridad.shared.port.TimeProvider;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -62,12 +54,18 @@ public class ApplicationsConfiguration {
     }
 
     @Bean
+    ApplicationMustHaveAtLeastOneEnabledEnvironmentRule applicationMustHaveAtLeastOneEnabledEnvironmentRule() {
+        return new ApplicationMustHaveAtLeastOneEnabledEnvironmentRuleImpl();
+    }
+
+    @Bean
     RegisterApplicationRulesValidator registerApplicationRulesValidator(
             ApplicationNameMustNotBeReservedRule nameMustNotBeReserved,
+            ApplicationMustHaveAtLeastOneEnabledEnvironmentRule mustHaveEnabledEnvironment,
             TenantMustBeActiveValidator tenantMustBeActive,
             ApplicationNameMustBeUniqueForTenantRule nameMustBeUnique,
             ApplicationRepository repository) {
-        return new RegisterApplicationRulesValidatorImpl(nameMustNotBeReserved, tenantMustBeActive, nameMustBeUnique,
+        return new RegisterApplicationRulesValidatorImpl(nameMustNotBeReserved, mustHaveEnabledEnvironment, tenantMustBeActive, nameMustBeUnique,
                 repository);
     }
 
@@ -75,8 +73,10 @@ public class ApplicationsConfiguration {
     RegisterApplicationUseCase registerApplicationUseCase(RegisterApplicationRulesValidator rules,
                                                           ApplicationRepository repository,
                                                           IdentifierGenerator identifiers,
-                                                          TimeProvider time) {
-        return new RegisterApplicationUseCaseImpl(rules, repository, identifiers, time);
+                                                          TimeProvider time,
+                                                          SecretGenerator secretGenerator,
+                                                          CredentialHasher hasher) {
+        return new RegisterApplicationUseCaseImpl(rules, repository, identifiers, time, secretGenerator, hasher);
     }
 
     @Bean
@@ -90,8 +90,9 @@ public class ApplicationsConfiguration {
     }
 
     @Bean
-    RegisterApplicationInteractor registerApplicationInteractor(RegisterApplicationUseCase useCase) {
-        return new RegisterApplicationInteractorImpl(useCase);
+    UpdateApplicationUseCase updateApplicationUseCase(ApplicationRepository repository,
+                                                      ApplicationMustHaveAtLeastOneEnabledEnvironmentRule mustHaveEnabledEnvironment) {
+        return new UpdateApplicationUseCaseImpl(repository, mustHaveEnabledEnvironment);
     }
 
     @Bean
@@ -106,7 +107,55 @@ public class ApplicationsConfiguration {
 
     @Bean
     ApplicationMustExistForTenantValidator applicationMustExistForTenantValidator(ApplicationRepository repository,
-                                                                                 ApplicationMustExistForTenantRule mustExist) {
+                                                                                  ApplicationMustExistForTenantRule mustExist) {
         return new ApplicationMustExistForTenantValidatorImpl(repository, mustExist);
     }
+
+    // Flujos de administración: resuelven el tenant dueño desde el UUID de la aplicación.
+    @Bean
+    ApplicationOwnerLookupValidator applicationOwnerLookupValidator(ApplicationRepository repository) {
+        return new ApplicationOwnerLookupValidatorImpl(repository);
+    }
+
+    @Bean
+    ApplicationDetailsLookupValidator applicationDetailsLookupValidator(ApplicationRepository repository) {
+        return new ApplicationDetailsLookupValidatorImpl(repository);
+    }
+
+    // Canal interno del PEP: resuelve el UUID interno desde el nombre configurable de la aplicación.
+    @Bean
+    ApplicationNameLookupValidator applicationNameLookupValidator(ApplicationRepository repository) {
+        return new ApplicationNameLookupValidatorImpl(repository);
+    }
+
+    @Bean
+    ApplicationNameForTenantLookupValidator applicationNameForTenantLookupValidator(ApplicationRepository repository) {
+        return new ApplicationNameForTenantLookupValidatorImpl(repository);
+    }
+
+    // HU-013 — canal interno de validación de credenciales.
+    @Bean
+    ApplicationCredentialMustBeValidRule applicationCredentialMustBeValidRule() {
+        return new ApplicationCredentialMustBeValidRuleImpl();
+    }
+
+    @Bean
+    ValidateApplicationCredentialUseCase validateApplicationCredentialUseCase(
+            ApplicationCredentialMustBeValidRule rule, ApplicationRepository repository, CredentialHasher hasher) {
+        return new ValidateApplicationCredentialUseCaseImpl(rule, repository, hasher);
+    }
+
+    @Bean
+    ValidateApplicationCredentialInteractor validateApplicationCredentialInteractor(
+            ValidateApplicationCredentialUseCase useCase) {
+        return new ValidateApplicationCredentialInteractorImpl(useCase);
+    }
+
+    // HU-014 — rotación de credencial de aplicación.
+    @Bean
+    RotateApplicationCredentialUseCase rotateApplicationCredentialUseCase(ApplicationRepository repository,
+                                                                          ApplicationMustExistForTenantRule mustExist, SecretGenerator secretGenerator, CredentialHasher hasher) {
+        return new RotateApplicationCredentialUseCaseImpl(repository, mustExist, secretGenerator, hasher);
+    }
+
 }

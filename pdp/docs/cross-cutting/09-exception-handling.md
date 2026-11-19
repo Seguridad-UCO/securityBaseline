@@ -67,11 +67,16 @@ casos que antes compartían tipo y ahora no:
 ## Ubicación verificable
 
 - Bases: [`DomainException.java`](../../src/main/java/co/edu/uco/seguridad/pdp/commons/exception/DomainException.java),
-  [`InvalidValueException.java`](../../src/main/java/co/edu/uco/seguridad/pdp/commons/exception/InvalidValueException.java),
-  [`BusinessRuleViolationException.java`](../../src/main/java/co/edu/uco/seguridad/pdp/commons/exception/BusinessRuleViolationException.java),
-  [`ConflictBusinessRuleException.java`](../../src/main/java/co/edu/uco/seguridad/pdp/commons/exception/ConflictBusinessRuleException.java)
-- Frontera: [`RequestContractException.java`](../../src/main/java/co/edu/uco/seguridad/shared/web/exception/RequestContractException.java)
-- Traducción: [`ApiErrorHandler.java`](../../src/main/java/co/edu/uco/seguridad/shared/web/exceptionhandler/ApiErrorHandler.java)
+  [
+  `InvalidValueException.java`](../../src/main/java/co/edu/uco/seguridad/pdp/commons/exception/InvalidValueException.java),
+  [
+  `BusinessRuleViolationException.java`](../../src/main/java/co/edu/uco/seguridad/pdp/commons/exception/BusinessRuleViolationException.java),
+  [
+  `ConflictBusinessRuleException.java`](../../src/main/java/co/edu/uco/seguridad/pdp/commons/exception/ConflictBusinessRuleException.java)
+- Frontera: [
+  `RequestContractException.java`](../../src/main/java/co/edu/uco/seguridad/shared/web/exception/RequestContractException.java)
+- Traducción: [
+  `ApiErrorHandler.java`](../../src/main/java/co/edu/uco/seguridad/shared/web/exceptionhandler/ApiErrorHandler.java)
 - Mensajes: [`crosscutting/messages`](../../src/main/java/co/edu/uco/seguridad/pdp/commons/message)
 
 ## Evidencia y límite

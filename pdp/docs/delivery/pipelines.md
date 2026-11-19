@@ -22,13 +22,13 @@ ambiente es el archivo de variables y el `environment` de Azure DevOps.
 
 ## Triggers
 
-| Rama | Build + pruebas + Sonar | Despliegue |
-|---|---|---|
-| `feature/*` | sí | ninguno |
-| `develop` | sí | DEV |
-| `qa` | sí | QA |
-| `main` | sí | PRODUCCIÓN |
-| Pull request a `develop`/`qa`/`main` | sí | ninguno |
+| Rama                                 | Build + pruebas + Sonar | Despliegue |
+|--------------------------------------|-------------------------|------------|
+| `feature/*`                          | sí                      | ninguno    |
+| `develop`                            | sí                      | DEV        |
+| `qa`                                 | sí                      | QA         |
+| `main`                               | sí                      | PRODUCCIÓN |
+| Pull request a `develop`/`qa`/`main` | sí                      | ninguno    |
 
 Los stages de despliegue verifican dos condiciones: la rama exacta y que la ejecución no sea de un
 pull request. La segunda no es redundante — sin ella, un PR hacia `main` desplegaría producción con
@@ -113,12 +113,12 @@ Comprobación local (sin publicar a Sonar):
 
 Nada de esto vive en el repositorio, y esa es la razón por la que hay que crearlo a mano una vez:
 
-| Elemento | Nombre esperado | Contiene |
-|---|---|---|
-| Service connection **SonarCloud** | `SonarCloud-seguridad` (ver `ci/variables/common.yml`) | Token de análisis de sonarcloud.io |
-| Service connection Azure | `Azure-PDP-Dev` / `-Qa` / `-Prod` | Credenciales de la suscripción, con rol Contributor a nivel de suscripción (necesario para `az acr build` sobre un registro que vive en el resource group de DEV, y para desplegar en resource groups distintos del propio ambiente) |
-| Environment | `pdp-dev`, `pdp-qa`, `pdp-prod` | Aprobaciones y checks |
-| Extensión | **SonarQube Cloud** (`SonarSource.sonarcloud`) | Tareas `SonarCloudPrepare@4` / `SonarCloudPublish@4` |
+| Elemento                          | Nombre esperado                                        | Contiene                                                                                                                                                                                                                             |
+|-----------------------------------|--------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Service connection **SonarCloud** | `SonarCloud-seguridad` (ver `ci/variables/common.yml`) | Token de análisis de sonarcloud.io                                                                                                                                                                                                   |
+| Service connection Azure          | `Azure-PDP-Dev` / `-Qa` / `-Prod`                      | Credenciales de la suscripción, con rol Contributor a nivel de suscripción (necesario para `az acr build` sobre un registro que vive en el resource group de DEV, y para desplegar en resource groups distintos del propio ambiente) |
+| Environment                       | `pdp-dev`, `pdp-qa`, `pdp-prod`                        | Aprobaciones y checks                                                                                                                                                                                                                |
+| Extensión                         | **SonarQube Cloud** (`SonarSource.sonarcloud`)         | Tareas `SonarCloudPrepare@4` / `SonarCloudPublish@4`                                                                                                                                                                                 |
 
 Importante: la extensión *SonarQube Server* (`SonarQubePrepare@7`) y la de *SonarQube Cloud*
 (`SonarCloudPrepare@4`) son distintas. Contra `sonarcloud.io` hay que usar la de Cloud; si no,

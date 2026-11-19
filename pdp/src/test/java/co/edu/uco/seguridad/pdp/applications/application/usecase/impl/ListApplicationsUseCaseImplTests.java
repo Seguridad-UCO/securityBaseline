@@ -3,13 +3,10 @@ package co.edu.uco.seguridad.pdp.applications.application.usecase.impl;
 import co.edu.uco.seguridad.pdp.applications.application.primaryport.request.ListApplicationsRequest;
 import co.edu.uco.seguridad.pdp.applications.application.secondaryport.repository.ApplicationRepository;
 import co.edu.uco.seguridad.pdp.applications.domain.Application;
-import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
 import co.edu.uco.seguridad.pdp.applications.domain.ApplicationCriteria;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationId;
-import co.edu.uco.seguridad.pdp.commons.model.ApplicationName;
-import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
-import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
-import co.edu.uco.seguridad.pdp.commons.model.TenantId;
+import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationBaseUrl;
+import co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash;
+import co.edu.uco.seguridad.pdp.commons.model.*;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -94,7 +91,7 @@ class ListApplicationsUseCaseImplTests {
 
     private static Application application(String name) {
         return new Application(new ApplicationId(UUID.randomUUID()), UCO, new ApplicationName(name), "",
-                new ApplicationBaseUrl("https://example.com"), REGISTERED_AT);
+                new ApplicationBaseUrl("https://example.com"), new ApplicationCredentialHash("hash"), REGISTERED_AT);
     }
 
     private static ApplicationRepository repositoryReturning(ResultPage<Application> page, List<Object[]> received) {
@@ -110,8 +107,30 @@ class ListApplicationsUseCaseImplTests {
             }
 
             @Override
+            public Mono<TenantId> findTenantIdById(ApplicationId applicationId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash> findCredentialHashById(
+                    ApplicationId applicationId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Application> findByIdForTenant(TenantId tenantId, ApplicationId applicationId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Mono<Void> updateCredentialHash(ApplicationId applicationId,
+                                                   co.edu.uco.seguridad.pdp.applications.domain.model.ApplicationCredentialHash credentialHash) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public Mono<ResultPage<Application>> findBy(ApplicationCriteria criteria, PageWindow window) {
-                received.add(new Object[] {criteria, window});
+                received.add(new Object[]{criteria, window});
                 return Mono.just(page);
             }
 

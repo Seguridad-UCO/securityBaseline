@@ -1,8 +1,8 @@
 package co.edu.uco.seguridad.pdp.resources.domain.rule.impl;
 
-import co.edu.uco.seguridad.pdp.resources.domain.rule.model.ProtectedResourceAvailability;
 import co.edu.uco.seguridad.pdp.resources.domain.exception.DuplicateProtectedResourceException;
 import co.edu.uco.seguridad.pdp.resources.domain.rule.ProtectedResourceMustBeUniqueRule;
+import co.edu.uco.seguridad.pdp.resources.domain.rule.model.ProtectedResourceAvailability;
 
 public final class ProtectedResourceMustBeUniqueRuleImpl implements ProtectedResourceMustBeUniqueRule {
 

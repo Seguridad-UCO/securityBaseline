@@ -33,7 +33,9 @@ public record ApplicationCriteria(TenantId tenantId, Optional<String> nameContai
         return new ApplicationCriteria(tenantId, nameContains);
     }
 
-    /** Todas las aplicaciones del inquilino, sin filtrar por nombre. */
+    /**
+     * Todas las aplicaciones del inquilino, sin filtrar por nombre.
+     */
     public static ApplicationCriteria ofTenant(TenantId tenantId) {
         return new ApplicationCriteria(tenantId, Optional.empty());
     }

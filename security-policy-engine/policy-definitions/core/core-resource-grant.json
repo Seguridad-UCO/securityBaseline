@@ -1,0 +1,8 @@
+{
+  "id": "core.resource-grant", "version": "1.0.0", "effect": "ALLOW",
+  "scope": { "level": "GLOBAL" },
+  "target": { "tenantIds": [], "applicationIds": [], "resourceTypes": ["http"], "resourceIds": [], "actions": [], "environments": [] },
+  "tenantScope": "SAME_TENANT",
+  "condition": { "predicate": { "left": { "ref": ["resource", "attributes", "entitlementKey"] }, "operator": "IN", "right": { "ref": ["subject", "entitlements"] } } },
+  "obligations": []
+}

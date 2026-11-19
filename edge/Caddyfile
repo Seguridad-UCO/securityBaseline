@@ -1,0 +1,165 @@
+# edge — Caddyfile. Contrato: PLAN-HU-027 §7.2 (orden y comportamiento). ADR-032.
+# Las variables {$EDGE_*} las valida edge-entrypoint.sh antes de arrancar; aquí no hay defaults.
+{
+	# La API administrativa nunca sale de loopback; las métricas se sirven aparte, sin admin API.
+	admin localhost:2020
+	metrics
+	# El WAF corre justo después de request_header: así un bloqueo ya lleva X-Correlation-Id.
+	order coraza_waf after request_header
+	order rate_limit before reverse_proxy
+	log default {
+		output stderr
+		format json {
+			time_format rfc3339_nano
+			time_key "@timestamp"
+			level_key "level"
+		}
+	}
+}
+
+# Endpoint de solo métricas para el Collector; no expone la API administrativa de Caddy.
+:2019 {
+	metrics /metrics
+}
+
+# Cabeceras que lleva TODA respuesta del edge, también los errores (headers.hurl lo comprueba).
+(cabeceras_plataforma) {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+		Cache-Control "no-store"
+		X-Correlation-Id {http.request.header.X-Correlation-Id}
+		X-Request-Id {http.request.header.X-Request-Id}
+		-Server
+		defer
+	}
+}
+
+{$EDGE_LISTEN} {
+	# ── Log de acceso: JSON Lines al archivo que lee el collector (TELEMETRY-CONVENTION) ──
+	log {
+		output file {$EDGE_LOG_DIR}/security-edge.json {
+			roll_size 10MiB
+			roll_keep 7
+		}
+		format filter {
+			wrap json {
+				time_format rfc3339_nano
+				time_key "@timestamp"
+				level_key "level"
+			}
+			fields {
+				request>uri regexp `\?.*` ""
+				request>remote_ip delete
+				request>client_ip delete
+				request>headers delete
+				resp_headers>Set-Cookie delete
+			}
+		}
+	}
+
+	# ── Correlación (E7): mismos nombres que lee CorrelationWebFilter; se generan solo si faltan ──
+	@sinCorrelation not header X-Correlation-Id *
+	request_header @sinCorrelation X-Correlation-Id {http.request.uuid}
+	@sinRequestId not header X-Request-Id *
+	request_header @sinRequestId X-Request-Id {http.request.uuid}
+
+	# ── Cabeceras de seguridad (criterio 7) y sin identificarse (E6). `defer`: tras el upstream ──
+	import cabeceras_plataforma
+
+	# ── Vivo: liveness del proxy. Pasa por el WAF (sin parámetros nunca puntúa); el motor lo
+	#    verifica el canario, no esta ruta ──
+	handle /_edge/health {
+		respond "ok" 200
+	}
+
+	# ── /internal/*: DENEGAR POR DEFECTO (decisión del responsable, hallazgo de la validación HU-027) ──
+	#    Ninguna ruta /internal sale por el edge: es el canal PEP→PDP (bff-session-token,
+	#    access-decisions, credential-validations, administrators…) y el PEP lo llama directo al PDP.
+	#    Responde 404 sin cuerpo en `detection` y en `blocking` (regla de enrutamiento, no del WAF).
+	#    Excepción en lista blanca, SOLO si el upstream es el PEP (EDGE_INTERNAL_ALLOW_PEP=true, que
+	#    fija compose.pep.yml): las dos rutas propias del starter embebido
+	#      PUT  /internal/v1/integrations/*/*
+	#      POST /internal/v1/embedded-access-decisions
+	#    El regex es de prefijo y tolera mayúsculas, barras repetidas, `;param` y sufijos. ──
+	@internal_denegado expression `path_regexp('(?i)^/+internal') && !("{$EDGE_INTERNAL_ALLOW_PEP}" == "true" && ((method('PUT') && path_regexp('(?i)^/+internal/+v1/+integrations/+[^/]+/+[^/]+/?$')) || (method('POST') && path_regexp('(?i)^/+internal/+v1/+embedded-access-decisions/?$'))))`
+	handle @internal_denegado {
+		respond 404
+	}
+
+	# ── WAF: después de request_header (ver order), antes de todo handle. Reglas en /etc/coraza/rules ──
+	coraza_waf {
+		load_owasp_crs
+		directives `
+		Include @coraza.conf-recommended
+		Include /etc/coraza/generated/00-engine.conf
+		Include /etc/coraza/rules/00-engine.conf
+		Include /etc/coraza/rules/01-crs-setup.conf
+		Include /etc/coraza/generated/01-tuning.conf
+		Include /etc/coraza/rules/10-platform-before.conf
+		Include /etc/coraza/rules/exclusions/*.conf
+		Include @owasp_crs/REQUEST-9[0-3]*.conf
+		Include @owasp_crs/REQUEST-94[0-8]*.conf
+		Include /etc/coraza/rules/85-audit-on-detection.conf
+		Include @owasp_crs/REQUEST-949-BLOCKING-EVALUATION.conf
+		Include @owasp_crs/RESPONSE-*.conf
+		Include /etc/coraza/rules/90-platform-after.conf
+		`
+	}
+
+	# ── Canario del motor: 200 estático DESPUÉS del WAF (healthcheck.sh, attacks/canary.hurl) ──
+	handle /_edge/canary {
+		respond "canary" 200
+	}
+
+	# ── Limitación por IP (§6.1). client_ip honra X-Forwarded-For solo desde trusted_proxies ──
+	rate_limit {
+		zone authorize {
+			match {
+				path /api/v1/authorize
+			}
+			key {client_ip}
+			events {$EDGE_RATE_AUTHORIZE_EVENTS}
+			window {$EDGE_RATE_AUTHORIZE_WINDOW}
+		}
+		zone session {
+			match {
+				path /api/v1/session* /oauth2/* /login/*
+			}
+			key {client_ip}
+			events {$EDGE_RATE_SESSION_EVENTS}
+			window {$EDGE_RATE_SESSION_WINDOW}
+		}
+		zone default {
+			match {
+				not path /api/v1/authorize /api/v1/session* /oauth2/* /login/*
+			}
+			key {client_ip}
+			events {$EDGE_RATE_DEFAULT_EVENTS}
+			window {$EDGE_RATE_DEFAULT_WINDOW}
+		}
+	}
+
+	# ── Proxy ──
+	reverse_proxy {$EDGE_UPSTREAM} {
+		trusted_proxies {$EDGE_TRUSTED_PROXIES_DIRECTIVE}
+	}
+
+	# ── Sobre de error de la plataforma (§7.3). Nunca regla ni puntuación ──
+	handle_errors 403 {
+		import cabeceras_plataforma
+		header Content-Type "application/problem+json"
+		respond `{"type":"urn:security-baseline:error:request-rejected","title":"REQUEST_REJECTED","status":403,"detail":"La solicitud fue rechazada por la política de seguridad de la plataforma","code":"REQUEST_REJECTED","requestId":"{http.request.header.X-Request-Id}","correlationId":"{http.request.header.X-Correlation-Id}"}` 403
+	}
+	handle_errors 429 {
+		import cabeceras_plataforma
+		header Content-Type "application/problem+json"
+		respond `{"type":"urn:security-baseline:error:rate-limited","title":"RATE_LIMITED","status":429,"detail":"Demasiadas solicitudes desde este origen; intente de nuevo más tarde","code":"RATE_LIMITED","requestId":"{http.request.header.X-Request-Id}","correlationId":"{http.request.header.X-Correlation-Id}"}` 429
+	}
+	handle_errors {
+		import cabeceras_plataforma
+		header Content-Type "application/problem+json"
+		respond `{"type":"urn:security-baseline:error:edge","title":"EDGE_ERROR","status":{err.status_code},"detail":"El edge no pudo atender la solicitud","code":"EDGE_ERROR","requestId":"{http.request.header.X-Request-Id}","correlationId":"{http.request.header.X-Correlation-Id}"}` {err.status_code}
+	}
+}

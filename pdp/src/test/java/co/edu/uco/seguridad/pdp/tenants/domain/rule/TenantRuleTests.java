@@ -1,16 +1,16 @@
 package co.edu.uco.seguridad.pdp.tenants.domain.rule;
 
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
-import co.edu.uco.seguridad.pdp.tenants.domain.rule.model.TenantActivation;
-import co.edu.uco.seguridad.pdp.tenants.domain.rule.model.TenantCodeAvailability;
-import co.edu.uco.seguridad.pdp.tenants.domain.rule.model.TenantExistence;
-import co.edu.uco.seguridad.pdp.tenants.domain.model.TenantStatus;
 import co.edu.uco.seguridad.pdp.tenants.domain.exception.DuplicateTenantException;
 import co.edu.uco.seguridad.pdp.tenants.domain.exception.TenantNotActiveException;
 import co.edu.uco.seguridad.pdp.tenants.domain.exception.TenantNotFoundException;
+import co.edu.uco.seguridad.pdp.tenants.domain.model.TenantStatus;
 import co.edu.uco.seguridad.pdp.tenants.domain.rule.impl.TenantCodeMustBeUniqueRuleImpl;
 import co.edu.uco.seguridad.pdp.tenants.domain.rule.impl.TenantMustExistRuleImpl;
 import co.edu.uco.seguridad.pdp.tenants.domain.rule.impl.TenantStatusMustBeActiveRuleImpl;
+import co.edu.uco.seguridad.pdp.tenants.domain.rule.model.TenantActivation;
+import co.edu.uco.seguridad.pdp.tenants.domain.rule.model.TenantCodeAvailability;
+import co.edu.uco.seguridad.pdp.tenants.domain.rule.model.TenantExistence;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThatCode;

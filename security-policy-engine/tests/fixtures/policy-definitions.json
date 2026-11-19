@@ -1,0 +1,49 @@
+[
+  {
+    "id": "fixture.rbac.allow", "version": "1.0", "effect": "ALLOW",
+    "scope": {"level": "APPLICATION"},
+    "target": {"applicationIds": ["fixture-app"], "actions": ["READ"]},
+    "tenantScope": "SAME_TENANT",
+    "condition": {"predicate": {"left": {"ref": ["subject", "roles"]}, "operator": "CONTAINS", "right": {"value": "ROLE_READER"}}},
+    "obligations": []
+  },
+  {
+    "id": "fixture.profile-and-entitlement.allow", "version": "1.0", "effect": "ALLOW",
+    "scope": {"level": "APPLICATION"},
+    "target": {"applicationIds": ["fixture-app"], "actions": ["UPDATE"]},
+    "tenantScope": "SAME_TENANT",
+    "condition": {"all": [
+      {"predicate": {"left": {"ref": ["subject", "profiles"]}, "operator": "CONTAINS", "right": {"value": "PROFILE_EDITOR"}}},
+      {"predicate": {"left": {"ref": ["subject", "entitlements"]}, "operator": "CONTAINS", "right": {"value": "resource:update"}}}
+    ]},
+    "obligations": []
+  },
+  {
+    "id": "fixture.attribute-and-risk.allow", "version": "1.0", "effect": "ALLOW",
+    "scope": {"level": "RESOURCE"},
+    "target": {"applicationIds": ["fixture-app"], "resourceTypes": ["protected-http-resource"], "actions": ["GET"]},
+    "tenantScope": "SAME_TENANT",
+    "condition": {"all": [
+      {"predicate": {"left": {"ref": ["resource", "attributes", "status"]}, "operator": "NEQ", "right": {"value": "LOCKED"}}},
+      {"predicate": {"left": {"ref": ["context", "risk", "score"]}, "operator": "LT", "right": {"value": 50}}},
+      {"predicate": {"left": {"ref": ["security", "authenticationLevel"]}, "operator": "EQ", "right": {"value": "MFA"}}}
+    ]},
+    "obligations": []
+  },
+  {
+    "id": "fixture.explicit-deny.locked", "version": "1.0", "effect": "DENY",
+    "scope": {"level": "GLOBAL"},
+    "target": {"resourceTypes": ["protected-http-resource"]},
+    "tenantScope": "SAME_TENANT",
+    "condition": {"predicate": {"left": {"ref": ["resource", "attributes", "status"]}, "operator": "EQ", "right": {"value": "LOCKED"}}},
+    "obligations": []
+  },
+  {
+    "id": "fixture.cross-tenant.allow", "version": "1.0", "effect": "ALLOW",
+    "scope": {"level": "TENANT", "ownerTenantId": "fixture-tenant"},
+    "target": {"applicationIds": ["fixture-app"], "actions": ["READ"]},
+    "tenantScope": "CROSS_TENANT",
+    "condition": {"predicate": {"left": {"ref": ["subject", "entitlements"]}, "operator": "CONTAINS", "right": {"value": "tenant:cross-access"}}},
+    "obligations": []
+  }
+]

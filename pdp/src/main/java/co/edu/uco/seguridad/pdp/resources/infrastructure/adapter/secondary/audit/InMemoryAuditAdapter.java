@@ -16,7 +16,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public final class InMemoryAuditAdapter {
 
-    /** Un hecho de auditoría. Solo identificadores: suficiente para reconstruir la acción, nada más. */
+    /**
+     * Un hecho de auditoría. Solo identificadores: suficiente para reconstruir la acción, nada más.
+     */
     public record AuditEvent(String event, String tenantId, String applicationId, String resourceId, Instant at) {
     }
 

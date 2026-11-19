@@ -3,7 +3,9 @@ package co.edu.uco.seguridad.pdp.tenants.domain.model;
 import co.edu.uco.seguridad.pdp.commons.message.ValueObjectMessages;
 import co.edu.uco.seguridad.pdp.tenants.domain.exception.InvalidTenantNameException;
 
-/** Nombre legible del tenant, distinto de {@link co.edu.uco.seguridad.pdp.commons.TenantId} (el slug). */
+/**
+ * Nombre legible del tenant, distinto de {@link co.edu.uco.seguridad.pdp.commons.TenantId} (el slug).
+ */
 public record TenantName(String value) {
 
     private static final int MIN_LENGTH = 3;

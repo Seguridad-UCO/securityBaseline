@@ -1,28 +1,32 @@
 package co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.repository;
 
+import co.edu.uco.seguridad.pdp.commons.model.PageWindow;
+import co.edu.uco.seguridad.pdp.commons.model.ResultPage;
 import co.edu.uco.seguridad.pdp.commons.model.TenantId;
+import co.edu.uco.seguridad.pdp.commons.model.UserId;
 import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.SecurityUserRepository;
+import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;
 import co.edu.uco.seguridad.pdp.identity.domain.model.Email;
 import co.edu.uco.seguridad.pdp.identity.domain.model.ExternalIdentity;
-import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;
-import co.edu.uco.seguridad.pdp.identity.domain.model.UserId;
 import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.entity.ExternalIdentityEntity;
 import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.entity.SecurityUserEntity;
 import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.mapper.SecurityUserPersistenceMapper;
 import co.edu.uco.seguridad.pdp.identity.infrastructure.adapter.secondary.persistence.schema.IdentitySchema;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbClient;
+import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealDbException;
 import co.edu.uco.seguridad.shared.persistence.surrealdb.SurrealRecordId;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import tools.jackson.databind.JsonNode;
 
-import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-/** Adaptador secundario (driven) real sobre SurrealDB (ADR-0004). */
+/**
+ * Adaptador secundario (driven) real sobre SurrealDB (ADR-0004).
+ */
 public final class SurrealSecurityUserRepository implements SecurityUserRepository {
 
     private static final String DEFAULT_PROVIDER = "keycloak-local";
@@ -39,6 +43,15 @@ public final class SurrealSecurityUserRepository implements SecurityUserReposito
                         "SELECT * FROM %s WHERE issuer = $issuer AND subject = $subject LIMIT 1;"
                                 .formatted(IdentitySchema.IDENTITY_TABLE),
                         Map.of("issuer", issuer, "subject", subject))
+                .map(results -> results.get(0))
+                .flatMap(rows -> rows.isEmpty() ? Mono.empty() : Mono.just(toExternalIdentity(rows.get(0))));
+    }
+
+    @Override
+    public Mono<ExternalIdentity> findIdentityBySubject(String subject) {
+        return client.execute(
+                        "SELECT * FROM %s WHERE subject = $subject LIMIT 1;".formatted(IdentitySchema.IDENTITY_TABLE),
+                        Map.of("subject", subject))
                 .map(results -> results.get(0))
                 .flatMap(rows -> rows.isEmpty() ? Mono.empty() : Mono.just(toExternalIdentity(rows.get(0))));
     }
@@ -75,10 +88,10 @@ public final class SurrealSecurityUserRepository implements SecurityUserReposito
     public Mono<SecurityUser> save(SecurityUser user) {
         return client.execute(
                         """
-                        UPSERT type::record('%s', $id) SET \
-                        email = $email, name = $name, tenantId = $tenantId, \
-                        createdAt = <datetime>$createdAt, lastLoginAt = <datetime>$lastLoginAt;\
-                        """.formatted(IdentitySchema.USER_TABLE),
+                                UPSERT type::record('%s', $id) SET \
+                                email = $email, name = $name, tenantId = $tenantId, \
+                                createdAt = <datetime>$createdAt, lastLoginAt = <datetime>$lastLoginAt;\
+                                """.formatted(IdentitySchema.USER_TABLE),
                         Map.of(
                                 "id", user.id().value().toString(),
                                 "email", user.email().value(),
@@ -93,9 +106,9 @@ public final class SurrealSecurityUserRepository implements SecurityUserReposito
     public Mono<Void> linkIdentity(ExternalIdentity identity) {
         return client.execute(
                         """
-                        CREATE type::record('%s', $id) SET \
-                        userId = $userId, issuer = $issuer, subject = $subject, provider = $provider;\
-                        """.formatted(IdentitySchema.IDENTITY_TABLE),
+                                CREATE type::record('%s', $id) SET \
+                                userId = $userId, issuer = $issuer, subject = $subject, provider = $provider;\
+                                """.formatted(IdentitySchema.IDENTITY_TABLE),
                         Map.of(
                                 "id", UUID.randomUUID().toString(),
                                 "userId", identity.userId().value().toString(),
@@ -106,10 +119,52 @@ public final class SurrealSecurityUserRepository implements SecurityUserReposito
     }
 
     @Override
+    public Mono<ExternalIdentity> createUserWithIdentityIfAbsent(SecurityUser user, ExternalIdentity identity) {
+        return client.execute(
+                        """
+                                BEGIN TRANSACTION; \
+                                CREATE type::record('%1$s', $userId) SET \
+                                email = $email, name = $name, tenantId = $tenantId, \
+                                createdAt = <datetime>$createdAt, lastLoginAt = <datetime>$lastLoginAt; \
+                                CREATE type::record('%2$s', $identityId) SET \
+                                userId = $userId, issuer = $issuer, subject = $subject, provider = $provider; \
+                                COMMIT TRANSACTION;\
+                                """.formatted(IdentitySchema.USER_TABLE, IdentitySchema.IDENTITY_TABLE),
+                        Map.of(
+                                "userId", user.id().value().toString(),
+                                "email", user.email().value(),
+                                "name", user.name(),
+                                "tenantId", user.tenantId().value(),
+                                "createdAt", user.createdAt().toString(),
+                                "lastLoginAt", user.lastLoginAt().toString(),
+                                "identityId", UUID.randomUUID().toString(),
+                                "issuer", identity.issuer(),
+                                "subject", identity.subject(),
+                                "provider", identity.provider()))
+                .thenReturn(identity)
+                // Violación de unicidad: toda la transacción se revierte. Si la identidad ya existe,
+                // otra petición ganó la carrera y se devuelve su vínculo; si no, el error es real.
+                .onErrorResume(SurrealDbException.class, failure -> findIdentity(identity.issuer(), identity.subject())
+                        .switchIfEmpty(Mono.error(failure)));
+    }
+
+    @Override
     public Flux<SecurityUser> findAll() {
         return client.execute("SELECT * FROM %s ORDER BY lastLoginAt DESC;".formatted(IdentitySchema.USER_TABLE), Map.of())
                 .flatMapMany(results -> Flux.fromIterable(results.get(0).valueStream().toList()))
                 .map(SurrealSecurityUserRepository::toSecurityUser);
+    }
+
+    @Override
+    public Mono<ResultPage<SecurityUser>> findPageByTenant(TenantId tenantId, String query, PageWindow window) {
+        String term = query == null ? "" : query.trim().toLowerCase();
+        String statement = """
+                SELECT * FROM %1$s WHERE tenantId = $tenantId AND (string::lowercase(name) CONTAINS $query OR string::lowercase(email) CONTAINS $query) ORDER BY name COLLATE ASC LIMIT %2$d START %3$d;
+                SELECT count() FROM %1$s WHERE tenantId = $tenantId AND (string::lowercase(name) CONTAINS $query OR string::lowercase(email) CONTAINS $query) GROUP ALL;
+                """.formatted(IdentitySchema.USER_TABLE, window.limit(), window.offset());
+        return client.execute(statement, Map.of("tenantId", tenantId.value(), "query", term)).map(results ->
+                ResultPage.of(results.get(0).valueStream().map(SurrealSecurityUserRepository::toSecurityUser).toList(),
+                        results.get(1).isEmpty() ? 0 : results.get(1).get(0).path("count").asLong(0), window));
     }
 
     private static SecurityUser toSecurityUser(JsonNode row) {

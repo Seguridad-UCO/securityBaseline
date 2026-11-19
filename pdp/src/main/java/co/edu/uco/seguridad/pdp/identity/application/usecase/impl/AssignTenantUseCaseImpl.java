@@ -5,8 +5,8 @@ import co.edu.uco.seguridad.pdp.identity.application.primaryport.response.UserRe
 import co.edu.uco.seguridad.pdp.identity.application.secondaryport.repository.SecurityUserRepository;
 import co.edu.uco.seguridad.pdp.identity.application.usecase.AssignTenantUseCase;
 import co.edu.uco.seguridad.pdp.identity.domain.SecurityUser;
-import co.edu.uco.seguridad.pdp.identity.domain.rule.model.UserExistence;
 import co.edu.uco.seguridad.pdp.identity.domain.rule.UserMustExistRule;
+import co.edu.uco.seguridad.pdp.identity.domain.rule.model.UserExistence;
 import co.edu.uco.seguridad.pdp.tenants.application.rule.validator.TenantMustBeActiveValidator;
 import co.edu.uco.seguridad.shared.message.RequiredArgumentMessages;
 import reactor.core.publisher.Mono;
@@ -27,7 +27,7 @@ public final class AssignTenantUseCaseImpl implements AssignTenantUseCase {
     private final SecurityUserRepository repository;
 
     public AssignTenantUseCaseImpl(TenantMustBeActiveValidator tenantMustBeActive, UserMustExistRule userMustExist,
-            SecurityUserRepository repository) {
+                                   SecurityUserRepository repository) {
         this.tenantMustBeActive = Objects.requireNonNull(tenantMustBeActive, RequiredArgumentMessages.TENANT_ACTIVE_VALIDATOR);
         this.userMustExist = Objects.requireNonNull(userMustExist, RequiredArgumentMessages.USER_RULE);
         this.repository = Objects.requireNonNull(repository, RequiredArgumentMessages.USER_REPOSITORY);
