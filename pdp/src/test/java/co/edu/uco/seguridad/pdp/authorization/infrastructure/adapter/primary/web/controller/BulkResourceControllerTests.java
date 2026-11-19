@@ -8,9 +8,12 @@ import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.Princip
 import co.edu.uco.seguridad.pdp.authorization.application.rule.validator.PrincipalMustBeApplicationAdministratorValidator;
 import co.edu.uco.seguridad.pdp.authorization.domain.exception.NotAuthorizedToAdministerException;
 import co.edu.uco.seguridad.pdp.authorization.domain.exception.NotAuthorizedToAdministerTenantCatalogException;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkCatalogImport;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkCatalogImportService;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkCatalogImports;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkCatalogWorkbookService;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkResourceImportService;
+import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkResourceRoleImportService;
 import co.edu.uco.seguridad.pdp.authorization.infrastructure.adapter.primary.web.service.BulkResourceWorkbookService;
 import co.edu.uco.seguridad.pdp.commons.model.*;
 import co.edu.uco.seguridad.pdp.profiles.application.secondaryport.repository.ProfileRepository;
@@ -52,7 +55,9 @@ import java.io.ByteArrayOutputStream;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -189,10 +194,14 @@ class BulkResourceControllerTests {
         BulkResourceImportService resourceImports = new BulkResourceImportService(new BulkResourceWorkbookService(),
                 applications, denyAll, resources, () -> new UUID(0, sequence.incrementAndGet()), () -> NOW,
                 batch -> Mono.empty());
+        Map<String, BulkCatalogImport> modes = new LinkedHashMap<>();
+        modes.put("roles", BulkCatalogImport.of(catalogImports, "roles"));
+        modes.put("profiles", BulkCatalogImport.of(catalogImports, "profiles"));
+        modes.put("resources-roles", new BulkResourceRoleImportService(resourceImports, catalogImports, batch -> Mono.empty(), resources, roles));
         return new BulkResourceController(new BulkResourceWorkbookService(), resourceImports, subject -> {
             resolvedSubjects.add(subject);
             return Mono.just(ACTOR);
-        }, catalogWorkbooks, catalogImports);
+        }, catalogWorkbooks, new BulkCatalogImports(modes));
     }
 
     private static MockServerWebExchange exchange() {
@@ -285,7 +294,7 @@ class BulkResourceControllerTests {
         byte[] workbook = applicationRoleWorkbook();
         BulkResourceController controller = controller();
 
-        for (String mode : List.of("otra", "resources-roles")) {
+        for (String mode : List.of("otra", "Roles")) {
             authenticated(controller.validateCatalog(mode, file(workbook), exchange()))
                     .expectErrorSatisfies(BulkResourceControllerTests::assertIsTheMalformedModeField)
                     .verify();
@@ -298,7 +307,7 @@ class BulkResourceControllerTests {
         byte[] workbook = applicationRoleWorkbook();
         BulkResourceController controller = controller();
 
-        for (String mode : List.of("otra", "resources-roles")) {
+        for (String mode : List.of("otra", "Roles")) {
             authenticated(controller.commitCatalog(mode, file(workbook), exchange()))
                     .expectErrorSatisfies(BulkResourceControllerTests::assertIsTheMalformedModeField)
                     .verify();
@@ -311,7 +320,7 @@ class BulkResourceControllerTests {
         byte[] workbook = applicationRoleWorkbook();
         BulkResourceController controller = controller();
 
-        for (String mode : List.of("otra", "resources-roles")) {
+        for (String mode : List.of("otra", "Roles")) {
             authenticated(controller.catalogErrorReport(mode, file(workbook)))
                     .expectErrorSatisfies(BulkResourceControllerTests::assertIsTheMalformedModeField)
                     .verify();
